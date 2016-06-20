@@ -4,6 +4,9 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.1 <2016-06-20>`
+- remove unneeded pyyaml, kaptan and click dependencies
+
 - :release:`0.1.0 <2016-06-20>`
 - libvcs split from `vcspull`_
 
