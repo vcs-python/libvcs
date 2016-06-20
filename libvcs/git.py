@@ -169,7 +169,7 @@ class GitRepo(BaseRepo):
 
         # Get head sha
         try:
-            head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'],
+            head_sha = self.run_buffered(['rev-list', '--max-count=1', 'HEAD'],
                                 print_stdout_on_progress_end=False)
         except exc.SubprocessError as e:
             self.error("Failed to get the hash for HEAD")
@@ -179,7 +179,7 @@ class GitRepo(BaseRepo):
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
-        show_ref_output = self.run(['show-ref', git_tag],
+        show_ref_output = self.run_buffered(['show-ref', git_tag],
                                    print_stdout_on_progress_end=False)
         self.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
@@ -198,7 +198,7 @@ class GitRepo(BaseRepo):
         # been fetched yet).
         try:
             error_code = 0
-            tag_sha = self.run(['rev-list', '--max-count=1', git_tag],
+            tag_sha = self.run_buffered(['rev-list', '--max-count=1', git_tag],
                                print_stdout_on_progress_end=False)
         except exc.SubprocessError as e:
             error_code = e.subprocess.returncode
@@ -238,7 +238,7 @@ class GitRepo(BaseRepo):
 
             # Pull changes from the remote branch
             try:
-                process = self.run([
+                process = self.run_buffered([
                     'rebase', git_remote_name + '/' + git_tag
                 ], print_stdout_on_progress_end=False)
             except exc.SubprocessError as e:
