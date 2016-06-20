@@ -4,6 +4,9 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.4 <2016-06-20>`
+- Fix print_stdout_on_progress_end signature in git update
+
 - :release:`0.1.3 <2016-06-20>`
 - ``create_repo`` function for regular vcs urls
 - API docs updated
