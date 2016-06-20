@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from libvcs import GitRepo, MercurialRepo, SubversionRepo
+from libvcs.exc import InvalidPipURL
 
 
 def create_repo_from_pip_url(url, **kwargs):
@@ -45,15 +46,4 @@ def create_repo_from_pip_url(url, **kwargs):
             kwargs['vcs'] = 'svn'
         return SubversionRepo.from_pip_url(url, **kwargs)
     else:
-        raise Exception(
-            'repo URL %s requires a vcs scheme. Prepend hg+,'
-            ' git+, svn+ to the repo URL. Examples:\n'
-            '\t %s\n'
-            '\t %s\n'
-            '\t %s\n' % (
-                url,
-                'git+https://github.com/freebsd/freebsd.git',
-                'hg+https://bitbucket.org/birkenfeld/sphinx',
-                'svn+http://svn.code.sf.net/p/docutils/code/trunk'
-            )
-        )
+        raise InvalidPipURL(url)
