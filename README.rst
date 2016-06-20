@@ -2,24 +2,29 @@
 
 |pypi| |docs| |build-status| |coverage| |license|
 
-repo via `pip`_-style URL
-
 a repo is an object representation of a vcs repository. it may or may not
 be checked out/cloned yet.
 
 .. code-block:: python
 
-   In [1]: from libvcs.shortcuts import create_repo_from_pip_url
+   In [1]: from libvcs.shortcuts import create_repo_from_pip_url, create_repo
+
+   In [2]: r = create_repo(
+            url='https://www.github.com/tony/myrepo',
+            vcs='git',
+            repo_dir='/tmp/repo')
+
+   # or via pip-style URL
 
    In [2]: r = create_repo_from_pip_url(
-            url='git+https://www.github.com/tony/myrepo',
-            parent_dir='/tmp/',
+            pip_url='git+https://www.github.com/tony/myrepo',
+            repo_dir='/tmp/repo',
             name='myrepo')
 
    In [3]: r.update_repo()
    |myrepo| (git)  Repo directory for myrepo (git) does not exist @ /tmp/myrepo
    |myrepo| (git)  Cloning.
-   |myrepo| (git)  git clone --progress https://www.github.com/tony/myrepo /tmp/myrepo
+   |myrepo| (git)  git clone https://www.github.com/tony/myrepo /tmp/myrepo
    Cloning into '/tmp/myrepo'...
    Checking connectivity... done.
    |myrepo| (git)  git fetch
@@ -38,7 +43,7 @@ Changelog       http://libvcs.readthedocs.io/en/latest/history.html
 API             http://libvcs.readthedocs.io/en/latest/api.html
 Issues          https://github.com/tony/libvcs/issues
 Travis          http://travis-ci.org/tony/libvcs
-Test Coverage   https://coveralls.io/r/tony/libvcs
+Test Coverage   https://codecov.io/gh/tony/libvcs
 pypi            https://pypi.python.org/pypi/libvcs
 Open Hub        https://www.openhub.net/p/libvcs
 License         `BSD`_.
