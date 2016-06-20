@@ -93,12 +93,13 @@ class BaseRepo(RepoLoggingAdapter, object):
     Extends :py:class:`logging.LoggerAdapter`.
     """
 
-    def __init__(self, url, parent_dir, *args, **kwargs):
+    def __init__(self, url, repo_dir, *args, **kwargs):
         self.__dict__.update(kwargs)
-        self.url = url
-        self.parent_dir = parent_dir
 
-        self.path = os.path.join(self.parent_dir, self.name)
+        self.url = url
+        self.parent_dir = os.path.dirname(repo_dir)
+        self.name = os.path.basename(os.path.normpath(repo_dir))
+        self.path = repo_dir
 
         # Register more schemes with urlparse for various version control
         # systems
@@ -110,12 +111,10 @@ class BaseRepo(RepoLoggingAdapter, object):
         RepoLoggingAdapter.__init__(self, logger, {})
 
     @classmethod
-    def from_pip_url(cls, *args, **kwargs):
-        self = cls(*args, **kwargs)
-        url, rev = self.get_url_and_revision_from_pip_url()
-        if url:
-            self.url = url
-        self.rev = rev if rev else None
+    def from_pip_url(cls, pip_url, *args, **kwargs):
+        url, rev = cls.get_url_and_revision_from_pip_url(pip_url)
+        self = cls(url=url, rev=rev, *args, **kwargs)
+
         return self
 
     def run_buffered(
@@ -215,14 +214,15 @@ class BaseRepo(RepoLoggingAdapter, object):
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
 
-    def get_url_and_revision_from_pip_url(self):
+    @classmethod
+    def get_url_and_revision_from_pip_url(cls, pip_url):
         """Return repo URL and revision by parsing :attr:`~.url`."""
         error_message = (
             "Sorry, '%s' is a malformed VCS url. "
             "The format is <vcs>+<protocol>://<url>, "
             "e.g. svn+http://myrepo/svn/MyApp#egg=MyApp")
-        assert '+' in self.url, error_message % self.url
-        url = self.url.split('+', 1)[1]
+        assert '+' in pip_url, error_message % pip_url
+        url = pip_url.split('+', 1)[1]
         scheme, netloc, path, query, frag = urlparse.urlsplit(url)
         rev = None
         if '@' in path:

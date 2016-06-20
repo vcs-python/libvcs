@@ -40,9 +40,8 @@ def test_repo_mercurial(tmpdir, hg_dummy_repo_dir):
     repo_name = 'my_mercurial_project'
 
     mercurial_repo = create_repo_from_pip_url(**{
-        'url': 'hg+file://' + hg_dummy_repo_dir,
-        'parent_dir': str(tmpdir),
-        'name': repo_name
+        'pip_url': 'hg+file://' + hg_dummy_repo_dir,
+        'repo_dir': str(tmpdir.join(repo_name)),
     })
 
     run(['hg', 'init', mercurial_repo.name],

@@ -85,27 +85,28 @@ class GitRepo(BaseRepo):
         except exc.SubprocessError:
             return 'initial'
 
-    def get_url_and_revision_from_pip_url(self):
+    @classmethod
+    def get_url_and_revision_from_pip_url(cls, pip_url):
         """
         Prefixes stub URLs like 'user@hostname:user/repo.git' with 'ssh://'.
         That's required because although they use SSH they sometimes doesn't
         work with a ssh:// scheme (e.g. Github). But we need a scheme for
         parsing. Hence we remove it again afterwards and return it as a stub.
         """
-        if '://' not in self.url:
-            assert 'file:' not in self.url
-            self.url = self.url.replace('git+', 'git+ssh://')
-            url, rev = super(GitRepo, self).get_url_and_revision_from_pip_url()
+        if '://' not in pip_url:
+            assert 'file:' not in pip_url
+            pip_url = pip_url.replace('git+', 'git+ssh://')
+            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
             url = url.replace('ssh://', '')
-        elif 'github.com:' in self.url:
+        elif 'github.com:' in pip_url:
             raise exc.LibVCSException(
                 "Repo %s is malformatted, please use the convention %s for"
                 "ssh / private GitHub repositories." % (
-                    self.url, "git+https://github.com/username/repo.git"
+                    pip_url, "git+https://github.com/username/repo.git"
                 )
             )
         else:
-            url, rev = super(GitRepo, self).get_url_and_revision_from_pip_url()
+            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
 
         return url, rev
 

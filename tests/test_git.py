@@ -28,8 +28,8 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
     bare_repo_dir = tmpdir.join(repo_name)
 
     git_repo = create_repo_from_pip_url(**{
-        'url': 'git+file://' + str(bare_repo_dir),
-        'parent_dir': str(tmpdir),
+        'pip_url': 'git+file://' + str(bare_repo_dir),
+        'repo_dir': str(tmpdir),
         'name': 'obtaining a bare repo'
     })
 
@@ -47,9 +47,8 @@ def test_repo_git_obtain_full(tmpdir, git_dummy_repo_dir):
 
     # create a new repo with the repo as a remote
     git_repo = create_repo_from_pip_url(**{
-        'url': 'git+file://' + remote_repo_dir,
-        'parent_dir': str(tmpdir),
-        'name': 'myrepo'
+        'pip_url': 'git+file://' + remote_repo_dir,
+        'repo_dir': str(tmpdir.join('myrepo')),
     })
 
     git_repo.obtain(quiet=True)
@@ -96,7 +95,6 @@ def test_remotes_preserves_git_ssh(git_repo_kwargs):
     remote_url = 'git+ssh://git@github.com/tony/AlgoXY.git'
 
     git_repo_kwargs.update(**{
-        'name': 'moo',
         'remotes': [{
             'remote_name': 'myrepo',
             'url': remote_url
@@ -111,7 +109,7 @@ def test_remotes_preserves_git_ssh(git_repo_kwargs):
 
 def test_private_ssh_format(git_repo_kwargs):
     git_repo_kwargs.update(**{
-        'url': 'git+ssh://github.com:' + '/tmp/omg/private_ssh_repo',
+        'pip_url': 'git+ssh://github.com:' + '/tmp/omg/private_ssh_repo',
     })
 
     with pytest.raises(exc.LibVCSException) as e:
@@ -167,9 +165,8 @@ def test_repository_not_found_raises_exception(tmpdir):
 
     url = 'git+file://' + os.path.join(repo_dir, repo_name)
     git_repo = create_repo_from_pip_url(**{
-        'url': url,
-        'parent_dir': str(tmpdir),
-        'name': repo_name
+        'pip_url': url,
+        'repo_dir': str(tmpdir.join(repo_name)),
     })
     error_output = 'ERROR: hello mock subprocess stderr'
 

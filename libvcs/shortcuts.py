@@ -5,7 +5,7 @@ from libvcs import GitRepo, MercurialRepo, SubversionRepo
 from libvcs.exc import InvalidPipURL
 
 
-def create_repo_from_pip_url(url, **kwargs):
+def create_repo_from_pip_url(pip_url, **kwargs):
     r"""Return object with base class :class:`BaseRepo` depending on url.
 
     Return instance of :class:`libvcs.svn.SubversionRepo`,
@@ -33,11 +33,11 @@ def create_repo_from_pip_url(url, **kwargs):
         |myrepo| (git)  git pull
         Already up-to-date.
     """
-    if url.startswith('git+'):
-        return GitRepo.from_pip_url(url, **kwargs)
-    if url.startswith('hg+'):
-        return MercurialRepo.from_pip_url(url, **kwargs)
-    if url.startswith('svn+'):
-        return SubversionRepo.from_pip_url(url, **kwargs)
+    if pip_url.startswith('git+'):
+        return GitRepo.from_pip_url(pip_url, **kwargs)
+    if pip_url.startswith('hg+'):
+        return MercurialRepo.from_pip_url(pip_url, **kwargs)
+    if pip_url.startswith('svn+'):
+        return SubversionRepo.from_pip_url(pip_url, **kwargs)
     else:
-        raise InvalidPipURL(url)
+        raise InvalidPipURL(pip_url)

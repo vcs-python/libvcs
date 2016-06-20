@@ -25,9 +25,8 @@ def test_repo_svn(tmpdir, svn_dummy_repo_dir):
     repo_name = 'my_svn_project'
 
     svn_repo = create_repo_from_pip_url(**{
-        'url': 'svn+file://' + svn_dummy_repo_dir,
-        'parent_dir': str(tmpdir),
-        'name': repo_name
+        'pip_url': 'svn+file://' + svn_dummy_repo_dir,
+        'repo_dir': str(tmpdir.join(repo_name)),
     })
 
     svn_repo.obtain()

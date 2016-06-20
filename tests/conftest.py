@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
 import pytest
 
 from libvcs.shortcuts import create_repo_from_pip_url
@@ -19,9 +21,8 @@ def git_repo_kwargs(tmpdir_repoparent, git_dummy_repo_dir):
     """Return kwargs for :func:`create_repo_from_pip_url`."""
     repo_name = 'repo_clone'
     return {
-        'url': 'git+file://' + git_dummy_repo_dir,
-        'parent_dir': str(tmpdir_repoparent),
-        'name': repo_name
+        'pip_url': 'git+file://' + git_dummy_repo_dir,
+        'repo_dir': os.path.join(str(tmpdir_repoparent), repo_name)
     }
 
 
@@ -37,17 +38,17 @@ def git_repo(git_repo_kwargs):
 def git_dummy_repo_dir(tmpdir_repoparent, scope='session'):
     """Create a git repo with 1 commit, used as a remote."""
     name = 'dummyrepo'
-    repo_path = str(tmpdir_repoparent.join(name))
+    repo_dir = str(tmpdir_repoparent.join(name))
 
     run(['git', 'init', name], cwd=str(tmpdir_repoparent))
 
     testfile_filename = 'testfile.test'
 
     run(['touch', testfile_filename],
-        cwd=repo_path)
+        cwd=repo_dir)
     run(['git', 'add', testfile_filename],
-        cwd=repo_path)
+        cwd=repo_dir)
     run(['git', 'commit', '-m', 'test file for %s' % name],
-        cwd=repo_path)
+        cwd=repo_dir)
 
-    return repo_path
+    return repo_dir

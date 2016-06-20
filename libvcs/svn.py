@@ -132,10 +132,11 @@ class SubversionRepo(BaseRepo):
             revision = max(revision, localrev)
         return revision
 
-    def get_url_and_revision_from_pip_url(self):
+    @classmethod
+    def get_url_and_revision_from_pip_url(cls, pip_url):
         # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
         url, rev = super(
-            SubversionRepo, self).get_url_and_revision_from_pip_url()
+            SubversionRepo, cls).get_url_and_revision_from_pip_url(pip_url)
         if url.startswith('ssh://'):
             url = 'svn+' + url
         return url, rev

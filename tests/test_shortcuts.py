@@ -10,27 +10,23 @@ from libvcs.exc import InvalidPipURL
 
 @pytest.mark.parametrize('repo_dict,repo_class,raises_exception', [
     ({
-        'url': 'git+https://github.com/freebsd/freebsd.git',
-        'name': 'hi'
+        'pip_url': 'git+https://github.com/freebsd/freebsd.git',
      }, GitRepo, False,),
     ({
-        'url': 'hg+https://bitbucket.org/birkenfeld/sphinx',
-        'name': 'hi'
+        'pip_url': 'hg+https://bitbucket.org/birkenfeld/sphinx',
      }, MercurialRepo, False,),
     ({
-        'url': 'svn+http://svn.code.sf.net/p/docutils/code/trunk',
-        'name': 'hi'
+        'pip_url': 'svn+http://svn.code.sf.net/p/docutils/code/trunk',
      }, SubversionRepo, False,),
     ({
-        'url': 'sv+http://svn.code.sf.net/p/docutils/code/trunk',
-        'name': 'hi'
+        'pip_url': 'sv+http://svn.code.sf.net/p/docutils/code/trunk',
      }, None, InvalidPipURL,),
 ])
 def test_create_repo_from_pip_url(
     repo_dict, repo_class, raises_exception,
     tmpdir
 ):
-    repo_dict['parent_dir'] = str(tmpdir)  # add parent_dir via fixture
+    repo_dict['repo_dir'] = str(tmpdir.join('repo_name'))  # add parent_dir via fixture
 
     if raises_exception:
         with pytest.raises(raises_exception):
