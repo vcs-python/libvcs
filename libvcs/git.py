@@ -74,7 +74,6 @@ class GitRepo(BaseRepo):
             self.git_submodules = []
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
-        print(url, kwargs)
         BaseRepo.__init__(self, url, **kwargs)
 
         self.remotes = remotes
