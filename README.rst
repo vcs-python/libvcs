@@ -54,10 +54,7 @@ install dev     .. code-block:: bash
                     $ pip install -e .
 tests           .. code-block:: bash
 
-                    $ python ./run-tests.py
-run             .. code-block:: bash
-
-                    $ libvcs
+                    $ py.test
 ==============  ==========================================================
 
 .. _BSD: http://opensource.org/licenses/BSD-3-Clause

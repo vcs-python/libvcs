@@ -1,0 +1,13 @@
+=========
+Changelog
+=========
+
+Here are the changes for libvcs.
+
+- :release:`0.1.0 <2016-06-20>`
+- libvcs split from `vcspull`_
+
+
+.. _vcspull: https://github.com/tony/vcspull
+
+.. vim: set filetype=rst:
