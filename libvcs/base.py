@@ -90,7 +90,7 @@ class BaseRepo(RepoLoggingAdapter, object):
 
     """Base class for repositories.
 
-    Extends and :py:class:`logging.LoggerAdapter`.
+    Extends :py:class:`logging.LoggerAdapter`.
     """
 
     def __init__(self, url, parent_dir, *args, **kwargs):
@@ -206,8 +206,8 @@ class BaseRepo(RepoLoggingAdapter, object):
             mkdir_p(self.parent_dir)
         else:
             if not os.path.exists(self.path):
-                self.debug('Repo directory for %s (%s) does not exist @ %s' % (
-                    self.name, self.vcs, self.path))
+                self.debug('Repo directory for %s does not exist @ %s' % (
+                    self.name, self.path))
                 mkdir_p(self.path)
 
         return True

@@ -34,16 +34,10 @@ def create_repo_from_pip_url(url, **kwargs):
         Already up-to-date.
     """
     if url.startswith('git+'):
-        if 'vcs' not in kwargs:
-            kwargs['vcs'] = 'git'
         return GitRepo.from_pip_url(url, **kwargs)
     if url.startswith('hg+'):
-        if 'vcs' not in kwargs:
-            kwargs['vcs'] = 'hg'
         return MercurialRepo.from_pip_url(url, **kwargs)
     if url.startswith('svn+'):
-        if 'vcs' not in kwargs:
-            kwargs['vcs'] = 'svn'
         return SubversionRepo.from_pip_url(url, **kwargs)
     else:
         raise InvalidPipURL(url)
