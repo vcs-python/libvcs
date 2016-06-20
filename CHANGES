@@ -4,6 +4,12 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.2 <2016-06-20>`
+- change signature on ``create_repo_from_pip_url`` to accept
+  ``pip_url`` insetad of ``url``.
+- ``Base`` to accept ``repo_dir`` instead of ``name`` and
+  ``parent_dir``.
+
 - :release:`0.1.1 <2016-06-20>`
 - remove unneeded pyyaml, kaptan and click dependencies
 
