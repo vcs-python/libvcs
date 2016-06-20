@@ -38,10 +38,7 @@ class GitRepo(BaseRepo):
     def __init__(self, url, remotes=None, **kwargs):
         """A git repository.
 
-        :param url: URL in pip vcs format:
-
-            - ``git+https://github.com/tony/libvcs.git``
-            - ``git+ssh://git@github.com:tony/libvcs.git``
+        :param url: URL of repo
         :type url: str
 
         :param remotes: list of remotes in dict format::

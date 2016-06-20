@@ -37,10 +37,7 @@ class SubversionRepo(BaseRepo):
     def __init__(self, url, **kwargs):
         """A svn repository.
 
-        :param url: URL in pip vcs format:
-
-            - ``svn+svn://svn.myproject.org/svn/MyProject``
-            - ``svn+http://svn.myproject.org/svn/MyProject/trunk@2019``
+        :param url: URL in subversion repository
         :type url: str
 
         :param svn_username: username to use for checkout and update
