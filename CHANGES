@@ -4,6 +4,10 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.3 <2016-06-20>`
+- ``create_repo`` function for regular vcs urls
+- API docs updated
+
 - :release:`0.1.2 <2016-06-20>`
 - change signature on ``create_repo_from_pip_url`` to accept
   ``pip_url`` insetad of ``url``.
