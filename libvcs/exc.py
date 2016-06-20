@@ -52,3 +52,8 @@ class InvalidPipURL(LibVCSException):
         '\t %s\n'
         '\t %s\n'
     )
+
+
+class InvalidVCS(LibVCSException):
+    """Invalid VCS."""
+    pass

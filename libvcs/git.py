@@ -96,7 +96,8 @@ class GitRepo(BaseRepo):
         if '://' not in pip_url:
             assert 'file:' not in pip_url
             pip_url = pip_url.replace('git+', 'git+ssh://')
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+            url, rev = super(
+                GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
             url = url.replace('ssh://', '')
         elif 'github.com:' in pip_url:
             raise exc.LibVCSException(
@@ -106,7 +107,8 @@ class GitRepo(BaseRepo):
                 )
             )
         else:
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+            url, rev = super(
+                GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
 
         return url, rev
 

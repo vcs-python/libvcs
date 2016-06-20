@@ -147,8 +147,9 @@ def test_set_remote(git_repo):
 def test_repository_not_found_raises_exception(tmpdir):
     r"""Need to imitate git remote not found.
 
-    |isobar-frontend| (git)  create_repo_from_pip_url directory for isobar-frontend (git) \
-        does not exist @ /home/tony/study/std/html/isobar-frontend
+    |isobar-frontend| (git)  create_repo_from_pip_url directory for \
+        isobar-frontend (git) does not exist @ \
+        /home/tony/study/std/html/isobar-frontend
     |isobar-frontend| (git)  Cloning.
     |isobar-frontend| (git)  git clone --progress \
         https://github.com/isobar-idev/code-standards/ /\
