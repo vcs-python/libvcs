@@ -4,6 +4,10 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.5 <2016-06-21>`
+- Fix issue where repo context wouldn't pass to repo logging
+  adapter
+
 - :release:`0.1.4 <2016-06-20>`
 - Fix print_stdout_on_progress_end signature in git update
 
