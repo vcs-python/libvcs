@@ -48,6 +48,18 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
         self.in_progress = msg
         self.last_message = None
 
+    def process(self, msg, kwargs):
+        """Return extra kwargs for :class:`Repo` prefixed with``repo_``.
+        Both :class:`Repo` and :py:class:`logging.LogRecord` use ``name``.
+        """
+        prefixed_dict = {}
+        prefixed_dict['repo_vcs'] = self.bin_name
+        prefixed_dict['repo_name'] = self.name
+
+        kwargs["extra"] = prefixed_dict
+
+        return msg, kwargs
+
     def end_progress(self, msg='done.'):
         assert self.in_progress, (
             "Tried to end_progress without start_progress")
