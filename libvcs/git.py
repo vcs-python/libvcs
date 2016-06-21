@@ -174,7 +174,7 @@ class GitRepo(BaseRepo):
             self.error("Failed to get the hash for HEAD")
             return
 
-        self.info("head_sha: %s" % head_sha)
+        self.debug("head_sha: %s" % head_sha)
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
