@@ -42,12 +42,19 @@ Extending libvcs can be done through subclassing ``BaseRepo``.
     :members:
     :show-inheritance:
 
-Utility stuff
--------------
+Logging
+-------
 
 .. autoclass:: libvcs.base.RepoLoggingAdapter
    :members:
    :show-inheritance:
+
+.. autoclass:: libvcs.base.BufferedProgressMixin
+   :members:
+   :show-inheritance:
+
+Utility stuff
+-------------
 
 .. automodule:: libvcs.util
    :members:

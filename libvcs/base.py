@@ -19,20 +19,13 @@ from .util import mkdir_p, run
 logger = logging.getLogger(__name__)
 
 
-class RepoLoggingAdapter(logging.LoggerAdapter):
+class BufferedProgressMixin(object):
+    """Facilities for showing live command progress to stdout."""
 
-    """Adapter for adding Repo related content to logger."""
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.indent = 0
         self.in_progress = None
         self.in_progress_hanging = False
-
-        logging.LoggerAdapter.__init__(self, *args, **kwargs)
-
-    def _show_progress(self):
-        """Should we display download progress."""
-        return sys.stdout.isatty()
 
     def start_progress(self, msg=True):
         assert not self.in_progress, (
@@ -48,17 +41,9 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
         self.in_progress = msg
         self.last_message = None
 
-    def process(self, msg, kwargs):
-        """Return extra kwargs for :class:`Repo` prefixed with``repo_``.
-        Both :class:`Repo` and :py:class:`logging.LogRecord` use ``name``.
-        """
-        prefixed_dict = {}
-        prefixed_dict['repo_vcs'] = self.bin_name
-        prefixed_dict['repo_name'] = self.name
-
-        kwargs["extra"] = prefixed_dict
-
-        return msg, kwargs
+    def _show_progress(self):
+        """Should we display download progress."""
+        return sys.stdout.isatty()
 
     def end_progress(self, msg='done.'):
         assert self.in_progress, (
@@ -96,38 +81,6 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
                 )
                 sys.stdout.flush()
                 self.last_message = message
-
-
-class BaseRepo(RepoLoggingAdapter, object):
-
-    """Base class for repositories.
-
-    Extends :py:class:`logging.LoggerAdapter`.
-    """
-
-    def __init__(self, url, repo_dir, *args, **kwargs):
-        self.__dict__.update(kwargs)
-
-        self.url = url
-        self.parent_dir = os.path.dirname(repo_dir)
-        self.name = os.path.basename(os.path.normpath(repo_dir))
-        self.path = repo_dir
-
-        # Register more schemes with urlparse for various version control
-        # systems
-        urlparse.uses_netloc.extend(self.schemes)
-        # Python >= 2.7.4, 3.3 doesn't have uses_fragment
-        if getattr(urlparse, 'uses_fragment', None):
-            urlparse.uses_fragment.extend(self.schemes)
-
-        RepoLoggingAdapter.__init__(self, logger, {})
-
-    @classmethod
-    def from_pip_url(cls, pip_url, *args, **kwargs):
-        url, rev = cls.get_url_and_revision_from_pip_url(pip_url)
-        self = cls(url=url, rev=rev, *args, **kwargs)
-
-        return self
 
     def run_buffered(
         self, cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -182,6 +135,73 @@ class BaseRepo(RepoLoggingAdapter, object):
         process.stderr.close()
         process.stdout.close()
         return process
+
+
+class RepoLoggingAdapter(logging.LoggerAdapter):
+
+    """Adapter for adding Repo related content to logger.
+
+    Extends :class:`logging.LoggerAdapter`'s functionality.
+
+    The standard library :py:mod:`logging` facility is pretty complex, so this
+    warrants and explanation of what's happening.
+
+    Any class that subclasses this will have its class attributes for:
+
+        - :attr:`~.bin_name` -> ``repo_vcs``
+        - :attr:`~.name` -> ``repo_name``
+
+    Added to a dictionary of context information in :py:meth:`
+    logging.LoggerAdapter.process()` to be made use of when the user of this
+    library wishes to use a custom :class:`logging.Formatter` to output
+    results.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        logging.LoggerAdapter.__init__(self, *args, **kwargs)
+
+    def process(self, msg, kwargs):
+        """Add additional context information for loggers."""
+        prefixed_dict = {}
+        prefixed_dict['repo_vcs'] = self.bin_name
+        prefixed_dict['repo_name'] = self.name
+
+        kwargs["extra"] = prefixed_dict
+
+        return msg, kwargs
+
+class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
+
+    """Base class for repositories.
+
+    Extends :py:class:`logging.LoggerAdapter`.
+    """
+
+    def __init__(self, url, repo_dir, *args, **kwargs):
+        self.__dict__.update(kwargs)
+
+        self.url = url
+        self.parent_dir = os.path.dirname(repo_dir)
+        self.name = os.path.basename(os.path.normpath(repo_dir))
+        self.path = repo_dir
+
+        # Register more schemes with urlparse for various version control
+        # systems
+        urlparse.uses_netloc.extend(self.schemes)
+        # Python >= 2.7.4, 3.3 doesn't have uses_fragment
+        if getattr(urlparse, 'uses_fragment', None):
+            urlparse.uses_fragment.extend(self.schemes)
+
+        RepoLoggingAdapter.__init__(self, logger, {})
+        BufferedProgressMixin.__init__(self)
+
+    @classmethod
+    def from_pip_url(cls, pip_url, *args, **kwargs):
+        url, rev = cls.get_url_and_revision_from_pip_url(pip_url)
+        self = cls(url=url, rev=rev, *args, **kwargs)
+
+        return self
 
     def run(
         self, cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
