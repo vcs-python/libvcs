@@ -14,14 +14,14 @@ def create_repo(url, vcs, **kwargs):
 
     Usage Example::
 
-        In [1]: from libvcs import create_repo
+        >>> from libvcs.shortcuts import create_repo
 
-        In [2]: r = create_repo_from_pip_url(
-                    url='https://www.github.com/you/myrepo',
-                    vcs='git',
-                    repo_dir='/tmp/myrepo')
+        >>> r = create_repo(
+        ...         url='https://www.github.com/you/myrepo',
+        ...         vcs='git',
+        ...         repo_dir='/tmp/myrepo')
 
-        In [3]: r.update_repo()
+        >>> r.update_repo()
         |myrepo| (git)  Repo directory for myrepo (git) does not exist @ \
             /tmp/myrepo
         |myrepo| (git)  Cloning.
@@ -52,13 +52,13 @@ def create_repo_from_pip_url(pip_url, **kwargs):
 
     Usage Example::
 
-        In [1]: from libvcs import create_repo_from_pip_url
+        >>> from libvcs.shortcuts import create_repo_from_pip_url
 
-        In [2]: r = create_repo_from_pip_url(
-                    pip_url='git+https://www.github.com/you/myrepo',
-                    repo_dir='/tmp/myrepo')
+        >>> r = create_repo_from_pip_url(
+        ...         pip_url='git+https://www.github.com/you/myrepo',
+        ...         repo_dir='/tmp/myrepo')
 
-        In [3]: r.update_repo()
+        >>> r.update_repo()
         |myrepo| (git)  Repo directory for myrepo (git) does not exist @ \
             /tmp/myrepo
         |myrepo| (git)  Cloning.

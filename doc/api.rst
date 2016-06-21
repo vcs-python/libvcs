@@ -1,8 +1,8 @@
 .. _api:
 
-==========
-Python API
-==========
+=============
+API Reference
+=============
 
 Creating a repo object
 ----------------------

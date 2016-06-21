@@ -2,26 +2,31 @@
 
 |pypi| |docs| |build-status| |coverage| |license|
 
-a repo is an object representation of a vcs repository. it may or may not
-be checked out/cloned yet.
+Install::
+
+   $ pip install libvcs
+
+Open up python::
+
+   $ python
 
 .. code-block:: python
 
-   In [1]: from libvcs.shortcuts import create_repo_from_pip_url, create_repo
+   >>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
 
-   In [2]: r = create_repo(
-            url='https://www.github.com/tony/myrepo',
-            vcs='git',
-            repo_dir='/tmp/repo')
+   # repo is an object representation of a vcs repository.
+   >>> r = create_repo(url='https://www.github.com/tony/myrepo',
+   ...                 vcs='git',
+   ...                 repo_dir='/tmp/repo')
 
    # or via pip-style URL
+   ... r = create_repo_from_pip_url(
+   ...         pip_url='git+https://www.github.com/tony/myrepo',
+   ...         repo_dir='/tmp/repo',
+   ...         name='myrepo')
 
-   In [2]: r = create_repo_from_pip_url(
-            pip_url='git+https://www.github.com/tony/myrepo',
-            repo_dir='/tmp/repo',
-            name='myrepo')
-
-   In [3]: r.update_repo()
+   # it may or may not be checked out/cloned on the system yet
+   >>> r.update_repo()
    |myrepo| (git)  Repo directory for myrepo (git) does not exist @ /tmp/myrepo
    |myrepo| (git)  Cloning.
    |myrepo| (git)  git clone https://www.github.com/tony/myrepo /tmp/myrepo
