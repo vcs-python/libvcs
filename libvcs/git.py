@@ -169,18 +169,20 @@ class GitRepo(BaseRepo):
 
         # Get head sha
         try:
-            head_sha = self.run_buffered(['rev-list', '--max-count=1', 'HEAD'],
-                                print_stdout_on_progress_end=False)
+            head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'])
         except exc.SubprocessError as e:
             self.error("Failed to get the hash for HEAD")
             return
 
-        self.debug("head_sha: %s" % head_sha)
+        self.info("head_sha: %s" % head_sha)
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
-        show_ref_output = self.run_buffered(['show-ref', git_tag],
-                                   print_stdout_on_progress_end=False)
+        try:
+            show_ref_output = self.run(['show-ref', git_tag])
+        except exc.SubprocessError as e:
+            self.error("Ref %s not found" % git_tag)
+            return
         self.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
         self.debug("is_remote_ref: %s" % is_remote_ref)
@@ -198,8 +200,7 @@ class GitRepo(BaseRepo):
         # been fetched yet).
         try:
             error_code = 0
-            tag_sha = self.run_buffered(['rev-list', '--max-count=1', git_tag],
-                               print_stdout_on_progress_end=False)
+            tag_sha = self.run(['rev-list', '--max-count=1', git_tag])
         except exc.SubprocessError as e:
             error_code = e.subprocess.returncode
         self.debug("tag_sha: %s" % tag_sha)
@@ -222,7 +223,7 @@ class GitRepo(BaseRepo):
             except exc.SubprocessError as e:
                 self.error("Failed to get the status")
                 return
-            need_stash = len(process.stdout_data) > 0
+            need_stash = len(process) > 0
 
             # If not in clean state, stash changes in order to be able
             # to be able to perform git pull --rebase
