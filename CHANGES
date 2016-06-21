@@ -21,6 +21,7 @@ Here are the changes for libvcs.
 
       # vcslib logging options
       vcslogger = logging.getLogger('libvcs')
+      vcslogger.propagate = False # don't pass libvcs settings up scope
       vcslogger.addHandler(logging.StreamHandler())
       vcslogger.setLevel(level)
 
@@ -33,6 +34,7 @@ Here are the changes for libvcs.
       )
       repo_channel.setFormatter(repo_formatter)
       vcslogger = logging.getLogger('libvcs')
+      vcslogger.propagate = False # don't pass libvcs settings up scope
       vcslogger.addHandler(repo_channel)
       vcslogger.setLevel(level)
 
