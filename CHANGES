@@ -24,6 +24,18 @@ Here are the changes for libvcs.
       vcslogger.addHandler(logging.StreamHandler())
       vcslogger.setLevel(level)
 
+  You can also use ``logging.Formatter`` variables ``repo_name``
+  and ``repo_vcs`` with repos::
+
+      repo_channel = logging.StreamHandler()
+      repo_formatter = logging.Formatter(
+          '[%(repo_name)s] (%(repo_vcs)s) %(levelname)1.1s: %(message)s'
+      )
+      repo_channel.setFormatter(repo_formatter)
+      vcslogger = logging.getLogger('libvcs')
+      vcslogger.addHandler(repo_channel)
+      vcslogger.setLevel(level)
+
 - :release:`0.1.5 <2016-06-21>`
 - Fix issue where repo context wouldn't pass to repo logging
   adapter
