@@ -18,8 +18,3 @@ __all__ = ['GitRepo', 'MercurialRepo', 'SubversionRepo', 'BaseRepo',
            'RepoLoggingAdapter']
 
 logger = logging.getLogger(__name__)
-
-logger.propagate = False
-channel = logging.StreamHandler()
-logger.setLevel('INFO')
-logger.addHandler(channel)
