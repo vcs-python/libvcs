@@ -205,7 +205,7 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
 
     def run(
         self, cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        env=None, cwd=None, *args, **kwargs
+        env=None, cwd=None, check_returncode=True, *args, **kwargs
     ):
         """Return combined stderr/stdout from a command.
 
@@ -214,6 +214,11 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
 
         :param cwd: dir command is run from, defaults :attr:`~.path`.
         :type cwd: string
+
+        :param check_returncode: Indicate whether a :exc:`~exc.SubprocessError` should
+        be raised if return code is different from 0.
+        :type check_returncode: :class:`bool`
+
         :returns: combined stdout/stderr in a big string, newlines retained
         :rtype: str
         """
@@ -228,6 +233,7 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
             stdout=stdout,
             stderr=stderr,
             env=env, cwd=cwd,
+            check_returncode=check_returncode,
             *args, **kwargs
         )
 

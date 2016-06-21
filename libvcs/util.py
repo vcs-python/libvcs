@@ -39,7 +39,8 @@ def run(
     stderr=subprocess.STDOUT,
     shell=False,
     env=None,
-    timeout=None
+    timeout=None,
+    check_returncode = True
 ):
     """Run command and return output.
 
@@ -71,7 +72,7 @@ def run(
         all_output.append(line + '\n')
     all_output = ''.join(all_output)
 
-    if process.returncode:
+    if check_returncode and process.returncode:
         logging.error(all_output)
         raise exc.SubprocessError(
             returncode=process.returncode,
