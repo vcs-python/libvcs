@@ -4,6 +4,11 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.7 <2016-06-21>`
+- :feature:`7` Add ``check_returncode`` property to run, thanks @jcfr
+- :support:`8` Remove all cases of ``run_buffered`` / buffering from
+  the library.
+
 - :release:`0.1.6 <2016-06-21>`
 - :support:`5` Remove colorama dependency
 - :support:`6` Remove log module. Logging defaults.
