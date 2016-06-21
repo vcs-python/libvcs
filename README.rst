@@ -22,8 +22,7 @@ Open up python::
    # or via pip-style URL
    ... r = create_repo_from_pip_url(
    ...         pip_url='git+https://www.github.com/tony/myrepo',
-   ...         repo_dir='/tmp/repo',
-   ...         name='myrepo')
+   ...         repo_dir='/tmp/repo')
 
    # it may or may not be checked out/cloned on the system yet
    >>> r.update_repo()
