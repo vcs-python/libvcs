@@ -154,7 +154,7 @@ class GitRepo(BaseRepo):
             return
 
         # Get requested revision or tag
-        url, git_tag = self.url, self.rev
+        url, git_tag = self.url, getattr(self, 'rev', None)
 
         if not git_tag:
             self.debug("No git revision set, defaulting to origin/master")
