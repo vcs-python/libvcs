@@ -29,8 +29,7 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
 
     git_repo = create_repo_from_pip_url(**{
         'pip_url': 'git+file://' + str(bare_repo_dir),
-        'repo_dir': str(tmpdir),
-        'name': 'obtaining a bare repo'
+        'repo_dir': str(tmpdir.join('obtaining a bare repo')),
     })
 
     git_repo.obtain(quiet=True)
