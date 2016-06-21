@@ -4,6 +4,26 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.1.6 <2016-06-21>`
+- :support:`5` Remove colorama dependency
+- :support:`6` Remove log module. Logging defaults.
+
+  The library user can still use formatters and set log levels,
+  for an example, see the vcspull logging setup.
+
+  An example::
+
+      import logging
+
+      # your app
+      log.setLevel(level)
+      log.addHandler(logging.StreamHandler())
+
+      # vcslib logging options
+      vcslogger = logging.getLogger('libvcs')
+      vcslogger.addHandler(logging.StreamHandler())
+      vcslogger.setLevel(level)
+
 - :release:`0.1.5 <2016-06-21>`
 - Fix issue where repo context wouldn't pass to repo logging
   adapter
