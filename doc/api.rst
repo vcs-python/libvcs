@@ -49,10 +49,6 @@ Logging
    :members:
    :show-inheritance:
 
-.. autoclass:: libvcs.base.BufferedProgressMixin
-   :members:
-   :show-inheritance:
-
 Utility stuff
 -------------
 

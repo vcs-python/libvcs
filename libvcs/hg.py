@@ -31,8 +31,8 @@ class MercurialRepo(BaseRepo):
     def obtain(self):
         self.check_destination()
 
-        self.run_buffered(['clone', '--noupdate', '-q', self.url, self.path])
-        self.run_buffered(['update', '-q'])
+        self.run(['clone', '--noupdate', '-q', self.url, self.path])
+        self.run(['update', '-q'])
 
     def get_revision(self):
         return self.run(['parents', '--template={rev}'])
@@ -40,8 +40,8 @@ class MercurialRepo(BaseRepo):
     def update_repo(self):
         self.check_destination()
         if os.path.isdir(os.path.join(self.path, '.hg')):
-            self.run_buffered(['update'])
-            self.run_buffered(['pull', '-u'])
+            self.run(['update'])
+            self.run(['pull', '-u'])
 
         else:
             self.obtain()

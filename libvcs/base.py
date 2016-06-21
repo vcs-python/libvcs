@@ -10,131 +10,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import subprocess
-import sys
 
-from . import exc
-from ._compat import console_to_str, text_type, urlparse
+from ._compat import urlparse
 from .util import mkdir_p, run
 
 logger = logging.getLogger(__name__)
-
-
-class BufferedProgressMixin(object):
-    """Facilities for showing live command progress to stdout."""
-
-    def __init__(self):
-        self.indent = 0
-        self.in_progress = None
-        self.in_progress_hanging = False
-
-    def start_progress(self, msg=True):
-        assert not self.in_progress, (
-            "Tried to start_progress(%r) while in_progress %r"
-            % (msg, self.in_progress))
-        if self._show_progress():
-            if msg and isinstance(msg, text_type):
-                self.info(' ' * self.indent + msg)
-            sys.stdout.flush()
-            self.in_progress_hanging = True
-        else:
-            self.in_progress_hanging = False
-        self.in_progress = msg
-        self.last_message = None
-
-    def _show_progress(self):
-        """Should we display download progress."""
-        return sys.stdout.isatty()
-
-    def end_progress(self, msg='done.'):
-        assert self.in_progress, (
-            "Tried to end_progress without start_progress")
-        if self._show_progress():
-            if not self.in_progress_hanging and isinstance(msg, text_type):
-                # Some message has been printed out since start_progress
-                sys.stdout.write('...' + self.in_progress + msg + '\n')
-                sys.stdout.flush()
-            else:
-                # Erase any messages shown with show_progress (besides .'s)
-                self.show_progress('')
-                self.show_progress('')
-                sys.stdout.write(msg)
-                sys.stdout.flush()
-        self.in_progress = None
-        self.in_progress_hanging = False
-
-    def show_progress(self, message=None):
-        """If in progress scope with no log messages shown yet, append '.'."""
-        if self.in_progress_hanging:
-            if message is None:
-                # sys.stdout.write('.')
-                sys.stdout.flush()
-            else:
-                if self.last_message:
-                    padding = ' ' * max(
-                        0, len(self.last_message) - len(message)
-                    )
-                else:
-                    padding = ''
-                sys.stdout.write(
-                    '\r%s%s%s' %
-                    (' ' * self.indent, message, padding)
-                )
-                sys.stdout.flush()
-                self.last_message = message
-
-    def run_buffered(
-        self, cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        env=None, cwd=None, print_stdout_on_progress_end=False,
-        *args, **kwargs
-    ):
-        """Run command with stderr directly to buffer, for CLI usage.
-
-        This method will also prefix the VCS command bin_name.
-
-        This is meant for buffering the raw progress of git/hg/etc. to CLI
-        when it is processing.
-
-        :param cwd: dir command is run from, defaults :attr:`~.path`.
-        :type cwd: string
-        :param print_stdout_on_progress_end: print final (non-buffered) stdout
-            message to buffer in cases like git pull, this would be
-            'Already up to date.' All stdout output is captured and added to
-            .stdout_data in the object returned from this method.
-        :type print_stdout_on_progress_end: bool
-        :returns: subprocess instance ``.stdout_data`` attached.
-        :rtype: :class:`Subprocess.Popen`
-        """
-        if cwd is None:
-            cwd = getattr(self, 'path', None)
-
-        cmd = [self.bin_name] + cmd
-
-        process = subprocess.Popen(
-            cmd,
-            stdout=stdout,
-            stderr=stderr,
-            env=env, cwd=cwd
-        )
-
-        self.start_progress(' '.join(cmd))
-        while True:
-            err = console_to_str(process.stderr.read(128))
-            if err == '' and process.poll() is not None:
-                break
-            elif 'ERROR' in err:
-                raise exc.LibVCSException(
-                    err + console_to_str(process.stderr.read())
-                )
-            else:
-                self.show_progress("%s" % err)
-
-        process.stdout_data = console_to_str(process.stdout.read())
-        self.end_progress(
-            '%s' % process.stdout_data if print_stdout_on_progress_end else '')
-
-        process.stderr.close()
-        process.stdout.close()
-        return process
 
 
 class RepoLoggingAdapter(logging.LoggerAdapter):
@@ -171,7 +51,8 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
 
         return msg, kwargs
 
-class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
+
+class BaseRepo(RepoLoggingAdapter, object):
 
     """Base class for repositories.
 
@@ -194,7 +75,6 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
             urlparse.uses_fragment.extend(self.schemes)
 
         RepoLoggingAdapter.__init__(self, logger, {})
-        BufferedProgressMixin.__init__(self)
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
@@ -205,7 +85,7 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
 
     def run(
         self, cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        env=None, cwd=None, check_returncode=True, *args, **kwargs
+        extra_env=None, cwd=None, check_returncode=True, *args, **kwargs
     ):
         """Return combined stderr/stdout from a command.
 
@@ -215,8 +95,8 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
         :param cwd: dir command is run from, defaults :attr:`~.path`.
         :type cwd: string
 
-        :param check_returncode: Indicate whether a :exc:`~exc.SubprocessError` should
-        be raised if return code is different from 0.
+        :param check_returncode: Indicate whether a :exc:`~exc.SubprocessError`
+            should be raised if return code is different from 0.
         :type check_returncode: :class:`bool`
 
         :returns: combined stdout/stderr in a big string, newlines retained
@@ -225,6 +105,10 @@ class BaseRepo(RepoLoggingAdapter, BufferedProgressMixin, object):
 
         if cwd is None:
             cwd = getattr(self, 'path', None)
+
+        env = os.environ.copy()
+        if extra_env:
+            env.update(extra_env)
 
         cmd = [self.bin_name] + cmd
 

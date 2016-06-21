@@ -40,7 +40,7 @@ def run(
     shell=False,
     env=None,
     timeout=None,
-    check_returncode = True
+    check_returncode=True,
 ):
     """Run command and return output.
 
@@ -53,7 +53,7 @@ def run(
         cmd[0] = which(cmd[0])
 
     try:
-        process = subprocess.Popen(
+        proc = subprocess.Popen(
             cmd,
             stdout=stdout,
             stderr=stderr,
@@ -62,20 +62,23 @@ def run(
     except (OSError, IOError) as e:
         raise exc.LibVCSException('Unable to run command: %s' % e)
 
-    process.wait()
     all_output = []
     while True:
-        line = console_to_str(process.stdout.readline())
+        line = console_to_str(proc.stdout.readline())
         if not line:
             break
         line = line.rstrip()
         all_output.append(line + '\n')
+        if logger.getEffectiveLevel() <= logging.DEBUG:
+            logger.debug(line)  # Show the line immediately
+    proc.wait()
+
     all_output = ''.join(all_output)
 
-    if check_returncode and process.returncode:
+    if check_returncode and proc.returncode:
         logging.error(all_output)
         raise exc.SubprocessError(
-            returncode=process.returncode,
+            returncode=proc.returncode,
             cmd=cmd,
             output=all_output,
         )
