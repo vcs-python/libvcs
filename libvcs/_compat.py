@@ -63,3 +63,7 @@ else:
             return s.decode('utf_8')
         except AttributeError:  # for tests, #13
             return s
+
+# windows detection, covers cpython and ironpython
+WINDOWS = (sys.platform.startswith("win") or
+           (sys.platform == 'cli' and os.name == 'nt'))

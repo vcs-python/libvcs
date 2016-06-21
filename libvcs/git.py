@@ -128,7 +128,7 @@ class GitRepo(BaseRepo):
         cmd.extend([url, self.path])
 
         self.info('Cloning.')
-        self.run_buffered(cmd)
+        self.run(cmd)
 
         if self.remotes:
             for r in self.remotes:
@@ -140,10 +140,10 @@ class GitRepo(BaseRepo):
                 )
 
         self.info('Initializing submodules.')
-        self.run_buffered(['submodule', 'init'],)
+        self.run(['submodule', 'init'],)
         cmd = ['submodule', 'update', '--recursive', '--init']
         cmd.extend(self.git_submodules)
-        self.run_buffered(cmd)
+        self.run(cmd)
 
     def update_repo(self):
         self.check_destination()
@@ -207,8 +207,9 @@ class GitRepo(BaseRepo):
             self.info("Already up-to-date.")
             return
 
-        process = self.run_buffered(['fetch'])
-        if process.returncode:
+        try:
+            process = self.run(['fetch'])
+        except exc.SubprocessError as e:
             self.error("Failed to fetch repository '%s'" % url)
             return
 
@@ -235,9 +236,9 @@ class GitRepo(BaseRepo):
 
             # Pull changes from the remote branch
             try:
-                process = self.run_buffered([
+                process = self.run([
                     'rebase', git_remote_name + '/' + git_tag
-                ], print_stdout_on_progress_end=False)
+                ])
             except exc.SubprocessError as e:
                 # Rebase failed: Restore previous state.
                 self.run(['rebase', '--abort'])

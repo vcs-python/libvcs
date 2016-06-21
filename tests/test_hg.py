@@ -36,12 +36,12 @@ def hg_dummy_repo_dir(tmpdir_repoparent, scope='session'):
     return repo_path
 
 
-def test_repo_mercurial(tmpdir, hg_dummy_repo_dir):
+def test_repo_mercurial(tmpdir, tmpdir_repoparent, hg_dummy_repo_dir):
     repo_name = 'my_mercurial_project'
 
     mercurial_repo = create_repo_from_pip_url(**{
         'pip_url': 'hg+file://' + hg_dummy_repo_dir,
-        'repo_dir': str(tmpdir.join(repo_name)),
+        'repo_dir': str(tmpdir_repoparent.join(repo_name)),
     })
 
     run(['hg', 'init', mercurial_repo.name],
@@ -52,7 +52,7 @@ def test_repo_mercurial(tmpdir, hg_dummy_repo_dir):
 
     test_repo_revision = run(
         ['hg', 'parents', '--template={rev}'],
-        cwd=str(tmpdir.join(repo_name)),
+        cwd=str(tmpdir_repoparent.join(repo_name)),
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
