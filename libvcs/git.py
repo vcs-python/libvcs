@@ -178,11 +178,7 @@ class GitRepo(BaseRepo):
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
-        try:
-            show_ref_output = self.run(['show-ref', git_tag])
-        except exc.SubprocessError as e:
-            self.error("Ref %s not found" % git_tag)
-            return
+        show_ref_output = self.run(['show-ref', git_tag], check_returncode=False)
         self.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
         self.debug("is_remote_ref: %s" % is_remote_ref)
