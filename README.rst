@@ -20,7 +20,7 @@ Open up python::
    ...                 repo_dir='/tmp/repo')
 
    # or via pip-style URL
-   ... r = create_repo_from_pip_url(
+   >>> r = create_repo_from_pip_url(
    ...         pip_url='git+https://www.github.com/tony/myrepo',
    ...         repo_dir='/tmp/repo')
 
