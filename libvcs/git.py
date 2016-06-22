@@ -200,6 +200,7 @@ class GitRepo(BaseRepo):
             tag_sha = self.run(['rev-list', '--max-count=1', git_tag])
         except exc.SubprocessError as e:
             error_code = e.subprocess.returncode
+            tag_sha = ""
         self.debug("tag_sha: %s" % tag_sha)
 
         # Is the hash checkout out what we want?
