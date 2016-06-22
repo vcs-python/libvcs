@@ -39,10 +39,9 @@ class MercurialRepo(BaseRepo):
 
     def update_repo(self):
         self.check_destination()
-        if os.path.isdir(os.path.join(self.path, '.hg')):
-            self.run(['update'])
-            self.run(['pull', '-u'])
-
-        else:
+        if not os.path.isdir(os.path.join(self.path, '.hg')):
             self.obtain()
             self.update_repo()
+        else:
+            self.run(['update'])
+            self.run(['pull', '-u'])

@@ -24,7 +24,6 @@ import os
 import re
 
 from ._compat import urlparse
-from .util import run
 from .base import BaseRepo
 
 logger = logging.getLogger(__name__)
@@ -76,23 +75,14 @@ class SubversionRepo(BaseRepo):
 
         self.run(cmd)
 
-    def get_revision_file(self, location=None):
+    def get_revision_file(self, location):
         """Return revision for a file."""
 
-        if location:
-            cwd = location
-        else:
-            cwd = self.path
-
-        current_rev = run(['info', cwd])
-        infos = current_rev['stdout']
+        current_rev = self.run(['info', location])
 
         _INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.M)
 
-        info_list = []
-        for infosplit in infos:
-            info_list.extend(_INI_RE.findall(infosplit))
-
+        info_list = _INI_RE.findall(current_rev)
         return int(dict(info_list)['Revision'])
 
     def get_revision(self, location=None):

@@ -30,6 +30,11 @@ if PY2:
     def console_to_str(s):
         return s.decode('utf_8')
 
+    def implements_to_string(cls):
+        cls.__unicode__ = cls.__str__
+        cls.__str__ = lambda x: x.__unicode__().encode('utf-8')
+        return cls
+
 else:
     unichr = chr
     text_type = str
@@ -54,6 +59,8 @@ else:
     from test import support
 
     console_encoding = sys.__stdout__.encoding
+
+    implements_to_string = _identity
 
     def console_to_str(s):
         """ From pypa/pip project, pip.backwardwardcompat. License MIT. """

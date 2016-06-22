@@ -7,28 +7,38 @@ libvcs.exc
 """
 from __future__ import absolute_import, print_function, unicode_literals
 
-from subprocess import CalledProcessError
-
 
 class LibVCSException(Exception):
-
     """Standard exception raised by libvcs."""
 
     pass
 
 
-class SubprocessError(LibVCSException, CalledProcessError):
-    """This exception is raised on non-zero Base.run, util.run return codes."""
-
-    def __init__(self, returncode, cmd, output):
-        CalledProcessError.__init__(self,
-                                    returncode=returncode,
-                                    cmd=cmd,
-                                    output=output)
+class CommandError(LibVCSException):
+    """This exception is raised on non-zero return codes."""
+    def __init__(self, output, returncode=None, cmd=None):
+        self.returncode = returncode
+        self.output = output
+        if cmd:
+            if isinstance(cmd, list):
+                cmd = ' '.join(cmd)
+            self.cmd = cmd
 
     def __str__(self):
-        return "Command '%s' returned non-zero exit status %d: \n%s" % (
-            self.cmd, self.returncode, self.output)
+        message = self.message.format(
+            returncode=self.returncode, cmd=self.cmd
+        )
+        if len(self.output.strip()):
+            message += '\n%s' % self.output
+        return message
+
+    message = 'Command failed with code {returncode}: {cmd}'
+
+
+class CommandTimeoutError(CommandError):
+    """CommandError which gets raised when a subprocess exceeds its timeout."""
+
+    pass
 
 
 class InvalidPipURL(LibVCSException):
@@ -38,19 +48,11 @@ class InvalidPipURL(LibVCSException):
         super(InvalidPipURL, self).__init__()
 
     def __str__(self):
-        return self.message % (
-            self.url,
-            'git+https://github.com/freebsd/freebsd.git',
-            'hg+https://bitbucket.org/birkenfeld/sphinx',
-            'svn+http://svn.code.sf.net/p/docutils/code/trunk'
-        )
+        return self.message
 
     message = (
-        'repo URL %s requires a vcs scheme. Prepend hg+,'
-        ' git+, svn+ to the repo URL. Examples:\n'
-        '\t %s\n'
-        '\t %s\n'
-        '\t %s\n'
+        'Repo URL %s requires a vcs scheme. Prepend the vcs (hg+, git+, svn+)'
+        'to the repo URL. e.g: git+https://github.com/freebsd/freebsd.git'
     )
 
 

@@ -7,98 +7,17 @@ libvcs.util
 """
 from __future__ import absolute_import, print_function, unicode_literals
 
+import datetime
 import errno
 import logging
 import os
-import re
 import subprocess
-from functools import wraps
 
 from . import exc
-from ._compat import PY2, console_to_str, string_types
+from ._compat import console_to_str
+
 
 logger = logging.getLogger(__name__)
-
-
-def remove_tracebacks(output):
-    pattern = (r'(?:\W+File "(?:.*)", line (?:.*)\W+(?:.*)\W+\^\W+)?'
-               r'Syntax(?:Error|Warning): (?:.*)')
-    output = re.sub(pattern, '', output)
-    if PY2:
-        return output
-    # compileall.compile_dir() prints different messages to stdout
-    # in Python 3
-    return re.sub(r"\*\*\* Error compiling (?:.*)", '', output)
-
-
-def run(
-    cmd,
-    cwd=None,
-    stdin=None,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    shell=False,
-    env=None,
-    timeout=None,
-    check_returncode=True,
-):
-    """Run command and return output.
-
-    :returns: combined stdout/stderr in a big string, newline symbols retained
-    :rtype: str
-    """
-    if isinstance(cmd, string_types):
-        cmd = cmd.split(' ')
-    if isinstance(cmd, list):
-        cmd[0] = which(cmd[0])
-
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            stdout=stdout,
-            stderr=stderr,
-            env=env, cwd=cwd
-        )
-    except (OSError, IOError) as e:
-        raise exc.LibVCSException('Unable to run command: %s' % e)
-
-    all_output = []
-    while True:
-        line = console_to_str(proc.stdout.readline())
-        if not line:
-            break
-        line = line.rstrip()
-        all_output.append(line + '\n')
-        if logger.getEffectiveLevel() <= logging.DEBUG:
-            logger.debug(line)  # Show the line immediately
-    proc.wait()
-
-    all_output = ''.join(all_output)
-
-    if check_returncode and proc.returncode:
-        logging.error(all_output)
-        raise exc.SubprocessError(
-            returncode=proc.returncode,
-            cmd=cmd,
-            output=all_output,
-        )
-
-    return remove_tracebacks(all_output).rstrip()
-
-
-def real_memoize(func):
-    '''
-    Memoize aka cache the return output of a function
-    given a specific set of arguments
-    '''
-    cache = {}
-
-    @wraps(func)
-    def _memoize(*args):
-        if args not in cache:
-            cache[args] = func(*args)
-        return cache[args]
-    return _memoize
 
 
 def which(exe=None):
@@ -118,23 +37,6 @@ def which(exe=None):
     if _is_executable_file_or_link(exe):
         # executable in cwd or fullpath
         return exe
-
-    ext_list = os.environ.get('PATHEXT', '.EXE').split(';')
-
-    @real_memoize
-    def _exe_has_ext():
-        '''
-        Do a case insensitive test if exe has a file extension match in
-        PATHEXT
-        '''
-        for ext in ext_list:
-            try:
-                pattern = r'.*\.' + ext.lstrip('.') + r'$'
-                re.match(pattern, exe, re.I).groups()
-                return True
-            except AttributeError:
-                continue
-        return False
 
     # Enhance POSIX path for the reliability at some environments, when
     # $PATH is changing. This also keeps order, where 'first came, first
@@ -171,3 +73,104 @@ def mkdir_p(path):
             pass
         else:
             raise Exception('Could not create directory %s' % path)
+
+
+class RepoLoggingAdapter(logging.LoggerAdapter):
+
+    """Adapter for adding Repo related content to logger.
+
+    Extends :class:`logging.LoggerAdapter`'s functionality.
+
+    The standard library :py:mod:`logging` facility is pretty complex, so this
+    warrants and explanation of what's happening.
+
+    Any class that subclasses this will have its class attributes for:
+
+        - :attr:`~.bin_name` -> ``repo_vcs``
+        - :attr:`~.name` -> ``repo_name``
+
+    Added to a dictionary of context information in :py:meth:`
+    logging.LoggerAdapter.process()` to be made use of when the user of this
+    library wishes to use a custom :class:`logging.Formatter` to output
+    results.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        logging.LoggerAdapter.__init__(self, *args, **kwargs)
+
+    def process(self, msg, kwargs):
+        """Add additional context information for loggers."""
+        prefixed_dict = {}
+        prefixed_dict['repo_vcs'] = self.bin_name
+        prefixed_dict['repo_name'] = self.name
+
+        kwargs["extra"] = prefixed_dict
+
+        return msg, kwargs
+
+
+def run(cmd, shell=False, cwd=None, log_in_real_time=True,
+        check_returncode=True, callback=None):
+    """ Run 'cmd' in a shell and return the combined contents of stdout and
+    stderr (Blocking).  Throws an exception if the command exits non-zero.
+
+    :param cmd: list of strings (or single string, iff shell==True) indicating
+       the command to run
+    :param shell: boolean indicating whether we are using advanced shell
+        features. Use only when absolutely necessary, since this allows a lot
+        more freedom which could be exploited by malicious code. See the
+        warning here:
+        http://docs.python.org/library/subprocess.html#popen-constructor
+    :param cwd: dir command is run from.
+    :type cwd: string
+    :param log_in_real_time: boolean indicating whether to read stdout from the
+        subprocess in real time instead of when the process finishes.
+    :param check_returncode: Indicate whether a :exc:`~exc.CommandError`
+        should be raised if return code is different from 0.
+    :type check_returncode: :class:`bool`
+    :param cwd: dir command is run from, defaults :attr:`~.path`.
+    :type cwd: string
+    :param callback: callback to return output as a command executes, accepts
+        a function signature of ``(output, timestamp)``. Example usage::
+
+            def progress_cb(output, timestamp):
+                sys.stdout.write(output)
+                sys.stdout.flush()
+            run(['git', 'pull'], callback=progrses_cb)
+    :type callback: func
+    """
+    proc = subprocess.Popen(
+        cmd, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+        creationflags=0, bufsize=1, cwd=cwd)
+
+    all_output = []
+    code = None
+    line = None
+    while code is None:
+        code = proc.poll()
+
+        # output = console_to_str(proc.stdout.readline())
+        # all_output.append(output)
+        if callback and callable(callback):
+            line = console_to_str(proc.stderr.read(128))
+            if line:
+                callback(
+                    output=line,
+                    timestamp=datetime.datetime.now())
+    if callback and callable(callback):
+        callback(
+            output='\r',
+            timestamp=datetime.datetime.now())
+
+    lines = filter(None, (
+        line.strip() for line in proc.stdout.readlines()))
+    all_output = console_to_str(b'\n'.join(lines))
+    if code:
+        stderr_lines = filter(None, (
+            line.strip() for line in proc.stderr.readlines()))
+        all_output = console_to_str(b''.join(stderr_lines))
+    output = ''.join(all_output)
+    if code != 0 and check_returncode:
+        raise exc.CommandError(output=output, returncode=code, cmd=cmd)
+    return output

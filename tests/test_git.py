@@ -2,15 +2,16 @@
 """Tests for libvcs git repos."""
 from __future__ import absolute_import, print_function, unicode_literals
 
+import datetime
 import os
 
-import mock
 import pytest
 
 from libvcs import exc
-from libvcs.shortcuts import create_repo_from_pip_url
-from libvcs._compat import StringIO
+from libvcs._compat import string_types
+from libvcs.git import GitRepo
 from libvcs.util import run
+from libvcs.shortcuts import create_repo_from_pip_url
 
 
 def test_repo_git_obtain_initial_commit_repo(tmpdir):
@@ -21,9 +22,7 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
     """
     repo_name = 'my_git_project'
 
-    run([  # init bare repo
-        'git', 'init', repo_name
-    ], cwd=str(tmpdir))
+    run(['git', 'init', repo_name], cwd=str(tmpdir))
 
     bare_repo_dir = tmpdir.join(repo_name)
 
@@ -32,33 +31,69 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
         'repo_dir': str(tmpdir.join('obtaining a bare repo')),
     })
 
-    git_repo.obtain(quiet=True)
+    git_repo.obtain()
     assert git_repo.get_revision() == 'initial'
 
 
-def test_repo_git_obtain_full(tmpdir, git_dummy_repo_dir):
-    remote_repo_dir = git_dummy_repo_dir
-
-    test_repo_revision = run(
-        ['git', 'rev-parse', 'HEAD'],
-        cwd=remote_repo_dir,
-    )
-
-    # create a new repo with the repo as a remote
+def test_repo_git_obtain_full(tmpdir, git_remote):
     git_repo = create_repo_from_pip_url(**{
-        'pip_url': 'git+file://' + remote_repo_dir,
+        'pip_url': 'git+file://' + git_remote,
         'repo_dir': str(tmpdir.join('myrepo')),
     })
 
-    git_repo.obtain(quiet=True)
+    git_repo.obtain()
+
+    test_repo_revision = run(['git', 'rev-parse', 'HEAD'], cwd=git_remote)
 
     assert git_repo.get_revision() == test_repo_revision
     assert os.path.exists(str(tmpdir.join('myrepo')))
 
 
-def test_remotes(git_repo_kwargs):
+def test_repo_update_handle_cases(tmpdir, git_remote, mocker):
+    git_repo = create_repo_from_pip_url(**{
+        'pip_url': 'git+file://' + git_remote,
+        'repo_dir': str(tmpdir.join('myrepo')),
+    })
+
+    git_repo.obtain()  # clone initial repo
+    mocka = mocker.spy(git_repo, 'run')
+    git_repo.update_repo()
+
+    mocka.assert_any_call(['symbolic-ref', '--short', 'HEAD'])
+
+    mocka.reset_mock()
+
+    # will only look up symbolic-ref if no rev specified for object
+    git_repo.rev = 'HEAD'
+    git_repo.update_repo()
+    assert mocker.call(
+        ['symbolic-ref', '--short', 'HEAD']) not in mocka.mock_calls
+
+
+def test_progress_callback(tmpdir, git_remote, mocker):
+
+    def progress_callback_spy(output, timestamp):
+        assert isinstance(output, string_types)
+        assert isinstance(timestamp, datetime.datetime)
+    progress_callback = mocker.Mock(
+        name='progress_callback_stub', side_effect=progress_callback_spy)
+
+    run(['git', 'rev-parse', 'HEAD'], cwd=git_remote,)
+
+    # create a new repo with the repo as a remote
+    git_repo = create_repo_from_pip_url(**{
+        'pip_url': 'git+file://' + git_remote,
+        'repo_dir': str(tmpdir.join('myrepo')),
+        'progress_callback': progress_callback
+    })
+    git_repo.obtain()
+
+    assert progress_callback.called
+
+
+def test_remotes(pip_url_kwargs):
     remote_name = 'myrepo'
-    git_repo_kwargs.update(**{
+    pip_url_kwargs.update(**{
         'remotes': [
             {
                 'remote_name': remote_name,
@@ -67,53 +102,74 @@ def test_remotes(git_repo_kwargs):
         ]
     })
 
-    git_repo = create_repo_from_pip_url(**git_repo_kwargs)
-    git_repo.obtain(quiet=True)
+    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo.obtain()
     assert remote_name in git_repo.remotes_get
 
 
-def test_remotes_vcs_prefix(git_repo_kwargs):
+def test_remotes_vcs_prefix(pip_url_kwargs):
     remote_url = 'https://localhost/my/git/repo.git'
     remote_vcs_url = 'git+' + remote_url
 
-    git_repo_kwargs.update(**{
+    pip_url_kwargs.update(**{
         'remotes': [{
             'remote_name': 'myrepo',
             'url': remote_vcs_url
         }]
     })
 
-    git_repo = create_repo_from_pip_url(**git_repo_kwargs)
-    git_repo.obtain(quiet=True)
+    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo.obtain()
 
     assert (remote_url, remote_url,) in git_repo.remotes_get.values()
 
 
-def test_remotes_preserves_git_ssh(git_repo_kwargs):
+def test_git_get_url_and_rev_from_pip_url():
+    pip_url = 'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
+    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
+    assert rev is None
+
+    pip_url = '%s@%s' % (
+        'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git',
+        'eucalyptus'
+    )
+    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
+    assert rev == 'eucalyptus'
+
+    # the git manual refers to this as "scp-like syntax"
+    # https://git-scm.com/docs/git-clone
+    pip_url = '%s@%s' % ('git+user@hostname:user/repo.git', 'eucalyptus')
+    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    assert 'user@hostname:user/repo.git' == url
+    assert rev == 'eucalyptus'
+
+
+def test_remotes_preserves_git_ssh(pip_url_kwargs):
     # Regression test for #14
     remote_url = 'git+ssh://git@github.com/tony/AlgoXY.git'
 
-    git_repo_kwargs.update(**{
+    pip_url_kwargs.update(**{
         'remotes': [{
             'remote_name': 'myrepo',
             'url': remote_url
         }]
     })
 
-    git_repo = create_repo_from_pip_url(**git_repo_kwargs)
-    git_repo.obtain(quiet=True)
+    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo.obtain()
 
     assert (remote_url, remote_url,) in git_repo.remotes_get.values()
 
 
-def test_private_ssh_format(git_repo_kwargs):
-    git_repo_kwargs.update(**{
+def test_private_ssh_format(pip_url_kwargs):
+    pip_url_kwargs.update(**{
         'pip_url': 'git+ssh://github.com:' + '/tmp/omg/private_ssh_repo',
     })
 
-    with pytest.raises(exc.LibVCSException) as e:
-        create_repo_from_pip_url(**git_repo_kwargs)
-        assert e.match("is malformatted")
+    with pytest.raises_regexp(exc.LibVCSException, "is malformatted"):
+        create_repo_from_pip_url(**pip_url_kwargs)
 
 
 def test_ls_remotes(git_repo):
@@ -140,44 +196,3 @@ def test_set_remote(git_repo):
 
     assert 'myrepo' in git_repo.remotes_get, \
         '.remotes_get() returns new remote'
-
-
-@pytest.mark.skip(reason='needs to be ported to pytest, mock/raises issues.')
-def test_repository_not_found_raises_exception(tmpdir):
-    r"""Need to imitate git remote not found.
-
-    |isobar-frontend| (git)  create_repo_from_pip_url directory for \
-        isobar-frontend (git) does not exist @ \
-        /home/tony/study/std/html/isobar-frontend
-    |isobar-frontend| (git)  Cloning.
-    |isobar-frontend| (git)  git clone --progress \
-        https://github.com/isobar-idev/code-standards/ /\
-        home/tony/study/std/html/isobar-frontend
-    Cloning into '/home/tony/study/std/html/isobar-frontend'...
-    ERROR: Repository not found.
-    ad from remote repository.
-
-    Please make sure you have the correct access rights
-    and the repository exists.
-    """
-    repo_dir = str(tmpdir.join('.repo_dir'))
-    repo_name = 'my_git_project'
-
-    url = 'git+file://' + os.path.join(repo_dir, repo_name)
-    git_repo = create_repo_from_pip_url(**{
-        'pip_url': url,
-        'repo_dir': str(tmpdir.join(repo_name)),
-    })
-    error_output = 'ERROR: hello mock subprocess stderr'
-
-    with pytest.raises(exc.LibVCSException) as excinfo:
-        with mock.patch(
-            "libvcs.repo.base.subprocess.Popen"
-        ) as mock_subprocess:
-            mock_subprocess.return_value = mock.Mock(
-                stdout=StringIO('hello mock subprocess stdout'),
-                stderr=StringIO(error_output)
-            )
-
-            git_repo.obtain()
-    assert excinfo.match(error_output)
