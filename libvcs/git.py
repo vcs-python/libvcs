@@ -79,7 +79,7 @@ class GitRepo(BaseRepo):
         """Return current revision. Initial repositories return 'initial'."""
         try:
             return self.run(['rev-parse', '--verify', 'HEAD'])
-        except exc.SubprocessError:
+        except exc.CommandError:
             return 'initial'
 
     @classmethod
@@ -89,6 +89,7 @@ class GitRepo(BaseRepo):
         That's required because although they use SSH they sometimes doesn't
         work with a ssh:// scheme (e.g. Github). But we need a scheme for
         parsing. Hence we remove it again afterwards and return it as a stub.
+        The manpage for git-clone(1) refers to this as the "scp-like styntax".
         """
         if '://' not in pip_url:
             assert 'file:' not in pip_url
@@ -109,13 +110,8 @@ class GitRepo(BaseRepo):
 
         return url, rev
 
-    def obtain(self, quiet=False):
-        """Retrieve the repository, clone if doesn't exist.
-
-        :param quiet: Suppress stderr output.
-        :type quiet: bool
-
-        """
+    def obtain(self):
+        """Retrieve the repository, clone if doesn't exist."""
         self.check_destination()
 
         url = self.url
@@ -128,7 +124,7 @@ class GitRepo(BaseRepo):
         cmd.extend([url, self.path])
 
         self.info('Cloning.')
-        self.run(cmd)
+        self.run(cmd, log_in_real_time=True)
 
         if self.remotes:
             for r in self.remotes:
@@ -140,10 +136,10 @@ class GitRepo(BaseRepo):
                 )
 
         self.info('Initializing submodules.')
-        self.run(['submodule', 'init'],)
+        self.run(['submodule', 'init'], log_in_real_time=True)
         cmd = ['submodule', 'update', '--recursive', '--init']
         cmd.extend(self.git_submodules)
-        self.run(cmd)
+        self.run(cmd, log_in_real_time=True)
 
     def update_repo(self):
         self.check_destination()
@@ -170,7 +166,7 @@ class GitRepo(BaseRepo):
         # Get head sha
         try:
             head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'])
-        except exc.SubprocessError as e:
+        except exc.CommandError as e:
             self.error("Failed to get the hash for HEAD")
             return
 
@@ -198,8 +194,8 @@ class GitRepo(BaseRepo):
         try:
             error_code = 0
             tag_sha = self.run(['rev-list', '--max-count=1', git_tag])
-        except exc.SubprocessError as e:
-            error_code = e.subprocess.returncode
+        except exc.CommandError as e:
+            error_code = e.returncode
             tag_sha = ""
         self.debug("tag_sha: %s" % tag_sha)
 
@@ -210,8 +206,8 @@ class GitRepo(BaseRepo):
             return
 
         try:
-            process = self.run(['fetch'])
-        except exc.SubprocessError as e:
+            process = self.run(['fetch'], log_in_real_time=True)
+        except exc.CommandError as e:
             self.error("Failed to fetch repository '%s'" % url)
             return
 
@@ -219,7 +215,7 @@ class GitRepo(BaseRepo):
             # Check if stash is needed
             try:
                 process = self.run(['status', '--porcelain'])
-            except exc.SubprocessError as e:
+            except exc.CommandError as e:
                 self.error("Failed to get the status")
                 return
             need_stash = len(process) > 0
@@ -233,7 +229,7 @@ class GitRepo(BaseRepo):
                     process = self.run([
                         'stash', 'save', git_stash_save_options
                     ])
-                except exc.SubprocessError as e:
+                except exc.CommandError as e:
                     self.error("Failed to stash changes")
 
             # Pull changes from the remote branch
@@ -241,7 +237,7 @@ class GitRepo(BaseRepo):
                 process = self.run([
                     'rebase', git_remote_name + '/' + git_tag
                 ])
-            except exc.SubprocessError as e:
+            except exc.CommandError as e:
                 # Rebase failed: Restore previous state.
                 self.run(['rebase', '--abort'])
                 if need_stash:
@@ -258,12 +254,12 @@ class GitRepo(BaseRepo):
                     process = self.run([
                         'stash', 'pop', '--index', '--quiet'
                     ])
-                except exc.SubprocessError as e:
+                except exc.CommandError as e:
                     # Stash pop --index failed: Try again dropping the index
                     self.run(['reset', '--hard', '--quiet'])
                     try:
                         process = self.run(['stash', 'pop', '--quiet'])
-                    except exc.SubprocessError as e:
+                    except exc.CommandError as e:
                         # Stash pop failed: Restore previous state.
                         self.run(['reset', '--hard', '--quiet', head_sha])
                         self.run(['stash', 'pop', '--index', '--quiet'])
@@ -275,13 +271,13 @@ class GitRepo(BaseRepo):
         else:
             try:
                 process = self.run(['checkout', git_tag])
-            except exc.SubprocessError as e:
+            except exc.CommandError as e:
                 self.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
         cmd = ['submodule', 'update', '--recursive', '--init']
         cmd.extend(self.git_submodules)
-        self.run(cmd)
+        self.run(cmd, log_in_real_time=True)
 
     @property
     def remotes_get(self):

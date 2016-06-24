@@ -39,7 +39,7 @@ More information
 ----------------
 
 ==============  ==========================================================
-Python support  Python 2.7, >= 3.3
+Python support  Python 2.7, >= 3.3, pypy
 VCS supported   git(1), svn(1), hg(1)
 Source          https://github.com/tony/libvcs
 Docs            http://libvcs.rtfd.org

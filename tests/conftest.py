@@ -10,37 +10,37 @@ from libvcs.util import run
 
 
 @pytest.fixture
-def tmpdir_repoparent(tmpdir_factory, scope='function'):
+def parentdir(tmpdir_factory, scope='function'):
     """Return temporary directory for repository checkout guaranteed unique."""
     fn = tmpdir_factory.mktemp("repo")
     return fn
 
 
 @pytest.fixture
-def git_repo_kwargs(tmpdir_repoparent, git_dummy_repo_dir):
+def pip_url_kwargs(parentdir, git_remote):
     """Return kwargs for :func:`create_repo_from_pip_url`."""
     repo_name = 'repo_clone'
     return {
-        'pip_url': 'git+file://' + git_dummy_repo_dir,
-        'repo_dir': os.path.join(str(tmpdir_repoparent), repo_name)
+        'pip_url': 'git+file://' + git_remote,
+        'repo_dir': os.path.join(str(parentdir), repo_name)
     }
 
 
 @pytest.fixture
-def git_repo(git_repo_kwargs):
+def git_repo(pip_url_kwargs):
     """Create an git repository for tests. Return repo."""
-    git_repo = create_repo_from_pip_url(**git_repo_kwargs)
-    git_repo.obtain(quiet=True)
+    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo.obtain()
     return git_repo
 
 
 @pytest.fixture
-def git_dummy_repo_dir(tmpdir_repoparent, scope='session'):
+def git_remote(parentdir, scope='session'):
     """Create a git repo with 1 commit, used as a remote."""
     name = 'dummyrepo'
-    repo_dir = str(tmpdir_repoparent.join(name))
+    repo_dir = str(parentdir.join(name))
 
-    run(['git', 'init', name], cwd=str(tmpdir_repoparent))
+    run(['git', 'init', name], cwd=str(parentdir))
 
     testfile_filename = 'testfile.test'
 

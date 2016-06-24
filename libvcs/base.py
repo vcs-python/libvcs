@@ -11,57 +11,40 @@ import logging
 import os
 import subprocess
 
-from ._compat import urlparse
-from .util import mkdir_p, run
+from ._compat import urlparse, implements_to_string
+from .util import RepoLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
 
 
-class RepoLoggingAdapter(logging.LoggerAdapter):
-
-    """Adapter for adding Repo related content to logger.
-
-    Extends :class:`logging.LoggerAdapter`'s functionality.
-
-    The standard library :py:mod:`logging` facility is pretty complex, so this
-    warrants and explanation of what's happening.
-
-    Any class that subclasses this will have its class attributes for:
-
-        - :attr:`~.bin_name` -> ``repo_vcs``
-        - :attr:`~.name` -> ``repo_name``
-
-    Added to a dictionary of context information in :py:meth:`
-    logging.LoggerAdapter.process()` to be made use of when the user of this
-    library wishes to use a custom :class:`logging.Formatter` to output
-    results.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        logging.LoggerAdapter.__init__(self, *args, **kwargs)
-
-    def process(self, msg, kwargs):
-        """Add additional context information for loggers."""
-        prefixed_dict = {}
-        prefixed_dict['repo_vcs'] = self.bin_name
-        prefixed_dict['repo_name'] = self.name
-
-        kwargs["extra"] = prefixed_dict
-
-        return msg, kwargs
-
-
+@implements_to_string
 class BaseRepo(RepoLoggingAdapter, object):
 
     """Base class for repositories.
 
     Extends :py:class:`logging.LoggerAdapter`.
+
     """
 
-    def __init__(self, url, repo_dir, *args, **kwargs):
-        self.__dict__.update(kwargs)
+    #: log command output to buffer
+    log_in_real_time = None
 
+    #: vcs app name, e.g. 'git'
+    bin_name = ''
+
+    def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
+        """
+        :param callback: Retrieve live progress from ``sys.stderr`` (useful for
+            certain vcs commands like ``git pull``. Use ``progress_callback``::
+
+                def progress_cb(output, timestamp):
+                    sys.stdout.write(output)
+                    sys.stdout.flush()
+                create_repo(..., progress_callback=progress_cb)
+        :type callback: func
+        """
+        self.__dict__.update(kwargs)
+        self.progress_callback = progress_callback
         self.url = url
         self.parent_dir = os.path.dirname(repo_dir)
         self.name = os.path.basename(os.path.normpath(repo_dir))
@@ -69,10 +52,11 @@ class BaseRepo(RepoLoggingAdapter, object):
 
         # Register more schemes with urlparse for various version control
         # systems
-        urlparse.uses_netloc.extend(self.schemes)
-        # Python >= 2.7.4, 3.3 doesn't have uses_fragment
-        if getattr(urlparse, 'uses_fragment', None):
-            urlparse.uses_fragment.extend(self.schemes)
+        if hasattr(self, 'schemes'):
+            urlparse.uses_netloc.extend(self.schemes)
+            # Python >= 2.7.4, 3.3 doesn't have uses_fragment
+            if getattr(urlparse, 'uses_fragment', None):
+                urlparse.uses_fragment.extend(self.schemes)
 
         RepoLoggingAdapter.__init__(self, logger, {})
 
@@ -85,7 +69,8 @@ class BaseRepo(RepoLoggingAdapter, object):
 
     def run(
         self, cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        extra_env=None, cwd=None, check_returncode=True, *args, **kwargs
+        cwd=None, check_returncode=True, log_in_real_time=None,
+        *args, **kwargs
     ):
         """Return combined stderr/stdout from a command.
 
@@ -95,7 +80,7 @@ class BaseRepo(RepoLoggingAdapter, object):
         :param cwd: dir command is run from, defaults :attr:`~.path`.
         :type cwd: string
 
-        :param check_returncode: Indicate whether a :exc:`~exc.SubprocessError`
+        :param check_returncode: Indicate whether a :exc:`~exc.CommandError`
             should be raised if return code is different from 0.
         :type check_returncode: :class:`bool`
 
@@ -106,19 +91,18 @@ class BaseRepo(RepoLoggingAdapter, object):
         if cwd is None:
             cwd = getattr(self, 'path', None)
 
-        env = os.environ.copy()
-        if extra_env:
-            env.update(extra_env)
-
         cmd = [self.bin_name] + cmd
 
         return run(
             cmd,
-            stdout=stdout,
-            stderr=stderr,
-            env=env, cwd=cwd,
+            callback=(
+                self.progress_callback
+                if callable(self.progress_callback)
+                else None
+            ),
             check_returncode=check_returncode,
-            *args, **kwargs
+            log_in_real_time=log_in_real_time or self.log_in_real_time,
+            cwd=cwd
         )
 
     def check_destination(self, *args, **kwargs):
@@ -132,9 +116,6 @@ class BaseRepo(RepoLoggingAdapter, object):
                 mkdir_p(self.path)
 
         return True
-
-    def __repr__(self):
-        return "%s(%r)" % (self.__class__, self.__dict__)
 
     @classmethod
     def get_url_and_revision_from_pip_url(cls, pip_url):
@@ -151,3 +132,6 @@ class BaseRepo(RepoLoggingAdapter, object):
             path, rev = path.rsplit('@', 1)
         url = urlparse.urlunsplit((scheme, netloc, path, query, ''))
         return url, rev
+
+    def __repr__(self):
+        return "<{} {}>".format(self.__class__.__name__, self.name)

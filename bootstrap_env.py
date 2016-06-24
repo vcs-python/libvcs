@@ -78,9 +78,7 @@ test27_reqs_fpath = os.path.join(project_dir, 'requirements', 'test-py27.txt')
 sphinx_reqs_fpath = os.path.join(project_dir, 'requirements', 'doc.txt')
 
 
-try:
-    import virtualenv  # noqa
-except ImportError:
+if not has_module('virtualenv'):
     message = (
         'Virtualenv is required for this bootstrap to run.\n'
         'Install virtualenv via:\n'
@@ -89,9 +87,7 @@ except ImportError:
     fail(message)
 
 
-try:
-    import pip  # noqa
-except ImportError:
+if not has_module('pip'):
     message = (
         'pip is required for this bootstrap to run.\n'
         'Find instructions on how to install at: %s' %
