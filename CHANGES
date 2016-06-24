@@ -4,6 +4,14 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.2.0 <2016-06-24>`
+- :feature:`9` Support for ``progress_callback`` to use realtime output
+  from commands in progress (such as ``git fetch``).
+- :support:`9` More tests, internal factoring and documentation, thanks
+  @jcfr
+- :support:`9` Official support for pypy, pypy3
+- :bug:`11`: Fix unbound local when updating git repos
+
 - :release:`0.1.7 <2016-06-21>`
 - :feature:`7` Add ``check_returncode`` property to run, thanks @jcfr
 - :support:`8` Remove all cases of ``run_buffered`` / buffering from
