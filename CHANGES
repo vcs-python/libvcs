@@ -4,6 +4,14 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.2.1 <2016-09-13>`
+- :support:`-` Update pytest to 3.0.2, remove unused pytest-raisesregexp
+  dependency.
+- :bug:`-` Fix bug in ``which`` when executable is not found. Allow
+  specifying search paths manually.
+- :support:`-` Better support for missing VCS when testing on git and
+  subversion.
+
 - :release:`0.2.0 <2016-06-24>`
 - :feature:`9` Support for ``progress_callback`` to use realtime output
   from commands in progress (such as ``git fetch``).
