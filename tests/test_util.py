@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import pytest
 
-from libvcs.util import mkdir_p
+from libvcs.util import mkdir_p, which
 
 
 def test_mkdir_p(tmpdir):
@@ -16,3 +16,9 @@ def test_mkdir_p(tmpdir):
 
     # already exists is a noop
     mkdir_p(str(tmpdir))
+
+
+def test_which_no_hg_found(monkeypatch):
+    monkeypatch.setenv("PATH", "/")
+    which('hg')
+    which('hg', '/')

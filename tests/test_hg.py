@@ -6,13 +6,10 @@ import os
 
 import pytest
 
-from libvcs import exc
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import which, run
 
-try:
-    which('hg')
-except exc.LibVCSException:
+if not which('hg'):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 

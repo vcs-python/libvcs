@@ -6,8 +6,11 @@ import os
 
 import pytest
 
-from libvcs.util import run
+from libvcs.util import run, which
 from libvcs.shortcuts import create_repo_from_pip_url
+
+if not which('svn'):
+    pytestmark = pytest.mark.skip(reason="svn is not available")
 
 
 @pytest.fixture
