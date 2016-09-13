@@ -9,10 +9,9 @@ from libvcs.util import mkdir_p, which
 def test_mkdir_p(tmpdir):
     path = tmpdir.join('file').ensure()
 
-    with pytest.raises_regexp(
-        Exception, 'Could not create directory %s' % path
-    ):
+    with pytest.raises(Exception) as excinfo:
         mkdir_p(str(path))
+    excinfo.match(r'Could not create directory %s' % path)
 
     # already exists is a noop
     mkdir_p(str(tmpdir))

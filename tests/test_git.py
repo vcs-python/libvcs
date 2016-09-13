@@ -172,8 +172,9 @@ def test_private_ssh_format(pip_url_kwargs):
         'pip_url': 'git+ssh://github.com:' + '/tmp/omg/private_ssh_repo',
     })
 
-    with pytest.raises_regexp(exc.LibVCSException, "is malformatted"):
+    with pytest.raises(exc.LibVCSException) as excinfo:
         create_repo_from_pip_url(**pip_url_kwargs)
+    excinfo.match(r'is malformatted')
 
 
 def test_ls_remotes(git_repo):
