@@ -73,20 +73,20 @@ Test only a file:
 
 .. code-block:: bash
 
-    $ py.test tests/test_config.py
+    $ py.test tests/test_util.py
 
-will test the ``tests/test_config.py`` tests.
+will test the ``tests/test_util.py`` tests.
 
 .. code-block:: bash
 
-    $ py.test tests/test_config::test_export_json
+    $ py.test tests/test_util.py::test_mkdir_p
 
-tests ``test_export_json`` inside of ``tests/test_config.py``.
+tests ``test_mkdir_p`` inside of ``tests/test_util.py``.
 
 Multiple can be separated by spaces:
 
 .. code-block:: bash
 
-    $ py.test tests/test_{window,pane}.py tests/test_config.py::test_export_json
+    $ py.test tests/test_{git,svn}.py tests/test_util.py::test_mkdir_p
 
 .. _issue on github: https://github.com/tony/libvcs/issues
