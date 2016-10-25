@@ -56,8 +56,6 @@ else:
     import urllib.parse as urlparse
     from urllib.request import urlretrieve
 
-    from test import support
-
     console_encoding = sys.__stdout__.encoding
 
     implements_to_string = _identity
