@@ -1,4 +1,4 @@
-``libvcs`` - abstraction layer for vcs
+``libvcs`` - abstraction layer for vcs, powers `vcspull`_.
 
 |pypi| |docs| |build-status| |coverage| |license|
 
@@ -80,6 +80,7 @@ tests           .. code-block:: bash
 .. _Documentation: http://libvcs.readthedocs.io/en/latest/
 .. _API: http://libvcs.readthedocs.io/en/latest/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
+.. _vcspull: http://www.github.com/tony/vcspull/
 
 .. |pypi| image:: https://img.shields.io/pypi/v/libvcs.svg
     :alt: Python Package
