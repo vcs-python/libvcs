@@ -35,6 +35,16 @@ Open up python::
    |myrepo| (git)  git pull
    Already up-to-date.
 
+Donations
+---------
+
+Your donations fund development of new features, testing and support.
+Your money will go directly to maintenance and development of the project.
+If you are an individual, feel free to give whatever feels right for the
+value you get out of the project.
+
+See donation options at https://git-pull.com/support.html.
+
 More information 
 ----------------
 
