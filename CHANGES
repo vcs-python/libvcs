@@ -4,6 +4,11 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.2.2 <2016-11-23>`
+- :bug:`-` Fix bug with unused ``support`` module in vcspull. See `#43`_
+
+.. _#43: https://github.com/tony/vcspull/issues/43
+
 - :release:`0.2.1 <2016-09-13>`
 - :support:`-` Update pytest to 3.0.2, remove unused pytest-raisesregexp
   dependency.
