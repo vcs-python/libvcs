@@ -6,7 +6,6 @@ python:
   - 3.4
   - 3.5
   - pypy
-  - pypy3
 before_install:
   - export PIP_USE_MIRRORS=true
   - pip install -U pip setuptools
