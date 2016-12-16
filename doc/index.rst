@@ -15,4 +15,3 @@ libvcs
    api
    developing
    history
-   roadmap
