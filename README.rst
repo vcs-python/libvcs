@@ -53,8 +53,8 @@ Python support  Python 2.7, >= 3.3, pypy
 VCS supported   git(1), svn(1), hg(1)
 Source          https://github.com/tony/libvcs
 Docs            http://libvcs.rtfd.org
-Changelog       http://libvcs.readthedocs.io/en/latest/history.html
-API             http://libvcs.readthedocs.io/en/latest/api.html
+Changelog       http://libvcs.git-pull.com/en/latest/history.html
+API             http://libvcs.git-pull.com/en/latest/api.html
 Issues          https://github.com/tony/libvcs/issues
 Travis          http://travis-ci.org/tony/libvcs
 Test Coverage   https://codecov.io/gh/tony/libvcs
@@ -77,8 +77,8 @@ tests           .. code-block:: bash
 ==============  ==========================================================
 
 .. _BSD: http://opensource.org/licenses/BSD-3-Clause
-.. _Documentation: http://libvcs.readthedocs.io/en/latest/
-.. _API: http://libvcs.readthedocs.io/en/latest/api.html
+.. _Documentation: http://libvcs.git-pull.com/en/latest/
+.. _API: http://libvcs.git-pull.com/en/latest/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
 .. _vcspull: http://www.github.com/tony/vcspull/
 
