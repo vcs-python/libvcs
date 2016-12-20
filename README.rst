@@ -2,11 +2,16 @@
 
 |pypi| |docs| |build-status| |coverage| |license|
 
-Install::
+Install:
+
+.. code-block:: bash
 
    $ pip install libvcs
 
-Open up python::
+
+Open up python:
+
+.. code-block:: bash
 
    $ python
 
