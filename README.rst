@@ -66,7 +66,7 @@ More information
 Python support  Python 2.7, >= 3.3, pypy
 VCS supported   git(1), svn(1), hg(1)
 Source          https://github.com/tony/libvcs
-Docs            http://libvcs.rtfd.org
+Docs            http://libvcs.git-pull.com
 Changelog       http://libvcs.git-pull.com/en/latest/history.html
 API             http://libvcs.git-pull.com/en/latest/api.html
 Issues          https://github.com/tony/libvcs/issues
