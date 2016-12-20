@@ -25,14 +25,14 @@ Create a `Repo`_ object of the project to inspect / checkout / update:
    >>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
 
    # repo is an object representation of a vcs repository.
-   >>> r = create_repo(url='https://www.github.com/tony/myrepo',
+   >>> r = create_repo(url='https://www.github.com/tony/libtmux',
    ...                 vcs='git',
-   ...                 repo_dir='/tmp/repo')
+   ...                 repo_dir='/tmp/libtmux')
 
    # or via pip-style URL
    >>> r = create_repo_from_pip_url(
-   ...         pip_url='git+https://www.github.com/tony/myrepo',
-   ...         repo_dir='/tmp/repo')
+   ...         pip_url='git+https://www.github.com/tony/libtmux',
+   ...         repo_dir='/tmp/libtmux')
 
 Update / clone repo:
 
@@ -40,14 +40,13 @@ Update / clone repo:
 
    # it may or may not be checked out/cloned on the system yet
    >>> r.update_repo()
-   |myrepo| (git)  Repo directory for myrepo (git) does not exist @ /tmp/myrepo
-   |myrepo| (git)  Cloning.
-   |myrepo| (git)  git clone https://www.github.com/tony/myrepo /tmp/myrepo
-   Cloning into '/tmp/myrepo'...
-   Checking connectivity... done.
-   |myrepo| (git)  git fetch
-   |myrepo| (git)  git pull
-   Already up-to-date.
+
+Get revision:
+
+.. code-block:: python
+
+   >>> r.get_revision()
+   u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 
 Donations
 ---------
