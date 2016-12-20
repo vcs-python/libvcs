@@ -4,16 +4,18 @@
 
 Install:
 
-.. code-block:: bash
+.. code-block:: sh
 
    $ pip install libvcs
 
-
 Open up python:
 
-.. code-block:: bash
+.. code-block:: sh
 
    $ python
+   # or for nice autocomplete and syntax highlighting
+   $ pip install ptpython
+   $ ptpython
 
 .. code-block:: python
 
