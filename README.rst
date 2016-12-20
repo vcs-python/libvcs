@@ -13,9 +13,12 @@ Open up python:
 .. code-block:: sh
 
    $ python
+
    # or for nice autocomplete and syntax highlighting
    $ pip install ptpython
    $ ptpython
+
+Create a `Repo`_ object of the project to inspect / checkout / update:
 
 .. code-block:: python
 
@@ -30,6 +33,10 @@ Open up python:
    >>> r = create_repo_from_pip_url(
    ...         pip_url='git+https://www.github.com/tony/myrepo',
    ...         repo_dir='/tmp/repo')
+
+Update / clone repo:
+
+.. code-block:: python
 
    # it may or may not be checked out/cloned on the system yet
    >>> r.update_repo()
@@ -88,6 +95,7 @@ tests           .. code-block:: bash
 .. _API: http://libvcs.git-pull.com/en/latest/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
 .. _vcspull: http://www.github.com/tony/vcspull/
+.. _Repo: https://libvcs.git-pull.com/en/latest/api.html#creating-a-repo-object
 
 .. |pypi| image:: https://img.shields.io/pypi/v/libvcs.svg
     :alt: Python Package
