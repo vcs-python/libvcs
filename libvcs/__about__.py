@@ -1,7 +1,7 @@
 __title__ = 'libvcs'
 __package_name__ = 'libvcs'
 __description__ = 'vcs abstraction layer'
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 __author__ = 'Tony Narlock'
 __email__ = 'tony@git-pull.com'
 __license__ = 'BSD'
