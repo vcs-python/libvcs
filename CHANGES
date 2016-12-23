@@ -4,6 +4,17 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.2.3 <2016-12-22>`
+- :support:`-` Update documentation to point to libvcs.git-pull.com
+- :support:`-` Switch doc theme to alabaster
+- :support:`-` Pin and update libraries via pyup
+  - update vulture 0.8.1 to 0.11
+  - update flake8 from 2.5.4 to 3.2.1
+  - update pytest-mock from 1.4.0 to 1.5.0
+  - update pytest from 3.0.4 to 3.0.5
+  - pin alabaster to 0.7.9
+  - pin sphinx to 1.5.1
+
 - :release:`0.2.2 <2016-11-23>`
 - :bug:`-` Fix bug with unused ``support`` module in vcspull. See `#43`_
 
