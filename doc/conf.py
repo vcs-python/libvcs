@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import alabaster
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
@@ -39,9 +40,10 @@ exclude_patterns = ['_build']
 
 pygments_style = 'sphinx'
 
-import alabaster
 
+html_static_path = ['_static']
 html_theme_path = [alabaster.get_path()]
+html_favicon = 'favicon.ico'
 html_theme = 'alabaster'
 html_theme_options = {
     'logo': 'img/libvcs.svg',
@@ -57,7 +59,6 @@ html_sidebars = {
     ]
 }
 
-html_static_path = ['_static']
 
 htmlhelp_basename = '%sdoc' % about['__title__']
 
