@@ -40,8 +40,6 @@ exclude_patterns = ['_build']
 
 pygments_style = 'sphinx'
 
-
-html_static_path = ['_static']
 html_theme_path = [alabaster.get_path()]
 html_favicon = 'favicon.ico'
 html_theme = 'alabaster'
@@ -59,7 +57,7 @@ html_sidebars = {
     ]
 }
 
-
+html_static_path = ['_static']
 htmlhelp_basename = '%sdoc' % about['__title__']
 
 latex_documents = [
