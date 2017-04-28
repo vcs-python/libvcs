@@ -22,7 +22,7 @@ extensions = [
 releases_unstable_prehistory = True
 releases_document_name = "history"
 releases_issue_uri = "https://github.com/tony/libvcs/issues/%s"
-releases_release_uri = "https://github.com/tony/libvcs/tree/%s"
+releases_release_uri = "https://github.com/tony/libvcs/tree/v%s"
 
 templates_path = ['_templates']
 
