@@ -78,7 +78,7 @@ class BaseRepo(RepoLoggingAdapter, object):
         using the cwd :attr:`~.path` of the repo.
 
         :param cwd: dir command is run from, defaults :attr:`~.path`.
-        :type cwd: string
+        :type cwd: str
 
         :param check_returncode: Indicate whether a :exc:`~exc.CommandError`
             should be raised if return code is different from 0.

@@ -319,7 +319,7 @@ class GitRepo(BaseRepo):
         """Set remote with name and URL like git remote add.
 
         :param url: defines the remote URL
-        :type url: string
+        :type url: str
         :param name: defines the remote name.
         :type name: str
         """
@@ -337,8 +337,8 @@ class GitRepo(BaseRepo):
         """Return clean VCS url from RFC-style url
 
         :param url: url
-        :type url: string
-        :return type: string
+        :type url: str
+        :rtype: str
         :returns: url as VCS software would accept it
         :seealso: #14
         """

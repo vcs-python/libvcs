@@ -29,10 +29,10 @@ def which(exe=None,
     from salt.util - https://www.github.com/saltstack/salt - license apache
 
     :param exe: Application to search PATHs for.
-    :type exe: string
+    :type exe: str
     :param default_path: Application to search PATHs for.
     :type default_path: list
-    :rtype: string
+    :rtype: str
     """
     def _is_executable_file_or_link(exe):
         # check for os.X_OK doesn't suffice because directory may executable
@@ -67,7 +67,7 @@ def mkdir_p(path):
     """Make directories recursively.
 
     :param path: path to create
-    :type path: string
+    :type path: str
     """
     try:
         os.makedirs(path)
@@ -118,7 +118,7 @@ def run(cmd, shell=False, cwd=None, log_in_real_time=True,
     """ Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
 
-    :param cmd: list of strings (or single string, iff shell==True) indicating
+    :param cmd: list of str (or single str, if shell==True) indicating
        the command to run
     :param shell: boolean indicating whether we are using advanced shell
         features. Use only when absolutely necessary, since this allows a lot
@@ -126,14 +126,14 @@ def run(cmd, shell=False, cwd=None, log_in_real_time=True,
         warning here:
         http://docs.python.org/library/subprocess.html#popen-constructor
     :param cwd: dir command is run from.
-    :type cwd: string
+    :type cwd: str
     :param log_in_real_time: boolean indicating whether to read stdout from the
         subprocess in real time instead of when the process finishes.
     :param check_returncode: Indicate whether a :exc:`~exc.CommandError`
         should be raised if return code is different from 0.
     :type check_returncode: :class:`bool`
     :param cwd: dir command is run from, defaults :attr:`~.path`.
-    :type cwd: string
+    :type cwd: str
     :param callback: callback to return output as a command executes, accepts
         a function signature of ``(output, timestamp)``. Example usage::
 
