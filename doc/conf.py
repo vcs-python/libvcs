@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import alabaster
+import alagitpull
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
@@ -16,7 +16,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'releases',
-    'alabaster',
+    'alagitpull',
 ]
 
 releases_unstable_prehistory = True
@@ -40,16 +40,21 @@ exclude_patterns = ['_build']
 
 pygments_style = 'sphinx'
 
-html_theme_path = [alabaster.get_path()]
+html_theme_path = [alagitpull.get_path()]
 html_favicon = 'favicon.ico'
-html_theme = 'alabaster'
+html_theme = 'alagitpull'
 html_theme_options = {
     'logo': 'img/libvcs.svg',
+    'github_user': 'tony',
+    'github_repo': 'libvcs',
+    'github_type': 'star',
+    'github_banner': True,
+    'projects': alagitpull.projects,
+    'project_name': about['__title__'],
 }
 html_sidebars = {
     '**': [
         'about.html',
-        'star.html',
         'navigation.html',
         'relations.html',
         'more.html',
