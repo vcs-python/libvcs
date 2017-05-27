@@ -65,11 +65,11 @@ More information
 Python support  Python 2.7, >= 3.3, pypy
 VCS supported   git(1), svn(1), hg(1)
 Source          https://github.com/tony/libvcs
-Docs            http://libvcs.git-pull.com
-Changelog       http://libvcs.git-pull.com/en/latest/history.html
-API             http://libvcs.git-pull.com/en/latest/api.html
+Docs            https://libvcs.git-pull.com
+Changelog       https://libvcs.git-pull.com/en/latest/history.html
+API             https://libvcs.git-pull.com/en/latest/api.html
 Issues          https://github.com/tony/libvcs/issues
-Travis          http://travis-ci.org/tony/libvcs
+Travis          https://travis-ci.org/tony/libvcs
 Test Coverage   https://codecov.io/gh/tony/libvcs
 pypi            https://pypi.python.org/pypi/libvcs
 Open Hub        https://www.openhub.net/p/libvcs
@@ -90,10 +90,10 @@ tests           .. code-block:: bash
 ==============  ==========================================================
 
 .. _BSD: http://opensource.org/licenses/BSD-3-Clause
-.. _Documentation: http://libvcs.git-pull.com/en/latest/
-.. _API: http://libvcs.git-pull.com/en/latest/api.html
+.. _Documentation: https://libvcs.git-pull.com/en/latest/
+.. _API: https://libvcs.git-pull.com/en/latest/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
-.. _vcspull: http://www.github.com/tony/vcspull/
+.. _vcspull: https://www.github.com/tony/vcspull/
 .. _Repo: https://libvcs.git-pull.com/en/latest/api.html#creating-a-repo-object
 
 .. |pypi| image:: https://img.shields.io/pypi/v/libvcs.svg
