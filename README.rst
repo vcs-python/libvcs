@@ -73,7 +73,7 @@ Travis          https://travis-ci.org/tony/libvcs
 Test Coverage   https://codecov.io/gh/tony/libvcs
 pypi            https://pypi.python.org/pypi/libvcs
 Open Hub        https://www.openhub.net/p/libvcs
-License         `BSD`_.
+License         `MIT`_.
 git repo        .. code-block:: bash
 
                     $ git clone https://github.com/tony/libvcs.git
@@ -89,7 +89,7 @@ tests           .. code-block:: bash
                     $ py.test
 ==============  ==========================================================
 
-.. _BSD: http://opensource.org/licenses/BSD-3-Clause
+.. _MIT: https://opensource.org/licenses/MIT
 .. _Documentation: https://libvcs.git-pull.com/en/latest/
 .. _API: https://libvcs.git-pull.com/en/latest/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
