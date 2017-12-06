@@ -1,2 +1,2 @@
-pytest==3.3.0 # Updated from 3.0.4
+pytest==3.3.1 # Updated from 3.0.4
 pytest-mock==1.6.3 # Updated from 1.2
