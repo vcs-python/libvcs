@@ -65,6 +65,13 @@ html_sidebars = {
 html_static_path = ['_static']
 htmlhelp_basename = '%sdoc' % about['__title__']
 
+alagitpull_internal_hosts = [
+    'libvcs.git-pull.com',
+    '0.0.0.0',
+]
+alagitpull_external_hosts_new_window = True
+
+
 latex_documents = [
     ('index', '{0}.tex'.format(about['__package_name__']),
      '{0} Documentation'.format(about['__title__']),

@@ -5,11 +5,11 @@ name = "pypi"
 
 [dev-packages]
 
-pytest = "==3.2.3"
-"pytest-mock" = "==1.6.3"
-alagitpull = "==0.0.13"
+pytest = "==3.4.0"
+"pytest-mock" = "==1.7.0"
+alagitpull = "==0.0.19"
 releases = "==1.4.0"
-sphinx = "*"
+sphinx = "==1.7.0"
 
 
 [packages]
