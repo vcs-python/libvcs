@@ -32,6 +32,8 @@ class BaseRepo(RepoLoggingAdapter, object):
     #: vcs app name, e.g. 'git'
     bin_name = ''
 
+    __slots__ = ['name']
+
     def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
         """
         :param callback: Retrieve live progress from ``sys.stderr`` (useful for
