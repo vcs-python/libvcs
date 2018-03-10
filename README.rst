@@ -25,13 +25,13 @@ Create a `Repo`_ object of the project to inspect / checkout / update:
    >>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
 
    # repo is an object representation of a vcs repository.
-   >>> r = create_repo(url='https://www.github.com/tony/libtmux',
+   >>> r = create_repo(url='https://www.github.com/vcs-python/libtmux',
    ...                 vcs='git',
    ...                 repo_dir='/tmp/libtmux')
 
    # or via pip-style URL
    >>> r = create_repo_from_pip_url(
-   ...         pip_url='git+https://www.github.com/tony/libtmux',
+   ...         pip_url='git+https://www.github.com/vcs-python/libtmux',
    ...         repo_dir='/tmp/libtmux')
 
 Update / clone repo:
@@ -64,22 +64,22 @@ More information
 ==============  ==========================================================
 Python support  Python 2.7, >= 3.4, pypy
 VCS supported   git(1), svn(1), hg(1)
-Source          https://github.com/tony/libvcs
+Source          https://github.com/vcs-python/libvcs
 Docs            https://libvcs.git-pull.com
 Changelog       https://libvcs.git-pull.com/en/latest/history.html
 API             https://libvcs.git-pull.com/en/latest/api.html
-Issues          https://github.com/tony/libvcs/issues
-Travis          https://travis-ci.org/tony/libvcs
-Test Coverage   https://codecov.io/gh/tony/libvcs
+Issues          https://github.com/vcs-python/libvcs/issues
+Travis          https://travis-ci.org/vcs-python/libvcs
+Test Coverage   https://codecov.io/gh/vcs-python/libvcs
 pypi            https://pypi.python.org/pypi/libvcs
 Open Hub        https://www.openhub.net/p/libvcs
 License         `MIT`_.
 git repo        .. code-block:: bash
 
-                    $ git clone https://github.com/tony/libvcs.git
+                    $ git clone https://github.com/vcs-python/libvcs.git
 install dev     .. code-block:: bash
 
-                    $ git clone https://github.com/tony/libvcs.git libvcs
+                    $ git clone https://github.com/vcs-python/libvcs.git libvcs
                     $ cd ./libvcs
                     $ virtualenv .venv
                     $ source .venv/bin/activate
@@ -93,22 +93,22 @@ tests           .. code-block:: bash
 .. _Documentation: https://libvcs.git-pull.com/en/latest/
 .. _API: https://libvcs.git-pull.com/en/latest/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
-.. _vcspull: https://www.github.com/tony/vcspull/
+.. _vcspull: https://www.github.com/vcs-python/vcspull/
 .. _Repo: https://libvcs.git-pull.com/en/latest/api.html#creating-a-repo-object
 
 .. |pypi| image:: https://img.shields.io/pypi/v/libvcs.svg
     :alt: Python Package
     :target: http://badge.fury.io/py/libvcs
 
-.. |build-status| image:: https://img.shields.io/travis/tony/libvcs.svg
+.. |build-status| image:: https://img.shields.io/travis/vcs-python/libvcs.svg
    :alt: Build Status
-   :target: https://travis-ci.org/tony/libvcs
+   :target: https://travis-ci.org/vcs-python/libvcs
 
-.. |coverage| image:: https://codecov.io/gh/tony/libvcs/branch/master/graph/badge.svg
+.. |coverage| image:: https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg
     :alt: Code Coverage
-    :target: https://codecov.io/gh/tony/libvcs
+    :target: https://codecov.io/gh/vcs-python/libvcs
     
-.. |license| image:: https://img.shields.io/github/license/tony/libvcs.svg
+.. |license| image:: https://img.shields.io/github/license/vcs-python/libvcs.svg
     :alt: License 
 
 .. |docs| image:: https://readthedocs.org/projects/libvcs/badge/?version=latest

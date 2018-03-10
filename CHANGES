@@ -97,7 +97,7 @@ Here are the changes for libvcs.
 - libvcs split from `vcspull`_
 
 
-.. _vcspull: https://github.com/tony/vcspull
-.. _#43: https://github.com/tony/vcspull/issues/43
+.. _vcspull: https://github.com/vcs-python/vcspull
+.. _#43: https://github.com/vcs-python/vcspull/issues/43
 
 .. vim: set filetype=rst:

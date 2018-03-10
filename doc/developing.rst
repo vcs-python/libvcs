@@ -21,7 +21,7 @@ To begin developing, check out the code from github:
 
 .. code-block:: sh
 
-    $ git clone git@github.com:tony/libvcs.git
+    $ git clone git@github.com:vcs-python/libvcs.git
     $ cd libvcs
 
 Now create a virtualenv, if you don't know how to, you can create a
@@ -89,4 +89,4 @@ Multiple can be separated by spaces:
 
     $ py.test tests/test_{git,svn}.py tests/test_util.py::test_mkdir_p
 
-.. _issue on github: https://github.com/tony/libvcs/issues
+.. _issue on github: https://github.com/vcs-python/libvcs/issues

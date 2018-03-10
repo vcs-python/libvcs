@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""libvcs lives at <https://github.com/tony/libvcs>."""
+"""libvcs lives at <https://github.com/vcs-python/libvcs>."""
 
 import sys
 
@@ -37,7 +37,7 @@ class PyTest(TestCommand):
 setup(
     name=about['__title__'],
     version=about['__version__'],
-    url='http://github.com/tony/libvcs/',
+    url='http://github.com/vcs-python/libvcs/',
     download_url='https://pypi.python.org/pypi/libvcs',
     license=about['__license__'],
     author=about['__author__'],
