@@ -4,6 +4,11 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :release:`0.3.0 <2018-03-12>`
+- :support:`-` Move vcspull to the vcs-python organization
+- :bug:`-` Fix issue where VCS objects failed to set attribute in Ubuntu
+  18.04.
+
 - :release:`0.2.3 <2016-12-22>`
 - :support:`-` Update documentation to point to libvcs.git-pull.com
 - :support:`-` Switch doc theme to alabaster
