@@ -4,6 +4,10 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :support:`-` Sort imports
+- :support:`-` Add isort package, isort configuration in setup.cfg, and
+  ``make isort`` task to Makefile.
+
 - :release:`0.3.0 <2018-03-12>`
 - :support:`-` Move vcspull to the vcs-python organization
 - :bug:`-` Fix issue where VCS objects failed to set attribute in Ubuntu
