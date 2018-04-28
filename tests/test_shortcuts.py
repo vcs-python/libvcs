@@ -4,8 +4,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import pytest
 
 from libvcs import GitRepo, MercurialRepo, SubversionRepo
-from libvcs.shortcuts import create_repo_from_pip_url, create_repo
 from libvcs.exc import InvalidPipURL, InvalidVCS
+from libvcs.shortcuts import create_repo, create_repo_from_pip_url
 
 
 @pytest.mark.parametrize('repo_dict,repo_class,raises_exception', [

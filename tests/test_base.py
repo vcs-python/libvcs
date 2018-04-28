@@ -2,9 +2,9 @@
 """tests for libvcs repo abstract base class."""
 from __future__ import absolute_import, print_function, unicode_literals
 
+from libvcs._compat import text_type
 from libvcs.base import BaseRepo
 from libvcs.shortcuts import create_repo
-from libvcs._compat import text_type
 
 
 def test_repr():

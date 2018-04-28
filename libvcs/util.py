@@ -16,7 +16,6 @@ import subprocess
 from . import exc
 from ._compat import console_to_str
 
-
 logger = logging.getLogger(__name__)
 
 

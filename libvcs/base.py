@@ -11,7 +11,7 @@ import logging
 import os
 import subprocess
 
-from ._compat import urlparse, implements_to_string
+from ._compat import implements_to_string, urlparse
 from .util import RepoLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)

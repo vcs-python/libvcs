@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+
 import alagitpull
 
 # Get the project root dir, which is the parent dir of this

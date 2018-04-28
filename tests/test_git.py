@@ -10,9 +10,8 @@ import pytest
 from libvcs import exc
 from libvcs._compat import string_types
 from libvcs.git import GitRepo
-from libvcs.util import run, which
 from libvcs.shortcuts import create_repo_from_pip_url
-
+from libvcs.util import run, which
 
 if not which('git'):
     pytestmark = pytest.mark.skip(reason="git is not available")
