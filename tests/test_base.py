@@ -8,10 +8,7 @@ from libvcs.shortcuts import create_repo
 
 
 def test_repr():
-    repo = create_repo(
-        url='file://path/to/myrepo',
-        repo_dir='/hello/',
-        vcs='git')
+    repo = create_repo(url='file://path/to/myrepo', repo_dir='/hello/', vcs='git')
 
     str_repo = text_type(repo)
     assert 'GitRepo' in str_repo
@@ -20,9 +17,7 @@ def test_repr():
 
 
 def test_repr_base():
-    repo = BaseRepo(
-        url='file://path/to/myrepo',
-        repo_dir='/hello/')
+    repo = BaseRepo(url='file://path/to/myrepo', repo_dir='/hello/')
 
     str_repo = text_type(repo)
     assert 'Repo' in str_repo
@@ -41,7 +36,8 @@ def test_check_destination_creates_parent_if_not_exist(tmpdir):
 
 def test_get_url_and_revision_from_pip_url():
     url, rev = BaseRepo.get_url_and_revision_from_pip_url(
-        pip_url='git+file://path/to/myrepo@therev')
+        pip_url='git+file://path/to/myrepo@therev'
+    )
 
     assert url, rev == 'therev'
     assert url, rev == 'file://path/to/myrepo'

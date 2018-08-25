@@ -70,9 +70,15 @@ class BaseRepo(RepoLoggingAdapter, object):
         return self
 
     def run(
-        self, cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        cwd=None, check_returncode=True, log_in_real_time=None,
-        *args, **kwargs
+        self,
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        cwd=None,
+        check_returncode=True,
+        log_in_real_time=None,
+        *args,
+        **kwargs
     ):
         """Return combined stderr/stdout from a command.
 
@@ -98,13 +104,11 @@ class BaseRepo(RepoLoggingAdapter, object):
         return run(
             cmd,
             callback=(
-                self.progress_callback
-                if callable(self.progress_callback)
-                else None
+                self.progress_callback if callable(self.progress_callback) else None
             ),
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time or self.log_in_real_time,
-            cwd=cwd
+            cwd=cwd,
         )
 
     def check_destination(self, *args, **kwargs):
@@ -113,8 +117,9 @@ class BaseRepo(RepoLoggingAdapter, object):
             mkdir_p(self.parent_dir)
         else:
             if not os.path.exists(self.path):
-                self.debug('Repo directory for %s does not exist @ %s' % (
-                    self.name, self.path))
+                self.debug(
+                    'Repo directory for %s does not exist @ %s' % (self.name, self.path)
+                )
                 mkdir_p(self.path)
 
         return True
@@ -125,7 +130,8 @@ class BaseRepo(RepoLoggingAdapter, object):
         error_message = (
             "Sorry, '%s' is a malformed VCS url. "
             "The format is <vcs>+<protocol>://<url>, "
-            "e.g. svn+http://myrepo/svn/MyApp#egg=MyApp")
+            "e.g. svn+http://myrepo/svn/MyApp#egg=MyApp"
+        )
         assert '+' in pip_url, error_message % pip_url
         url = pip_url.split('+', 1)[1]
         scheme, netloc, path, query, frag = urlparse.urlsplit(url)

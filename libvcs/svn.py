@@ -57,8 +57,7 @@ class SubversionRepo(BaseRepo):
         args = []
         for param_name in ['svn_username', 'svn_password']:
             if hasattr(self, param_name):
-                args.extend(['--' + param_name[4:],
-                             getattr(self, param_name)])
+                args.extend(['--' + param_name[4:], getattr(self, param_name)])
         return args
 
     def obtain(self, quiet=None):
@@ -102,7 +101,7 @@ class SubversionRepo(BaseRepo):
         for base, dirs, files in os.walk(location):
             if '.svn' not in dirs:
                 dirs[:] = []
-                continue    # no sense walking uncontrolled subdirs
+                continue  # no sense walking uncontrolled subdirs
             dirs.remove('.svn')
             entries_fn = os.path.join(base, '.svn', 'entries')
             if not os.path.exists(entries_fn):
@@ -112,18 +111,17 @@ class SubversionRepo(BaseRepo):
             dirurl, localrev = self._get_svn_url_rev(base)
 
             if base == location:
-                base_url = dirurl + '/'   # save the root url
+                base_url = dirurl + '/'  # save the root url
             elif not dirurl or not dirurl.startswith(base_url):
                 dirs[:] = []
-                continue    # not part of the same svn tree, skip it
+                continue  # not part of the same svn tree, skip it
             revision = max(revision, localrev)
         return revision
 
     @classmethod
     def get_url_and_revision_from_pip_url(cls, pip_url):
         # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
-        url, rev = super(
-            SubversionRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+        url, rev = super(SubversionRepo, cls).get_url_and_revision_from_pip_url(pip_url)
         if url.startswith('ssh://'):
             url = 'svn+' + url
         return url, rev

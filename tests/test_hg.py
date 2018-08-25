@@ -33,18 +33,19 @@ def hg_remote(parentdir, scope='session'):
 def test_repo_mercurial(tmpdir, parentdir, hg_remote):
     repo_name = 'my_mercurial_project'
 
-    mercurial_repo = create_repo_from_pip_url(**{
-        'pip_url': 'hg+file://' + hg_remote,
-        'repo_dir': str(parentdir.join(repo_name)),
-    })
+    mercurial_repo = create_repo_from_pip_url(
+        **{
+            'pip_url': 'hg+file://' + hg_remote,
+            'repo_dir': str(parentdir.join(repo_name)),
+        }
+    )
 
     run(['hg', 'init', mercurial_repo.name], cwd=str(tmpdir))
 
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ['hg', 'parents', '--template={rev}'],
-        cwd=str(parentdir.join(repo_name)),
+        ['hg', 'parents', '--template={rev}'], cwd=str(parentdir.join(repo_name))
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision

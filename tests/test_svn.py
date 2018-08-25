@@ -27,10 +27,12 @@ def svn_remote(parentdir, scope='session'):
 def test_repo_svn(tmpdir, svn_remote):
     repo_name = 'my_svn_project'
 
-    svn_repo = create_repo_from_pip_url(**{
-        'pip_url': 'svn+file://' + svn_remote,
-        'repo_dir': str(tmpdir.join(repo_name)),
-    })
+    svn_repo = create_repo_from_pip_url(
+        **{
+            'pip_url': 'svn+file://' + svn_remote,
+            'repo_dir': str(tmpdir.join(repo_name)),
+        }
+    )
 
     svn_repo.obtain()
     svn_repo.update_repo()

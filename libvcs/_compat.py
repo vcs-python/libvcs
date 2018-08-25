@@ -35,6 +35,7 @@ if PY2:
         cls.__str__ = lambda x: x.__unicode__().encode('utf-8')
         return cls
 
+
 else:
     unichr = chr
     text_type = str
