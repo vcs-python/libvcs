@@ -22,7 +22,7 @@ def pip_url_kwargs(parentdir, git_remote):
     repo_name = 'repo_clone'
     return {
         'pip_url': 'git+file://' + git_remote,
-        'repo_dir': os.path.join(str(parentdir), repo_name)
+        'repo_dir': os.path.join(str(parentdir), repo_name),
     }
 
 
@@ -44,11 +44,8 @@ def git_remote(parentdir, scope='session'):
 
     testfile_filename = 'testfile.test'
 
-    run(['touch', testfile_filename],
-        cwd=repo_dir)
-    run(['git', 'add', testfile_filename],
-        cwd=repo_dir)
-    run(['git', 'commit', '-m', 'test file for %s' % name],
-        cwd=repo_dir)
+    run(['touch', testfile_filename], cwd=repo_dir)
+    run(['git', 'add', testfile_filename], cwd=repo_dir)
+    run(['git', 'commit', '-m', 'test file for %s' % name], cwd=repo_dir)
 
     return repo_dir

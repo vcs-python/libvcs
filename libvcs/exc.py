@@ -16,6 +16,7 @@ class LibVCSException(Exception):
 
 class CommandError(LibVCSException):
     """This exception is raised on non-zero return codes."""
+
     def __init__(self, output, returncode=None, cmd=None):
         self.returncode = returncode
         self.output = output
@@ -25,9 +26,7 @@ class CommandError(LibVCSException):
             self.cmd = cmd
 
     def __str__(self):
-        message = self.message.format(
-            returncode=self.returncode, cmd=self.cmd
-        )
+        message = self.message.format(returncode=self.returncode, cmd=self.cmd)
         if len(self.output.strip()):
             message += '\n%s' % self.output
         return message
@@ -43,6 +42,7 @@ class CommandTimeoutError(CommandError):
 
 class InvalidPipURL(LibVCSException):
     """Invalid pip-style URL."""
+
     def __init__(self, url):
         self.url = url
         super(InvalidPipURL, self).__init__()
@@ -58,4 +58,5 @@ class InvalidPipURL(LibVCSException):
 
 class InvalidVCS(LibVCSException):
     """Invalid VCS."""
+
     pass

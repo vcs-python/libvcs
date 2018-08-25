@@ -31,9 +31,7 @@ logger = logging.getLogger(__name__)
 
 class GitRepo(BaseRepo):
     bin_name = 'git'
-    schemes = (
-        'git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file',
-    )
+    schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
 
     def __init__(self, url, remotes=None, **kwargs):
         """A git repository.
@@ -94,19 +92,16 @@ class GitRepo(BaseRepo):
         if '://' not in pip_url:
             assert 'file:' not in pip_url
             pip_url = pip_url.replace('git+', 'git+ssh://')
-            url, rev = super(
-                GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
             url = url.replace('ssh://', '')
         elif 'github.com:' in pip_url:
             raise exc.LibVCSException(
                 "Repo %s is malformatted, please use the convention %s for"
-                "ssh / private GitHub repositories." % (
-                    pip_url, "git+https://github.com/username/repo.git"
-                )
+                "ssh / private GitHub repositories."
+                % (pip_url, "git+https://github.com/username/repo.git")
             )
         else:
-            url, rev = super(
-                GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
 
         return url, rev
 
@@ -128,12 +123,8 @@ class GitRepo(BaseRepo):
 
         if self.remotes:
             for r in self.remotes:
-                self.error('Adding remote %s <%s>' %
-                           (r['remote_name'], r['url']))
-                self.remote_set(
-                    name=r['remote_name'],
-                    url=r['url']
-                )
+                self.error('Adding remote %s <%s>' % (r['remote_name'], r['url']))
+                self.remote_set(name=r['remote_name'], url=r['url'])
 
         self.info('Initializing submodules.')
         self.run(['submodule', 'init'], log_in_real_time=True)
@@ -174,8 +165,7 @@ class GitRepo(BaseRepo):
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
-        show_ref_output = self.run(['show-ref', git_tag],
-                                   check_returncode=False)
+        show_ref_output = self.run(['show-ref', git_tag], check_returncode=False)
         self.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
         self.debug("is_remote_ref: %s" % is_remote_ref)
@@ -184,8 +174,9 @@ class GitRepo(BaseRepo):
         # strip the remote from the tag.
         git_remote_name = self.git_remote_name
         if "refs/remotes/%s" % git_tag in show_ref_output:
-            m = re.match(r'^(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$',
-                         show_ref_output)
+            m = re.match(
+                r'^(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$', show_ref_output
+            )
             git_remote_name = m.group('git_remote_name')
             git_tag = m.group('git_tag')
 
@@ -200,7 +191,7 @@ class GitRepo(BaseRepo):
         self.debug("tag_sha: %s" % tag_sha)
 
         # Is the hash checkout out what we want?
-        somethings_up = (error_code, is_remote_ref, tag_sha != head_sha,)
+        somethings_up = (error_code, is_remote_ref, tag_sha != head_sha)
         if all(not x for x in somethings_up):
             self.info("Already up-to-date.")
             return
@@ -226,17 +217,13 @@ class GitRepo(BaseRepo):
                 # If Git < 1.7.6, uses --quiet --all
                 git_stash_save_options = '--quiet'
                 try:
-                    process = self.run([
-                        'stash', 'save', git_stash_save_options
-                    ])
+                    process = self.run(['stash', 'save', git_stash_save_options])
                 except exc.CommandError as e:
                     self.error("Failed to stash changes")
 
             # Pull changes from the remote branch
             try:
-                process = self.run([
-                    'rebase', git_remote_name + '/' + git_tag
-                ])
+                process = self.run(['rebase', git_remote_name + '/' + git_tag])
             except exc.CommandError as e:
                 # Rebase failed: Restore previous state.
                 self.run(['rebase', '--abort'])
@@ -245,15 +232,13 @@ class GitRepo(BaseRepo):
 
                 self.error(
                     "\nFailed to rebase in: '%s'.\n"
-                    "You will have to resolve the conflicts manually" %
-                    self.path)
+                    "You will have to resolve the conflicts manually" % self.path
+                )
                 return
 
             if need_stash:
                 try:
-                    process = self.run([
-                        'stash', 'pop', '--index', '--quiet'
-                    ])
+                    process = self.run(['stash', 'pop', '--index', '--quiet'])
                 except exc.CommandError as e:
                     # Stash pop --index failed: Try again dropping the index
                     self.run(['reset', '--hard', '--quiet'])
@@ -263,9 +248,11 @@ class GitRepo(BaseRepo):
                         # Stash pop failed: Restore previous state.
                         self.run(['reset', '--hard', '--quiet', head_sha])
                         self.run(['stash', 'pop', '--index', '--quiet'])
-                        self.error("\nFailed to rebase in: '%s'.\n"
-                                   "You will have to resolve the "
-                                   "conflicts manually" % self.path)
+                        self.error(
+                            "\nFailed to rebase in: '%s'.\n"
+                            "You will have to resolve the "
+                            "conflicts manually" % self.path
+                        )
                         return
 
         else:

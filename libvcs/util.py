@@ -19,10 +19,9 @@ from ._compat import console_to_str
 logger = logging.getLogger(__name__)
 
 
-def which(exe=None,
-          default_paths=[
-              '/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin']
-          ):
+def which(
+    exe=None, default_paths=['/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin']
+):
     """Return path of bin. Python clone of /usr/bin/which.
 
     from salt.util - https://www.github.com/saltstack/salt - license apache
@@ -33,10 +32,10 @@ def which(exe=None,
     :type default_path: list
     :rtype: str
     """
+
     def _is_executable_file_or_link(exe):
         # check for os.X_OK doesn't suffice because directory may executable
-        return (os.access(exe, os.X_OK) and
-                (os.path.isfile(exe) or os.path.islink(exe)))
+        return os.access(exe, os.X_OK) and (os.path.isfile(exe) or os.path.islink(exe))
 
     if _is_executable_file_or_link(exe):
         # executable in cwd or fullpath
@@ -45,8 +44,9 @@ def which(exe=None,
     # Enhance POSIX path for the reliability at some environments, when
     # $PATH is changing. This also keeps order, where 'first came, first
     # win' for cases to find optional alternatives
-    search_path = os.environ.get('PATH') and \
-        os.environ['PATH'].split(os.pathsep) or list()
+    search_path = (
+        os.environ.get('PATH') and os.environ['PATH'].split(os.pathsep) or list()
+    )
     for default_path in default_paths:
         if default_path not in search_path:
             search_path.append(default_path)
@@ -57,7 +57,8 @@ def which(exe=None,
             return full_path
     logger.info(
         '\'{0}\' could not be found in the following search path: '
-        '\'{1}\''.format(exe, search_path))
+        '\'{1}\''.format(exe, search_path)
+    )
 
     return None
 
@@ -112,8 +113,14 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
         return msg, kwargs
 
 
-def run(cmd, shell=False, cwd=None, log_in_real_time=True,
-        check_returncode=True, callback=None):
+def run(
+    cmd,
+    shell=False,
+    cwd=None,
+    log_in_real_time=True,
+    check_returncode=True,
+    callback=None,
+):
     """ Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
 
@@ -143,8 +150,14 @@ def run(cmd, shell=False, cwd=None, log_in_real_time=True,
     :type callback: func
     """
     proc = subprocess.Popen(
-        cmd, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-        creationflags=0, bufsize=1, cwd=cwd)
+        cmd,
+        shell=shell,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        creationflags=0,
+        bufsize=1,
+        cwd=cwd,
+    )
 
     all_output = []
     code = None
@@ -157,20 +170,14 @@ def run(cmd, shell=False, cwd=None, log_in_real_time=True,
         if callback and callable(callback):
             line = console_to_str(proc.stderr.read(128))
             if line:
-                callback(
-                    output=line,
-                    timestamp=datetime.datetime.now())
+                callback(output=line, timestamp=datetime.datetime.now())
     if callback and callable(callback):
-        callback(
-            output='\r',
-            timestamp=datetime.datetime.now())
+        callback(output='\r', timestamp=datetime.datetime.now())
 
-    lines = filter(None, (
-        line.strip() for line in proc.stdout.readlines()))
+    lines = filter(None, (line.strip() for line in proc.stdout.readlines()))
     all_output = console_to_str(b'\n'.join(lines))
     if code:
-        stderr_lines = filter(None, (
-            line.strip() for line in proc.stderr.readlines()))
+        stderr_lines = filter(None, (line.strip() for line in proc.stderr.readlines()))
         all_output = console_to_str(b''.join(stderr_lines))
     output = ''.join(all_output)
     if code != 0 and check_returncode:

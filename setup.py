@@ -30,6 +30,7 @@ class PyTest(TestCommand):
 
     def run_tests(self):
         import pytest
+
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
@@ -50,9 +51,7 @@ setup(
     cmdclass={'test': PyTest},
     zip_safe=False,
     keywords=about['__title__'],
-    packages=[
-        'libvcs',
-    ],
+    packages=['libvcs'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',

@@ -13,9 +13,13 @@ def test_command_error():
         command = ['command', 'arg']
         raise exc.CommandError('this is output', returncode, command)
     assert e.value.cmd == ' '.join(command)
-    assert str(e.value) == exc.CommandError.message.format(
-        returncode=e.value.returncode, cmd=e.value.cmd
-    ) + '\n%s' % e.value.output
+    assert (
+        str(e.value)
+        == exc.CommandError.message.format(
+            returncode=e.value.returncode, cmd=e.value.cmd
+        )
+        + '\n%s' % e.value.output
+    )
 
     with pytest.raises(exc.CommandError) as e:
         returncode = 0
