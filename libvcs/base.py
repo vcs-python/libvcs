@@ -72,8 +72,6 @@ class BaseRepo(RepoLoggingAdapter, object):
     def run(
         self,
         cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
         cwd=None,
         check_returncode=True,
         log_in_real_time=None,
