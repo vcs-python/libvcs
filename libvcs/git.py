@@ -170,15 +170,16 @@ class GitRepo(BaseRepo):
         is_remote_ref = "remotes" in show_ref_output
         self.debug("is_remote_ref: %s" % is_remote_ref)
 
-        # Tag is in the form <remote>/<tag> (i.e. origin/master) we must
-        # strip the remote from the tag.
+        # show-ref output is in the form "<sha> refs/remotes/<remote>/<tag>"
+        # we must strip the remote from the tag.
         git_remote_name = self.git_remote_name
         if "refs/remotes/%s" % git_tag in show_ref_output:
-            m = re.match(
-                r'^(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$', show_ref_output
-            )
+            m = re.match(r'^[0-9a-f]{40} refs/remotes/(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$',
+                         show_ref_output)
             git_remote_name = m.group('git_remote_name')
             git_tag = m.group('git_tag')
+        self.debug("git_remote_name: %s" % git_remote_name)
+        self.debug("git_tag: %s" % git_tag)
 
         # This will fail if the tag does not exist (it probably has not
         # been fetched yet).
