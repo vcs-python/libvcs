@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
+import subprocess
 
 from . import exc
 from ._compat import urlparse
@@ -185,7 +186,8 @@ class GitRepo(BaseRepo):
         # been fetched yet).
         try:
             error_code = 0
-            tag_sha = self.run(['rev-list', '--max-count=1', git_tag])
+            tag_sha = self.run(['rev-list', '--max-count=1',
+                git_remote_name + '/' + git_tag if is_remote_ref else git_tag])
         except exc.CommandError as e:
             error_code = e.returncode
             tag_sha = ""
