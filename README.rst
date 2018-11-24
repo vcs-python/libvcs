@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fvcs-python%2Flibvcs.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fvcs-python%2Flibvcs?ref=badge_shield)
+
 ``libvcs`` - abstraction layer for vcs, powers `vcspull`_.
 
 |pypi| |docs| |build-status| |coverage| |license|
@@ -115,3 +117,6 @@ tests           .. code-block:: bash
     :alt: Documentation Status
     :scale: 100%
     :target: https://readthedocs.org/projects/libvcs/
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fvcs-python%2Flibvcs.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fvcs-python%2Flibvcs?ref=badge_large)
