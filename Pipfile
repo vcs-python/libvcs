@@ -12,6 +12,7 @@ pytest = "*"
 pytest-mock = "*"
 libvcs = {path = ".",editable = true}
 black = "==19.3b0"
+sphinx-issues = "*"
 
 [packages]
 
