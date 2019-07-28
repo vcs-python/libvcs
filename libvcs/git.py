@@ -10,7 +10,7 @@ From https://github.com/saltstack/salt (Apache License):
 - :py:meth:`Git.remote_get`
 - :py:meth:`Git.remote_set`
 
-From pip (MIT Licnese):
+From pip (MIT License):
 
 - :py:meth:`Git.get_url_and_revision_from_pip_url` (get_url_rev)
 - :py:meth:`Git.get_revision`
@@ -21,7 +21,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
-import subprocess
 
 from . import exc
 from ._compat import urlparse
@@ -158,7 +157,7 @@ class Git(VCSRepo):
         # Get head sha
         try:
             head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'])
-        except exc.CommandError as e:
+        except exc.CommandError:
             self.error("Failed to get the hash for HEAD")
             return
 
@@ -208,7 +207,7 @@ class Git(VCSRepo):
 
         try:
             process = self.run(['fetch'], log_in_real_time=True)
-        except exc.CommandError as e:
+        except exc.CommandError:
             self.error("Failed to fetch repository '%s'" % url)
             return
 
@@ -216,7 +215,7 @@ class Git(VCSRepo):
             # Check if stash is needed
             try:
                 process = self.run(['status', '--porcelain'])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 self.error("Failed to get the status")
                 return
             need_stash = len(process) > 0
@@ -228,13 +227,13 @@ class Git(VCSRepo):
                 git_stash_save_options = '--quiet'
                 try:
                     process = self.run(['stash', 'save', git_stash_save_options])
-                except exc.CommandError as e:
+                except exc.CommandError:
                     self.error("Failed to stash changes")
 
             # Pull changes from the remote branch
             try:
                 process = self.run(['rebase', git_remote_name + '/' + git_tag])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 # Rebase failed: Restore previous state.
                 self.run(['rebase', '--abort'])
                 if need_stash:
@@ -249,12 +248,12 @@ class Git(VCSRepo):
             if need_stash:
                 try:
                     process = self.run(['stash', 'pop', '--index', '--quiet'])
-                except exc.CommandError as e:
+                except exc.CommandError:
                     # Stash pop --index failed: Try again dropping the index
                     self.run(['reset', '--hard', '--quiet'])
                     try:
                         process = self.run(['stash', 'pop', '--quiet'])
-                    except exc.CommandError as e:
+                    except exc.CommandError:
                         # Stash pop failed: Restore previous state.
                         self.run(['reset', '--hard', '--quiet', head_sha])
                         self.run(['stash', 'pop', '--index', '--quiet'])
@@ -268,7 +267,7 @@ class Git(VCSRepo):
         else:
             try:
                 process = self.run(['checkout', git_tag])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 self.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
