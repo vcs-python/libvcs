@@ -9,17 +9,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from .base import BaseRepo, RepoLoggingAdapter
-from .git import GitRepo
-from .hg import MercurialRepo
-from .svn import SubversionRepo
+from .base import RepoLoggingAdapter, VCSRepo
+from .git import Git
+from .hg import Mercurial
+from .svn import Subversion
 
-__all__ = [
-    'GitRepo',
-    'MercurialRepo',
-    'SubversionRepo',
-    'BaseRepo',
-    'RepoLoggingAdapter',
-]
+__all__ = ['Git', 'Mercurial', 'Subversion', 'VCSRepo', 'RepoLoggingAdapter']
 
 logger = logging.getLogger(__name__)

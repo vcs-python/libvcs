@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @implements_to_string
-class BaseRepo(RepoLoggingAdapter, object):
+class VCSRepo(RepoLoggingAdapter, object):
 
     """Base class for repositories.
 

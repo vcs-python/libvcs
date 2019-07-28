@@ -21,24 +21,24 @@ Tools like :func:`libvcs.shortcuts.create_repo` and
 `:func:`libvcs.shortcuts.create_repo_from_pip_url` are just wrappers
 around instantiated these classes.
 
-.. autoclass:: libvcs.git.GitRepo
+.. autoclass:: libvcs.git.Git
    :members:
    :show-inheritance:
 
-.. autoclass:: libvcs.hg.MercurialRepo
+.. autoclass:: libvcs.hg.Mercurial
    :members:
    :show-inheritance:
 
-.. autoclass:: libvcs.svn.SubversionRepo
+.. autoclass:: libvcs.svn.Subversion
    :members:
    :show-inheritance:
 
 Adding your own VCS
 -------------------
 
-Extending libvcs can be done through subclassing ``BaseRepo``.
+Extending libvcs can be done through subclassing ``VCSRepo``.
 
-.. autoclass:: libvcs.base.BaseRepo
+.. autoclass:: libvcs.base.VCSRepo
     :members:
     :show-inheritance:
 
