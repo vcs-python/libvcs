@@ -9,7 +9,7 @@ import pytest
 
 from libvcs import exc
 from libvcs._compat import string_types
-from libvcs.git import GitRepo
+from libvcs.git import Git
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
@@ -129,7 +129,7 @@ def test_remotes_vcs_prefix(pip_url_kwargs):
 
 def test_git_get_url_and_rev_from_pip_url():
     pip_url = 'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
-    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    url, rev = Git.get_url_and_revision_from_pip_url(pip_url)
     assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
     assert rev is None
 
@@ -137,14 +137,14 @@ def test_git_get_url_and_rev_from_pip_url():
         'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git',
         'eucalyptus',
     )
-    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    url, rev = Git.get_url_and_revision_from_pip_url(pip_url)
     assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
     assert rev == 'eucalyptus'
 
     # the git manual refers to this as "scp-like syntax"
     # https://git-scm.com/docs/git-clone
     pip_url = '%s@%s' % ('git+user@hostname:user/repo.git', 'eucalyptus')
-    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    url, rev = Git.get_url_and_revision_from_pip_url(pip_url)
     assert 'user@hostname:user/repo.git' == url
     assert rev == 'eucalyptus'
 

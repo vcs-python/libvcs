@@ -6,9 +6,9 @@ libvcs.hg
 
 The following is from pypa/pip (MIT license):
 
-- :py:meth:`MercurialRepo.get_url_and_revision_from_pip_url`
-- :py:meth:`MercurialRepo.get_url`
-- :py:meth:`MercurialRepo.get_revision`
+- :py:meth:`Mercurial.get_url_and_revision_from_pip_url`
+- :py:meth:`Mercurial.get_url`
+- :py:meth:`Mercurial.get_revision`
 
 """
 from __future__ import absolute_import, print_function, unicode_literals
@@ -16,17 +16,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 
-from .base import BaseRepo
+from .base import VCSRepo
 
 logger = logging.getLogger(__name__)
 
 
-class MercurialRepo(BaseRepo):
+class Mercurial(VCSRepo):
     bin_name = 'hg'
     schemes = ('hg', 'hg+http', 'hg+https', 'hg+file')
 
     def __init__(self, url, **kwargs):
-        BaseRepo.__init__(self, url, **kwargs)
+        VCSRepo.__init__(self, url, **kwargs)
 
     def obtain(self):
         self.check_destination()

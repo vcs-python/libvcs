@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 
-from libvcs import GitRepo, MercurialRepo, SubversionRepo
+from libvcs import Git, Mercurial, Subversion
 from libvcs.exc import InvalidPipURL, InvalidVCS
 
 
@@ -9,8 +9,8 @@ def create_repo(url, vcs, **kwargs):
     r"""Return a object representation of a VCS repository.
 
     :returns: instance of a repository object
-    :rtype: :class:`libvcs.svn.SubversionRepo`, :class:`libvcs.git.GitRepo` or
-        :class:`libvcs.hg.MercurialRepo`.
+    :rtype: :class:`libvcs.svn.Subversion`, :class:`libvcs.git.Git` or
+        :class:`libvcs.hg.Mercurial`.
 
     Usage Example::
 
@@ -34,11 +34,11 @@ def create_repo(url, vcs, **kwargs):
         Already up-to-date.
     """
     if vcs == 'git':
-        return GitRepo(url, **kwargs)
+        return Git(url, **kwargs)
     elif vcs == 'hg':
-        return MercurialRepo(url, **kwargs)
+        return Mercurial(url, **kwargs)
     elif vcs == 'svn':
-        return SubversionRepo(url, **kwargs)
+        return Subversion(url, **kwargs)
     else:
         raise InvalidVCS('VCS %s is not a valid VCS' % vcs)
 
@@ -47,8 +47,8 @@ def create_repo_from_pip_url(pip_url, **kwargs):
     r"""Return a object representation of a VCS repository via pip-style url.
 
     :returns: instance of a repository object
-    :rtype: :class:`libvcs.svn.SubversionRepo`, :class:`libvcs.git.GitRepo` or
-        :class:`libvcs.hg.MercurialRepo`.
+    :rtype: :class:`libvcs.svn.Subversion`, :class:`libvcs.git.Git` or
+        :class:`libvcs.hg.Mercurial`.
 
     Usage Example::
 
@@ -71,10 +71,10 @@ def create_repo_from_pip_url(pip_url, **kwargs):
         Already up-to-date.
     """
     if pip_url.startswith('git+'):
-        return GitRepo.from_pip_url(pip_url, **kwargs)
+        return Git.from_pip_url(pip_url, **kwargs)
     elif pip_url.startswith('hg+'):
-        return MercurialRepo.from_pip_url(pip_url, **kwargs)
+        return Mercurial.from_pip_url(pip_url, **kwargs)
     elif pip_url.startswith('svn+'):
-        return SubversionRepo.from_pip_url(pip_url, **kwargs)
+        return Subversion.from_pip_url(pip_url, **kwargs)
     else:
         raise InvalidPipURL(pip_url)

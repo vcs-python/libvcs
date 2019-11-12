@@ -6,14 +6,14 @@ libvcs.git
 
 From https://github.com/saltstack/salt (Apache License):
 
-- :py:meth:`GitRepo.remote`
-- :py:meth:`GitRepo.remote_get`
-- :py:meth:`GitRepo.remote_set`
+- :py:meth:`Git.remote`
+- :py:meth:`Git.remote_get`
+- :py:meth:`Git.remote_set`
 
-From pip (MIT Licnese):
+From pip (MIT License):
 
-- :py:meth:`GitRepo.get_url_and_revision_from_pip_url` (get_url_rev)
-- :py:meth:`GitRepo.get_revision`
+- :py:meth:`Git.get_url_and_revision_from_pip_url` (get_url_rev)
+- :py:meth:`Git.get_revision`
 
 """
 from __future__ import absolute_import, print_function, unicode_literals
@@ -21,16 +21,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
-import subprocess
 
 from . import exc
 from ._compat import urlparse
-from .base import BaseRepo
+from .base import VCSRepo
 
 logger = logging.getLogger(__name__)
 
 
-class GitRepo(BaseRepo):
+class Git(VCSRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
 
@@ -70,7 +69,7 @@ class GitRepo(BaseRepo):
             self.git_submodules = []
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
-        BaseRepo.__init__(self, url, **kwargs)
+        VCSRepo.__init__(self, url, **kwargs)
 
         self.remotes = remotes
 
@@ -93,7 +92,7 @@ class GitRepo(BaseRepo):
         if '://' not in pip_url:
             assert 'file:' not in pip_url
             pip_url = pip_url.replace('git+', 'git+ssh://')
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+            url, rev = super(Git, cls).get_url_and_revision_from_pip_url(pip_url)
             url = url.replace('ssh://', '')
         elif 'github.com:' in pip_url:
             raise exc.LibVCSException(
@@ -102,7 +101,7 @@ class GitRepo(BaseRepo):
                 % (pip_url, "git+https://github.com/username/repo.git")
             )
         else:
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+            url, rev = super(Git, cls).get_url_and_revision_from_pip_url(pip_url)
 
         return url, rev
 
@@ -158,7 +157,7 @@ class GitRepo(BaseRepo):
         # Get head sha
         try:
             head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'])
-        except exc.CommandError as e:
+        except exc.CommandError:
             self.error("Failed to get the hash for HEAD")
             return
 
@@ -175,8 +174,10 @@ class GitRepo(BaseRepo):
         # we must strip the remote from the tag.
         git_remote_name = self.git_remote_name
         if "refs/remotes/%s" % git_tag in show_ref_output:
-            m = re.match(r'^[0-9a-f]{40} refs/remotes/(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$',
-                         show_ref_output)
+            m = re.match(
+                r'^[0-9a-f]{40} refs/remotes/(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$',
+                show_ref_output,
+            )
             git_remote_name = m.group('git_remote_name')
             git_tag = m.group('git_tag')
         self.debug("git_remote_name: %s" % git_remote_name)
@@ -186,8 +187,13 @@ class GitRepo(BaseRepo):
         # been fetched yet).
         try:
             error_code = 0
-            tag_sha = self.run(['rev-list', '--max-count=1',
-                git_remote_name + '/' + git_tag if is_remote_ref else git_tag])
+            tag_sha = self.run(
+                [
+                    'rev-list',
+                    '--max-count=1',
+                    git_remote_name + '/' + git_tag if is_remote_ref else git_tag,
+                ]
+            )
         except exc.CommandError as e:
             error_code = e.returncode
             tag_sha = ""
@@ -201,7 +207,7 @@ class GitRepo(BaseRepo):
 
         try:
             process = self.run(['fetch'], log_in_real_time=True)
-        except exc.CommandError as e:
+        except exc.CommandError:
             self.error("Failed to fetch repository '%s'" % url)
             return
 
@@ -209,7 +215,7 @@ class GitRepo(BaseRepo):
             # Check if stash is needed
             try:
                 process = self.run(['status', '--porcelain'])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 self.error("Failed to get the status")
                 return
             need_stash = len(process) > 0
@@ -221,13 +227,13 @@ class GitRepo(BaseRepo):
                 git_stash_save_options = '--quiet'
                 try:
                     process = self.run(['stash', 'save', git_stash_save_options])
-                except exc.CommandError as e:
+                except exc.CommandError:
                     self.error("Failed to stash changes")
 
             # Pull changes from the remote branch
             try:
                 process = self.run(['rebase', git_remote_name + '/' + git_tag])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 # Rebase failed: Restore previous state.
                 self.run(['rebase', '--abort'])
                 if need_stash:
@@ -242,12 +248,12 @@ class GitRepo(BaseRepo):
             if need_stash:
                 try:
                     process = self.run(['stash', 'pop', '--index', '--quiet'])
-                except exc.CommandError as e:
+                except exc.CommandError:
                     # Stash pop --index failed: Try again dropping the index
                     self.run(['reset', '--hard', '--quiet'])
                     try:
                         process = self.run(['stash', 'pop', '--quiet'])
-                    except exc.CommandError as e:
+                    except exc.CommandError:
                         # Stash pop failed: Restore previous state.
                         self.run(['reset', '--hard', '--quiet', head_sha])
                         self.run(['stash', 'pop', '--index', '--quiet'])
@@ -261,7 +267,7 @@ class GitRepo(BaseRepo):
         else:
             try:
                 process = self.run(['checkout', git_tag])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 self.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 

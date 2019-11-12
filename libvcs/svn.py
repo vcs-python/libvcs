@@ -7,13 +7,13 @@ libvcs.svn
 
 The follow are from saltstack/salt (Apache license):
 
-- :py:meth:`SubversionRepo.get_revision_file`
+- :py:meth:`Subversion.get_revision_file`
 
 The following are pypa/pip (MIT license):
 
-- :py:meth:`SubversionRepo.get_url_and_revision_from_pip_url`
-- :py:meth:`SubversionRepo.get_url`
-- :py:meth:`SubversionRepo.get_revision`
+- :py:meth:`Subversion.get_url_and_revision_from_pip_url`
+- :py:meth:`Subversion.get_url`
+- :py:meth:`Subversion.get_revision`
 - :py:meth:`~.get_rev_options`
 
 """
@@ -24,12 +24,12 @@ import os
 import re
 
 from ._compat import urlparse
-from .base import BaseRepo
+from .base import VCSRepo
 
 logger = logging.getLogger(__name__)
 
 
-class SubversionRepo(BaseRepo):
+class Subversion(VCSRepo):
     bin_name = 'svn'
     schemes = ('svn', 'svn+ssh', 'svn+http', 'svn+https', 'svn+svn')
 
@@ -51,7 +51,7 @@ class SubversionRepo(BaseRepo):
         """
         if 'svn_trust_cert' not in kwargs:
             self.svn_trust_cert = False
-        BaseRepo.__init__(self, url, **kwargs)
+        VCSRepo.__init__(self, url, **kwargs)
 
     def _user_pw_args(self):
         args = []
@@ -121,7 +121,7 @@ class SubversionRepo(BaseRepo):
     @classmethod
     def get_url_and_revision_from_pip_url(cls, pip_url):
         # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
-        url, rev = super(SubversionRepo, cls).get_url_and_revision_from_pip_url(pip_url)
+        url, rev = super(Subversion, cls).get_url_and_revision_from_pip_url(pip_url)
         if url.startswith('ssh://'):
             url = 'svn+' + url
         return url, rev

@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import subprocess
 
 from ._compat import implements_to_string, urlparse
 from .util import RepoLoggingAdapter, mkdir_p, run
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @implements_to_string
-class BaseRepo(RepoLoggingAdapter, object):
+class VCSRepo(RepoLoggingAdapter, object):
 
     """Base class for repositories.
 
