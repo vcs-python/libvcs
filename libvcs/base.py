@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import subprocess
 
 from ._compat import implements_to_string, urlparse
 from .util import RepoLoggingAdapter, mkdir_p, run

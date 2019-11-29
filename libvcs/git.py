@@ -21,7 +21,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
-import subprocess
 
 from . import exc
 from ._compat import urlparse
@@ -158,7 +157,7 @@ class GitRepo(BaseRepo):
         # Get head sha
         try:
             head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'])
-        except exc.CommandError as e:
+        except exc.CommandError:
             self.error("Failed to get the hash for HEAD")
             return
 
@@ -175,8 +174,13 @@ class GitRepo(BaseRepo):
         # we must strip the remote from the tag.
         git_remote_name = self.git_remote_name
         if "refs/remotes/%s" % git_tag in show_ref_output:
-            m = re.match(r'^[0-9a-f]{40} refs/remotes/(?P<git_remote_name>[^/]+)/(?P<git_tag>.+)$',
-                         show_ref_output)
+            m = re.match(
+                r'^[0-9a-f]{40} refs/remotes/'
+                r'(?P<git_remote_name>[^/]+)/'
+                r'(?P<git_tag>.+)$',
+                show_ref_output,
+                re.MULTILINE,
+            )
             git_remote_name = m.group('git_remote_name')
             git_tag = m.group('git_tag')
         self.debug("git_remote_name: %s" % git_remote_name)
@@ -186,8 +190,13 @@ class GitRepo(BaseRepo):
         # been fetched yet).
         try:
             error_code = 0
-            tag_sha = self.run(['rev-list', '--max-count=1',
-                git_remote_name + '/' + git_tag if is_remote_ref else git_tag])
+            tag_sha = self.run(
+                [
+                    'rev-list',
+                    '--max-count=1',
+                    git_remote_name + '/' + git_tag if is_remote_ref else git_tag,
+                ]
+            )
         except exc.CommandError as e:
             error_code = e.returncode
             tag_sha = ""
@@ -201,7 +210,7 @@ class GitRepo(BaseRepo):
 
         try:
             process = self.run(['fetch'], log_in_real_time=True)
-        except exc.CommandError as e:
+        except exc.CommandError:
             self.error("Failed to fetch repository '%s'" % url)
             return
 
@@ -209,7 +218,7 @@ class GitRepo(BaseRepo):
             # Check if stash is needed
             try:
                 process = self.run(['status', '--porcelain'])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 self.error("Failed to get the status")
                 return
             need_stash = len(process) > 0
@@ -221,13 +230,13 @@ class GitRepo(BaseRepo):
                 git_stash_save_options = '--quiet'
                 try:
                     process = self.run(['stash', 'save', git_stash_save_options])
-                except exc.CommandError as e:
+                except exc.CommandError:
                     self.error("Failed to stash changes")
 
             # Pull changes from the remote branch
             try:
                 process = self.run(['rebase', git_remote_name + '/' + git_tag])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 # Rebase failed: Restore previous state.
                 self.run(['rebase', '--abort'])
                 if need_stash:
@@ -242,12 +251,12 @@ class GitRepo(BaseRepo):
             if need_stash:
                 try:
                     process = self.run(['stash', 'pop', '--index', '--quiet'])
-                except exc.CommandError as e:
+                except exc.CommandError:
                     # Stash pop --index failed: Try again dropping the index
                     self.run(['reset', '--hard', '--quiet'])
                     try:
                         process = self.run(['stash', 'pop', '--quiet'])
-                    except exc.CommandError as e:
+                    except exc.CommandError:
                         # Stash pop failed: Restore previous state.
                         self.run(['reset', '--hard', '--quiet', head_sha])
                         self.run(['stash', 'pop', '--index', '--quiet'])
@@ -261,7 +270,7 @@ class GitRepo(BaseRepo):
         else:
             try:
                 process = self.run(['checkout', git_tag])
-            except exc.CommandError as e:
+            except exc.CommandError:
                 self.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
