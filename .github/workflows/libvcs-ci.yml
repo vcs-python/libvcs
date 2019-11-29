@@ -23,3 +23,6 @@ jobs:
     - name: Test with pytest
       run: |
         pipenv run py.test
+    - uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
