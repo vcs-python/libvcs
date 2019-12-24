@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """libvcs lives at <https://github.com/vcs-python/libvcs>."""
-
-import sys
-
 from setuptools import setup
 
 about = {}
