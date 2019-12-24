@@ -1,2 +1,2 @@
 pytest<6
-pytest-mock==1.10.4
+pytest-mock<2
