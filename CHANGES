@@ -4,6 +4,7 @@ Changelog
 
 Here are the changes for libvcs.
 
+- :issue:`296` - Move from Pipfile to poetry
 - Sort imports
 - Add isort package, isort configuration in setup.cfg, and
   ``make isort`` task to Makefile.
