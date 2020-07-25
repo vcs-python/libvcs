@@ -155,7 +155,7 @@ def run(
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         creationflags=0,
-        bufsize=1,
+        bufsize=0,
         cwd=cwd,
     )
 
