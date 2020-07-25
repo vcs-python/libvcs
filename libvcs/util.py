@@ -150,13 +150,7 @@ def run(
     :type callback: func
     """
     proc = subprocess.Popen(
-        cmd,
-        shell=shell,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        creationflags=0,
-        bufsize=0,
-        cwd=cwd,
+        cmd, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
     )
 
     all_output = []
