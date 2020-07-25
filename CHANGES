@@ -4,6 +4,9 @@ Changelog
 
 Here are the changes for libvcs.
 
+0.3.1 <2020-07-25>
+------------------
+- Fix issue with subprocess.Popen loud warning on Python 3.8
 - :issue:`296` - Move from Pipfile to poetry
 - Sort imports
 - Add isort package, isort configuration in setup.cfg, and
