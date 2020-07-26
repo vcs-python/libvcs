@@ -314,7 +314,7 @@ class GitRepo(BaseRepo):
         except exc.LibVCSException:
             return None
 
-    def remote_set(self, url, name='origin'):
+    def remote_set(self, url, name='origin', overwrite=False):
         """Set remote with name and URL like git remote add.
 
         :param url: defines the remote URL
@@ -325,8 +325,8 @@ class GitRepo(BaseRepo):
 
         url = self.chomp_protocol(url)
 
-        if self.remote_get(name):
-            self.run(['remote', 'rm', 'name'])
+        if self.remote_get(name) and overwrite:
+            self.run(['remote', 'rm', name])
 
         self.run(['remote', 'add', name, url])
         return self.remote_get(remote=name)
