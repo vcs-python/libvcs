@@ -4,8 +4,8 @@ Changelog
 
 Here are the changes for libvcs.
 
-current
--------
+0.3.2 <2020-07-26>
+------------------
 - :issue:`258` :meth:`libvcs.git.GitRepo.remote_set`
 
   - Fix updating of remote URLs
