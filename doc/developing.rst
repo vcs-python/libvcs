@@ -17,6 +17,9 @@ Our tests are inside ``tests/``. Tests are implemented using
 Install the latest code from git
 --------------------------------
 
+Using pip
+^^^^^^^^^
+
 To begin developing, check out the code from github:
 
 .. code-block:: sh
@@ -46,6 +49,40 @@ Good! Now let's run this:
 This has ``pip``, a python package manager install the python package
 in the current directory. ``-e`` means ``--editable``, which means you can
 adjust the code and the installed software will reflect the changes.
+
+Using poetry
+^^^^^^^^^^^^
+
+To begin developing, check out the code from github:
+
+.. code-block:: bash
+
+    $ git clone git@github.com:vcs-python/libvcs.git
+    $ cd libvcs
+
+You can create a virtualenv, and install all of the locked
+packages as listed in poetry.lock:
+
+.. code-block:: bash
+
+    $ poetry install
+
+If you ever need to update packages during your development session, the
+following command can be used to update all packages as per poetry settings or
+individual package (second command):
+
+.. code-block:: bash
+
+    $ poetry update
+    $ poetry update requests
+
+Then activate it to your current tty / terminal session with:
+
+.. code-block:: bash
+
+    $ poetry shell
+
+That is it! You are now ready to code!
 
 Test Runner
 -----------
