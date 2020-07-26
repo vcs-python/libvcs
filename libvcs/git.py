@@ -326,9 +326,9 @@ class GitRepo(BaseRepo):
         url = self.chomp_protocol(url)
 
         if self.remote_get(name) and overwrite:
-            self.run(['remote', 'rm', name])
-
-        self.run(['remote', 'add', name, url])
+            self.run(['remote', 'set-url', name, url])
+        else:
+            self.run(['remote', 'add', name, url])
         return self.remote_get(remote=name)
 
     @staticmethod
