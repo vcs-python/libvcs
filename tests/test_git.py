@@ -183,17 +183,22 @@ def test_get_remotes(git_repo):
 
 @pytest.mark.parametrize('repo_name,new_repo_url', [['myrepo', 'file:///apples'],])
 def test_set_remote(git_repo, repo_name, new_repo_url):
-    mynewremote = git_repo.remote_set(name='myrepo', url='file:///')
+    mynewremote = git_repo.remote_set(name=repo_name, url='file:///')
 
     assert 'file:///' in mynewremote, 'remote_set returns remote'
 
     assert 'file:///' in git_repo.remote_get(
-        remote='myrepo'
+        remote=repo_name
     ), 'remote_get returns remote'
 
     assert 'myrepo' in git_repo.remotes_get, '.remotes_get() returns new remote'
 
-    mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url)
+    with pytest.raises(
+        exc.CommandError, match=f'.*remote {repo_name} already exists.*'
+    ):
+        mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url)
+
+    mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url, overwrite=True)
 
     assert new_repo_url in git_repo.remote_get(
         remote='myrepo'
