@@ -178,7 +178,6 @@ def test_ls_remotes(git_repo):
 
 
 def test_get_remotes(git_repo):
-
     assert 'origin' in git_repo.remotes_get
 
 
