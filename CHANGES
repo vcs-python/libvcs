@@ -4,6 +4,10 @@ Changelog
 
 Here are the changes for libvcs.
 
+current
+-------
+- Remove f-string from test
+
 0.3.2 <2020-07-26>
 ------------------
 - :issue:`258` :meth:`libvcs.git.GitRepo.remote_set`
