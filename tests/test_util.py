@@ -18,6 +18,6 @@ def test_mkdir_p(tmpdir):
 
 
 def test_which_no_hg_found(monkeypatch):
-    monkeypatch.setenv("PATH", "/")
+    monkeypatch.setenv(str("PATH"), str("/"))
     which('hg')
     which('hg', '/')
