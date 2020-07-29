@@ -194,7 +194,8 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     assert 'myrepo' in git_repo.remotes_get, '.remotes_get() returns new remote'
 
     with pytest.raises(
-        exc.CommandError, match=f'.*remote {repo_name} already exists.*'
+        exc.CommandError,
+        match='.*remote {repo_name} already exists.*'.format(repo_name=repo_name),
     ):
         mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url)
 
