@@ -124,7 +124,7 @@ class GitRepo(BaseRepo):
         if self.remotes:
             for r in self.remotes:
                 self.error('Adding remote %s <%s>' % (r['remote_name'], r['url']))
-                self.remote_set(name=r['remote_name'], url=r['url'])
+                self.remote_set(name=r['remote_name'], url=r['url'], overwrite=True)
 
         self.info('Initializing submodules.')
         self.run(['submodule', 'init'], log_in_real_time=True)
