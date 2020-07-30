@@ -110,14 +110,17 @@ class BaseRepo(RepoLoggingAdapter, object):
 
     def check_destination(self, *args, **kwargs):
         """Assure destination path exists. If not, create directories."""
+        if os.path.exists(self.path):
+            return True
+
         if not os.path.exists(self.parent_dir):
             mkdir_p(self.parent_dir)
-        else:
-            if not os.path.exists(self.path):
-                self.debug(
-                    'Repo directory for %s does not exist @ %s' % (self.name, self.path)
-                )
-                mkdir_p(self.path)
+
+        if not os.path.exists(self.path):
+            self.debug(
+                'Repo directory for %s does not exist @ %s' % (self.name, self.path)
+            )
+            mkdir_p(self.path)
 
         return True
 
