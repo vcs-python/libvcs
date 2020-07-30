@@ -4,8 +4,8 @@ Changelog
 
 Here are the changes for libvcs.
 
-current
--------
+0.3.3 <2020-07-29>
+------------------
 - Remove f-string from test
 - :meth:`libvcs.git.GitRepo.obtain` Overwrite remote if exists
 
