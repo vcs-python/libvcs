@@ -343,7 +343,7 @@ class GitRepo(BaseRepo):
 
         return self.remotes()
 
-    def remote(self, name='origin', **kwargs):
+    def remote(self, name, **kwargs):
         """Get the fetch and push URL for a specified remote name.
 
         :param name: the remote name used to define the fetch and push URL
@@ -396,13 +396,15 @@ class GitRepo(BaseRepo):
 
         return self.remote(name=name, **kwargs)
 
-    def set_remote(self, url, name='origin', overwrite=False):
+    def set_remote(self, name, url, overwrite=False):
         """Set remote with name and URL like git remote add.
 
-        :param url: defines the remote URL
-        :type url: str
         :param name: defines the remote name.
         :type name: str
+        :param url: defines the remote URL
+        :type url: str
+
+        .. versionadded:: 0.3.4
         """
 
         url = self.chomp_protocol(url)
