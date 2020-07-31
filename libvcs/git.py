@@ -43,7 +43,7 @@ class GitRepo(BaseRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
 
-    def __init__(self, url, remotes=None, **kwargs):
+    def __init__(self, url, **kwargs):
         """A git repository.
 
         :param url: URL of repo
@@ -80,11 +80,12 @@ class GitRepo(BaseRepo):
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
 
-        warnings.warn(
-            "'remotes' is deprecated and will be removed in 0.4.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+        if kwargs.get('remotes') is not None:
+            warnings.warn(
+                "'remotes' is deprecated and will be removed in 0.4.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         BaseRepo.__init__(self, url, **kwargs)
 
     def get_revision(self):
