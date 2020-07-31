@@ -112,9 +112,9 @@ def test_remotes(parentdir, git_remote):
         repo_dir=os.path.join(str(parentdir), repo_name),
     )
     git_repo.obtain()
-    git_repo.remote_set(name=remote_name, url=remote_url)
+    git_repo.set_remote(name=remote_name, url=remote_url)
 
-    assert (remote_name, remote_url, remote_url) == git_repo.remote_get(remote_name)
+    assert (remote_name, remote_url, remote_url) == git_repo.remote(remote_name)
 
 
 def test_git_get_url_and_rev_from_pip_url():
@@ -148,11 +148,11 @@ def test_remotes_preserves_git_ssh(parentdir, git_remote):
 
     git_repo = create_repo_from_pip_url(pip_url=remote_url, repo_dir=repo_dir)
     git_repo.obtain()
-    git_repo.remote_set(name=remote_name, url=remote_url)
+    git_repo.set_remote(name=remote_name, url=remote_url)
 
     assert (
         GitRemote(remote_name, remote_url, remote_url)._asdict()
-        in git_repo.remotes_get.values()
+        in git_repo.remotes.values()
     )
 
 
@@ -167,35 +167,33 @@ def test_private_ssh_format(pip_url_kwargs):
 
 
 def test_ls_remotes(git_repo):
-    remotes = git_repo.remotes_get
+    remotes = git_repo.remotes
 
     assert 'origin' in remotes
 
 
 def test_get_remotes(git_repo):
-    assert 'origin' in git_repo.remotes_get
+    assert 'origin' in git_repo.remotes
 
 
 @pytest.mark.parametrize('repo_name,new_repo_url', [['myrepo', 'file:///apples'],])
 def test_set_remote(git_repo, repo_name, new_repo_url):
-    mynewremote = git_repo.remote_set(name=repo_name, url='file:///')
+    mynewremote = git_repo.set_remote(name=repo_name, url='file:///')
 
-    assert 'file:///' in mynewremote, 'remote_set returns remote'
+    assert 'file:///' in mynewremote, 'set_remote returns remote'
 
-    assert 'file:///' in git_repo.remote_get(
-        name=repo_name
-    ), 'remote_get returns remote'
+    assert 'file:///' in git_repo.remote(name=repo_name), 'remote returns remote'
 
-    assert 'myrepo' in git_repo.remotes_get, '.remotes_get() returns new remote'
+    assert 'myrepo' in git_repo.remotes, '.remotes() returns new remote'
 
     with pytest.raises(
         exc.CommandError,
         match='.*remote {repo_name} already exists.*'.format(repo_name=repo_name),
     ):
-        mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url)
+        mynewremote = git_repo.set_remote(name='myrepo', url=new_repo_url)
 
-    mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url, overwrite=True)
+    mynewremote = git_repo.set_remote(name='myrepo', url=new_repo_url, overwrite=True)
 
-    assert new_repo_url in git_repo.remote_get(
+    assert new_repo_url in git_repo.remote(
         name='myrepo'
     ), 'Running remove_set should overwrite previous remote'
