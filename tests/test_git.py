@@ -146,7 +146,10 @@ def test_remotes_preserves_git_ssh(parentdir, git_remote):
     remote_name = 'myremote'
     remote_url = 'git+ssh://git@github.com/tony/AlgoXY.git'
 
-    git_repo = create_repo_from_pip_url(pip_url=remote_url, repo_dir=repo_dir)
+    git_repo = create_repo_from_pip_url(
+        pip_url='git+file://{git_remote}'.format(git_remote=git_remote),
+        repo_dir=repo_dir,
+    )
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
 
