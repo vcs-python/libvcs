@@ -294,9 +294,24 @@ class GitRepo(BaseRepo):
         cmd.extend(self.git_submodules)
         self.run(cmd, log_in_real_time=True)
 
-    @property
-    def remotes(self):
+    def remotes(self, flat=False):
         """Return remotes like git remote -v.
+
+        :param flat: Return a dict of ``tuple`` instead of ``dict``. Default False.
+        :type flat: bool
+
+        .. versionchanged:: 0.3.4
+
+           Has been changed from property to method
+
+        .. versionchanged:: 0.3.4
+
+           The ``flat`` argument has been added to return remotes in ``tuple`` form
+
+        .. versionchanged:: 0.3.4
+
+           This used to return a dict of tuples, it now returns a dict of dictionaries
+           with ``name``, ``push_url``, and ``fetch_url``.
 
         :rtype: dict
         """
@@ -306,7 +321,9 @@ class GitRepo(BaseRepo):
         ret = filter(None, cmd.split('\n'))
 
         for remote_name in ret:
-            remotes[remote_name] = self.remote(remote_name)._asdict()
+            remotes[remote_name] = (
+                self.remote(remote_name) if flat else self.remote(remote_name)._asdict()
+            )
         return remotes
 
     @property
@@ -315,16 +332,16 @@ class GitRepo(BaseRepo):
         .. versionchanged:: 0.3.4
 
            The ``remotes_get`` property is deprecated and will be removed in 0.4.0. It
-           has been renamed ``remotes`` 
+           has been renamed ``remotes()`` and changed from property to a method.
         """
         warnings.warn(
             "'remotes_get' is deprecated and will be removed in 0.4. "
-            "Use 'remotes' instead.",
+            "Use 'remotes()' method instead.",
             DeprecationWarning,
             stacklevel=2,
         )
 
-        return self.remotes
+        return self.remotes()
 
     def remote(self, name='origin', **kwargs):
         """Get the fetch and push URL for a specified remote name.
