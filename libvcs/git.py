@@ -120,7 +120,13 @@ class GitRepo(BaseRepo):
         return url, rev
 
     def obtain(self):
-        """Retrieve the repository, clone if doesn't exist."""
+        """Retrieve the repository, clone if doesn't exist.
+
+        .. versionchanged:: 0.3.4
+
+           No longer sets remotes. This is now done manually through 
+           :meth:`~.set_remote`.
+        """
         self.check_destination()
 
         url = self.url
@@ -134,13 +140,6 @@ class GitRepo(BaseRepo):
 
         self.info('Cloning.')
         self.run(cmd, log_in_real_time=True)
-
-        if self.remotes:
-            for name, remote in self.remotes.items():
-                self.error('Adding remote %s <%s>' % (name, remote['fetch_url']))
-                self.set_remote(
-                    name=remote['name'], url=remote['fetch_url'], overwrite=True
-                )
 
         self.info('Initializing submodules.')
         self.run(['submodule', 'init'], log_in_real_time=True)
