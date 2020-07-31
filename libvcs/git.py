@@ -74,11 +74,6 @@ class GitRepo(BaseRepo):
             self.tls_verify = False
         BaseRepo.__init__(self, url, **kwargs)
 
-    @property
-    def remotes(self):
-        remotes = self.remotes_get
-        return remotes
-
     def get_revision(self):
         """Return current revision. Initial repositories return 'initial'."""
         try:
@@ -300,6 +295,8 @@ class GitRepo(BaseRepo):
         for remote_name in ret:
             remotes[remote_name] = self.remote_get(remote_name)._asdict()
         return remotes
+
+    remotes = remotes_get
 
     def remote_get(self, name='origin'):
         """Get the fetch and push URL for a specified remote name.
