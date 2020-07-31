@@ -7,8 +7,8 @@ libvcs.git
 From https://github.com/saltstack/salt (Apache License):
 
 - :py:meth:`GitRepo.remote`
-- :py:meth:`GitRepo.remote_get`
-- :py:meth:`GitRepo.remote_set`
+- :py:meth:`GitRepo.remote_get` (renamed to ``remote``)
+- :py:meth:`GitRepo.remote_set` (renamed to ``set_remote``)
 
 From pip (MIT Licnese):
 
@@ -22,6 +22,7 @@ import collections
 import logging
 import os
 import re
+import warnings
 
 from . import exc
 from ._compat import urlparse
@@ -30,6 +31,12 @@ from .base import BaseRepo
 logger = logging.getLogger(__name__)
 
 GitRemote = collections.namedtuple('GitRemote', ['name', 'fetch_url', 'push_url'])
+"""Structure containing git repo information.
+
+Supports :meth:`collections.namedtuple._asdict()`
+
+.. versionadded:: 0.3.4
+"""
 
 
 class GitRepo(BaseRepo):
@@ -41,14 +48,6 @@ class GitRepo(BaseRepo):
 
         :param url: URL of repo
         :type url: str
-
-        :param remotes: list of remotes in dict format::
-
-            [{
-            "remote_name": "myremote",
-            "url": "https://github.com/tony/vim-config.git"
-            }]
-        :type remotes: list
 
         :param git_remote_name: name of the remote (default "origin")
         :type git_remote_name: str
@@ -63,6 +62,14 @@ class GitRepo(BaseRepo):
         :param tls_verify: Should certificate for https be checked (default
             False)
         :type tls_verify: bool
+
+        .. versionchanged:: 0.3.4
+
+           The ``remotes`` argument is ignored. Use :meth:`~.set_remote` to set remotes
+           before running :meth:`~.obtain`.
+
+           The ``remotes`` argument is deprecated and will be removed in 0.4
+           
         """
         if 'git_remote_name' not in kwargs:
             self.git_remote_name = "origin"
@@ -72,6 +79,12 @@ class GitRepo(BaseRepo):
             self.git_submodules = []
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
+
+        warnings.warn(
+            "'remotes' is deprecated and will be removed in 0.4.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         BaseRepo.__init__(self, url, **kwargs)
 
     def get_revision(self):
@@ -125,7 +138,7 @@ class GitRepo(BaseRepo):
         if self.remotes:
             for name, remote in self.remotes.items():
                 self.error('Adding remote %s <%s>' % (name, remote['fetch_url']))
-                self.remote_set(
+                self.set_remote(
                     name=remote['name'], url=remote['fetch_url'], overwrite=True
                 )
 
@@ -282,10 +295,10 @@ class GitRepo(BaseRepo):
         self.run(cmd, log_in_real_time=True)
 
     @property
-    def remotes_get(self):
+    def remotes(self):
         """Return remotes like git remote -v.
 
-        :rtype: dict of tuples
+        :rtype: dict
         """
         remotes = {}
 
@@ -293,19 +306,49 @@ class GitRepo(BaseRepo):
         ret = filter(None, cmd.split('\n'))
 
         for remote_name in ret:
-            remotes[remote_name] = self.remote_get(remote_name)._asdict()
+            remotes[remote_name] = self.remote(remote_name)._asdict()
         return remotes
 
-    remotes = remotes_get
+    @property
+    def remotes_get(self):
+        """
+        .. versionchanged:: 0.3.4
 
-    def remote_get(self, name='origin'):
+           The ``remotes_get`` property is deprecated and will be removed in 0.4.0. It
+           has been renamed ``remotes`` 
+        """
+        warnings.warn(
+            "'remotes_get' is deprecated and will be removed in 0.4. "
+            "Use 'remotes' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        return self.remotes
+
+    def remote(self, name='origin', **kwargs):
         """Get the fetch and push URL for a specified remote name.
 
-        :param remote: the remote name used to define the fetch and push URL
-        :type remote: str
+        :param name: the remote name used to define the fetch and push URL
+        :type name: str
         :returns: remote name and url in tuple form
-        :rtype: tuple
+        :rtype: :class:`libvcs.git.GitRemote`
+
+        .. versionchanged:: 0.3.4
+
+           The ``remote`` argument was renamed to ``name`` and will be deprecated
+           in 0.4.
         """
+
+        if kwargs.get('remote') is not None:
+            warnings.warn(
+                "'remote' is deprecated and will be removed in 0.4. "
+                "Use 'name' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            name = kwargs.get('remote')
+
         try:
             ret = self.run(['remote', 'show', '-n', name])
             lines = ret.split('\n')
@@ -320,7 +363,23 @@ class GitRepo(BaseRepo):
         except exc.LibVCSException:
             return None
 
-    def remote_set(self, url, name='origin', overwrite=False):
+    def remote_get(self, name='origin', **kwargs):
+        """
+        .. versionchanged:: 0.3.4
+
+           The ``remote_get`` method is deprecated and will be removed in 0.4.0. It has
+           been renamed ``remote`` 
+        """
+        warnings.warn(
+            "'remote_get' is deprecated and will be removed in 0.4. "
+            "Use 'remote' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        return self.remote(name=name, **kwargs)
+
+    def set_remote(self, url, name='origin', overwrite=False):
         """Set remote with name and URL like git remote add.
 
         :param url: defines the remote URL
@@ -331,11 +390,27 @@ class GitRepo(BaseRepo):
 
         url = self.chomp_protocol(url)
 
-        if self.remote_get(name) and overwrite:
+        if self.remote(name) and overwrite:
             self.run(['remote', 'set-url', name, url])
         else:
             self.run(['remote', 'add', name, url])
-        return self.remote_get(name=name)
+        return self.remote(name=name)
+
+    def remote_set(self, url, name='origin', overwrite=False, **kwargs):
+        """
+        .. versionchanged:: 0.3.4
+
+           The ``remote_set`` method is deprecated and will be removed in 0.4.0. It has
+           been renamed ``set_remote``.
+        """
+        warnings.warn(
+            "'remote_set' is deprecated and will be removed in 0.4. "
+            "Use 'set_remote' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        return self.set_remote(url=url, name=name, overwrite=overwrite, **kwargs)
 
     @staticmethod
     def chomp_protocol(url):
