@@ -4,13 +4,16 @@ Changelog
 
 Here are the changes for libvcs.
 
-current
--------
+0.4-current
+-----------
 
 **Breaking changes**
 
+Internal functionality relating to remotes have been reorganized to avoid
+implicit behavior.
+
 - :class:`~libvcs.git.GitRepo` methods have been renamed, they will be deprecated
-  in 0.4:
+  in 0.5:
 
   - ``GitRepo.remotes_get`` renamed to :meth:`libvcs.git.GitRepo.remotes()`
   - ``GitRepo.remote_get`` renamed to :meth:`libvcs.git.GitRepo.remote()`
@@ -29,7 +32,7 @@ current
 
 - :meth:`libvcs.git.GitRepo.remote()` (formerly ``remote_get``):
 
-  - ``remote`` argument renamed to ``name``. It will be removed in 0.3.4
+  - ``remote`` argument renamed to ``name``. It will be removed in 0.5.0
 
     The default value of ``'origin'`` has been removed
   - Now returns :meth:`~libvcs.git.GitRemote` (a :py:class:`collections.namedtuple` object)
