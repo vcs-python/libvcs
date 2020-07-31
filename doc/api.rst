@@ -21,6 +21,11 @@ Tools like :func:`libvcs.shortcuts.create_repo` and
 :func:`libvcs.shortcuts.create_repo_from_pip_url` are just wrappers
 around instantiated these classes.
 
+See examples below of git, mercurial, and subversion.
+
+Git
+---
+
 .. autoclass:: libvcs.git.GitRepo
    :members:
    :show-inheritance:
@@ -29,9 +34,19 @@ around instantiated these classes.
    :members:
    :show-inheritance:
 
+Mercurial
+---------
+
+aka ``hg(1)``
+
 .. autoclass:: libvcs.hg.MercurialRepo
    :members:
    :show-inheritance:
+
+Subversion
+----------
+
+aka ``svn(1)``
 
 .. autoclass:: libvcs.svn.SubversionRepo
    :members:
