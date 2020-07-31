@@ -311,7 +311,7 @@ class GitRepo(BaseRepo):
         .. versionchanged:: 0.3.4
 
            This used to return a dict of tuples, it now returns a dict of dictionaries
-           with ``name``, ``push_url``, and ``fetch_url``.
+           with ``name``, ``fetch_url``, and ``push_url``.
 
         :rtype: dict
         """
