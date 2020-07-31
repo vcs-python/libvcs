@@ -18,6 +18,7 @@ From pip (MIT Licnese):
 """
 from __future__ import absolute_import, print_function, unicode_literals
 
+import collections
 import logging
 import os
 import re
@@ -27,6 +28,8 @@ from ._compat import urlparse
 from .base import BaseRepo
 
 logger = logging.getLogger(__name__)
+
+GitRemote = collections.namedtuple('GitRemote', ['name', 'fetch_url', 'push_url'])
 
 
 class GitRepo(BaseRepo):
@@ -71,7 +74,10 @@ class GitRepo(BaseRepo):
             self.tls_verify = False
         BaseRepo.__init__(self, url, **kwargs)
 
-        self.remotes = remotes
+    @property
+    def remotes(self):
+        remotes = self.remotes_get
+        return remotes
 
     def get_revision(self):
         """Return current revision. Initial repositories return 'initial'."""
@@ -122,9 +128,11 @@ class GitRepo(BaseRepo):
         self.run(cmd, log_in_real_time=True)
 
         if self.remotes:
-            for r in self.remotes:
-                self.error('Adding remote %s <%s>' % (r['remote_name'], r['url']))
-                self.remote_set(name=r['remote_name'], url=r['url'], overwrite=True)
+            for name, remote in self.remotes.items():
+                self.error('Adding remote %s <%s>' % (name, remote['fetch_url']))
+                self.remote_set(
+                    name=remote['name'], url=remote['fetch_url'], overwrite=True
+                )
 
         self.info('Initializing submodules.')
         self.run(['submodule', 'init'], log_in_real_time=True)
@@ -290,10 +298,10 @@ class GitRepo(BaseRepo):
         ret = filter(None, cmd.split('\n'))
 
         for remote_name in ret:
-            remotes[remote_name] = self.remote_get(remote_name)
+            remotes[remote_name] = self.remote_get(remote_name)._asdict()
         return remotes
 
-    def remote_get(self, remote='origin'):
+    def remote_get(self, name='origin'):
         """Get the fetch and push URL for a specified remote name.
 
         :param remote: the remote name used to define the fetch and push URL
@@ -302,13 +310,14 @@ class GitRepo(BaseRepo):
         :rtype: tuple
         """
         try:
-            ret = self.run(['remote', 'show', '-n', remote])
+            ret = self.run(['remote', 'show', '-n', name])
             lines = ret.split('\n')
             remote_fetch_url = lines[1].replace('Fetch URL: ', '').strip()
             remote_push_url = lines[2].replace('Push  URL: ', '').strip()
-            if remote_fetch_url != remote and remote_push_url != remote:
-                res = (remote_fetch_url, remote_push_url)
-                return res
+            if remote_fetch_url != name and remote_push_url != name:
+                return GitRemote(
+                    name=name, fetch_url=remote_fetch_url, push_url=remote_push_url
+                )
             else:
                 return None
         except exc.LibVCSException:
@@ -329,7 +338,7 @@ class GitRepo(BaseRepo):
             self.run(['remote', 'set-url', name, url])
         else:
             self.run(['remote', 'add', name, url])
-        return self.remote_get(remote=name)
+        return self.remote_get(name=name)
 
     @staticmethod
     def chomp_protocol(url):
