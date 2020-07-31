@@ -4,6 +4,48 @@ Changelog
 
 Here are the changes for libvcs.
 
+0.4-current
+-----------
+
+**Breaking changes**
+
+Internal functionality relating to remotes have been reorganized to avoid
+implicit behavior.
+
+- :class:`~libvcs.git.GitRepo` methods have been renamed, they will be deprecated
+  in 0.5:
+
+  - ``GitRepo.remotes_get`` renamed to :meth:`libvcs.git.GitRepo.remotes()`
+  - ``GitRepo.remote_get`` renamed to :meth:`libvcs.git.GitRepo.remote()`
+  - ``GitRepo.remote_set`` renamed to :meth:`libvcs.git.GitRepo.set_remote()`
+
+- :class:`~libvcs.git.GitRepo` the ``remotes`` argument is deprecated and no longer
+  used. Use :meth:`libvcs.git.GitRepo.set_remote` after repo is instantiated.
+
+- :meth:`libvcs.git.GitRepo.obtain` no longer set remotes based on a ``dict`` passed
+  to :class:`~libvcs.git.GitRepo`. This was deemed to specialized / implicit.
+
+- :meth:`libvcs.git.GitRepo.set_remote()` (formerly ``remote_set``)
+
+  The new method accepts ``name`` and ``url`` (in that order). ``name`` no longer
+  has a default value (was ``origin``).
+
+- :meth:`libvcs.git.GitRepo.remote()` (formerly ``remote_get``):
+
+  - ``remote`` argument renamed to ``name``. It will be removed in 0.5.0
+
+    The default value of ``'origin'`` has been removed
+  - Now returns :meth:`~libvcs.git.GitRemote` (a :py:class:`collections.namedtuple` object)
+
+    The tuple is similar to the old output, except there is an additional value at
+    the beginning, the name of the remote, e.g. ``('origin', '<fetch_url>', '<push_url>')``
+
+- :meth:`libvcs.git.GitRepo.remotes()` (formerly ``remotes_get``) are now methods
+  instead of properties.
+
+  Passing ``flat=True`` to return a ``dict`` of ``tuple`` instead of ``dict``
+
+
 0.3.3 <2020-07-29>
 ------------------
 - Remove f-string from test
