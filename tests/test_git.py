@@ -9,7 +9,7 @@ import pytest
 
 from libvcs import exc
 from libvcs._compat import string_types
-from libvcs.git import GitRepo
+from libvcs.git import GitRemote, GitRepo
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
@@ -102,29 +102,19 @@ def test_progress_callback(tmpdir, git_remote, mocker):
     assert progress_callback.called
 
 
-def test_remotes(pip_url_kwargs):
-    remote_name = 'myrepo'
-    pip_url_kwargs.update(
-        **{'remotes': [{'remote_name': remote_name, 'url': 'file:///'}]}
-    )
-
-    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
-    git_repo.obtain()
-    assert remote_name in git_repo.remotes_get
-
-
-def test_remotes_vcs_prefix(pip_url_kwargs):
+def test_remotes(parentdir, git_remote):
+    repo_name = 'myrepo'
+    remote_name = 'myremote'
     remote_url = 'https://localhost/my/git/repo.git'
-    remote_vcs_url = 'git+' + remote_url
 
-    pip_url_kwargs.update(
-        **{'remotes': [{'remote_name': 'myrepo', 'url': remote_vcs_url}]}
+    git_repo = create_repo_from_pip_url(
+        pip_url='git+file://{git_remote}'.format(git_remote=git_remote),
+        repo_dir=os.path.join(str(parentdir), repo_name),
     )
-
-    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
     git_repo.obtain()
+    git_repo.remote_set(name=remote_name, url=remote_url)
 
-    assert (remote_url, remote_url) in git_repo.remotes_get.values()
+    assert (remote_name, remote_url, remote_url) == git_repo.remote_get(remote_name)
 
 
 def test_git_get_url_and_rev_from_pip_url():
@@ -149,16 +139,21 @@ def test_git_get_url_and_rev_from_pip_url():
     assert rev == 'eucalyptus'
 
 
-def test_remotes_preserves_git_ssh(pip_url_kwargs):
+def test_remotes_preserves_git_ssh(parentdir, git_remote):
     # Regression test for #14
+    repo_name = 'myexamplegit'
+    repo_dir = os.path.join(str(parentdir), repo_name)
+    remote_name = 'myremote'
     remote_url = 'git+ssh://git@github.com/tony/AlgoXY.git'
 
-    pip_url_kwargs.update(**{'remotes': [{'remote_name': 'myrepo', 'url': remote_url}]})
-
-    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo = create_repo_from_pip_url(pip_url=remote_url, repo_dir=repo_dir)
     git_repo.obtain()
+    git_repo.remote_set(name=remote_name, url=remote_url)
 
-    assert (remote_url, remote_url) in git_repo.remotes_get.values()
+    assert (
+        GitRemote(remote_name, remote_url, remote_url)._asdict()
+        in git_repo.remotes_get.values()
+    )
 
 
 def test_private_ssh_format(pip_url_kwargs):
@@ -188,7 +183,7 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     assert 'file:///' in mynewremote, 'remote_set returns remote'
 
     assert 'file:///' in git_repo.remote_get(
-        remote=repo_name
+        name=repo_name
     ), 'remote_get returns remote'
 
     assert 'myrepo' in git_repo.remotes_get, '.remotes_get() returns new remote'
@@ -202,5 +197,5 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     mynewremote = git_repo.remote_set(name='myrepo', url=new_repo_url, overwrite=True)
 
     assert new_repo_url in git_repo.remote_get(
-        remote='myrepo'
+        name='myrepo'
     ), 'Running remove_set should overwrite previous remote'
