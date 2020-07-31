@@ -22,9 +22,16 @@ current
 - :meth:`libvcs.git.GitRepo.obtain` no longer set remotes based on a ``dict`` passed
   to :class:`~libvcs.git.GitRepo`. This was deemed to specialized / implicit.
 
+- :meth:`libvcs.git.GitRepo.set_remote()` (formerly ``remote_set``)
+
+  The new method accepts ``name`` and ``url`` (in that order). ``name`` no longer
+  has a default value (was ``origin``).
+
 - :meth:`libvcs.git.GitRepo.remote()` (formerly ``remote_get``):
 
   - ``remote`` argument renamed to ``name``. It will be removed in 0.3.4
+
+    The default value of ``'origin'`` has been removed
   - Now returns :meth:`~libvcs.git.GitRemote` (a :py:class:`collections.namedtuple` object)
 
     The tuple is similar to the old output, except there is an additional value at
