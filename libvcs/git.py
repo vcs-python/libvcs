@@ -35,7 +35,7 @@ GitRemote = collections.namedtuple('GitRemote', ['name', 'fetch_url', 'push_url'
 
 Supports :meth:`collections.namedtuple._asdict()`
 
-.. versionadded:: 0.3.4
+.. versionadded:: 0.4.0
 """
 
 
@@ -63,12 +63,12 @@ class GitRepo(BaseRepo):
             False)
         :type tls_verify: bool
 
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
            The ``remotes`` argument is ignored. Use :meth:`~.set_remote` to set remotes
            before running :meth:`~.obtain`.
 
-           The ``remotes`` argument is deprecated and will be removed in 0.4
+           The ``remotes`` argument is deprecated and will be removed in 0.5
            
         """
         if 'git_remote_name' not in kwargs:
@@ -82,7 +82,7 @@ class GitRepo(BaseRepo):
 
         if kwargs.get('remotes') is not None:
             warnings.warn(
-                "'remotes' is deprecated and will be removed in 0.4.",
+                "'remotes' is deprecated and will be removed in 0.5.",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -123,7 +123,7 @@ class GitRepo(BaseRepo):
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist.
 
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
            No longer sets remotes. This is now done manually through 
            :meth:`~.set_remote`.
@@ -300,15 +300,15 @@ class GitRepo(BaseRepo):
         :param flat: Return a dict of ``tuple`` instead of ``dict``. Default False.
         :type flat: bool
 
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
            Has been changed from property to method
 
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
            The ``flat`` argument has been added to return remotes in ``tuple`` form
 
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
            This used to return a dict of tuples, it now returns a dict of dictionaries
            with ``name``, ``fetch_url``, and ``push_url``.
@@ -329,13 +329,13 @@ class GitRepo(BaseRepo):
     @property
     def remotes_get(self):
         """
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
-           The ``remotes_get`` property is deprecated and will be removed in 0.4.0. It
+           The ``remotes_get`` property is deprecated and will be removed in 0.5. It
            has been renamed ``remotes()`` and changed from property to a method.
         """
         warnings.warn(
-            "'remotes_get' is deprecated and will be removed in 0.4. "
+            "'remotes_get' is deprecated and will be removed in 0.5. "
             "Use 'remotes()' method instead.",
             DeprecationWarning,
             stacklevel=2,
@@ -351,15 +351,15 @@ class GitRepo(BaseRepo):
         :returns: remote name and url in tuple form
         :rtype: :class:`libvcs.git.GitRemote`
 
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
            The ``remote`` argument was renamed to ``name`` and will be deprecated
-           in 0.4.
+           in 0.5.
         """
 
         if kwargs.get('remote') is not None:
             warnings.warn(
-                "'remote' is deprecated and will be removed in 0.4. "
+                "'remote' is deprecated and will be removed in 0.5. "
                 "Use 'name' instead.",
                 DeprecationWarning,
                 stacklevel=2,
@@ -382,13 +382,13 @@ class GitRepo(BaseRepo):
 
     def remote_get(self, name='origin', **kwargs):
         """
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
-           The ``remote_get`` method is deprecated and will be removed in 0.4.0. It has
+           The ``remote_get`` method is deprecated and will be removed in 0.5.0. It has
            been renamed ``remote`` 
         """
         warnings.warn(
-            "'remote_get' is deprecated and will be removed in 0.4. "
+            "'remote_get' is deprecated and will be removed in 0.5. "
             "Use 'remote' instead.",
             DeprecationWarning,
             stacklevel=2,
@@ -404,7 +404,7 @@ class GitRepo(BaseRepo):
         :param url: defines the remote URL
         :type url: str
 
-        .. versionadded:: 0.3.4
+        .. versionadded:: 0.4.0
         """
 
         url = self.chomp_protocol(url)
@@ -417,13 +417,13 @@ class GitRepo(BaseRepo):
 
     def remote_set(self, url, name='origin', overwrite=False, **kwargs):
         """
-        .. versionchanged:: 0.3.4
+        .. versionchanged:: 0.4.0
 
-           The ``remote_set`` method is deprecated and will be removed in 0.4.0. It has
+           The ``remote_set`` method is deprecated and will be removed in 0.5.0. It has
            been renamed ``set_remote``.
         """
         warnings.warn(
-            "'remote_set' is deprecated and will be removed in 0.4. "
+            "'remote_set' is deprecated and will be removed in 0.5. "
             "Use 'set_remote' instead.",
             DeprecationWarning,
             stacklevel=2,
