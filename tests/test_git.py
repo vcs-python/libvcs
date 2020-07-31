@@ -155,7 +155,7 @@ def test_remotes_preserves_git_ssh(parentdir, git_remote):
 
     assert (
         GitRemote(remote_name, remote_url, remote_url)._asdict()
-        in git_repo.remotes.values()
+        in git_repo.remotes().values()
     )
 
 
@@ -170,13 +170,14 @@ def test_private_ssh_format(pip_url_kwargs):
 
 
 def test_ls_remotes(git_repo):
-    remotes = git_repo.remotes
+    remotes = git_repo.remotes()
 
     assert 'origin' in remotes
+    assert 'origin' in git_repo.remotes(flat=True)
 
 
 def test_get_remotes(git_repo):
-    assert 'origin' in git_repo.remotes
+    assert 'origin' in git_repo.remotes()
 
 
 @pytest.mark.parametrize('repo_name,new_repo_url', [['myrepo', 'file:///apples'],])
@@ -187,7 +188,7 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
 
     assert 'file:///' in git_repo.remote(name=repo_name), 'remote returns remote'
 
-    assert 'myrepo' in git_repo.remotes, '.remotes() returns new remote'
+    assert 'myrepo' in git_repo.remotes(), '.remotes() returns new remote'
 
     with pytest.raises(
         exc.CommandError,
