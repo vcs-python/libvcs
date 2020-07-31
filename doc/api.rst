@@ -25,6 +25,10 @@ around instantiated these classes.
    :members:
    :show-inheritance:
 
+.. autoclass:: libvcs.git.GitRemote
+   :members:
+   :show-inheritance:
+
 .. autoclass:: libvcs.hg.MercurialRepo
    :members:
    :show-inheritance:
