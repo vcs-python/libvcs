@@ -55,12 +55,10 @@ class GitRepo(BaseRepo):
         :param git_shallow: clone with ``--depth 1`` (default False)
         :type git_shallow: bool
 
-        :param git_submodules: Git submodules that shall be updated, all if
-            empty
+        :param git_submodules: Git submodules that shall be updated, all if empty
         :type git_submodules: list
 
-        :param tls_verify: Should certificate for https be checked (default
-            False)
+        :param tls_verify: Should certificate for https be checked (default False)
         :type tls_verify: bool
 
         .. versionchanged:: 0.4.0
@@ -69,7 +67,6 @@ class GitRepo(BaseRepo):
            before running :meth:`~.obtain`.
 
            The ``remotes`` argument is deprecated and will be removed in 0.5
-           
         """
         if 'git_shallow' not in kwargs:
             self.git_shallow = False
