@@ -14,6 +14,7 @@ From pip (MIT Licnese):
 
 - :py:meth:`GitRepo.get_url_and_revision_from_pip_url` (get_url_rev)
 - :py:meth:`GitRepo.get_revision`
+- :py:meth:`GitRepo.get_git_version`
 
 """
 from __future__ import absolute_import, print_function, unicode_literals
@@ -23,6 +24,8 @@ import logging
 import os
 import re
 import warnings
+
+from pip._vendor.packaging.version import parse as parse_version
 
 from . import exc
 from ._compat import urlparse
@@ -455,3 +458,16 @@ class GitRepo(BaseRepo):
             url = url.replace('git+', 'git+ssh://')
             url = url.replace('ssh://', '')
         return url
+
+    def get_git_version(self):
+        VERSION_PFX = 'git version '
+        version = self.run(['version'])
+        if version.startswith(VERSION_PFX):
+            version = version[len(VERSION_PFX) :].split()[0]
+        else:
+            version = ''
+        # get first 3 positions of the git version because
+        # on windows it is x.y.z.windows.t, and this parses as
+        # LegacyVersion which always smaller than a Version.
+        version = '.'.join(version.split('.')[:3])
+        return parse_version(version)
