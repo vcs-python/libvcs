@@ -4,8 +4,14 @@ Changelog
 
 Here are the changes for libvcs.
 
-0.4-current
+0.5-current
 -----------
+Generally speaking, refactor / magic is in the process of being stripped
+out in the next few releases. The API is subject to change significantly
+in pre-1.0 builds.
+
+0.4 <2020-08-01>
+----------------
 
 **Breaking changes**
 
