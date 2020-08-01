@@ -44,7 +44,7 @@ def extract_status(value):
     """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
     :returns: Dictionary of git repo's status
-    :rtype: str
+    :rtype: dict
     """
     pattern = re.compile(
         r"""[\n\r]?
@@ -532,6 +532,9 @@ class GitRepo(BaseRepo):
                 "branch_ahead": '0',
                 "branch_behind": '0',
             }
+
+        :returns: Status of current checked out repository
+        :rtype: dict
         """
         return extract_status(self.run(['status', '-sb', '--porcelain=2']))
 
