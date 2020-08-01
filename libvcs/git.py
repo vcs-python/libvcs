@@ -40,6 +40,61 @@ Supports :meth:`collections.namedtuple._asdict()`
 """
 
 
+def extract_status(value):
+    """Returns ``git status -sb --porcelain=2`` extracted to a dict
+
+    Returns
+    -------
+    dict : 
+        Dictionary of git repo's status
+    """
+    pattern = re.compile(
+        r"""[\n\r]?
+        (
+            #
+            \W+
+            branch.oid\W+
+            (?P<branch_oid>
+                [a-f0-9]{40}
+            )
+        )?
+        (
+            #
+            \W+
+            branch.head
+            [\W]+
+            (?P<branch_head>
+                [\w-]*
+            )
+            
+        )?
+        (
+            #
+            \W+
+            branch.upstream
+            [\W]+
+            (?P<branch_upstream>
+                [/\w-]*
+            )
+        )?
+        (
+            #
+            \W+
+            branch.ab
+            [\W]+
+            (?P<branch_ab>
+                \+(?P<branch_ahead>\d+)
+                \W{1}
+                \-(?P<branch_behind>\d+)
+            )
+        )?
+        """,
+        re.VERBOSE | re.MULTILINE,
+    )
+    matches = pattern.search(value)
+    return matches.groupdict()
+
+
 class GitRepo(BaseRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
@@ -307,7 +362,9 @@ class GitRepo(BaseRepo):
            This used to return a dict of tuples, it now returns a dict of dictionaries
            with ``name``, ``fetch_url``, and ``push_url``.
 
-        :rtype: dict
+        Returns
+        -------
+        dict
         """
         remotes = {}
 
@@ -340,10 +397,15 @@ class GitRepo(BaseRepo):
     def remote(self, name, **kwargs):
         """Get the fetch and push URL for a specified remote name.
 
-        :param name: the remote name used to define the fetch and push URL
-        :type name: str
-        :returns: remote name and url in tuple form
-        :rtype: :class:`libvcs.git.GitRemote`
+        Parameters
+        ----------
+        name : str
+            The remote name used to define the fetch and push URL
+
+        Returns
+        -------
+        :class:`libvcs.git.GitRemote` : 
+            Remote name and url in tuple form
 
         .. versionchanged:: 0.4.0
 
@@ -429,11 +491,15 @@ class GitRepo(BaseRepo):
     def chomp_protocol(url):
         """Return clean VCS url from RFC-style url
 
-        :param url: url
-        :type url: str
-        :rtype: str
-        :returns: url as VCS software would accept it
-        :seealso: #14
+        Parameters
+        ----------
+        url : str 
+            PIP-style url
+
+        Returns
+        -------
+        str :
+            URL as VCS software would accept it
         """
         if '+' in url:
             url = url.split('+', 1)[1]
@@ -453,7 +519,9 @@ class GitRepo(BaseRepo):
     def get_git_version(self):
         """Return current version of git binary
 
-        :rtype: str
+        Returns
+        -------
+        str
         """
         VERSION_PFX = 'git version '
         version = self.run(['version'])
@@ -463,19 +531,44 @@ class GitRepo(BaseRepo):
             version = ''
         return '.'.join(version.split('.')[:3])
 
+    def status(self):
+        """Retrieve status of project in dict format.
+
+        Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
+
+        Examples
+        --------
+
+        ::
+
+            print(git_repo.status())
+            {
+                "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
+                "branch_head": 'fix-current-remote-name',
+                "branch_upstream": 'origin/fix-current-remote-name',
+                "branch_ab": '+0 -0',
+                "branch_ahead": '0',
+                "branch_behind": '0',
+            }
+
+        Returns
+        -------
+        dict :
+            Status of current checked out repository
+        """
+        return extract_status(self.run(['status', '-sb', '--porcelain=2']))
+
     def get_current_remote_name(self):
         """Retrieve name of the remote / upstream of currently checked out branch.
 
-        :rtype: str, None if no remote set
+        Returns
+        -------
+        str :
+            If upstream the same, returns ``branch_name``.
+            If upstream mismatches, returns ``remote_name/branch_name``.
         """
-        current_status = self.run(['status', '-sb'])
-        # git status -sb
-        # ## v1.0-ourbranch...remotename/v1.0-ourbranch
-        match = re.match(
-            r'^## (?P<branch>.*)\.{3}(?P<remote_slash_branch>.*)', current_status,
-        )
-        if match is None:  # No upstream set
-            return None
-        return match.group('remote_slash_branch').replace(
-            '/' + match.group('branch'), ''
-        )
+        match = self.status()
+
+        if match['branch_upstream'] is None:  # no upstream set
+            return match['branch_head']
+        return match['branch_upstream'].replace('/' + match['branch_head'], '')

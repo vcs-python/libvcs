@@ -4,12 +4,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
 import os
+import textwrap
 
 import pytest
 
 from libvcs import exc
-from libvcs._compat import string_types
-from libvcs.git import GitRemote, GitRepo
+from libvcs._compat import PY2, string_types
+from libvcs.git import GitRemote, GitRepo, extract_status
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
@@ -201,3 +202,134 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     assert new_repo_url in git_repo.remote(
         name='myrepo'
     ), 'Running remove_set should overwrite previous remote'
+
+
+def test_get_git_version(git_repo):
+    expected_version = git_repo.run(['--version']).replace('git version ', '')
+    assert git_repo.get_git_version()
+    assert expected_version == git_repo.get_git_version()
+
+
+def test_get_current_remote_name(git_repo):
+    assert git_repo.get_current_remote_name() == 'origin'
+
+    new_branch = 'another-branch-with-no-upstream'
+    git_repo.run(['checkout', '-B', new_branch])
+    assert (
+        git_repo.get_current_remote_name() == new_branch
+    ), 'branch w/o upstream should return branch only'
+
+    new_remote_name = 'new_remote_name'
+    git_repo.set_remote(
+        name=new_remote_name, url='file://' + git_repo.path, overwrite=True
+    )
+    git_repo.run(['fetch', new_remote_name])
+    git_repo.run(
+        ['branch', '--set-upstream-to', '{}/{}'.format(new_remote_name, new_branch)]
+    )
+    assert (
+        git_repo.get_current_remote_name() == new_remote_name
+    ), 'Should reflect new upstream branch (different remote)'
+
+    upstream = '{}/{}'.format(new_remote_name, 'master')
+
+    git_repo.run(['branch', '--set-upstream-to', upstream])
+    assert (
+        git_repo.get_current_remote_name() == upstream
+    ), 'Should reflect upstream branch (differente remote+branch)'
+
+    git_repo.run(['checkout', 'master'])
+
+    # Different remote, different branch
+    remote = '{}/{}'.format(new_remote_name, new_branch)
+    git_repo.run(['branch', '--set-upstream-to', remote])
+    assert (
+        git_repo.get_current_remote_name() == remote
+    ), 'Should reflect new upstream branch (different branch)'
+
+
+def test_extract_status():
+    FIXTURE_A = textwrap.dedent(
+        """
+        # branch.oid d4ccd4d6af04b53949f89fbf0cdae13719dc5a08
+        # branch.head fix-current-remote-name
+        1 .M N... 100644 100644 100644 91082f119279b6f105ee9a5ce7795b3bdbe2b0de 91082f119279b6f105ee9a5ce7795b3bdbe2b0de CHANGES
+    """  # NOQA: E501
+    )
+    assert {
+        "branch_oid": 'd4ccd4d6af04b53949f89fbf0cdae13719dc5a08',
+        "branch_head": 'fix-current-remote-name',
+    }.items() <= extract_status(FIXTURE_A).items()
+
+
+@pytest.mark.parametrize(
+    'fixture,expected_result',
+    [
+        [
+            """
+        # branch.oid de6185fde0806e5c7754ca05676325a1ea4d6348
+        # branch.head fix-current-remote-name
+        # branch.upstream origin/fix-current-remote-name
+        # branch.ab +0 -0
+        1 .M N... 100644 100644 100644 91082f119279b6f105ee9a5ce7795b3bdbe2b0de 91082f119279b6f105ee9a5ce7795b3bdbe2b0de CHANGES
+        1 .M N... 100644 100644 100644 302ca2c18d4c295ce217bff5f93e1ba342dc6665 302ca2c18d4c295ce217bff5f93e1ba342dc6665 tests/test_git.py
+    """,  # NOQA: E501
+            {
+                "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
+                "branch_head": 'fix-current-remote-name',
+                "branch_upstream": 'origin/fix-current-remote-name',
+                "branch_ab": '+0 -0',
+                "branch_ahead": '0',
+                "branch_behind": '0',
+            },
+        ],
+        [
+            '# branch.upstream moo/origin/myslash/remote',
+            {"branch_upstream": 'moo/origin/myslash/remote'},
+        ],
+    ],
+)
+def test_extract_status_b(fixture, expected_result):
+    if PY2:
+        assert (
+            extract_status(textwrap.dedent(fixture)).items() <= expected_result.items()
+        )
+    else:
+        assert (
+            extract_status(textwrap.dedent(fixture)).items() >= expected_result.items()
+        )
+
+
+@pytest.mark.parametrize(
+    'fixture,expected_result',
+    [
+        [
+            '# branch.ab +1 -83',
+            {"branch_ab": '+1 -83', "branch_ahead": '1', "branch_behind": '83',},
+        ],
+        [
+            """
+            # branch.ab +0 -0
+            """,
+            {"branch_ab": '+0 -0', "branch_ahead": '0', "branch_behind": '0',},
+        ],
+        [
+            """
+            # branch.ab +1 -83
+            """,
+            {"branch_ab": '+1 -83', "branch_ahead": '1', "branch_behind": '83',},
+        ],
+        [
+            """
+            # branch.ab +9999999 -9999999
+            """,
+            {
+                "branch_ab": '+9999999 -9999999',
+                "branch_ahead": '9999999',
+                "branch_behind": '9999999',
+            },
+        ],
+    ],
+)
+def test_extract_status_c(fixture, expected_result):
+    assert expected_result.items() <= extract_status(textwrap.dedent(fixture)).items()
