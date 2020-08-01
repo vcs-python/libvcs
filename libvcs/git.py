@@ -25,8 +25,6 @@ import os
 import re
 import warnings
 
-from pip._vendor.packaging.version import parse as parse_version
-
 from . import exc
 from ._compat import urlparse
 from .base import BaseRepo
@@ -453,23 +451,24 @@ class GitRepo(BaseRepo):
         return url
 
     def get_git_version(self):
+        """Return current version of git binary
+
+        :rtype: str
+        """
         VERSION_PFX = 'git version '
         version = self.run(['version'])
         if version.startswith(VERSION_PFX):
             version = version[len(VERSION_PFX) :].split()[0]
         else:
             version = ''
-        # get first 3 positions of the git version because
-        # on windows it is x.y.z.windows.t, and this parses as
-        # LegacyVersion which always smaller than a Version.
-        version = '.'.join(version.split('.')[:3])
-        return parse_version(version)
+        return '.'.join(version.split('.')[:3])
 
     def get_current_remote_name(self):
         """Retrieve name of the remote / upstream of currently checked out branch.
 
         :rtype: str
         """
+        self.info(self.get_git_version())
         current_status = self.run(['status', '-sb'])
         # git status -sb
         # ## v1.0-ourbranch...remotename/v1.0-ourbranch
