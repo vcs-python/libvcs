@@ -208,9 +208,45 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
 def extract_status(value):
     """Returns `git status -sb --porcelain=2` extracted to a dict"""
     pattern = re.compile(
-        r"""
-        ^.*branch.oid\W+(?P<branch_oid>[a-f0-9]{40})[\n\r]?
-        \#\W+branch.head[\W]+(?P<branch_head>[\w-]*)
+        r"""[\n\r]?
+        (
+            #
+            \W+
+            branch.oid\W+
+            (?P<branch_oid>
+                [a-f0-9]{40}
+            )
+        )?
+        (
+            #
+            \W+
+            branch.head
+            [\W]+
+            (?P<branch_head>
+                [\w-]*
+            )
+            
+        )?
+        (
+            #
+            \W+
+            branch.upstream
+            [\W]+
+            (?P<branch_upstream>
+                [/\w-]*
+            )
+        )?
+        (
+            #
+            \W+
+            branch.ab
+            [\W]+
+            (?P<branch_ab>
+                \+(?P<branch_ahead>\d+)
+                \W{1}
+                \-(?P<branch_behind>\d+)
+            )
+        )?
         """,
         re.VERBOSE | re.MULTILINE,
     )
@@ -230,3 +266,69 @@ def test_extract_status():
         "branch_oid": 'd4ccd4d6af04b53949f89fbf0cdae13719dc5a08',
         "branch_head": 'fix-current-remote-name',
     }.items() <= extract_status(FIXTURE_A).items()
+
+
+@pytest.mark.parametrize(
+    'fixture,expected_result',
+    [
+        [
+            """
+        # branch.oid de6185fde0806e5c7754ca05676325a1ea4d6348
+        # branch.head fix-current-remote-name
+        # branch.upstream origin/fix-current-remote-name
+        # branch.ab +0 -0
+        1 .M N... 100644 100644 100644 91082f119279b6f105ee9a5ce7795b3bdbe2b0de 91082f119279b6f105ee9a5ce7795b3bdbe2b0de CHANGES
+        1 .M N... 100644 100644 100644 302ca2c18d4c295ce217bff5f93e1ba342dc6665 302ca2c18d4c295ce217bff5f93e1ba342dc6665 tests/test_git.py
+    """,  # NOQA: E501
+            {
+                "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
+                "branch_head": 'fix-current-remote-name',
+                "branch_upstream": 'origin/fix-current-remote-name',
+                "branch_ab": '+0 -0',
+                "branch_ahead": '0',
+                "branch_behind": '0',
+            },
+        ],
+        [
+            '# branch.upstream moo/origin/myslash/remote',
+            {"branch_upstream": 'moo/origin/myslash/remote',},
+        ],
+    ],
+)
+def test_extract_status_b(fixture, expected_result):
+    assert expected_result.items() <= extract_status(textwrap.dedent(fixture)).items()
+
+
+@pytest.mark.parametrize(
+    'fixture,expected_result',
+    [
+        [
+            '# branch.ab +1 -83',
+            {"branch_ab": '+1 -83', "branch_ahead": '1', "branch_behind": '83',},
+        ],
+        [
+            """
+            # branch.ab +0 -0
+            """,
+            {"branch_ab": '+0 -0', "branch_ahead": '0', "branch_behind": '0',},
+        ],
+        [
+            """
+            # branch.ab +1 -83
+            """,
+            {"branch_ab": '+1 -83', "branch_ahead": '1', "branch_behind": '83',},
+        ],
+        [
+            """
+            # branch.ab +9999999 -9999999
+            """,
+            {
+                "branch_ab": '+9999999 -9999999',
+                "branch_ahead": '9999999',
+                "branch_behind": '9999999',
+            },
+        ],
+    ],
+)
+def test_extract_status_c(fixture, expected_result):
+    assert expected_result.items() <= extract_status(textwrap.dedent(fixture)).items()
