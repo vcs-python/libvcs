@@ -34,6 +34,8 @@ Git
    :members:
    :show-inheritance:
 
+.. autofunction:: libvcs.git.extract_status
+
 Mercurial
 ---------
 
