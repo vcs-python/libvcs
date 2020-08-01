@@ -216,8 +216,8 @@ def test_get_current_remote_name(git_repo):
     new_branch = 'another-branch-with-no-upstream'
     git_repo.run(['checkout', '-B', new_branch])
     assert (
-        git_repo.get_current_remote_name() is None
-    ), 'branch w/o upstream should return None'
+        git_repo.get_current_remote_name() == new_branch
+    ), 'branch w/o upstream should return branch only'
 
     new_remote_name = 'new_remote_name'
     git_repo.set_remote(
