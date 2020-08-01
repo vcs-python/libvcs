@@ -3,7 +3,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "libvcs"
-version = "0.4.0rc2"
+version = "0.4.0"
 description = "vcs abstraction layer"
 license = "MIT"
 authors = ["Tony Narlock <tony@git-pull.com>"]
