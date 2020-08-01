@@ -43,8 +43,10 @@ Supports :meth:`collections.namedtuple._asdict()`
 def extract_status(value):
     """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
-    :returns: Dictionary of git repo's status
-    :rtype: dict
+    Returns
+    -------
+    dict : 
+        Dictionary of git repo's status
     """
     pattern = re.compile(
         r"""[\n\r]?
@@ -360,7 +362,9 @@ class GitRepo(BaseRepo):
            This used to return a dict of tuples, it now returns a dict of dictionaries
            with ``name``, ``fetch_url``, and ``push_url``.
 
-        :rtype: dict
+        Returns
+        -------
+        dict
         """
         remotes = {}
 
@@ -393,10 +397,15 @@ class GitRepo(BaseRepo):
     def remote(self, name, **kwargs):
         """Get the fetch and push URL for a specified remote name.
 
-        :param name: the remote name used to define the fetch and push URL
-        :type name: str
-        :returns: remote name and url in tuple form
-        :rtype: :class:`libvcs.git.GitRemote`
+        Parameters
+        ----------
+        name : str
+            The remote name used to define the fetch and push URL
+
+        Returns
+        -------
+        :class:`libvcs.git.GitRemote` : 
+            Remote name and url in tuple form
 
         .. versionchanged:: 0.4.0
 
@@ -482,11 +491,15 @@ class GitRepo(BaseRepo):
     def chomp_protocol(url):
         """Return clean VCS url from RFC-style url
 
-        :param url: url
-        :type url: str
-        :rtype: str
-        :returns: url as VCS software would accept it
-        :seealso: #14
+        Parameters
+        ----------
+        url : str 
+            PIP-style url
+
+        Returns
+        -------
+        str :
+            URL as VCS software would accept it
         """
         if '+' in url:
             url = url.split('+', 1)[1]
@@ -506,7 +519,9 @@ class GitRepo(BaseRepo):
     def get_git_version(self):
         """Return current version of git binary
 
-        :rtype: str
+        Returns
+        -------
+        str
         """
         VERSION_PFX = 'git version '
         version = self.run(['version'])
@@ -521,7 +536,10 @@ class GitRepo(BaseRepo):
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
 
-        .. code-block:: python
+        Examples
+        --------
+
+        ::
 
             print(git_repo.status())
             {
@@ -533,15 +551,21 @@ class GitRepo(BaseRepo):
                 "branch_behind": '0',
             }
 
-        :returns: Status of current checked out repository
-        :rtype: dict
+        Returns
+        -------
+        dict :
+            Status of current checked out repository
         """
         return extract_status(self.run(['status', '-sb', '--porcelain=2']))
 
     def get_current_remote_name(self):
         """Retrieve name of the remote / upstream of currently checked out branch.
 
-        :rtype: str, None if no remote set
+        Returns
+        -------
+        str :
+            If upstream the same, returns ``branch_name``.
+            If upstream mismatches, returns ``remote_name/branch_name``.
         """
         match = self.status()
 
