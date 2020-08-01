@@ -19,7 +19,6 @@ import collections
 import logging
 import os
 import re
-import warnings
 
 from . import exc
 from ._compat import urlparse
@@ -101,15 +100,8 @@ class GitRepo(BaseRepo):
         url : str
             URL of repo
 
-        git_shallow : bool
-            clone with `--depth 1`, default `False`
-
-        git_submodules : list
-            Git submodules that shall be updated, all if empty
-
         tls_verify : bool
             Should certificate for https be checked (default False)
-
         """
         if 'git_shallow' not in kwargs:
             self.git_shallow = False
@@ -118,12 +110,6 @@ class GitRepo(BaseRepo):
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
 
-        if kwargs.get('remotes') is not None:
-            warnings.warn(
-                "'remotes' is deprecated and will be removed in 0.5.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         BaseRepo.__init__(self, url, **kwargs)
 
     def get_revision(self):
@@ -354,17 +340,6 @@ class GitRepo(BaseRepo):
             )
         return remotes
 
-    @property
-    def remotes_get(self):
-        warnings.warn(
-            "'remotes_get' is deprecated and will be removed in 0.5. "
-            "Use 'remotes()' method instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.remotes()
-
     def remote(self, name, **kwargs):
         """Get the fetch and push URL for a specified remote name.
 
@@ -379,15 +354,6 @@ class GitRepo(BaseRepo):
             Remote name and url in tuple form
         """
 
-        if kwargs.get('remote') is not None:
-            warnings.warn(
-                "'remote' is deprecated and will be removed in 0.5. "
-                "Use 'name' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            name = kwargs.get('remote')
-
         try:
             ret = self.run(['remote', 'show', '-n', name])
             lines = ret.split('\n')
@@ -401,22 +367,6 @@ class GitRepo(BaseRepo):
                 return None
         except exc.LibVCSException:
             return None
-
-    def remote_get(self, name='origin', **kwargs):
-        """Retrieve remote
-
-        !!! note
-            The ``remote_get`` method is deprecated and will be removed in 0.5.0. It has
-            been renamed ``remote`` 
-        """
-        warnings.warn(
-            "'remote_get' is deprecated and will be removed in 0.5. "
-            "Use 'remote' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.remote(name=name, **kwargs)
 
     def set_remote(self, name, url, overwrite=False):
         """Set remote with name and URL like git remote add.
@@ -437,16 +387,6 @@ class GitRepo(BaseRepo):
         else:
             self.run(['remote', 'add', name, url])
         return self.remote(name=name)
-
-    def remote_set(self, url, name='origin', overwrite=False, **kwargs):
-        warnings.warn(
-            "'remote_set' is deprecated and will be removed in 0.5. "
-            "Use 'set_remote' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.set_remote(url=url, name=name, overwrite=overwrite, **kwargs)
 
     @staticmethod
     def chomp_protocol(url):
