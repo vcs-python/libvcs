@@ -521,14 +521,8 @@ class GitRepo(BaseRepo):
 
         :rtype: str, None if no remote set
         """
-        current_status = self.run(['status', '-sb'])
-        # git status -sb
-        # ## v1.0-ourbranch...remotename/v1.0-ourbranch
-        match = re.match(
-            r'^## (?P<branch>.*)\.{3}(?P<remote_slash_branch>.*)', current_status,
-        )
-        if match is None:  # No upstream set
-            return None
-        return match.group('remote_slash_branch').replace(
-            '/' + match.group('branch'), ''
-        )
+        match = extract_status(self.run(['status', '-sb', '--porcelain=2']))
+
+        if match['branch_upstream'] is None:  # no upstream set
+            return match['branch_head']
+        return match['branch_upstream'].replace('/' + match['branch_head'], '')
