@@ -52,9 +52,6 @@ class GitRepo(BaseRepo):
         :param url: URL of repo
         :type url: str
 
-        :param git_remote_name: name of the remote (default "origin")
-        :type git_remote_name: str
-
         :param git_shallow: clone with ``--depth 1`` (default False)
         :type git_shallow: bool
 
@@ -74,8 +71,6 @@ class GitRepo(BaseRepo):
            The ``remotes`` argument is deprecated and will be removed in 0.5
            
         """
-        if 'git_remote_name' not in kwargs:
-            self.git_remote_name = "origin"
         if 'git_shallow' not in kwargs:
             self.git_shallow = False
         if 'git_submodules' not in kwargs:
@@ -191,7 +186,7 @@ class GitRepo(BaseRepo):
 
         # show-ref output is in the form "<sha> refs/remotes/<remote>/<tag>"
         # we must strip the remote from the tag.
-        git_remote_name = self.get_current_remote_name() or self.git_remote_name
+        git_remote_name = self.get_current_remote_name()
 
         if "refs/remotes/%s" % git_tag in show_ref_output:
             m = re.match(
