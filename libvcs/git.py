@@ -40,6 +40,59 @@ Supports :meth:`collections.namedtuple._asdict()`
 """
 
 
+def extract_status(value):
+    """Returns `git status -sb --porcelain=2` extracted to a dict
+
+    :returns: Dictionary of git repo's status
+    :rtype: str
+    """
+    pattern = re.compile(
+        r"""[\n\r]?
+        (
+            #
+            \W+
+            branch.oid\W+
+            (?P<branch_oid>
+                [a-f0-9]{40}
+            )
+        )?
+        (
+            #
+            \W+
+            branch.head
+            [\W]+
+            (?P<branch_head>
+                [\w-]*
+            )
+            
+        )?
+        (
+            #
+            \W+
+            branch.upstream
+            [\W]+
+            (?P<branch_upstream>
+                [/\w-]*
+            )
+        )?
+        (
+            #
+            \W+
+            branch.ab
+            [\W]+
+            (?P<branch_ab>
+                \+(?P<branch_ahead>\d+)
+                \W{1}
+                \-(?P<branch_behind>\d+)
+            )
+        )?
+        """,
+        re.VERBOSE | re.MULTILINE,
+    )
+    matches = pattern.search(value)
+    return matches.groupdict()
+
+
 class GitRepo(BaseRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
