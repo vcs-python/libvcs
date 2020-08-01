@@ -4,6 +4,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
 import os
+import re
+import textwrap
 
 import pytest
 
@@ -201,3 +203,30 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     assert new_repo_url in git_repo.remote(
         name='myrepo'
     ), 'Running remove_set should overwrite previous remote'
+
+
+def extract_status(value):
+    """Returns `git status -sb --porcelain=2` extracted to a dict"""
+    pattern = re.compile(
+        r"""
+        ^.*branch.oid\W+(?P<branch_oid>[a-f0-9]{40})[\n\r]?
+        \#\W+branch.head[\W]+(?P<branch_head>[\w-]*)
+        """,
+        re.VERBOSE | re.MULTILINE,
+    )
+    matches = pattern.search(value)
+    return matches.groupdict()
+
+
+def test_extract_status():
+    FIXTURE_A = textwrap.dedent(
+        """
+        # branch.oid d4ccd4d6af04b53949f89fbf0cdae13719dc5a08
+        # branch.head fix-current-remote-name
+        1 .M N... 100644 100644 100644 91082f119279b6f105ee9a5ce7795b3bdbe2b0de 91082f119279b6f105ee9a5ce7795b3bdbe2b0de CHANGES
+    """  # NOQA: E501
+    )
+    assert {
+        "branch_oid": 'd4ccd4d6af04b53949f89fbf0cdae13719dc5a08',
+        "branch_head": 'fix-current-remote-name',
+    }.items() <= extract_status(FIXTURE_A).items()
