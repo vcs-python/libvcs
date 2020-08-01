@@ -12,8 +12,11 @@ in pre-1.0 builds.
 
 0.4-current
 -----------
-- :meth:`libvcs.git.GitRepo.get_current_remote_name()` Handle case where
+- [bug] :meth:`libvcs.git.GitRepo.get_current_remote_name()` Handle case where
   upstream is unpushed
+- [feature] :meth:`libvcs.git.GitRepo.status()` - Retrieve status of repo
+- [feature] :func:`libvcs.git.extract_status()` - Return structured info from
+  ``git status``
 
 0.4.1 <2020-08-01>
 ------------------
