@@ -9,7 +9,7 @@ import textwrap
 import pytest
 
 from libvcs import exc
-from libvcs._compat import string_types
+from libvcs._compat import PY2, string_types
 from libvcs.git import GitRemote, GitRepo, extract_status
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
@@ -285,12 +285,19 @@ def test_extract_status():
         ],
         [
             '# branch.upstream moo/origin/myslash/remote',
-            {"branch_upstream": 'moo/origin/myslash/remote',},
+            {"branch_upstream": 'moo/origin/myslash/remote'},
         ],
     ],
 )
 def test_extract_status_b(fixture, expected_result):
-    assert expected_result.items() <= extract_status(textwrap.dedent(fixture)).items()
+    if PY2:
+        assert (
+            extract_status(textwrap.dedent(fixture)).items() <= expected_result.items()
+        )
+    else:
+        assert (
+            extract_status(textwrap.dedent(fixture)).items() >= expected_result.items()
+        )
 
 
 @pytest.mark.parametrize(
