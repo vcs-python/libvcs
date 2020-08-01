@@ -41,7 +41,7 @@ Supports :meth:`collections.namedtuple._asdict()`
 
 
 def extract_status(value):
-    """Returns `git status -sb --porcelain=2` extracted to a dict
+    """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
     :returns: Dictionary of git repo's status
     :rtype: str
@@ -516,12 +516,31 @@ class GitRepo(BaseRepo):
             version = ''
         return '.'.join(version.split('.')[:3])
 
+    def status(self):
+        """Retrieve status of project in dict format.
+
+        Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
+
+        .. code-block:: python
+
+            print(git_repo.status())
+            {
+                "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
+                "branch_head": 'fix-current-remote-name',
+                "branch_upstream": 'origin/fix-current-remote-name',
+                "branch_ab": '+0 -0',
+                "branch_ahead": '0',
+                "branch_behind": '0',
+            }
+        """
+        return extract_status(self.run(['status', '-sb', '--porcelain=2']))
+
     def get_current_remote_name(self):
         """Retrieve name of the remote / upstream of currently checked out branch.
 
         :rtype: str, None if no remote set
         """
-        match = extract_status(self.run(['status', '-sb', '--porcelain=2']))
+        match = self.status()
 
         if match['branch_upstream'] is None:  # no upstream set
             return match['branch_head']
