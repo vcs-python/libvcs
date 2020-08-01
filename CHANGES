@@ -10,6 +10,11 @@ Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
+0.4-current
+-----------
+- :meth:`libvcs.git.GitRepo.get_current_remote_name()` Handle case where
+  upstream is unpushed
+
 0.4.1 <2020-08-01>
 ------------------
 - Remove log statement
