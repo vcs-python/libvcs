@@ -204,6 +204,50 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     ), 'Running remove_set should overwrite previous remote'
 
 
+def test_get_git_version(git_repo):
+    expected_version = git_repo.run(['--version']).replace('git version ', '')
+    assert git_repo.get_git_version()
+    assert expected_version == git_repo.get_git_version()
+
+
+def test_get_current_remote_name(git_repo):
+    assert git_repo.get_current_remote_name() == 'origin'
+
+    new_branch = 'another-branch-with-no-upstream'
+    git_repo.run(['checkout', '-B', new_branch])
+    assert (
+        git_repo.get_current_remote_name() is None
+    ), 'branch w/o upstream should return None'
+
+    new_remote_name = 'new_remote_name'
+    git_repo.set_remote(
+        name=new_remote_name, url='file://' + git_repo.path, overwrite=True
+    )
+    git_repo.run(['fetch', new_remote_name])
+    git_repo.run(
+        ['branch', '--set-upstream-to', '{}/{}'.format(new_remote_name, new_branch)]
+    )
+    assert (
+        git_repo.get_current_remote_name() == new_remote_name
+    ), 'Should reflect new upstream branch (different remote)'
+
+    upstream = '{}/{}'.format(new_remote_name, 'master')
+
+    git_repo.run(['branch', '--set-upstream-to', upstream])
+    assert (
+        git_repo.get_current_remote_name() == upstream
+    ), 'Should reflect upstream branch (differente remote+branch)'
+
+    git_repo.run(['checkout', 'master'])
+
+    # Different remote, different branch
+    remote = '{}/{}'.format(new_remote_name, new_branch)
+    git_repo.run(['branch', '--set-upstream-to', remote])
+    assert (
+        git_repo.get_current_remote_name() == remote
+    ), 'Should reflect new upstream branch (different branch)'
+
+
 def test_extract_status():
     FIXTURE_A = textwrap.dedent(
         """
