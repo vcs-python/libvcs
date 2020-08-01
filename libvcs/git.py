@@ -468,7 +468,6 @@ class GitRepo(BaseRepo):
 
         :rtype: str
         """
-        self.info(self.get_git_version())
         current_status = self.run(['status', '-sb'])
         # git status -sb
         # ## v1.0-ourbranch...remotename/v1.0-ourbranch
