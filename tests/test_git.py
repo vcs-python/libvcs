@@ -4,14 +4,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
 import os
-import re
 import textwrap
 
 import pytest
 
 from libvcs import exc
 from libvcs._compat import string_types
-from libvcs.git import GitRemote, GitRepo
+from libvcs.git import GitRemote, GitRepo, extract_status
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
@@ -203,55 +202,6 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     assert new_repo_url in git_repo.remote(
         name='myrepo'
     ), 'Running remove_set should overwrite previous remote'
-
-
-def extract_status(value):
-    """Returns `git status -sb --porcelain=2` extracted to a dict"""
-    pattern = re.compile(
-        r"""[\n\r]?
-        (
-            #
-            \W+
-            branch.oid\W+
-            (?P<branch_oid>
-                [a-f0-9]{40}
-            )
-        )?
-        (
-            #
-            \W+
-            branch.head
-            [\W]+
-            (?P<branch_head>
-                [\w-]*
-            )
-            
-        )?
-        (
-            #
-            \W+
-            branch.upstream
-            [\W]+
-            (?P<branch_upstream>
-                [/\w-]*
-            )
-        )?
-        (
-            #
-            \W+
-            branch.ab
-            [\W]+
-            (?P<branch_ab>
-                \+(?P<branch_ahead>\d+)
-                \W{1}
-                \-(?P<branch_behind>\d+)
-            )
-        )?
-        """,
-        re.VERBOSE | re.MULTILINE,
-    )
-    matches = pattern.search(value)
-    return matches.groupdict()
 
 
 def test_extract_status():
