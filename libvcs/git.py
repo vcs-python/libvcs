@@ -466,7 +466,7 @@ class GitRepo(BaseRepo):
     def get_current_remote_name(self):
         """Retrieve name of the remote / upstream of currently checked out branch.
 
-        :rtype: str
+        :rtype: str, None if no remote set
         """
         current_status = self.run(['status', '-sb'])
         # git status -sb
@@ -474,6 +474,8 @@ class GitRepo(BaseRepo):
         match = re.match(
             r'^## (?P<branch>.*)\.{3}(?P<remote_slash_branch>.*)', current_status,
         )
+        if match is None:  # No upstream set
+            return None
         return match.group('remote_slash_branch').replace(
             '/' + match.group('branch'), ''
         )
