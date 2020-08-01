@@ -191,7 +191,8 @@ class GitRepo(BaseRepo):
 
         # show-ref output is in the form "<sha> refs/remotes/<remote>/<tag>"
         # we must strip the remote from the tag.
-        git_remote_name = self.git_remote_name
+        git_remote_name = self.get_current_remote_name() or self.git_remote_name
+
         if "refs/remotes/%s" % git_tag in show_ref_output:
             m = re.match(
                 r'^[0-9a-f]{40} refs/remotes/'
@@ -471,3 +472,18 @@ class GitRepo(BaseRepo):
         # LegacyVersion which always smaller than a Version.
         version = '.'.join(version.split('.')[:3])
         return parse_version(version)
+
+    def get_current_remote_name(self):
+        """Retrieve name of the remote / upstream of currently checked out branch.
+
+        :rtype: str
+        """
+        current_status = self.run(['status', '-sb'])
+        # git status -sb
+        # ## v1.0-ourbranch...remotename/v1.0-ourbranch
+        match = re.match(
+            r'^## (?P<branch>.*)\.{3}(?P<remote_slash_branch>.*)', current_status,
+        )
+        return match.group('remote_slash_branch').replace(
+            '/' + match.group('branch'), ''
+        )
