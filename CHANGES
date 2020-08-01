@@ -44,6 +44,8 @@ implicit behavior.
   instead of properties.
 
   Passing ``flat=True`` to return a ``dict`` of ``tuple`` instead of ``dict``
+- New method: :meth:`libvcs.git.GitRepo.get_git_version()`
+- New method: :meth:`libvcs.git.GitRepo.get_current_remote_name()`
 
 
 0.3.3 <2020-07-29>
