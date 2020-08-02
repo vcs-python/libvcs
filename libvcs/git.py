@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 """Git Repo object for libvcs.
 
-libvcs.git
-~~~~~~~~~~
-
 From https://github.com/saltstack/salt (Apache License):
 
-- :py:meth:`GitRepo.remote`
-- :py:meth:`GitRepo.remote_get` (renamed to ``remote``)
-- :py:meth:`GitRepo.remote_set` (renamed to ``set_remote``)
+- [`GitRepo.remote`](libvcs.git.GitRepo.remote) (renamed to ``remote``)
+- [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
 
 From pip (MIT Licnese):
 
-- :py:meth:`GitRepo.get_url_and_revision_from_pip_url` (get_url_rev)
-- :py:meth:`GitRepo.get_revision`
-- :py:meth:`GitRepo.get_git_version`
-
-"""
+- [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
+- [`GitRepo.get_url_and_revision_from_pip_url`](libvcs.git.GitRepo.get_url_and_revision_from_pip_url`) (``get_url_rev``)
+- [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
+- [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
+"""  # NOQA: E501
 from __future__ import absolute_import, print_function, unicode_literals
 
 import collections
@@ -541,25 +537,23 @@ class GitRepo(BaseRepo):
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
 
+        Returns
+        -------
+        dict
+            Status of current checked out repository
+
         Examples
         --------
 
-        ::
-
-            print(git_repo.status())
-            {
-                "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
-                "branch_head": 'fix-current-remote-name',
-                "branch_upstream": 'origin/fix-current-remote-name',
-                "branch_ab": '+0 -0',
-                "branch_ahead": '0',
-                "branch_behind": '0',
-            }
-
-        Returns
-        -------
-        dict :
-            Status of current checked out repository
+        >>> git_repo.status()
+        { 
+            "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
+            "branch_head": 'fix-current-remote-name',
+            "branch_upstream": 'origin/fix-current-remote-name',
+            "branch_ab": '+0 -0',
+            "branch_ahead": '0',
+            "branch_behind": '0'
+        }
         """
         return extract_status(self.run(['status', '-sb', '--porcelain=2']))
 
