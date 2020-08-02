@@ -367,7 +367,8 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        dict
+        dict :
+            dict of git upstream / remote URLs
         """
         remotes = {}
 
@@ -524,7 +525,8 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        str
+        str :
+            git version
         """
         VERSION_PFX = 'git version '
         version = self.run(['version'])
