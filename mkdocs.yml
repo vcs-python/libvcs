@@ -8,3 +8,17 @@ theme:
   custom_dir: .
   logo: assets/images/libvcs.svg
   favicon: assets/images/favicon.ico
+
+markdown_extensions:
+  - admonition
+  - codehilite
+
+plugins:
+  - search
+  - mkapi
+
+nav:
+  - index.md
+  - history.md
+  - api.md
+  - API: mkapi/api/libvcs
