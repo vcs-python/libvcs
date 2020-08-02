@@ -1,6 +1,12 @@
 [tool.black]
 skip-string-normalization = true
 
+[tool.portray.mkdocs.theme]
+favicon = "art/favicon.ico"
+logo = "art/libvcs.svg"
+name = "material"
+palette = {primary = "blue grey", accent = "pink"}
+
 [tool.poetry]
 name = "libvcs"
 version = "0.4.4"
