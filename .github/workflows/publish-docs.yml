@@ -64,7 +64,7 @@ jobs:
       run: poetry install
 
     - name: Build documentation
-      run: poetry run portray as_html --output_dir doc/_build --overwrite
+      run: poetry run mkdocs build
 
     - name: Push documentation to S3
       uses: jakejarvis/s3-sync-action@master
@@ -75,11 +75,11 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: 'us-west-1'   # optional: defaults to us-east-1
-        SOURCE_DIR: 'doc/_build'      # optional: defaults to entire repository 
+        SOURCE_DIR: 'site'      # optional: defaults to entire repository 
 
     - name: Generate list of changed files for CloudFront to invalidate
       run: |
-        pushd doc/_build; FILES=$(find . -name \* -print | cut -c2- | sort | uniq | tr '\n' ' '); popd
+        pushd site; FILES=$(find . -name \* -print | cut -c2- | sort | uniq | tr '\n' ' '); popd
         for file in $FILES; do
           echo $file
           # add bare directory to list of updated paths when we see index.html
