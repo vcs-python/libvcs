@@ -77,3 +77,6 @@ doc/_build/
 *.lprof
 
 pip-wheel-metadata/
+
+# Used by publish-docs.yml CI
+.updated_files
