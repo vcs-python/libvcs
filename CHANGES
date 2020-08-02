@@ -217,4 +217,4 @@ libvcs 0.1.0 (2016-06-20)
 .. _vcspull: https://github.com/vcs-python/vcspull
 .. _#43: https://github.com/vcs-python/vcspull/issues/43
 
-.. vim: set filetype=rst:
+.. vim: set filetype=md:
