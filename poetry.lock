@@ -441,6 +441,10 @@ version = "1.0.12"
 jinja2 = "*"
 markdown = "*"
 
+[package.source]
+reference = "b2888ec059f548e1ca65d2c3f96c639c0a5e5b36"
+type = "git"
+url = "https://github.com/tony/mkapi"
 [[package]]
 category = "dev"
 description = "Project documentation with Markdown."
@@ -1036,7 +1040,7 @@ version = "0.5.1"
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.5\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.7\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\")"
+marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.5\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.7\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\")"
 name = "zipp"
 optional = false
 python-versions = ">=2.7"
@@ -1052,7 +1056,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "aa6df2148870a26053f1ae0f736462d8247ae9e9379f6c404f3ab0d4ec78cc88"
+content-hash = "4b02b21ac9455add55e32c6373d8de8da9c955e9b2cb1ac32e7f583b94313c4b"
 lock-version = "1.0"
 python-versions = "~2.7 || ^3.5"
 
@@ -1252,10 +1256,7 @@ mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
 ]
-mkapi = [
-    {file = "mkapi-1.0.12-py3-none-any.whl", hash = "sha256:57acce0d2ed08305c8ed5cfc8c5158b0149da9f42884f8af12a4fb46137bedfb"},
-    {file = "mkapi-1.0.12.tar.gz", hash = "sha256:8982eb8b6420d3535d932e6b8aeb0c40c010d32b0392ac627e76eb44f95eb8d0"},
-]
+mkapi = []
 mkdocs = [
     {file = "mkdocs-1.1.2-py3-none-any.whl", hash = "sha256:096f52ff52c02c7e90332d2e53da862fde5c062086e1b5356a6e392d5d60f5e9"},
     {file = "mkdocs-1.1.2.tar.gz", hash = "sha256:f0b61e5402b99d7789efa032c7a74c90a20220a9c81749da06dbfbcbd52ffb39"},
