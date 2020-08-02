@@ -1,14 +1,11 @@
-Development
-===========
+# Development
 
-Testing
--------
+## Testing
 
 Our tests are inside `tests/`. Tests are implemented using
 [pytest](http://pytest.org/).
 
-Install the latest code from git
---------------------------------
+## Install the latest code from git
 
 ### Using pip
 
@@ -59,8 +56,7 @@ Then activate it to your current tty / terminal session with:
 
 That is it! You are now ready to code!
 
-Test Runner
------------
+## Test Runner
 
 As you seen above, the `libvcs` command will now be available to you,
 since you are in the virtual environment, your <span
@@ -90,3 +86,21 @@ tests `test_mkdir_p` inside of `tests/test_util.py`.
 Multiple can be separated by spaces:
 
     $ py.test tests/test_{git,svn}.py tests/test_util.py::test_mkdir_p
+
+## Docs
+
+Build docs to _site/_:
+
+    $ make build_docs
+
+Serve docs from http://localhost:8000:
+
+    $ make serve_docs
+
+Rebuild docs when files are edited (requires [`entr(1)`](http://eradman.com/entrproject/)):
+
+    $ make watch_docs
+
+Serve + watch w/ rebuild (requires `make(1)` w/ `-j` support, usually GNU Make):
+
+    $ make dev_docs
