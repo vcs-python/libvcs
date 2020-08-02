@@ -1,0 +1,23 @@
+.mkapi-node {
+  font-size: 0.85em;
+}
+
+.mkapi-node .mkapi-item-name,
+.mkapi-node .mkapi-object,
+.mkapi-node .mkapi-object code,
+.mkapi-node .mkapi-object.code h2.mkapi-object-body,
+.mkapi-node h2 .mkapi-object {
+  font-size: 1em;
+}
+
+.mkapi-node ul.mkapi-items li::before {
+  font-size: 80%;
+}
+
+.mkapi-section-name {
+  padding: 0px 8px 2px 8px;
+}
+
+.mkapi-object.plain .mkapi-object-kind {
+  font-weight: normal;
+}

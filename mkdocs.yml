@@ -9,6 +9,9 @@ theme:
   logo: assets/images/libvcs.svg
   favicon: assets/images/favicon.ico
 
+extra_css:
+  - assets/css/custom.css
+
 markdown_extensions:
   - admonition
   - codehilite
