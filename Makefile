@@ -1,4 +1,5 @@
 PY_FILES= find . -type f -not -path '*/\.*' | grep -i '.*[.]py$$' 2> /dev/null
+DOC_FILES= find . -type f -not -path '*/\.*' | grep -i '.*[.]rst\$\|.*[.]py\$\|mkdocs\.yml\|CHANGES\|TODO\|.*conf\.py' 2> /dev/null
 
 
 entr_warn:
@@ -22,10 +23,10 @@ watch_test:
 	if command -v entr > /dev/null; then ${PY_FILES} | entr -c $(MAKE) test; else $(MAKE) test entr_warn; fi
 
 build_docs:
-	cd docs && $(MAKE) html
+	poetry run mkdocs build
 
 watch_docs:
-	cd docs && $(MAKE) watch_docs
+	if command -v entr > /dev/null; then ${DOC_FILES} | entr -c $(MAKE) build_docs; else $(MAKE) build_docs entr_warn; fi
 
 flake8:
 	flake8 libvcs tests
