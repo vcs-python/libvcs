@@ -28,6 +28,12 @@ build_docs:
 watch_docs:
 	if command -v entr > /dev/null; then ${DOC_FILES} | entr -c $(MAKE) build_docs; else $(MAKE) build_docs entr_warn; fi
 
+serve_docs:
+	python -m http.server --directory site
+
+dev_docs:
+	$(MAKE) -j watch_docs serve_docs
+
 flake8:
 	flake8 libvcs tests
 
