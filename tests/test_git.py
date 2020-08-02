@@ -287,6 +287,22 @@ def test_extract_status():
             '# branch.upstream moo/origin/myslash/remote',
             {"branch_upstream": 'moo/origin/myslash/remote'},
         ],
+        [
+            """
+            # branch.oid c3c5323abc5dca78d9bdeba6c163c2a37b452e69
+            # branch.head libvcs-0.4.0
+            # branch.upstream origin/libvcs-0.4.0
+            # branch.ab +0 -0
+            """,
+            {
+                "branch_oid": 'c3c5323abc5dca78d9bdeba6c163c2a37b452e69',
+                "branch_head": 'libvcs-0.4.0',
+                "branch_upstream": 'origin/libvcs-0.4.0',
+                "branch_ab": '+0 -0',
+                "branch_ahead": '0',
+                "branch_behind": '0',
+            },
+        ],
     ],
 )
 def test_extract_status_b(fixture, expected_result):

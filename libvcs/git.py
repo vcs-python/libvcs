@@ -64,7 +64,7 @@ def extract_status(value):
             branch.head
             [\W]+
             (?P<branch_head>
-                [\w-]*
+                [/.\w-]*
             )
             
         )?
@@ -74,7 +74,7 @@ def extract_status(value):
             branch.upstream
             [\W]+
             (?P<branch_upstream>
-                [/\w-]*
+                [/.\w-]*
             )
         )?
         (
@@ -301,17 +301,20 @@ class GitRepo(BaseRepo):
             # Pull changes from the remote branch
             try:
                 process = self.run(['rebase', git_remote_name + '/' + git_tag])
-            except exc.CommandError:
-                # Rebase failed: Restore previous state.
-                self.run(['rebase', '--abort'])
-                if need_stash:
-                    self.run(['stash', 'pop', '--index', '--quiet'])
+            except exc.CommandError as e:
+                if 'invalid_upstream' in str(e):
+                    self.error(e)
+                else:
+                    # Rebase failed: Restore previous state.
+                    self.run(['rebase', '--abort'])
+                    if need_stash:
+                        self.run(['stash', 'pop', '--index', '--quiet'])
 
-                self.error(
-                    "\nFailed to rebase in: '%s'.\n"
-                    "You will have to resolve the conflicts manually" % self.path
-                )
-                return
+                    self.error(
+                        "\nFailed to rebase in: '%s'.\n"
+                        "You will have to resolve the conflicts manually" % self.path
+                    )
+                    return
 
             if need_stash:
                 try:
