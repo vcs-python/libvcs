@@ -2,21 +2,17 @@
 # -*- coding: utf-8 -*-
 """Subversion object for libvcs.
 
-libvcs.svn
-~~~~~~~~~~
-
 The follow are from saltstack/salt (Apache license):
 
-- :py:meth:`SubversionRepo.get_revision_file`
+- [`SubversionRepo.get_revision_file`](libvcs.svn.SubversionRepo.get_revision_file)
 
 The following are pypa/pip (MIT license):
 
-- :py:meth:`SubversionRepo.get_url_and_revision_from_pip_url`
-- :py:meth:`SubversionRepo.get_url`
-- :py:meth:`SubversionRepo.get_revision`
-- :py:meth:`~.get_rev_options`
-
-"""
+- [`SubversionRepo.get_url_and_revision_from_pip_url`](libvcs.svn.SubversionRepo.get_url_and_revision_from_pip_url)
+- [`SubversionRepo.get_url`](libvcs.svn.SubversionRepo.get_url)
+- [`SubversionRepo.get_revision`](libvcs.svn.SubversionRepo.get_revision)
+- [`get_rev_options`](libvcs.svn.get_rev_options)
+"""  # NOQA: E5
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
@@ -36,18 +32,19 @@ class SubversionRepo(BaseRepo):
     def __init__(self, url, **kwargs):
         """A svn repository.
 
-        :param url: URL in subversion repository
-        :type url: str
+        Parameters
+        ----------
+        url : str
+            URL in subversion repository
 
-        :param svn_username: username to use for checkout and update
-        :type svn_username: str or None
+        svn_username : str, optional
+            username to use for checkout and update
 
-        :param svn_password: password to use for checkout and update
-        :type svn_password: str or None
+        svn_password : str, optional
+            password to use for checkout and update
 
-        :param svn_trust_cert: trust the Subversion server site certificate
-            (default False)
-        :type svn_trust_cert: bool
+        svn_trust_cert : bool
+            trust the Subversion server site certificate, default False
         """
         if 'svn_trust_cert' not in kwargs:
             self.svn_trust_cert = False
@@ -87,9 +84,7 @@ class SubversionRepo(BaseRepo):
         return int(dict(info_list)['Revision'])
 
     def get_revision(self, location=None):
-        """
-        Return the maximum revision for all files under a given location
-        """
+        """Return maximum revision for all files under a given location"""
 
         if not location:
             location = self.url
@@ -146,11 +141,7 @@ class SubversionRepo(BaseRepo):
 
 
 def get_rev_options(url, rev):
-    """Return revision options.
-
-    from pip pip.vcs.subversion.
-
-    """
+    """Return revision options. From pip pip.vcs.subversion."""
     if rev:
         rev_options = ['-r', rev]
     else:

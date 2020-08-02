@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Utility functions for libvcs.
-
-libvcs.util
-~~~~~~~~~~~
-
-"""
+"""Utility functions for libvcs."""
 from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
@@ -26,11 +21,17 @@ def which(
 
     from salt.util - https://www.github.com/saltstack/salt - license apache
 
-    :param exe: Application to search PATHs for.
-    :type exe: str
-    :param default_path: Application to search PATHs for.
-    :type default_path: list
-    :rtype: str
+    Parameters
+    ----------
+    exe : str
+        Application to search PATHs for.
+    default_path : list
+        Application to search PATHs for.
+
+    Returns
+    -------
+    str :
+        Path to binary
     """
 
     def _is_executable_file_or_link(exe):
@@ -66,8 +67,10 @@ def which(
 def mkdir_p(path):
     """Make directories recursively.
 
-    :param path: path to create
-    :type path: str
+    Parameters
+    ----------
+    path : str
+        path to create
     """
     try:
         os.makedirs(path)
@@ -82,7 +85,7 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
 
     """Adapter for adding Repo related content to logger.
 
-    Extends :class:`logging.LoggerAdapter`'s functionality.
+    Extends `logging.LoggerAdapter`'s functionality.
 
     The standard library :py:mod:`logging` facility is pretty complex, so this
     warrants and explanation of what's happening.
@@ -96,7 +99,6 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
     logging.LoggerAdapter.process()` to be made use of when the user of this
     library wishes to use a custom :class:`logging.Formatter` to output
     results.
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -124,30 +126,37 @@ def run(
     """ Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
 
-    :param cmd: list of str (or single str, if shell==True) indicating
+    Parameters
+    ----------
+    cmd : list or str, or single str, if shell=True
        the command to run
-    :param shell: boolean indicating whether we are using advanced shell
+
+    shell : boolean
+        boolean indicating whether we are using advanced shell
         features. Use only when absolutely necessary, since this allows a lot
         more freedom which could be exploited by malicious code. See the
         warning here:
         http://docs.python.org/library/subprocess.html#popen-constructor
-    :param cwd: dir command is run from.
-    :type cwd: str
-    :param log_in_real_time: boolean indicating whether to read stdout from the
-        subprocess in real time instead of when the process finishes.
-    :param check_returncode: Indicate whether a :exc:`~exc.CommandError`
-        should be raised if return code is different from 0.
-    :type check_returncode: :class:`bool`
-    :param cwd: dir command is run from, defaults :attr:`~.path`.
-    :type cwd: str
-    :param callback: callback to return output as a command executes, accepts
-        a function signature of ``(output, timestamp)``. Example usage::
 
-            def progress_cb(output, timestamp):
-                sys.stdout.write(output)
-                sys.stdout.flush()
-            run(['git', 'pull'], callback=progrses_cb)
-    :type callback: func
+    cwd : str
+        dir command is run from. Defaults to ``path``.
+
+    log_in_real_time : boolean
+        boolean indicating whether to read stdout from the
+        subprocess in real time instead of when the process finishes.
+
+    check_returncode : bool
+        Indicate whether a `libvcs.exc.CommandError` should be raised if return code is
+        different from 0.
+
+    callback : callable
+        callback to return output as a command executes, accepts a function signature
+        of `(output, timestamp)`. Example usage:
+
+        def progress_cb(output, timestamp):
+            sys.stdout.write(output)
+            sys.stdout.flush()
+        run(['git', 'pull'], callback=progrses_cb)
     """
     proc = subprocess.Popen(
         cmd, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,

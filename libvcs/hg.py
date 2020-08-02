@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 """Mercurial Repo object for libvcs.
 
-libvcs.hg
-~~~~~~~~~
-
 The following is from pypa/pip (MIT license):
 
-- :py:meth:`MercurialRepo.get_url_and_revision_from_pip_url`
-- :py:meth:`MercurialRepo.get_url`
-- :py:meth:`MercurialRepo.get_revision`
-
-"""
+- [`MercurialRepo.get_url_and_revision_from_pip_url`](libvcs.hg.get_url_and_revision_from_pip_url)
+- [`MercurialRepo.get_url`](libvcs.hg.MercurialRepo.get_url)
+- [`MercurialRepo.get_revision`](libvcs.hg.MercurialRepo.get_revision)
+"""  # NOQA E5
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
