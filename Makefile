@@ -10,13 +10,13 @@ entr_warn:
 	@echo "----------------------------------------------------------"
 
 isort:
-	isort `${PY_FILES}`
+	poetry run isort `${PY_FILES}`
 
 black:
-	black `${PY_FILES}` --skip-string-normalization
+	poetry run black `${PY_FILES}` --skip-string-normalization
 
 test:
-	py.test $(test)
+	poetry run py.test $(test)
 
 watch_test:
 	if command -v entr > /dev/null; then ${PY_FILES} | entr -c $(MAKE) test; else $(MAKE) test entr_warn; fi
