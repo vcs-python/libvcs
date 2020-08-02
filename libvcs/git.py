@@ -64,7 +64,7 @@ def extract_status(value):
             branch.head
             [\W]+
             (?P<branch_head>
-                [/.\w-]*
+                .*
             )
             
         )?
@@ -74,7 +74,7 @@ def extract_status(value):
             branch.upstream
             [\W]+
             (?P<branch_upstream>
-                [/.\w-]*
+                .*
             )
         )?
         (
