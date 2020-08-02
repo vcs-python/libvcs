@@ -83,3 +83,6 @@ pip-wheel-metadata/
 
 # mkdocs
 site/
+
+# vim
+.vim/
