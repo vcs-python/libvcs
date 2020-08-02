@@ -31,6 +31,9 @@ sphinx = [
   {version="<2", python="<3"},
   {version="*", python=">=3"}
 ]
+portray = [
+  {version="*", python=">=3.6"}
+]
 sphinx-issues = "*"
 twine = "*"
 codecov = "*"
