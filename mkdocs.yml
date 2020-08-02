@@ -1,0 +1,10 @@
+# mkdocs.yml
+site_name: libvcs
+site_url: https://libvcs.git-pull.com
+repo_url: https://github.com/vcs-python/libvcs
+repo_name: 'GitHub'
+theme:
+  name: "material"
+  custom_dir: .
+  logo: assets/images/libvcs.svg
+  favicon: assets/images/favicon.ico
