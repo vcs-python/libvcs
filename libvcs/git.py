@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 GitRemote = collections.namedtuple('GitRemote', ['name', 'fetch_url', 'push_url'])
 """Structure containing git repo information.
 
-Supports :meth:`collections.namedtuple._asdict()`
-
-.. versionadded:: 0.4.0
+Supports `collections.namedtuple._asdict()`
 """
 
 
@@ -41,7 +39,7 @@ def extract_status(value):
 
     Returns
     -------
-    dict : 
+    dict
         Dictionary of git repo's status
     """
     pattern = re.compile(
@@ -98,24 +96,20 @@ class GitRepo(BaseRepo):
     def __init__(self, url, **kwargs):
         """A git repository.
 
-        :param url: URL of repo
-        :type url: str
+        Parameters
+        ----------
+        url : str
+            URL of repo
 
-        :param git_shallow: clone with ``--depth 1`` (default False)
-        :type git_shallow: bool
+        git_shallow : bool
+            clone with `--depth 1`, default `False`
 
-        :param git_submodules: Git submodules that shall be updated, all if empty
-        :type git_submodules: list
+        git_submodules : list
+            Git submodules that shall be updated, all if empty
 
-        :param tls_verify: Should certificate for https be checked (default False)
-        :type tls_verify: bool
+        tls_verify : bool
+            Should certificate for https be checked (default False)
 
-        .. versionchanged:: 0.4.0
-
-           The ``remotes`` argument is ignored. Use :meth:`~.set_remote` to set remotes
-           before running :meth:`~.obtain`.
-
-           The ``remotes`` argument is deprecated and will be removed in 0.5
         """
         if 'git_shallow' not in kwargs:
             self.git_shallow = False
@@ -165,13 +159,7 @@ class GitRepo(BaseRepo):
         return url, rev
 
     def obtain(self):
-        """Retrieve the repository, clone if doesn't exist.
-
-        .. versionchanged:: 0.4.0
-
-           No longer sets remotes. This is now done manually through 
-           :meth:`~.set_remote`.
-        """
+        """Retrieve the repository, clone if doesn't exist."""
         self.check_destination()
 
         url = self.url
@@ -345,25 +333,14 @@ class GitRepo(BaseRepo):
     def remotes(self, flat=False):
         """Return remotes like git remote -v.
 
-        :param flat: Return a dict of ``tuple`` instead of ``dict``. Default False.
-        :type flat: bool
-
-        .. versionchanged:: 0.4.0
-
-           Has been changed from property to method
-
-        .. versionchanged:: 0.4.0
-
-           The ``flat`` argument has been added to return remotes in ``tuple`` form
-
-        .. versionchanged:: 0.4.0
-
-           This used to return a dict of tuples, it now returns a dict of dictionaries
-           with ``name``, ``fetch_url``, and ``push_url``.
+        Parameters
+        ----------
+        flat : bool
+            Return a dict of ``tuple`` instead of ``dict``, default `False`.
 
         Returns
         -------
-        dict :
+        dict
             dict of git upstream / remote URLs
         """
         remotes = {}
@@ -379,12 +356,6 @@ class GitRepo(BaseRepo):
 
     @property
     def remotes_get(self):
-        """
-        .. versionchanged:: 0.4.0
-
-           The ``remotes_get`` property is deprecated and will be removed in 0.5. It
-           has been renamed ``remotes()`` and changed from property to a method.
-        """
         warnings.warn(
             "'remotes_get' is deprecated and will be removed in 0.5. "
             "Use 'remotes()' method instead.",
@@ -404,13 +375,8 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        :class:`libvcs.git.GitRemote` : 
+        [`GitRemote`](libvcs.git.GitRemote)
             Remote name and url in tuple form
-
-        .. versionchanged:: 0.4.0
-
-           The ``remote`` argument was renamed to ``name`` and will be deprecated
-           in 0.5.
         """
 
         if kwargs.get('remote') is not None:
@@ -437,11 +403,11 @@ class GitRepo(BaseRepo):
             return None
 
     def remote_get(self, name='origin', **kwargs):
-        """
-        .. versionchanged:: 0.4.0
+        """Retrieve remote
 
-           The ``remote_get`` method is deprecated and will be removed in 0.5.0. It has
-           been renamed ``remote`` 
+        !!! note
+            The ``remote_get`` method is deprecated and will be removed in 0.5.0. It has
+            been renamed ``remote`` 
         """
         warnings.warn(
             "'remote_get' is deprecated and will be removed in 0.5. "
@@ -455,12 +421,13 @@ class GitRepo(BaseRepo):
     def set_remote(self, name, url, overwrite=False):
         """Set remote with name and URL like git remote add.
 
-        :param name: defines the remote name.
-        :type name: str
-        :param url: defines the remote URL
-        :type url: str
+        Parameters
+        ----------
+        name : str
+            defines the remote name.
 
-        .. versionadded:: 0.4.0
+        url : str
+            defines the remote URL
         """
 
         url = self.chomp_protocol(url)
@@ -472,12 +439,6 @@ class GitRepo(BaseRepo):
         return self.remote(name=name)
 
     def remote_set(self, url, name='origin', overwrite=False, **kwargs):
-        """
-        .. versionchanged:: 0.4.0
-
-           The ``remote_set`` method is deprecated and will be removed in 0.5.0. It has
-           been renamed ``set_remote``.
-        """
         warnings.warn(
             "'remote_set' is deprecated and will be removed in 0.5. "
             "Use 'set_remote' instead.",
@@ -498,7 +459,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        str :
+        str
             URL as VCS software would accept it
         """
         if '+' in url:
@@ -521,7 +482,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        str :
+        str
             git version
         """
         VERSION_PFX = 'git version '
@@ -562,7 +523,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        str :
+        str
             If upstream the same, returns ``branch_name``.
             If upstream mismatches, returns ``remote_name/branch_name``.
         """
