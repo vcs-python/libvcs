@@ -10,6 +10,11 @@ Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
+0.4.3 <2020-08-01>
+------------------
+- [bug] :func:`libvcs.git.extract_status()` Fix issue capturing branch names
+  with special characters
+
 0.4.2 <2020-08-01>
 ------------------
 - [bug] :meth:`libvcs.git.GitRepo.get_current_remote_name()` Handle case where
