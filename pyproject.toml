@@ -49,3 +49,4 @@ pytest-mock = [
   {version="<3.0.0", python="<3"},
   {version="*", python=">=3"}
 ]
+mkdocs = {version = "^1.1.2", python = ">=3.5"}
