@@ -1,220 +1,214 @@
-=========
-Changelog
-=========
+# Changelog
 
 Here are the changes for libvcs.
 
-libvcs 0.5-current
-------------------
+## libvcs 0.5-current
+
 Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
-libvcs 0.4.4 (2020-08-05)
--------------------------
-- :issue:`268` :class:`libvcs.base.BaseRepo`: 
-  
-  - no longer sets ``**kwargs`` to dictionary on the object
-  - remove ``__slot__`` and rename ``name`` attribute to ``repo_name``
+## libvcs 0.4.4 (2020-08-05)
 
-libvcs 0.4.3 (2020-08-01)
--------------------------
-- [bug] :func:`libvcs.git.extract_status()` Fix issue capturing branch names
-  with special characters
+- `268` `libvcs.base.BaseRepo`:
+    - no longer sets `**kwargs` to dictionary on the object
+    - remove `__slot__` and rename `name` attribute to `repo_name`
 
-libvcs 0.4.2 (2020-08-01)
--------------------------
-- [bug] :meth:`libvcs.git.GitRepo.get_current_remote_name()` Handle case where
-  upstream is unpushed
-- [feature] :meth:`libvcs.git.GitRepo.status()` - Retrieve status of repo
-- [feature] :func:`libvcs.git.extract_status()` - Return structured info from
-  ``git status``
+## libvcs 0.4.3 (2020-08-01)
 
-libvcs 0.4.1 (2020-08-01)
--------------------------
+- \[bug\] `libvcs.git.extract_status()` Fix issue capturing branch
+    names with special characters
+
+## libvcs 0.4.2 (2020-08-01)
+
+- \[bug\] `libvcs.git.GitRepo.get_current_remote_name()` Handle case
+    where upstream is unpushed
+- \[feature\] `libvcs.git.GitRepo.status()` - Retrieve status of repo
+- \[feature\] `libvcs.git.extract_status()` - Return structured info
+    from `git status`
+
+## libvcs 0.4.1 (2020-08-01)
+
 - Remove log statement
 
-libvcs 0.4 (2020-08-01)
------------------------
+## libvcs 0.4 (2020-08-01)
 
 **Breaking changes**
 
-Internal functionality relating to remotes have been reorganized to avoid
-implicit behavior.
+Internal functionality relating to remotes have been reorganized to
+avoid implicit behavior.
 
-- :class:`~libvcs.git.GitRepo` methods have been renamed, they will be deprecated
-  in 0.5:
+- `~libvcs.git.GitRepo` methods have been renamed, they will be
+    deprecated in 0.5:
 
-  - ``GitRepo.remotes_get`` renamed to :meth:`libvcs.git.GitRepo.remotes()`
-  - ``GitRepo.remote_get`` renamed to :meth:`libvcs.git.GitRepo.remote()`
-  - ``GitRepo.remote_set`` renamed to :meth:`libvcs.git.GitRepo.set_remote()`
+    - `GitRepo.remotes_get` renamed to `libvcs.git.GitRepo.remotes()`
+    - `GitRepo.remote_get` renamed to `libvcs.git.GitRepo.remote()`
+    - `GitRepo.remote_set` renamed to
+        `libvcs.git.GitRepo.set_remote()`
 
-- :class:`~libvcs.git.GitRepo` the ``remotes`` argument is deprecated and no longer
-  used. Use :meth:`libvcs.git.GitRepo.set_remote` after repo is instantiated.
+- `~libvcs.git.GitRepo` the `remotes` argument is deprecated and no
+    longer used. Use `libvcs.git.GitRepo.set_remote` after repo is
+    instantiated.
 
-- :meth:`libvcs.git.GitRepo.obtain` no longer set remotes based on a ``dict`` passed
-  to :class:`~libvcs.git.GitRepo`. This was deemed to specialized / implicit.
+- `libvcs.git.GitRepo.obtain` no longer set remotes based on a `dict`
+    passed to `~libvcs.git.GitRepo`. This was deemed to specialized /
+    implicit.
 
-- :meth:`libvcs.git.GitRepo.set_remote()` (formerly ``remote_set``)
+- `libvcs.git.GitRepo.set_remote()` (formerly `remote_set`)
 
-  The new method accepts ``name`` and ``url`` (in that order). ``name`` no longer
-  has a default value (was ``origin``).
+    The new method accepts `name` and `url` (in that order). `name` no
+    longer has a default value (was `origin`).
 
-- :meth:`libvcs.git.GitRepo.remote()` (formerly ``remote_get``):
+- `libvcs.git.GitRepo.remote()` (formerly `remote_get`):
 
-  - ``remote`` argument renamed to ``name``. It will be removed in 0.5.0
+    - `remote` argument renamed to `name`. It will be removed in 0.5.0
 
-    The default value of ``'origin'`` has been removed
-  - Now returns :meth:`~libvcs.git.GitRemote` (a :py:class:`collections.namedtuple` object)
+        The default value of `'origin'` has been removed
 
-    The tuple is similar to the old output, except there is an additional value at
-    the beginning, the name of the remote, e.g. ``('origin', '<fetch_url>', '<push_url>')``
+    - Now returns `~libvcs.git.GitRemote` (a
+        :py`collections.namedtuple` object)
 
-- :meth:`libvcs.git.GitRepo.remotes()` (formerly ``remotes_get``) are now methods
-  instead of properties.
+        The tuple is similar to the old output, except there is an
+        additional value at the beginning, the name of the remote, e.g.
+        `('origin', '<fetch_url>', '<push_url>')`
 
-  Passing ``flat=True`` to return a ``dict`` of ``tuple`` instead of ``dict``
-- New method: :meth:`libvcs.git.GitRepo.get_git_version()`
-- New method: :meth:`libvcs.git.GitRepo.get_current_remote_name()`
+- `libvcs.git.GitRepo.remotes()` (formerly `remotes_get`) are now
+    methods instead of properties.
 
+    Passing `flat=True` to return a `dict` of `tuple` instead of `dict`
 
-libvcs 0.3.3 (2020-07-29)
--------------------------
+- New method: `libvcs.git.GitRepo.get_git_version()`
+
+- New method: `libvcs.git.GitRepo.get_current_remote_name()`
+
+## libvcs 0.3.3 (2020-07-29)
+
 - Remove f-string from test
-- :meth:`libvcs.git.GitRepo.obtain` Overwrite remote if exists
+- `libvcs.git.GitRepo.obtain` Overwrite remote if exists
 
-libvcs 0.3.2 (2020-07-26)
--------------------------
-- :issue:`258` :meth:`libvcs.git.GitRepo.remote_set`
+## libvcs 0.3.2 (2020-07-26)
 
-  - Fix updating of remote URLs
-  - Add new param: ``overwrite``, usage: ``repo.remote_set(url, 'origin', overwrite=True)``
+- `258` `libvcs.git.GitRepo.remote_set`
+    - Fix updating of remote URLs
+    - Add new param: `overwrite`, usage:
+        `repo.remote_set(url, 'origin', overwrite=True)`
 
-libvcs 0.3.1post1 (2020-07-26)
-------------------------------
+## libvcs 0.3.1post1 (2020-07-26)
+
 - Fix version in pyroject.toml
 - Update developer docs
 
-libvcs 0.3.1 (2020-07-25)
--------------------------
+## libvcs 0.3.1 (2020-07-25)
+
 - Fix issue with subprocess.Popen loud warning on Python 3.8
-- :issue:`296` - Move from Pipfile to poetry
+- `296` - Move from Pipfile to poetry
 - Sort imports
 - Add isort package, isort configuration in setup.cfg, and
-  ``make isort`` task to Makefile.
-- Add ``project_urls`` to setup.py
+    `make isort` task to Makefile.
+- Add `project_urls` to setup.py
 
-libvcs 0.3.0 (2018-03-12)
--------------------------
+## libvcs 0.3.0 (2018-03-12)
+
 - Move vcspull to the vcs-python organization
-- Fix issue where VCS objects failed to set attribute in Ubuntu
-  18.04.
+- Fix issue where VCS objects failed to set attribute in Ubuntu 18.04.
 
-libvcs 0.2.3 (2016-12-22)
--------------------------
+## libvcs 0.2.3 (2016-12-22)
+
 - Update documentation to point to libvcs.git-pull.com
 - Switch doc theme to alabaster
 - Pin and update libraries via pyup
-  - update vulture 0.8.1 to 0.11
-  - update flake8 from 2.5.4 to 3.2.1
-  - update pytest-mock from 1.4.0 to 1.5.0
-  - update pytest from 3.0.4 to 3.0.5
-  - pin alabaster to 0.7.9
-  - pin sphinx to 1.5.1
+    - update vulture 0.8.1 to 0.11
+    - update flake8 from 2.5.4 to 3.2.1
+    - update pytest-mock from 1.4.0 to 1.5.0
+    - update pytest from 3.0.4 to 3.0.5
+    - pin alabaster to 0.7.9
+    - pin sphinx to 1.5.1
 
-libvcs 0.2.2 (2016-11-23)
--------------------------
-- Fix bug with unused ``support`` module in vcspull. See `#43`_
+## libvcs 0.2.2 (2016-11-23)
 
-libvcs 0.2.1 (2016-09-13)
--------------------------
+- Fix bug with unused `support` module in vcspull. See
+    [\#43](https://github.com/vcs-python/vcspull/issues/43)
+
+## libvcs 0.2.1 (2016-09-13)
+
 - Update pytest to 3.0.2, remove unused pytest-raisesregexp
-  dependency.
-- Fix bug in ``which`` when executable is not found. Allow
-  specifying search paths manually.
-- Better support for missing VCS when testing on git and
-  subversion.
+    dependency.
+- Fix bug in `which` when executable is not found. Allow specifying
+    search paths manually.
+- Better support for missing VCS when testing on git and subversion.
 
-libvcs 0.2.0 (2016-06-24)
--------------------------
-- :issue:`9`  Support for ``progress_callback`` to use realtime output
-  from commands in progress (such as ``git fetch``).
-- :issue:`9`  More tests, internal factoring and documentation, thanks
-  @jcfr
-- :issue:`9`  Official support for pypy, pypy3
-- :issue:`11` : Fix unbound local when updating git repos
+## libvcs 0.2.0 (2016-06-24)
 
-libvcs 0.1.7 (2016-06-21)
--------------------------
-- :issue:`7`  Add ``check_returncode`` property to run, thanks @jcfr
-- :issue:`8`  Remove all cases of ``run_buffered`` / buffering from
-  the library.
+- `9` Support for `progress_callback` to use realtime output from
+    commands in progress (such as `git fetch`).
+- `9` More tests, internal factoring and documentation, thanks @jcfr
+- `9` Official support for pypy, pypy3
+- `11` : Fix unbound local when updating git repos
 
-libvcs 0.1.6 (2016-06-21)
--------------------------
-- :issue:`5`  Remove colorama dependency
-- :issue:`6`  Remove log module. Logging defaults.
+## libvcs 0.1.7 (2016-06-21)
 
-  The library user can still use formatters and set log levels,
-  for an example, see the vcspull logging setup.
+- `7` Add `check_returncode` property to run, thanks @jcfr
+- `8` Remove all cases of `run_buffered` / buffering from the library.
 
-  An example::
+## libvcs 0.1.6 (2016-06-21)
 
-      import logging
+- `5` Remove colorama dependency
 
-      # your app
-      log.setLevel(level)
-      log.addHandler(logging.StreamHandler())
+- `6` Remove log module. Logging defaults.
 
-      # vcslib logging options
-      vcslogger = logging.getLogger('libvcs')
-      vcslogger.propagate = False # don't pass libvcs settings up scope
-      vcslogger.addHandler(logging.StreamHandler())
-      vcslogger.setLevel(level)
+    The library user can still use formatters and set log levels, for an
+    example, see the vcspull logging setup.
 
-  You can also use ``logging.Formatter`` variables ``repo_name``
-  and ``repo_vcs`` with repos::
+    An example:
 
-      repo_channel = logging.StreamHandler()
-      repo_formatter = logging.Formatter(
-          '[%(repo_name)s] (%(repo_vcs)s) %(levelname)1.1s: %(message)s'
-      )
-      repo_channel.setFormatter(repo_formatter)
-      vcslogger = logging.getLogger('libvcs')
-      vcslogger.propagate = False # don't pass libvcs settings up scope
-      vcslogger.addHandler(repo_channel)
-      vcslogger.setLevel(level)
+        import logging
 
-libvcs 0.1.5 (2016-06-21)
--------------------------
-- Fix issue where repo context wouldn't pass to repo logging
-  adapter
+        # your app
+        log.setLevel(level)
+        log.addHandler(logging.StreamHandler())
 
-libvcs 0.1.4 (2016-06-20)
--------------------------
-- Fix print_stdout_on_progress_end signature in git update
+        # vcslib logging options
+        vcslogger = logging.getLogger('libvcs')
+        vcslogger.propagate = False # don't pass libvcs settings up scope
+        vcslogger.addHandler(logging.StreamHandler())
+        vcslogger.setLevel(level)
 
-libvcs 0.1.3 (2016-06-20)
--------------------------
-- ``create_repo`` function for regular vcs urls
+    You can also use `logging.Formatter` variables `repo_name` and
+    `repo_vcs` with repos:
+
+        repo_channel = logging.StreamHandler()
+        repo_formatter = logging.Formatter(
+            '[%(repo_name)s] (%(repo_vcs)s) %(levelname)1.1s: %(message)s'
+        )
+        repo_channel.setFormatter(repo_formatter)
+        vcslogger = logging.getLogger('libvcs')
+        vcslogger.propagate = False # don't pass libvcs settings up scope
+        vcslogger.addHandler(repo_channel)
+        vcslogger.setLevel(level)
+
+## libvcs 0.1.5 (2016-06-21)
+
+- Fix issue where repo context wouldn't pass to repo logging adapter
+
+## libvcs 0.1.4 (2016-06-20)
+
+- Fix print\_stdout\_on\_progress\_end signature in git update
+
+## libvcs 0.1.3 (2016-06-20)
+
+- `create_repo` function for regular vcs urls
 - API docs updated
 
-libvcs 0.1.2 (2016-06-20)
--------------------------
-- change signature on ``create_repo_from_pip_url`` to accept
-  ``pip_url`` insetad of ``url``.
-- ``Base`` to accept ``repo_dir`` instead of ``name`` and
-  ``parent_dir``.
+## libvcs 0.1.2 (2016-06-20)
 
-libvcs 0.1.1 (2016-06-20)
--------------------------
+- change signature on `create_repo_from_pip_url` to accept `pip_url`
+    insetad of `url`.
+- `Base` to accept `repo_dir` instead of `name` and `parent_dir`.
+
+## libvcs 0.1.1 (2016-06-20)
+
 - remove unneeded pyyaml, kaptan and click dependencies
 
-libvcs 0.1.0 (2016-06-20)
--------------------------
-- libvcs split from `vcspull`_
+## libvcs 0.1.0 (2016-06-20)
 
-.. _vcspull: https://github.com/vcs-python/vcspull
-.. _#43: https://github.com/vcs-python/vcspull/issues/43
-
-.. vim: set filetype=md:
+- libvcs split from [vcspull](https://github.com/vcs-python/vcspull)
