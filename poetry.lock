@@ -500,7 +500,7 @@ marker = "python_version >= \"3.7\""
 name = "mkapi-git-pull"
 optional = false
 python-versions = ">=3.7"
-version = "1.0.12"
+version = "1.0.12.post1"
 
 [package.dependencies]
 jinja2 = "*"
@@ -1166,7 +1166,7 @@ version = "0.5.1"
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\") or python_version >= \"3.5\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\")"
+marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.5\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\")"
 name = "zipp"
 optional = false
 python-versions = ">=2.7"
@@ -1184,7 +1184,7 @@ testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\") or python_version >= \"3.5\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\") or python_version >= \"3.7\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\")"
+marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.5\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\") or python_version >= \"3.7\" and python_version < \"3.8\" and (python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\" or python_version >= \"3.5\" and python_version < \"3.8\" or python_version >= \"3.7\" and python_version < \"3.8\")"
 name = "zipp"
 optional = false
 python-versions = ">=3.6"
@@ -1455,7 +1455,7 @@ mccabe = [
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
 ]
 mkapi-git-pull = [
-    {file = "mkapi-git-pull-1.0.12.tar.gz", hash = "sha256:8114e70a71f9b68184eb0bcc72fbb34ae031f49074d6bf64c28b8e4164c24b0a"},
+    {file = "mkapi-git-pull-1.0.12.post1.tar.gz", hash = "sha256:eba245518808a67ba0e6068269d68224ccff324460ecf179cacae8c2122c3ef4"},
 ]
 mkdocs = [
     {file = "mkdocs-1.1.2-py3-none-any.whl", hash = "sha256:096f52ff52c02c7e90332d2e53da862fde5c062086e1b5356a6e392d5d60f5e9"},
