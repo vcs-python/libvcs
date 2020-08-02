@@ -23,4 +23,5 @@ plugins:
 nav:
   - index.md
   - history.md
+  - developing.md
   - API: mkapi/api/libvcs
