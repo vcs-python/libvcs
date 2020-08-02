@@ -66,6 +66,7 @@ target/
 .ipynb_checkpoints
 
 # editors
+.vim
 .idea
 .ropeproject
 *.swp
