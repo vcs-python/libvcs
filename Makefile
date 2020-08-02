@@ -22,10 +22,10 @@ watch_test:
 	if command -v entr > /dev/null; then ${PY_FILES} | entr -c $(MAKE) test; else $(MAKE) test entr_warn; fi
 
 build_docs:
-	cd doc && $(MAKE) html
+	cd docs && $(MAKE) html
 
 watch_docs:
-	cd doc && $(MAKE) watch_docs
+	cd docs && $(MAKE) watch_docs
 
 flake8:
 	flake8 libvcs tests
