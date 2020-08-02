@@ -50,3 +50,4 @@ pytest-mock = [
   {version="*", python=">=3"}
 ]
 mkdocs = {version = "^1.1.2", python = ">=3.5"}
+mkdocs-material = {version = "^5.5.1", python = ">=3.5"}
