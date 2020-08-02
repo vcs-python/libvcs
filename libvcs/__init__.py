@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Repo package for libvcs.
-
-libvcs
-~~~~~~
-
-"""
+"""Repo package for libvcs."""
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
