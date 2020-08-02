@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """Exceptions for libvcs.
 
-libvcs.exc
-~~~~~~~~~~
+If you see this, we're publishing to S3 automatically
 
 """
 from __future__ import absolute_import, print_function, unicode_literals
