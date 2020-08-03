@@ -18,7 +18,10 @@ authors = ["Tony Narlock <tony@git-pull.com>"]
 python = "~2.7 || ^3.5"
 
 [tool.poetry.dev-dependencies]
+alagitpull = "*"
 black = {version="==19.10b0", python="^3.6"}
+doc8 = "*"
+docutils = "*"
 flake8 = "*"
 isort = [
   {version="<5", python="<3.6"},
@@ -30,6 +33,11 @@ pytest = [
 ]
 pathlib2 = {version="<2.3.5", python="<3"}  # Untangle pytest peer-dependency
 pytest-rerunfailures = "*"
+sphinx = [
+  {version="<2", python="<3"},
+  {version="*", python=">=3"}
+]
+sphinx-issues = "*"
 twine = "*"
 codecov = "*"
 coverage = "*"
