@@ -1,0 +1,33 @@
+{
+  "name": "libvcs",
+  "short_name": "libvcs",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "vcs abstraction layer",
+  "icons": [{
+    "src": "_static/img/libvcs.svg",
+    "sizes": "48x48",
+    "type": "image/svg"
+  }, {
+    "src": "_static/img/libvcs.svg",
+    "sizes": "72x72",
+    "type": "image/svg"
+  }, {
+    "src": "_static/img/libvcs.svg",
+    "sizes": "96x96",
+    "type": "image/svg"
+  }, {
+    "src": "_static/img/libvcs.svg",
+    "sizes": "144x144",
+    "type": "image/svg"
+  }, {
+    "src": "_static/img/libvcs.svg",
+    "sizes": "168x168",
+    "type": "image/svg"
+  }, {
+    "src": "_static/img/libvcs.svg",
+    "sizes": "192x192",
+    "type": "image/svg"
+  }]
+}
