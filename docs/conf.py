@@ -12,6 +12,9 @@ about = {}
 with open("../libvcs/__about__.py") as fp:
     exec(fp.read(), about)
 
+import recommonmark
+from recommonmark.transform import AutoStructify
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
@@ -19,6 +22,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'alagitpull',
     'sphinx_issues',
+    'recommonmark',
 ]
 
 releases_unstable_prehistory = True
@@ -30,9 +34,26 @@ issues_github_path = about['__github__']
 
 templates_path = ['_templates']
 
-source_suffix = '.rst'
+source_suffix = {'.rst': 'restructuredtext', '.md': 'markdown'}
 
 master_doc = 'index'
+
+# app setup hook
+def setup(app):
+    app.add_config_value(
+        'recommonmark_config',
+        {
+            #'url_resolver': lambda url: github_doc_root + url,
+            'enable_auto_toc_tree': True,
+            'auto_toc_tree_section': 'Contents',
+            'enable_auto_doc_ref': True,
+            'auto_code_block': True,
+            'enable_eval_rst': True,
+        },
+        True,
+    )
+    app.add_transform(AutoStructify)
+
 
 project = about['__title__']
 copyright = about['__copyright__']
