@@ -1,5 +1,3 @@
-.. _api:
-
 # API Reference
 
 ## Creating a repo object
