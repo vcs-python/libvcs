@@ -2,6 +2,7 @@
 import os
 
 import alagitpull
+from recommonmark.transform import AutoStructify
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
@@ -11,9 +12,6 @@ project_root = os.path.dirname(cwd)
 about = {}
 with open("../libvcs/__about__.py") as fp:
     exec(fp.read(), about)
-
-import recommonmark
-from recommonmark.transform import AutoStructify
 
 extensions = [
     'sphinx.ext.autodoc',
