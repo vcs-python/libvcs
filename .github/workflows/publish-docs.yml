@@ -67,7 +67,7 @@ jobs:
       run: poetry install
 
     - name: Build documentation
-      run: pushd docs; make SPHINXBUILD='poetry run sphinx-build' build; popd
+      run: pushd docs; make SPHINXBUILD='poetry run sphinx-build' html; popd
 
     - name: Push documentation to S3
       uses: jakejarvis/s3-sync-action@master
