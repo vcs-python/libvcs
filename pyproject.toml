@@ -52,3 +52,4 @@ pytest-mock = [
 mkdocs = {version = "^1.1.2", extras = ["docs"], python = ">=3.5"}
 mkdocs-material = {version = "^5.5.1", extras = ["docs"], python = ">=3.5"}
 mkapi-git-pull = {version = "^1.0.12", extras = ["docs"], python = ">=3.7"}
+recommonmark = "^0.6.0"
