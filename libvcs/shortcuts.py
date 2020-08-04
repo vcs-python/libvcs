@@ -25,17 +25,16 @@ def create_repo(url, vcs, **kwargs):
     ... )
 
     >>> r.update_repo()
-
-        |myrepo| (git)  Repo directory for myrepo (git) does not exist @ \
-            /tmp/myrepo
-        |myrepo| (git)  Cloning.
-        |myrepo| (git)  git clone https://www.github.com/tony/myrepo \
-            /tmp/myrepo
-        Cloning into '/tmp/myrepo'...
-        Checking connectivity... done.
-        |myrepo| (git)  git fetch
-        |myrepo| (git)  git pull
-        Already up-to-date.
+    |myrepo| (git)  Repo directory for myrepo (git) does not exist @ \
+        /tmp/myrepo
+    |myrepo| (git)  Cloning.
+    |myrepo| (git)  git clone https://www.github.com/tony/myrepo \
+        /tmp/myrepo
+    Cloning into '/tmp/myrepo'...
+    Checking connectivity... done.
+    |myrepo| (git)  git fetch
+    |myrepo| (git)  git pull
+    Already up-to-date.
     """
     if vcs == 'git':
         return GitRepo(url, **kwargs)

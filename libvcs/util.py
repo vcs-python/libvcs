@@ -151,12 +151,12 @@ def run(
 
     callback : callable
         callback to return output as a command executes, accepts a function signature
-        of `(output, timestamp)`. Example usage:
+        of `(output, timestamp)`. Example usage::
 
-        def progress_cb(output, timestamp):
-            sys.stdout.write(output)
-            sys.stdout.flush()
-        run(['git', 'pull'], callback=progrses_cb)
+            def progress_cb(output, timestamp):
+                sys.stdout.write(output)
+                sys.stdout.flush()
+            run(['git', 'pull'], callback=progrses_cb)
     """
     proc = subprocess.Popen(
         cmd, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
