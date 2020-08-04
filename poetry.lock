@@ -52,7 +52,6 @@ tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.i
 [[package]]
 category = "dev"
 description = "Internationalization utilities"
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "babel"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -164,6 +163,22 @@ name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 version = "0.4.3"
+
+[[package]]
+category = "dev"
+description = "Python parser for the CommonMark Markdown spec"
+name = "commonmark"
+optional = false
+python-versions = "*"
+version = "0.9.1"
+
+[package.dependencies]
+[package.dependencies.future]
+python = "<3"
+version = ">=0.14.0"
+
+[package.extras]
+test = ["flake8 (3.7.8)", "hypothesis (3.55.3)"]
 
 [[package]]
 category = "dev"
@@ -306,7 +321,7 @@ version = "3.2.3-2"
 [[package]]
 category = "dev"
 description = "Clean single-source support for Python 3 and 2"
-marker = "python_version >= \"3.5\""
+marker = "python_version < \"3\" or python_version >= \"3.5\""
 name = "future"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
@@ -332,7 +347,6 @@ version = "2.10"
 [[package]]
 category = "dev"
 description = "Getting image size from png/jpeg/jpeg2000/gif file"
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "imagesize"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -427,7 +441,6 @@ dev = ["testpath"]
 [[package]]
 category = "dev"
 description = "A very fast and expressive template engine."
-marker = "python_version >= \"3\" or python_version < \"3\""
 name = "jinja2"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -535,7 +548,7 @@ testing = ["coverage", "pyyaml"]
 [[package]]
 category = "dev"
 description = "Safely add untrusted strings to HTML/XML markup."
-marker = "python_version >= \"3.5\""
+marker = "python_version < \"3\" or python_version >= \"3\""
 name = "markupsafe"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
@@ -1035,6 +1048,19 @@ md = ["cmarkgfm (>=0.2.0)"]
 
 [[package]]
 category = "dev"
+description = "A docutils-compatibility bridge to CommonMark, enabling you to write CommonMark inside of Docutils & Sphinx projects."
+name = "recommonmark"
+optional = false
+python-versions = "*"
+version = "0.6.0"
+
+[package.dependencies]
+commonmark = ">=0.8.1"
+docutils = ">=0.11"
+sphinx = ">=1.3.1"
+
+[[package]]
+category = "dev"
 description = "Alternative regular expression module, to replace re."
 marker = "python_version >= \"3.5\" or python_version >= \"3.6\" and python_version < \"4.0\""
 name = "regex"
@@ -1126,7 +1152,6 @@ version = "1.15.0"
 [[package]]
 category = "dev"
 description = "This package provides 26 stemmers for 25 languages generated from Snowball algorithms."
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "snowballstemmer"
 optional = false
 python-versions = "*"
@@ -1214,7 +1239,6 @@ tests = ["pytest", "mock"]
 [[package]]
 category = "dev"
 description = "sphinxcontrib-applehelp is a sphinx extension which outputs Apple help books"
-marker = "python_version >= \"3\""
 name = "sphinxcontrib-applehelp"
 optional = false
 python-versions = ">=3.5"
@@ -1227,7 +1251,6 @@ test = ["pytest"]
 [[package]]
 category = "dev"
 description = "sphinxcontrib-devhelp is a sphinx extension which outputs Devhelp document."
-marker = "python_version >= \"3\""
 name = "sphinxcontrib-devhelp"
 optional = false
 python-versions = ">=3.5"
@@ -1240,7 +1263,6 @@ test = ["pytest"]
 [[package]]
 category = "dev"
 description = "sphinxcontrib-htmlhelp is a sphinx extension which renders HTML help files"
-marker = "python_version >= \"3\""
 name = "sphinxcontrib-htmlhelp"
 optional = false
 python-versions = ">=3.5"
@@ -1253,7 +1275,6 @@ test = ["pytest", "html5lib"]
 [[package]]
 category = "dev"
 description = "A sphinx extension which renders display math in HTML via JavaScript"
-marker = "python_version >= \"3\""
 name = "sphinxcontrib-jsmath"
 optional = false
 python-versions = ">=3.5"
@@ -1265,7 +1286,6 @@ test = ["pytest", "flake8", "mypy"]
 [[package]]
 category = "dev"
 description = "sphinxcontrib-qthelp is a sphinx extension which outputs QtHelp document."
-marker = "python_version >= \"3\""
 name = "sphinxcontrib-qthelp"
 optional = false
 python-versions = ">=3.5"
@@ -1278,7 +1298,6 @@ test = ["pytest"]
 [[package]]
 category = "dev"
 description = "sphinxcontrib-serializinghtml is a sphinx extension which outputs \"serialized\" HTML files (json and pickle)."
-marker = "python_version >= \"3\""
 name = "sphinxcontrib-serializinghtml"
 optional = false
 python-versions = ">=3.5"
@@ -1483,7 +1502,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "4c94aabb38ff80b5ca0e0e7693996cc14b2fc4a235125f59778daf589720193a"
+content-hash = "82e549e4616363f9dfc4565f17ad046029d7deac8c82b7f5a57d378bc000d200"
 lock-version = "1.0"
 python-versions = "~2.7 || ^3.5"
 
@@ -1573,6 +1592,10 @@ codecov = [
 colorama = [
     {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},
     {file = "colorama-0.4.3.tar.gz", hash = "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"},
+]
+commonmark = [
+    {file = "commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},
+    {file = "commonmark-0.9.1.tar.gz", hash = "sha256:452f9dc859be7f06631ddcb328b6919c67984aca654e5fefb3914d54691aed60"},
 ]
 configparser = [
     {file = "configparser-4.0.2-py2.py3-none-any.whl", hash = "sha256:254c1d9c79f60c45dfde850850883d5aaa7f19a23f13561243a050d5a7c3fe4c"},
@@ -1894,6 +1917,10 @@ pyyaml = [
 readme-renderer = [
     {file = "readme_renderer-26.0-py2.py3-none-any.whl", hash = "sha256:cc4957a803106e820d05d14f71033092537a22daa4f406dfbdd61177e0936376"},
     {file = "readme_renderer-26.0.tar.gz", hash = "sha256:cbe9db71defedd2428a1589cdc545f9bd98e59297449f69d721ef8f1cfced68d"},
+]
+recommonmark = [
+    {file = "recommonmark-0.6.0-py2.py3-none-any.whl", hash = "sha256:2ec4207a574289355d5b6ae4ae4abb29043346ca12cdd5f07d374dc5987d2852"},
+    {file = "recommonmark-0.6.0.tar.gz", hash = "sha256:29cd4faeb6c5268c633634f2d69aef9431e0f4d347f90659fd0aab20e541efeb"},
 ]
 regex = [
     {file = "regex-2020.7.14-cp27-cp27m-win32.whl", hash = "sha256:e46d13f38cfcbb79bfdb2964b0fe12561fe633caf964a77a5f8d4e45fe5d2ef7"},
