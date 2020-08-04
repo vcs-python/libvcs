@@ -67,7 +67,7 @@ jobs:
       run: poetry install
 
     - name: Build documentation
-      run: poetry run mkdocs build
+      run: pushd docs; make SPHINXBUILD='poetry run sphinx-build' build; popd
 
     - name: Push documentation to S3
       uses: jakejarvis/s3-sync-action@master
@@ -78,11 +78,11 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: 'us-west-1'   # optional: defaults to us-east-1
-        SOURCE_DIR: 'site'      # optional: defaults to entire repository 
+        SOURCE_DIR: '_build/html'      # optional: defaults to entire repository 
 
     - name: Generate list of changed files for CloudFront to invalidate
       run: |
-        pushd site; FILES=$(find . -name \* -print | grep html | cut -c2- | sort | uniq | tr '\n' ' '); popd
+        pushd _build/html; FILES=$(find . -name \* -print | grep html | cut -c2- | sort | uniq | tr '\n' ' '); popd
         for file in $FILES; do
           echo $file
           # add bare directory to list of updated paths when we see index.html
