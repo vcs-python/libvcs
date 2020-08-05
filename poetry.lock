@@ -12,7 +12,7 @@ description = "Cleverly-named alabaster sub-theme for git-pull projects"
 name = "alagitpull"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "0.0.25rc1"
+version = "0.0.25rc2"
 
 [package.dependencies]
 alabaster = "<0.8"
@@ -1510,8 +1510,8 @@ alabaster = [
     {file = "alabaster-0.7.12.tar.gz", hash = "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"},
 ]
 alagitpull = [
-    {file = "alagitpull-0.0.25rc1-py2.py3-none-any.whl", hash = "sha256:6a881a03e85610722b35125af152262ac0cb49879ea8d70bca05d74bf06e6c37"},
-    {file = "alagitpull-0.0.25rc1.tar.gz", hash = "sha256:c539203ce6572e73ce056b6ffb234bd9cfafb1094c9458495d008fd6ee567945"},
+    {file = "alagitpull-0.0.25rc2-py2.py3-none-any.whl", hash = "sha256:02a347cdca1bf1d6ceabbeb75430fd185a35541f5880609c8c79e584ab31de5e"},
+    {file = "alagitpull-0.0.25rc2.tar.gz", hash = "sha256:2bfe712a56be4e41c3e452b51a9fc76e5f44e0968673deb35e59e71bb023eebc"},
 ]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
