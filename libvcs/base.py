@@ -44,7 +44,6 @@ class BaseRepo(RepoLoggingAdapter, object):
                 create_repo(..., progress_callback=progress_cb)
         :type callback: func
         """
-        self.__dict__.update(kwargs)
         self.progress_callback = progress_callback
         self.url = url
         self.parent_dir = os.path.dirname(repo_dir)
