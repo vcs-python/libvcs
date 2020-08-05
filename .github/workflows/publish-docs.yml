@@ -82,7 +82,7 @@ jobs:
 
     - name: Generate list of changed files for CloudFront to invalidate
       run: |
-        pushd site; FILES=$(find . -name \* -print | cut -c2- | sort | uniq | tr '\n' ' '); popd
+        pushd site; FILES=$(find . -name \* -print | grep html | cut -c2- | sort | uniq | tr '\n' ' '); popd
         for file in $FILES; do
           echo $file
           # add bare directory to list of updated paths when we see index.html
