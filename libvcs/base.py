@@ -31,8 +31,6 @@ class BaseRepo(RepoLoggingAdapter, object):
     #: vcs app name, e.g. 'git'
     bin_name = ''
 
-    __slots__ = ['name']
-
     def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
         """
         :param callback: Retrieve live progress from ``sys.stderr`` (useful for
@@ -47,7 +45,7 @@ class BaseRepo(RepoLoggingAdapter, object):
         self.progress_callback = progress_callback
         self.url = url
         self.parent_dir = os.path.dirname(repo_dir)
-        self.name = os.path.basename(os.path.normpath(repo_dir))
+        self.repo_name = os.path.basename(os.path.normpath(repo_dir))
         self.path = repo_dir
 
         # Register more schemes with urlparse for various version control
@@ -117,7 +115,8 @@ class BaseRepo(RepoLoggingAdapter, object):
 
         if not os.path.exists(self.path):
             self.debug(
-                'Repo directory for %s does not exist @ %s' % (self.name, self.path)
+                'Repo directory for %s does not exist @ %s'
+                % (self.repo_name, self.path)
             )
             mkdir_p(self.path)
 
@@ -141,4 +140,4 @@ class BaseRepo(RepoLoggingAdapter, object):
         return url, rev
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.name)
+        return "<{} {}>".format(self.__class__.__name__, self.repo_name)
