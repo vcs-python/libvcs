@@ -61,7 +61,7 @@ jobs:
       run: poetry run python -m pip install pip -U
 
     - name: Install dependencies
-      run: poetry install
+      run: poetry install -E "docs test coverage lint format deploy"
 
     - name: Lint with flake8
       run: poetry run flake8
