@@ -12,10 +12,7 @@ authors = ["Tony Narlock <tony@git-pull.com>"]
 python = "~2.7 || ^3.5"
 
 [tool.poetry.dev-dependencies]
-alagitpull = {version="*", allow-prereleases=true}
 black = {version="==19.10b0", python="^3.6"}
-doc8 = "*"
-docutils = "*"
 flake8 = "*"
 isort = [
   {version="<5", python="<3.6"},
@@ -27,11 +24,6 @@ pytest = [
 ]
 pathlib2 = {version="<2.3.5", python="<3"}  # Untangle pytest peer-dependency
 pytest-rerunfailures = "*"
-sphinx = [
-  {version="<2", python="<3"},
-  {version="*", python=">=3"}
-]
-sphinx-issues = "*"
 twine = "*"
 codecov = "*"
 coverage = "*"
@@ -43,4 +35,13 @@ pytest-mock = [
   {version="<3.0.0", python="<3"},
   {version="*", python=">=3"}
 ]
-recommonmark = "^0.6.0"
+sphinx = [
+  {version="<2", python="<3"},
+  {version="*", python=">=3"}
+]
+recommonmark = {version = "^0.6.0"}
+alagitpull = {version = "^0.0.25-rc.2", allow-prereleases = true}
+sphinx-issues = {version = "^1.2.0"}
+
+[tool.poetry.extras]
+docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull"]
