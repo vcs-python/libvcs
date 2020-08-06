@@ -8,6 +8,17 @@ Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
+- [refactor] [#267](https://github.com/vcs-python/libvcs/pull/267) overhaul docs
+
+  - Move sphinx api format to Numpy-style
+
+  - Move from reStructuredText to Markdown (via recommonmark). The master plan is to eliminate
+    docutils and sphinx as a bottleneck completely in favor of something else (e.g. gatsby with
+    a source that inspects our modules and can source intersphinx)
+
+  - Move from RTD to GitHub Action, full support of poetry extras packages, deploys straight to
+    S3 and CloudFront
+
 ## libvcs 0.4.4 (2020-08-05)
 
 - `268` `libvcs.base.BaseRepo`:
