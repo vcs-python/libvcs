@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Base class for Repository objects.
-
-libvcs.base
-~~~~~~~~~~~
-
-"""
+"""Base class for Repository objects."""
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
@@ -22,7 +17,6 @@ class BaseRepo(RepoLoggingAdapter, object):
     """Base class for repositories.
 
     Extends :py:class:`logging.LoggerAdapter`.
-
     """
 
     #: log command output to buffer
@@ -33,14 +27,16 @@ class BaseRepo(RepoLoggingAdapter, object):
 
     def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
         """
-        :param callback: Retrieve live progress from ``sys.stderr`` (useful for
-            certain vcs commands like ``git pull``. Use ``progress_callback``::
+        Parameters
+        ----------
+        callback : func
+            Retrieve live progress from ``sys.stderr`` (useful for certain vcs commands
+            like ``git pull``. Use ``progress_callback``:
 
-                def progress_cb(output, timestamp):
-                    sys.stdout.write(output)
-                    sys.stdout.flush()
-                create_repo(..., progress_callback=progress_cb)
-        :type callback: func
+            >>> def progress_cb(output, timestamp):
+            >>>     sys.stdout.write(output)
+            >>>     sys.stdout.flush()
+            >>> create_repo(..., progress_callback=progress_cb)
         """
         self.progress_callback = progress_callback
         self.url = url
@@ -77,17 +73,21 @@ class BaseRepo(RepoLoggingAdapter, object):
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
-        using the cwd :attr:`~.path` of the repo.
+        using the cwd `libvcs.base.BaseRepo.path` of the repo.
 
-        :param cwd: dir command is run from, defaults :attr:`~.path`.
-        :type cwd: str
+        Parameters
+        ----------
+        cwd : str
+            dir command is run from, defaults to `libvcs.base.BaseRepo.path`.
 
-        :param check_returncode: Indicate whether a :exc:`~exc.CommandError`
-            should be raised if return code is different from 0.
-        :type check_returncode: :class:`bool`
+        check_returncode : bool
+            Indicate whether a :exc:`~exc.CommandError` should be raised if return code
+            is different from 0.
 
-        :returns: combined stdout/stderr in a big string, newlines retained
-        :rtype: str
+        Returns
+        -------
+        str
+            combined stdout/stderr in a big string, newlines retained
         """
 
         if cwd is None:
@@ -124,7 +124,7 @@ class BaseRepo(RepoLoggingAdapter, object):
 
     @classmethod
     def get_url_and_revision_from_pip_url(cls, pip_url):
-        """Return repo URL and revision by parsing :attr:`~.url`."""
+        """Return repo URL and revision by parsing `libvcs.base.BaseRepo.url`."""
         error_message = (
             "Sorry, '%s' is a malformed VCS url. "
             "The format is <vcs>+<protocol>://<url>, "

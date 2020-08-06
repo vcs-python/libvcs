@@ -2,6 +2,7 @@
 import os
 
 import alagitpull
+from recommonmark.transform import AutoStructify
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
@@ -19,6 +20,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'alagitpull',
     'sphinx_issues',
+    'recommonmark',
 ]
 
 releases_unstable_prehistory = True
@@ -30,9 +32,25 @@ issues_github_path = about['__github__']
 
 templates_path = ['_templates']
 
-source_suffix = '.rst'
+source_suffix = {'.rst': 'restructuredtext', '.md': 'markdown'}
 
 master_doc = 'index'
+
+# app setup hook
+def setup(app):
+    app.add_config_value(
+        'recommonmark_config',
+        {
+            #'url_resolver': lambda url: github_doc_root + url,
+            'enable_auto_toc_tree': True,
+            'auto_toc_tree_section': 'Contents',
+            'auto_code_block': True,
+            'enable_eval_rst': True,
+        },
+        True,
+    )
+    app.add_transform(AutoStructify)
+
 
 project = about['__title__']
 copyright = about['__copyright__']
@@ -55,6 +73,10 @@ html_theme_options = {
     'github_banner': True,
     'projects': alagitpull.projects,
     'project_name': about['__title__'],
+    'project_url': 'https://libvcs.git-pull.com',
+    'show_meta_manifest_tag': True,
+    'show_meta_og_tags': True,
+    'show_meta_app_icon_tags': True,
 }
 html_sidebars = {
     '**': [
