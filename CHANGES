@@ -10,6 +10,11 @@ Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
+- :class:`libvcs.base.BaseRepo`: 
+  
+  - no longer sets ``**kwargs`` to dictionary on the object
+  - remove ``__slot__`` and rename ``name`` attribute to ``repo_name``
+
 libvcs 0.4.3 (2020-08-01)
 -------------------------
 - [bug] :func:`libvcs.git.extract_status()` Fix issue capturing branch names

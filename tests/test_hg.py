@@ -40,7 +40,7 @@ def test_repo_mercurial(tmpdir, parentdir, hg_remote):
         }
     )
 
-    run(['hg', 'init', mercurial_repo.name], cwd=str(tmpdir))
+    run(['hg', 'init', mercurial_repo.repo_name], cwd=str(tmpdir))
 
     mercurial_repo.update_repo()
 
