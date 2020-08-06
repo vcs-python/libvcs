@@ -89,8 +89,8 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
 
     Any class that subclasses this will have its class attributes for:
 
-        - :attr:`~.bin_name` -> ``repo_vcs``
-        - :attr:`~.name` -> ``repo_name``
+    - :attr:`~.bin_name` -> ``repo_vcs``
+    - :attr:`~.repo_name` -> ``repo_name``
 
     Added to a dictionary of context information in :py:meth:`
     logging.LoggerAdapter.process()` to be made use of when the user of this
@@ -106,7 +106,7 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict['repo_vcs'] = self.bin_name
-        prefixed_dict['repo_name'] = self.name
+        prefixed_dict['repo_name'] = self.repo_name
 
         kwargs["extra"] = prefixed_dict
 
