@@ -13,7 +13,7 @@ with open('requirements/base.txt') as f:
 with open('requirements/test.txt') as f:
     tests_reqs = [line for line in f.read().split('\n') if line]
 
-readme = open('README.md').read()
+readme = open('README.rst').read()
 history = open('CHANGES').read().replace('.. :changelog:', '')
 
 
