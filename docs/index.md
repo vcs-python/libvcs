@@ -1,9 +1,6 @@
-.. _index:
+# libvcs - vcs abstraction layer
 
-######
-libvcs
-######
-
+```eval_rst
 
 .. include:: ../README.rst
     :start-line: 4
@@ -15,3 +12,4 @@ libvcs
    api
    developing
    history
+```
