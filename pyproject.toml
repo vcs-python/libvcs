@@ -57,6 +57,7 @@ twine = "*"
 ### Gatsby Source ###
 sphinx-autoapi = {version = "^1.4.0", python = ">=3.6"}
 astroid = {version = "^2.4.2", python = ">=3.6"}
+sphobjinv = {version = "^2.0.1", python = ">=3.5"}
 
 [tool.poetry.extras]
 docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull"]
@@ -65,4 +66,4 @@ coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
 lint = ["flake8"]
 deploy = ["deploy"]
-gatsby = ["astroid", "sphinx-autoapi"]
+gatsby = ["astroid", "sphinx-autoapi", "sphobjinv"]
