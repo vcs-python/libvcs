@@ -66,10 +66,9 @@ Python support  Python 2.7, >= 3.4, pypy
 VCS supported   git(1), svn(1), hg(1)
 Source          https://github.com/vcs-python/libvcs
 Docs            https://libvcs.git-pull.com
-Changelog       https://libvcs.git-pull.com/en/latest/history.html
-API             https://libvcs.git-pull.com/en/latest/api.html
+Changelog       https://libvcs.git-pull.com/history.html
+API             https://libvcs.git-pull.com/api.html
 Issues          https://github.com/vcs-python/libvcs/issues
-Travis          https://travis-ci.org/vcs-python/libvcs
 Test Coverage   https://codecov.io/gh/vcs-python/libvcs
 pypi            https://pypi.python.org/pypi/libvcs
 Open Hub        https://www.openhub.net/p/libvcs
@@ -90,11 +89,11 @@ tests           .. code-block:: bash
 ==============  ==========================================================
 
 .. _MIT: https://opensource.org/licenses/MIT
-.. _Documentation: https://libvcs.git-pull.com/en/latest/
-.. _API: https://libvcs.git-pull.com/en/latest/api.html
+.. _Documentation: https://libvcs.git-pull.com/
+.. _API: https://libvcs.git-pull.com/api.html
 .. _pip: http://www.pip-installer.org/en/latest/
 .. _vcspull: https://www.github.com/vcs-python/vcspull/
-.. _Repo: https://libvcs.git-pull.com/en/latest/api.html#creating-a-repo-object
+.. _Repo: https://libvcs.git-pull.com/api.html#creating-a-repo-object
 
 .. |pypi| image:: https://img.shields.io/pypi/v/libvcs.svg
     :alt: Python Package
