@@ -100,9 +100,13 @@ tests           .. code-block:: bash
     :alt: Python Package
     :target: http://badge.fury.io/py/libvcs
 
-.. |build-status| image:: https://img.shields.io/travis/vcs-python/libvcs.svg
+.. |docs| image:: https://github.com/tony/libvcs/workflows/docs/badge.svg
+   :alt: Docs
+   :target: https://github.com/tony/libvcs/actions?query=workflow%3Adocs
+
+.. |build-status| image:: https://github.com/tony/libvcs/workflows/tests/badge.svg
    :alt: Build Status
-   :target: https://travis-ci.org/vcs-python/libvcs
+   :target: https://github.com/tony/libvcs/actions?query=workflow%3Atests
 
 .. |coverage| image:: https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg
     :alt: Code Coverage
@@ -110,8 +114,3 @@ tests           .. code-block:: bash
     
 .. |license| image:: https://img.shields.io/github/license/vcs-python/libvcs.svg
     :alt: License 
-
-.. |docs| image:: https://readthedocs.org/projects/libvcs/badge/?version=latest
-    :alt: Documentation Status
-    :scale: 100%
-    :target: https://readthedocs.org/projects/libvcs/
