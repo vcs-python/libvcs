@@ -73,7 +73,7 @@ html_theme_options = {
     'github_banner': True,
     'projects': alagitpull.projects,
     'project_name': about['__title__'],
-    'project_url': 'https://libvcs.git-pull.com',
+    'project_url': about['__docs__'],
     'show_meta_manifest_tag': True,
     'show_meta_og_tags': True,
     'show_meta_app_icon_tags': True,
