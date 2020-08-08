@@ -12,7 +12,7 @@ description = "Cleverly-named alabaster sub-theme for git-pull projects"
 name = "alagitpull"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "0.0.25rc2"
+version = "0.1.0"
 
 [package.dependencies]
 alabaster = "<0.8"
@@ -407,7 +407,7 @@ marker = "python_version >= \"3.6\""
 name = "isort"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "5.3.0"
+version = "5.3.2"
 
 [package.extras]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
@@ -991,7 +991,7 @@ description = "Python documentation generator"
 name = "sphinx"
 optional = false
 python-versions = ">=3.5"
-version = "3.1.2"
+version = "3.2.0"
 
 [package.dependencies]
 Jinja2 = ">=2.3"
@@ -1278,7 +1278,7 @@ lint = []
 test = []
 
 [metadata]
-content-hash = "b23cfef0071a7d17f6449adf4f9001b8460769070cf1b96aaafb9941875c6325"
+content-hash = "d77b2d26f55bf376802e5546d258bd1ac0b5195b3f389dc58946d527a7e6ff23"
 lock-version = "1.0"
 python-versions = "~2.7 || ^3.5"
 
@@ -1288,8 +1288,8 @@ alabaster = [
     {file = "alabaster-0.7.12.tar.gz", hash = "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"},
 ]
 alagitpull = [
-    {file = "alagitpull-0.0.25rc2-py2.py3-none-any.whl", hash = "sha256:02a347cdca1bf1d6ceabbeb75430fd185a35541f5880609c8c79e584ab31de5e"},
-    {file = "alagitpull-0.0.25rc2.tar.gz", hash = "sha256:2bfe712a56be4e41c3e452b51a9fc76e5f44e0968673deb35e59e71bb023eebc"},
+    {file = "alagitpull-0.1.0-py2.py3-none-any.whl", hash = "sha256:5b9ed87ee410c6fa40a63a91d2f25919a10e20c6d39e080356b067f3ff6f379b"},
+    {file = "alagitpull-0.1.0.tar.gz", hash = "sha256:f6076f81a738c3291b598d8016b248edf5adf25d1d348c2599eff92c1eedaed9"},
 ]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
@@ -1486,8 +1486,8 @@ iniconfig = [
 isort = [
     {file = "isort-4.3.21-py2.py3-none-any.whl", hash = "sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd"},
     {file = "isort-4.3.21.tar.gz", hash = "sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1"},
-    {file = "isort-5.3.0-py3-none-any.whl", hash = "sha256:723de131d9ae9d2561844f0ee525ce33a396a11bcda57174f036ed5ab3d6a122"},
-    {file = "isort-5.3.0.tar.gz", hash = "sha256:cdca22530d093ed16983ba52c41560fa0219d1b958e44fd2ae2995dcc7b785be"},
+    {file = "isort-5.3.2-py3-none-any.whl", hash = "sha256:5196bd2f5b23dc91215734b1c96c6d28390061d69860a948094c12635d6d64e6"},
+    {file = "isort-5.3.2.tar.gz", hash = "sha256:ba83762132a8661d3525f87a86549712fb7d8da79eeb452e01f327ada9e87920"},
 ]
 jeepney = [
     {file = "jeepney-0.4.3-py3-none-any.whl", hash = "sha256:d6c6b49683446d2407d2fe3acb7a368a77ff063f9182fe427da15d622adc24cf"},
@@ -1702,8 +1702,8 @@ snowballstemmer = [
 sphinx = [
     {file = "Sphinx-1.8.5-py2.py3-none-any.whl", hash = "sha256:9f3e17c64b34afc653d7c5ec95766e03043cc6d80b0de224f59b6b6e19d37c3c"},
     {file = "Sphinx-1.8.5.tar.gz", hash = "sha256:c7658aab75c920288a8cf6f09f244c6cfdae30d82d803ac1634d9f223a80ca08"},
-    {file = "Sphinx-3.1.2-py3-none-any.whl", hash = "sha256:97dbf2e31fc5684bb805104b8ad34434ed70e6c588f6896991b2fdfd2bef8c00"},
-    {file = "Sphinx-3.1.2.tar.gz", hash = "sha256:b9daeb9b39aa1ffefc2809b43604109825300300b987a24f45976c001ba1a8fd"},
+    {file = "Sphinx-3.2.0-py3-none-any.whl", hash = "sha256:f7db5b76c42c8b5ef31853c2de7178ef378b985d7793829ec071e120dac1d0ca"},
+    {file = "Sphinx-3.2.0.tar.gz", hash = "sha256:cf2d5bc3c6c930ab0a1fbef3ad8a82994b1bf4ae923f8098a05c7e5516f07177"},
 ]
 sphinx-issues = [
     {file = "sphinx-issues-1.2.0.tar.gz", hash = "sha256:845294736c7ac4c09c706f13431f709e1164037cbb00f6bf623ae16eccf509f3"},

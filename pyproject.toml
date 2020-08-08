@@ -36,7 +36,7 @@ sphinx = [
   {version="*", python=">=3"}
 ]
 recommonmark = {version = "^0.6.0"}
-alagitpull = {version = "^0.0.25-rc.2", allow-prereleases = true}
+alagitpull = {version = "~0.1.0"}
 sphinx-issues = {version = "^1.2.0"}
 
 ### Testing ###
