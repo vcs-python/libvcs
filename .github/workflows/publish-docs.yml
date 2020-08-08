@@ -69,7 +69,6 @@ jobs:
     - name: Build documentation
       run: |
         pushd docs; make SPHINXBUILD='poetry run sphinx-build' html; popd
-        pushd docs; cp manifest.json _build/html; popd
 
     - name: Push documentation to S3
       uses: jakejarvis/s3-sync-action@master
