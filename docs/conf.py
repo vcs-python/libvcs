@@ -58,7 +58,6 @@ exclude_patterns = ['_build']
 pygments_style = 'sphinx'
 
 html_theme_path = [alagitpull.get_path()]
-html_favicon = 'favicon.ico'
 html_theme = 'alagitpull'
 html_theme_options = {
     'logo': 'img/libvcs.svg',
@@ -68,6 +67,8 @@ html_theme_options = {
     'github_banner': True,
     'projects': alagitpull.projects,
     'project_name': about['__title__'],
+    'project_title': about['__title__'],
+    'project_description': about['__description__'],
     'project_url': about['__docs__'],
     'show_meta_manifest_tag': True,
     'show_meta_og_tags': True,
@@ -84,6 +85,7 @@ html_sidebars = {
 }
 
 html_static_path = ['_static']
+html_extra_path = ['manifest.json']
 htmlhelp_basename = '%sdoc' % about['__title__']
 
 alagitpull_internal_hosts = ['libvcs.git-pull.com', '0.0.0.0']
