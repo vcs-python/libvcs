@@ -99,13 +99,13 @@ tests           .. code-block:: bash
     :alt: Python Package
     :target: http://badge.fury.io/py/libvcs
 
-.. |docs| image:: https://github.com/tony/libvcs/workflows/docs/badge.svg
+.. |docs| image:: https://github.com/tony/libvcs/workflows/Publish%20Docs/badge.svg
    :alt: Docs
-   :target: https://github.com/tony/libvcs/actions?query=workflow%3Adocs
+   :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"Publish+Docs"
 
-.. |build-status| image:: https://github.com/tony/libvcs/workflows/tests/badge.svg
+.. |build-status| image:: https://github.com/tony/libvcs/workflows/libvcs%20CI/badge.svg
    :alt: Build Status
-   :target: https://github.com/tony/libvcs/actions?query=workflow%3Atests
+   :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"libvcs+CI"
 
 .. |coverage| image:: https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg
     :alt: Code Coverage
