@@ -8,7 +8,21 @@ description = "vcs abstraction layer"
 license = "MIT"
 authors = ["Tony Narlock <tony@git-pull.com>"]
 keywords = ["libvcs"]
-classifiers = ["Development Status :: 4 - Beta", "License :: OSI Approved :: MIT License", "Environment :: Web Environment", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating System :: MacOS :: MacOS X", "Programming Language :: Python", "Programming Language :: Python :: 2.7", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.5", "Programming Language :: Python :: 3.6", "Programming Language :: Python :: 3.7", "Programming Language :: Python :: Implementation :: PyPy", "Topic :: Utilities", "Topic :: System :: Shells"]
+classifiers = ["Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "Operating System :: POSIX",
+  "Operating System :: MacOS :: MacOS X",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 2.7",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.5",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Utilities",
+  "Topic :: System :: Shells"]
 homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.rst"
 
