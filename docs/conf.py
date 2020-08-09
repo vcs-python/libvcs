@@ -23,7 +23,7 @@ extensions = [
     'recommonmark',
 ]
 
-issues_github_path = about['__github__']
+issues_github_path = about['__github__'].replace('https://github.com/', '')
 
 templates_path = ['_templates']
 
