@@ -23,9 +23,15 @@ classifiers = [
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Utilities",
-  "Topic :: System :: Shells"]
+  "Topic :: System :: Shells"
+]
 homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.rst"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/vcs-python/libvcs/issues"
+Documentation = "https://libvcs.git-pull.com"
+Repository = "https://github.com/vcs-python/libvcs"
 
 [tool.poetry.dependencies]
 python = "~2.7 || ^3.5"
