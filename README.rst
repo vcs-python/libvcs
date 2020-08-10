@@ -50,7 +50,6 @@ Get revision:
 
 Donations
 ---------
-
 Your donations fund development of new features, testing and support.
 Your money will go directly to maintenance and development of the project.
 If you are an individual, feel free to give whatever feels right for the
@@ -60,33 +59,17 @@ See donation options at https://www.git-pull.com/support.html.
 
 More information 
 ----------------
-
-==============  ==========================================================
-Python support  Python 2.7, >= 3.4, pypy
-VCS supported   git(1), svn(1), hg(1)
-Source          https://github.com/vcs-python/libvcs
-Docs            https://libvcs.git-pull.com
-Changelog       https://libvcs.git-pull.com/history.html
-API             https://libvcs.git-pull.com/api.html
-Issues          https://github.com/vcs-python/libvcs/issues
-Test Coverage   https://codecov.io/gh/vcs-python/libvcs
-pypi            https://pypi.python.org/pypi/libvcs
-Open Hub        https://www.openhub.net/p/libvcs
-License         `MIT`_.
-git repo        .. code-block:: bash
-
-                    $ git clone https://github.com/vcs-python/libvcs.git
-install dev     .. code-block:: bash
-
-                    $ git clone https://github.com/vcs-python/libvcs.git libvcs
-                    $ cd ./libvcs
-                    $ virtualenv .venv
-                    $ source .venv/bin/activate
-                    $ pip install -e .
-tests           .. code-block:: bash
-
-                    $ py.test
-==============  ==========================================================
+Python support: Python 2.7, >= 3.4, pypy
+VCS supported: git(1), svn(1), hg(1)
+Source: https://github.com/vcs-python/libvcs
+Docs: https://libvcs.git-pull.com
+Changelog: https://libvcs.git-pull.com/history.html
+API: https://libvcs.git-pull.com/api.html
+Issues: https://github.com/vcs-python/libvcs/issues
+Test Coverage: https://codecov.io/gh/vcs-python/libvcs
+pypi: https://pypi.python.org/pypi/libvcs
+Open Hub: https://www.openhub.net/p/libvcs
+License: `MIT`_.
 
 .. _MIT: https://opensource.org/licenses/MIT
 .. _Documentation: https://libvcs.git-pull.com/
