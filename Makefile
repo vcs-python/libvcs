@@ -36,7 +36,7 @@ dev_docs:
 	$(MAKE) -j watch_docs serve_docs
 
 flake8:
-	flake8 libvcs tests
+	poetry run flake8
 
 watch_flake8:
 	if command -v entr > /dev/null; then ${PY_FILES} | entr -c $(MAKE) flake8; else $(MAKE) flake8 entr_warn; fi
