@@ -2,7 +2,8 @@
 
 |pypi| |docs| |build-status| |coverage| |license|
 
-Install:
+Setup
+-----
 
 .. code-block:: sh
 
@@ -18,6 +19,8 @@ Open up python:
    $ pip install ptpython
    $ ptpython
 
+Usage
+-----
 Create a `Repo`_ object of the project to inspect / checkout / update:
 
 .. code-block:: python
@@ -59,17 +62,17 @@ See donation options at https://www.git-pull.com/support.html.
 
 More information 
 ----------------
-Python support: Python 2.7, >= 3.4, pypy
-VCS supported: git(1), svn(1), hg(1)
-Source: https://github.com/vcs-python/libvcs
-Docs: https://libvcs.git-pull.com
-Changelog: https://libvcs.git-pull.com/history.html
-API: https://libvcs.git-pull.com/api.html
-Issues: https://github.com/vcs-python/libvcs/issues
-Test Coverage: https://codecov.io/gh/vcs-python/libvcs
-pypi: https://pypi.python.org/pypi/libvcs
-Open Hub: https://www.openhub.net/p/libvcs
-License: `MIT`_.
+- Python support: Python 2.7, >= 3.4, pypy
+- VCS supported: git(1), svn(1), hg(1)
+- Source: https://github.com/vcs-python/libvcs
+- Docs: https://libvcs.git-pull.com
+- Changelog: https://libvcs.git-pull.com/history.html
+- API: https://libvcs.git-pull.com/api.html
+- Issues: https://github.com/vcs-python/libvcs/issues
+- Test Coverage: https://codecov.io/gh/vcs-python/libvcs
+- pypi: https://pypi.python.org/pypi/libvcs
+- Open Hub: https://www.openhub.net/p/libvcs
+- License: `MIT`_.
 
 .. _MIT: https://opensource.org/licenses/MIT
 .. _Documentation: https://libvcs.git-pull.com/
