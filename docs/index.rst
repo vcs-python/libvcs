@@ -1,12 +1,9 @@
-# libvcs - vcs abstraction layer
-
-```eval_rst
+libvcs - vcs abstraction layer
+==============================
 
 .. include:: ../README.rst
-    :start-line: 3
-```
+    :start-line: 1
 
-```eval_rst
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -15,4 +12,3 @@
    api
    developing
    history
-```
