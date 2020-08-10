@@ -8,7 +8,7 @@ Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
-- [refactor] [#267](https://github.com/vcs-python/libvcs/pull/267) overhaul docs
+- [refactor] [#267] overhaul docs
 
   - Move sphinx api format to Numpy-style
 
@@ -18,12 +18,19 @@ in pre-1.0 builds.
 
   - Move from RTD to GitHub Action, full support of poetry extras packages, deploys straight to
     S3 and CloudFront
+- [#270] Build and publish packages via poetry
+- [#270] Overhaul development docs
+
+[#270]: https://github.com/vcs-python/libvcs/pull/270
+[#267]: https://github.com/vcs-python/libvcs/pull/267
 
 ## libvcs 0.4.4 (2020-08-05)
 
-- `268` `libvcs.base.BaseRepo`:
+- [#268] `libvcs.base.BaseRepo`:
     - no longer sets `**kwargs` to dictionary on the object
     - remove `__slot__` and rename `name` attribute to `repo_name`
+
+[#268]: https://github.com/vcs-python/libvcs/pull/268
 
 ## libvcs 0.4.3 (2020-08-01)
 
@@ -112,11 +119,13 @@ avoid implicit behavior.
 ## libvcs 0.3.1 (2020-07-25)
 
 - Fix issue with subprocess.Popen loud warning on Python 3.8
-- `296` - Move from Pipfile to poetry
+- [#296] - Move from Pipfile to poetry
 - Sort imports
 - Add isort package, isort configuration in setup.cfg, and
     `make isort` task to Makefile.
 - Add `project_urls` to setup.py
+
+[#296] https://github.com/vcs-python/libvcs/pull/296
 
 ## libvcs 0.3.0 (2018-03-12)
 
@@ -137,8 +146,9 @@ avoid implicit behavior.
 
 ## libvcs 0.2.2 (2016-11-23)
 
-- Fix bug with unused `support` module in vcspull. See
-    [\#43](https://github.com/vcs-python/vcspull/issues/43)
+- Fix bug with unused `support` module in vcspull. See [vcspull#43]
+
+[vcspull#43]: https://github.com/vcs-python/vcspull/pull/43
 
 ## libvcs 0.2.1 (2016-09-13)
 
@@ -150,11 +160,14 @@ avoid implicit behavior.
 
 ## libvcs 0.2.0 (2016-06-24)
 
-- `9` Support for `progress_callback` to use realtime output from
+- [#9] Support for `progress_callback` to use realtime output from
     commands in progress (such as `git fetch`).
-- `9` More tests, internal factoring and documentation, thanks @jcfr
-- `9` Official support for pypy, pypy3
-- `11` : Fix unbound local when updating git repos
+- [#9] More tests, internal factoring and documentation, thanks @jcfr
+- [#9] Official support for pypy, pypy3
+- [#11] : Fix unbound local when updating git repos
+
+[#9]: https://github.com/vcs-python/libvcs/pull/9
+[#11]: https://github.com/vcs-python/libvcs/pull/11
 
 ## libvcs 0.1.7 (2016-06-21)
 
