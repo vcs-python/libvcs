@@ -1,4 +1,4 @@
-name: libvcs CI
+name: tests
 
 on: [push]
 

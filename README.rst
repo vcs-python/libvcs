@@ -89,9 +89,9 @@ More information
    :alt: Docs
    :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"Publish+Docs"
 
-.. |build-status| image:: https://github.com/tony/libvcs/workflows/libvcs%20CI/badge.svg
+.. |build-status| image:: https://github.com/tony/libvcs/workflows/tests/badge.svg
    :alt: Build Status
-   :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"libvcs+CI"
+   :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"tests"
 
 .. |coverage| image:: https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg
     :alt: Code Coverage
