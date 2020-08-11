@@ -1,2 +1,0 @@
-pytest<6
-pytest-mock<2

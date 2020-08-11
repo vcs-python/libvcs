@@ -80,9 +80,3 @@ pip-wheel-metadata/
 
 # Used by publish-docs.yml CI
 .updated_files
-
-# mkdocs
-site/
-
-# vim
-.vim/

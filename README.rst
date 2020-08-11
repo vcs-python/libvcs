@@ -2,7 +2,8 @@
 
 |pypi| |docs| |build-status| |coverage| |license|
 
-Install:
+Setup
+-----
 
 .. code-block:: sh
 
@@ -18,6 +19,8 @@ Open up python:
    $ pip install ptpython
    $ ptpython
 
+Usage
+-----
 Create a `Repo`_ object of the project to inspect / checkout / update:
 
 .. code-block:: python
@@ -50,7 +53,6 @@ Get revision:
 
 Donations
 ---------
-
 Your donations fund development of new features, testing and support.
 Your money will go directly to maintenance and development of the project.
 If you are an individual, feel free to give whatever feels right for the
@@ -60,33 +62,17 @@ See donation options at https://www.git-pull.com/support.html.
 
 More information 
 ----------------
-
-==============  ==========================================================
-Python support  Python 2.7, >= 3.4, pypy
-VCS supported   git(1), svn(1), hg(1)
-Source          https://github.com/vcs-python/libvcs
-Docs            https://libvcs.git-pull.com
-Changelog       https://libvcs.git-pull.com/history.html
-API             https://libvcs.git-pull.com/api.html
-Issues          https://github.com/vcs-python/libvcs/issues
-Test Coverage   https://codecov.io/gh/vcs-python/libvcs
-pypi            https://pypi.python.org/pypi/libvcs
-Open Hub        https://www.openhub.net/p/libvcs
-License         `MIT`_.
-git repo        .. code-block:: bash
-
-                    $ git clone https://github.com/vcs-python/libvcs.git
-install dev     .. code-block:: bash
-
-                    $ git clone https://github.com/vcs-python/libvcs.git libvcs
-                    $ cd ./libvcs
-                    $ virtualenv .venv
-                    $ source .venv/bin/activate
-                    $ pip install -e .
-tests           .. code-block:: bash
-
-                    $ py.test
-==============  ==========================================================
+- Python support: Python 2.7, >= 3.4, pypy
+- VCS supported: git(1), svn(1), hg(1)
+- Source: https://github.com/vcs-python/libvcs
+- Docs: https://libvcs.git-pull.com
+- Changelog: https://libvcs.git-pull.com/history.html
+- API: https://libvcs.git-pull.com/api.html
+- Issues: https://github.com/vcs-python/libvcs/issues
+- Test Coverage: https://codecov.io/gh/vcs-python/libvcs
+- pypi: https://pypi.python.org/pypi/libvcs
+- Open Hub: https://www.openhub.net/p/libvcs
+- License: `MIT`_.
 
 .. _MIT: https://opensource.org/licenses/MIT
 .. _Documentation: https://libvcs.git-pull.com/
@@ -99,13 +85,13 @@ tests           .. code-block:: bash
     :alt: Python Package
     :target: http://badge.fury.io/py/libvcs
 
-.. |docs| image:: https://github.com/tony/libvcs/workflows/Publish%20Docs/badge.svg
+.. |docs| image:: https://github.com/vcs-python/libvcs/workflows/Publish%20Docs/badge.svg
    :alt: Docs
    :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"Publish+Docs"
 
-.. |build-status| image:: https://github.com/tony/libvcs/workflows/libvcs%20CI/badge.svg
+.. |build-status| image:: https://github.com/vcs-python/libvcs/workflows/tests/badge.svg
    :alt: Build Status
-   :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"libvcs+CI"
+   :target: https://github.com/vcs-python/libvcs/actions?query=workflow%3A"tests"
 
 .. |coverage| image:: https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg
     :alt: Code Coverage

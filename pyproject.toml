@@ -3,7 +3,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "libvcs"
-version = "0.4.4"
+version = "0.5.0a2"
 description = "vcs abstraction layer"
 license = "MIT"
 authors = ["Tony Narlock <tony@git-pull.com>"]
@@ -23,9 +23,15 @@ classifiers = [
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Utilities",
-  "Topic :: System :: Shells"]
+  "Topic :: System :: Shells"
+]
 homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.rst"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/vcs-python/libvcs/issues"
+Documentation = "https://libvcs.git-pull.com"
+Repository = "https://github.com/vcs-python/libvcs"
 
 [tool.poetry.dependencies]
 python = "~2.7 || ^3.5"
@@ -70,13 +76,9 @@ isort = [
 ### Lint ###
 flake8 = "*"
 
-### Deploy ###
-twine = "*"
-
 [tool.poetry.extras]
 docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull"]
 test = ["pytest", "pathlib2", "pytest-rerunfailures", "pytest-mock"]
 coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
 lint = ["flake8"]
-deploy = ["deploy"]

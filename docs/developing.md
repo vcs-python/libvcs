@@ -1,106 +1,60 @@
 # Development
 
-## Testing
+[poetry] is a required package to develop.
 
-Our tests are inside `tests/`. Tests are implemented using
-[pytest](http://pytest.org/).
+`git clone https://github.com/vcs-python/libvcs.git`
 
-## Install the latest code from git
+`cd libvcs`
 
-### Using pip
+`poetry install -E "docs test coverage lint format"`
 
-To begin developing, check out the code from github:
+Makefile commands prefixed with `watch_` will watch files and rerun.
 
-    $ git clone git@github.com:vcs-python/libvcs.git
-    $ cd libvcs
+## Tests
 
-Now create a virtualenv, if you don't know how to, you can create a
-virtualenv with:
+`poetry run py.test`
 
-    $ virtualenv .venv
+Helpers: `make test`
+Rerun tests on file change: `make watch_test` (requires [entr(1)])
 
-Then activate it to current tty / terminal session with:
+## Documentation
 
-    $ source .venv/bin/activate
+Default preview server: http://localhost:8068
 
-Good! Now let's run this:
+`cd docs/` and `make html` to build. `make serve` to start http server.
 
-    $ pip install -r requirements/test.txt -e .
+Helpers:
+`make build_docs`, `make serve_docs`
 
-This has `pip`, a python package manager install the python package in
-the current directory. `-e` means `--editable`, which means you can
-adjust the code and the installed software will reflect the changes.
+Rebuild docs on file change: `make watch_docs` (requires [entr(1)])
 
-### Using poetry
+Rebuild docs and run server via one terminal: `make dev_docs` (requires above, and a
+`make(1)` with `-J` support, e.g. GNU Make)
 
-To begin developing, check out the code from github:
+## Formatting / Linting
 
-    $ git clone git@github.com:vcs-python/libvcs.git
-    $ cd libvcs
+The project uses [black] and [isort] (one after the other) and runs [flake8] via
+CI. See the configuration in `pyproject.toml` and `setup.cfg`:
 
-You can create a virtualenv, and install all of the locked packages as
-listed in poetry.lock:
+`make black isort`: Run `black` first, then `isort` to handle import nuances
+`make flake8`, to watch (requires `entr(1)`): `make watch_flake8`
 
-    $ poetry install
+## Releasing
 
-If you ever need to update packages during your development session, the
-following command can be used to update all packages as per poetry
-settings or individual package (second command):
+As of 0.10, [poetry] handles virtualenv creation, package requirements, versioning,
+building, and publishing. Therefore there is no setup.py or requirements files.
 
-    $ poetry update
-    $ poetry update requests
+Update `__version__` in `__about__.py` and `pyproject.toml`::
 
-Then activate it to your current tty / terminal session with:
+    git commit -m 'build(libvcs): Tag v0.1.1'
+    git tag v0.1.1
+    git push
+    git push --tags
+    poetry build
+    poetry deploy
 
-    $ poetry shell
-
-That is it! You are now ready to code!
-
-## Test Runner
-
-As you seen above, the `libvcs` command will now be available to you,
-since you are in the virtual environment, your <span
-class="title-ref">PATH</span> environment was updated to include a
-special version of `python` inside your `.venv` folder with its own
-packages.
-
-    $ make test
-
-You probably didn't see anything but tests scroll by.
-
-If you found a problem or are trying to write a test, you can file an
-[issue on github](https://github.com/vcs-python/libvcs/issues).
-
-#### Test runner options
-
-Test only a file:
-
-    $ py.test tests/test_util.py
-
-will test the `tests/test_util.py` tests.
-
-    $ py.test tests/test_util.py::test_mkdir_p
-
-tests `test_mkdir_p` inside of `tests/test_util.py`.
-
-Multiple can be separated by spaces:
-
-    $ py.test tests/test_{git,svn}.py tests/test_util.py::test_mkdir_p
-
-## Docs
-
-Build docs to _site/_:
-
-    $ make build_docs
-
-Serve docs from http://localhost:8000:
-
-    $ make serve_docs
-
-Rebuild docs when files are edited (requires [`entr(1)`](http://eradman.com/entrproject/)):
-
-    $ make watch_docs
-
-Serve + watch w/ rebuild (requires `make(1)` w/ `-j` support, usually GNU Make):
-
-    $ make dev_docs
+[poetry]: https://python-poetry.org/
+[entr(1)]: http://eradman.com/entrproject/
+[black]: https://github.com/psf/black
+[isort]: https://pypi.org/project/isort/
+[flake8]: https://flake8.pycqa.org/
