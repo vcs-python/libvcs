@@ -18,7 +18,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from . import exc
 from ._compat import urlparse
@@ -38,7 +38,16 @@ class GitRemote(NamedTuple):
     push_url: str
 
 
-def extract_status(value):
+class GitStatus(NamedTuple):
+    branch_oid: Optional[str]
+    branch_head: Optional[str]
+    branch_upstream: Optional[str]
+    branch_ab: Optional[str]
+    branch_ahead: Optional[str]
+    branch_behind: Optional[str]
+
+
+def extract_status(value) -> GitStatus:
     """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
     Returns
@@ -90,7 +99,7 @@ def extract_status(value):
         re.VERBOSE | re.MULTILINE,
     )
     matches = pattern.search(value)
-    return matches.groupdict()
+    return GitStatus(**matches.groupdict())
 
 
 class GitRepo(BaseRepo):
@@ -474,6 +483,6 @@ class GitRepo(BaseRepo):
         """
         match = self.status()
 
-        if match['branch_upstream'] is None:  # no upstream set
-            return match['branch_head']
-        return match['branch_upstream'].replace('/' + match['branch_head'], '')
+        if match.branch_upstream is None:  # no upstream set
+            return match.branch_head
+        return match.branch_upstream.replace('/' + match.branch_head, '')
