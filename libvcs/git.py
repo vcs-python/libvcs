@@ -15,10 +15,10 @@ From pip (MIT Licnese):
 """  # NOQA: E501
 from __future__ import absolute_import, print_function, unicode_literals
 
-import collections
 import logging
 import os
 import re
+from typing import NamedTuple
 
 from . import exc
 from ._compat import urlparse
@@ -26,11 +26,16 @@ from .base import BaseRepo
 
 logger = logging.getLogger(__name__)
 
-GitRemote = collections.namedtuple('GitRemote', ['name', 'fetch_url', 'push_url'])
-"""Structure containing git repo information.
 
-Supports `collections.namedtuple._asdict()`
-"""
+class GitRemote(NamedTuple):
+    """Structure containing git repo information.
+
+    Supports `collections.namedtuple._asdict()`
+    """
+
+    name: str
+    fetch_url: str
+    push_url: str
 
 
 def extract_status(value):
