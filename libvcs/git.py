@@ -9,7 +9,7 @@ From https://github.com/saltstack/salt (Apache License):
 From pip (MIT Licnese):
 
 - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
-- [`GitRepo.get_url_and_revision_from_pip_url`](libvcs.git.GitRepo.get_url_and_revision_from_pip_url`) (``get_url_rev``)
+- [`GitRepo.convert_pip_url`](libvcs.git.GitRepo.convert_pip_url`) (``get_url_rev``)
 - [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
 - [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
 """  # NOQA: E501
@@ -22,7 +22,7 @@ from typing import NamedTuple, Optional
 
 from . import exc
 from ._compat import urlparse
-from .base import BaseRepo
+from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +102,31 @@ def extract_status(value) -> GitStatus:
     return GitStatus(**matches.groupdict())
 
 
+def convert_pip_url(pip_url: str) -> VCSLocation:
+    """
+    Prefixes stub URLs like 'user@hostname:user/repo.git' with 'ssh://'.
+    That's required because although they use SSH they sometimes doesn't
+    work with a ssh:// scheme (e.g. Github). But we need a scheme for
+    parsing. Hence we remove it again afterwards and return it as a stub.
+    The manpage for git-clone(1) refers to this as the "scp-like styntax".
+    """
+    if '://' not in pip_url:
+        assert 'file:' not in pip_url
+        pip_url = pip_url.replace('git+', 'git+ssh://')
+        url, rev = base_convert_pip_url(pip_url)
+        url = url.replace('ssh://', '')
+    elif 'github.com:' in pip_url:
+        raise exc.LibVCSException(
+            "Repo %s is malformatted, please use the convention %s for"
+            "ssh / private GitHub repositories."
+            % (pip_url, "git+https://github.com/username/repo.git")
+        )
+    else:
+        url, rev = base_convert_pip_url(pip_url)
+
+    return VCSLocation(url=url, rev=rev)
+
+
 class GitRepo(BaseRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
@@ -126,37 +151,19 @@ class GitRepo(BaseRepo):
 
         BaseRepo.__init__(self, url, **kwargs)
 
+    @classmethod
+    def from_pip_url(cls, pip_url, *args, **kwargs):
+        url, rev = convert_pip_url(pip_url)
+        self = cls(url=url, rev=rev, *args, **kwargs)
+
+        return self
+
     def get_revision(self):
         """Return current revision. Initial repositories return 'initial'."""
         try:
             return self.run(['rev-parse', '--verify', 'HEAD'])
         except exc.CommandError:
             return 'initial'
-
-    @classmethod
-    def get_url_and_revision_from_pip_url(cls, pip_url):
-        """
-        Prefixes stub URLs like 'user@hostname:user/repo.git' with 'ssh://'.
-        That's required because although they use SSH they sometimes doesn't
-        work with a ssh:// scheme (e.g. Github). But we need a scheme for
-        parsing. Hence we remove it again afterwards and return it as a stub.
-        The manpage for git-clone(1) refers to this as the "scp-like styntax".
-        """
-        if '://' not in pip_url:
-            assert 'file:' not in pip_url
-            pip_url = pip_url.replace('git+', 'git+ssh://')
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
-            url = url.replace('ssh://', '')
-        elif 'github.com:' in pip_url:
-            raise exc.LibVCSException(
-                "Repo %s is malformatted, please use the convention %s for"
-                "ssh / private GitHub repositories."
-                % (pip_url, "git+https://github.com/username/repo.git")
-            )
-        else:
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
-
-        return url, rev
 
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist."""

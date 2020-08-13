@@ -3,7 +3,7 @@
 
 The following is from pypa/pip (MIT license):
 
-- [`MercurialRepo.get_url_and_revision_from_pip_url`](libvcs.hg.get_url_and_revision_from_pip_url)
+- [`MercurialRepo.convert_pip_url`](libvcs.hg.convert_pip_url)
 - [`MercurialRepo.get_url`](libvcs.hg.MercurialRepo.get_url)
 - [`MercurialRepo.get_revision`](libvcs.hg.MercurialRepo.get_revision)
 """  # NOQA E5

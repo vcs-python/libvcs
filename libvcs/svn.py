@@ -8,7 +8,7 @@ The follow are from saltstack/salt (Apache license):
 
 The following are pypa/pip (MIT license):
 
-- [`SubversionRepo.get_url_and_revision_from_pip_url`](libvcs.svn.SubversionRepo.get_url_and_revision_from_pip_url)
+- [`SubversionRepo.convert_pip_url`](libvcs.svn.SubversionRepo.convert_pip_url)
 - [`SubversionRepo.get_url`](libvcs.svn.SubversionRepo.get_url)
 - [`SubversionRepo.get_revision`](libvcs.svn.SubversionRepo.get_revision)
 - [`get_rev_options`](libvcs.svn.get_rev_options)
@@ -20,9 +20,17 @@ import os
 import re
 
 from ._compat import urlparse
-from .base import BaseRepo
+from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
+
+
+def convert_pip_url(pip_url: str) -> VCSLocation:
+    # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
+    url, rev = base_convert_pip_url(pip_url)
+    if url.startswith('ssh://'):
+        url = 'svn+' + url
+    return VCSLocation(url=url, rev=rev)
 
 
 class SubversionRepo(BaseRepo):
@@ -114,14 +122,6 @@ class SubversionRepo(BaseRepo):
                 continue  # not part of the same svn tree, skip it
             revision = max(revision, localrev)
         return revision
-
-    @classmethod
-    def get_url_and_revision_from_pip_url(cls, pip_url):
-        # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
-        url, rev = super(SubversionRepo, cls).get_url_and_revision_from_pip_url(pip_url)
-        if url.startswith('ssh://'):
-            url = 'svn+' + url
-        return url, rev
 
     def update_repo(self, dest=None):
         self.check_destination()
