@@ -8,6 +8,10 @@ Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
+- Remove Python 2.7 support
+- Add annotations
+- Change `libvcs.git.GitRepo.status()` to return `GitStatus` named tuple
+
 ## libvcs 0.5 (2020-08-11)
 
 - [refactor] [#267] overhaul docs
