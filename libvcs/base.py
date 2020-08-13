@@ -4,11 +4,34 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
+from typing import NamedTuple
 
 from ._compat import implements_to_string, urlparse
 from .util import RepoLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
+
+
+class VCSLocation(NamedTuple):
+    url: str
+    rev: str
+
+
+def convert_pip_url(pip_url: str) -> VCSLocation:
+    """Return repo URL and revision by parsing `libvcs.base.BaseRepo.url`."""
+    error_message = (
+        "Sorry, '%s' is a malformed VCS url. "
+        "The format is <vcs>+<protocol>://<url>, "
+        "e.g. svn+http://myrepo/svn/MyApp#egg=MyApp"
+    )
+    assert '+' in pip_url, error_message % pip_url
+    url = pip_url.split('+', 1)[1]
+    scheme, netloc, path, query, frag = urlparse.urlsplit(url)
+    rev = None
+    if '@' in path:
+        path, rev = path.rsplit('@', 1)
+    url = urlparse.urlunsplit((scheme, netloc, path, query, ''))
+    return VCSLocation(url=url, rev=rev)
 
 
 @implements_to_string
@@ -56,7 +79,7 @@ class BaseRepo(RepoLoggingAdapter, object):
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
-        url, rev = cls.get_url_and_revision_from_pip_url(pip_url)
+        url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, *args, **kwargs)
 
         return self
@@ -121,23 +144,6 @@ class BaseRepo(RepoLoggingAdapter, object):
             mkdir_p(self.path)
 
         return True
-
-    @classmethod
-    def get_url_and_revision_from_pip_url(cls, pip_url):
-        """Return repo URL and revision by parsing `libvcs.base.BaseRepo.url`."""
-        error_message = (
-            "Sorry, '%s' is a malformed VCS url. "
-            "The format is <vcs>+<protocol>://<url>, "
-            "e.g. svn+http://myrepo/svn/MyApp#egg=MyApp"
-        )
-        assert '+' in pip_url, error_message % pip_url
-        url = pip_url.split('+', 1)[1]
-        scheme, netloc, path, query, frag = urlparse.urlsplit(url)
-        rev = None
-        if '@' in path:
-            path, rev = path.rsplit('@', 1)
-        url = urlparse.urlunsplit((scheme, netloc, path, query, ''))
-        return url, rev
 
     def __repr__(self):
         return "<{} {}>".format(self.__class__.__name__, self.repo_name)
