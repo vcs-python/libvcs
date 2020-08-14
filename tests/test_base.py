@@ -2,7 +2,6 @@
 """tests for libvcs repo abstract base class."""
 from __future__ import absolute_import, print_function, unicode_literals
 
-from libvcs._compat import text_type
 from libvcs.base import BaseRepo, convert_pip_url
 from libvcs.shortcuts import create_repo
 
@@ -10,7 +9,7 @@ from libvcs.shortcuts import create_repo
 def test_repr():
     repo = create_repo(url='file://path/to/myrepo', repo_dir='/hello/', vcs='git')
 
-    str_repo = text_type(repo)
+    str_repo = str(repo)
     assert 'GitRepo' in str_repo
     assert 'hello' in str_repo
     assert '<GitRepo hello>' == str_repo
@@ -19,7 +18,7 @@ def test_repr():
 def test_repr_base():
     repo = BaseRepo(url='file://path/to/myrepo', repo_dir='/hello/')
 
-    str_repo = text_type(repo)
+    str_repo = str(repo)
     assert 'Repo' in str_repo
     assert 'hello' in str_repo
     assert '<BaseRepo hello>' == str_repo

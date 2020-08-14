@@ -9,7 +9,6 @@ import textwrap
 import pytest
 
 from libvcs import exc
-from libvcs._compat import PY2, string_types
 from libvcs.git import GitRemote, convert_pip_url as git_convert_pip_url, extract_status
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
@@ -81,7 +80,7 @@ def test_repo_update_handle_cases(tmpdir, git_remote, mocker):
 
 def test_progress_callback(tmpdir, git_remote, mocker):
     def progress_callback_spy(output, timestamp):
-        assert isinstance(output, string_types)
+        assert isinstance(output, str)
         assert isinstance(timestamp, datetime.datetime)
 
     progress_callback = mocker.Mock(
@@ -307,16 +306,10 @@ def test_extract_status():
     ],
 )
 def test_extract_status_b(fixture, expected_result):
-    if PY2:
-        assert (
-            extract_status(textwrap.dedent(fixture))._asdict().items()
-            <= expected_result.items()
-        )
-    else:
-        assert (
-            extract_status(textwrap.dedent(fixture))._asdict().items()
-            >= expected_result.items()
-        )
+    assert (
+        extract_status(textwrap.dedent(fixture))._asdict().items()
+        >= expected_result.items()
+    )
 
 
 @pytest.mark.parametrize(

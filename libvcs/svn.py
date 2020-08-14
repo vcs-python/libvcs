@@ -18,8 +18,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
+from urllib import parse as urlparse
 
-from ._compat import urlparse
 from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)

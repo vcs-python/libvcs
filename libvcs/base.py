@@ -5,8 +5,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 from typing import NamedTuple
+from urllib import parse as urlparse
 
-from ._compat import implements_to_string, urlparse
 from .util import RepoLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,6 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-@implements_to_string
 class BaseRepo(RepoLoggingAdapter, object):
 
     """Base class for repositories.
