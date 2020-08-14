@@ -19,9 +19,9 @@ import logging
 import os
 import re
 from typing import NamedTuple, Optional
+from urllib import parse as urlparse
 
 from . import exc
-from ._compat import urlparse
 from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
