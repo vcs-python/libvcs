@@ -20,7 +20,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import re
-from typing import NamedTuple, Optional
+from typing import Dict, NamedTuple, Optional
 from urllib import parse as urlparse
 
 from . import exc
@@ -334,7 +334,7 @@ class GitRepo(BaseRepo):
         cmd = ['submodule', 'update', '--recursive', '--init']
         self.run(cmd, log_in_real_time=True)
 
-    def remotes(self, flat=False):
+    def remotes(self, flat=False) -> Dict:
         """Return remotes like git remote -v.
 
         Parameters
@@ -344,8 +344,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        dict
-            dict of git upstream / remote URLs
+        dict of git upstream / remote URLs
         """
         remotes = {}
 
@@ -358,7 +357,7 @@ class GitRepo(BaseRepo):
             )
         return remotes
 
-    def remote(self, name, **kwargs):
+    def remote(self, name, **kwargs) -> GitRemote:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters
@@ -368,8 +367,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        libvcs.git.GitRemote
-            Remote name and url in tuple form
+        Remote name and url in tuple form
         """
 
         try:
@@ -407,7 +405,7 @@ class GitRepo(BaseRepo):
         return self.remote(name=name)
 
     @staticmethod
-    def chomp_protocol(url):
+    def chomp_protocol(url) -> str:
         """Return clean VCS url from RFC-style url
 
         Parameters
@@ -417,8 +415,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        str
-            URL as VCS software would accept it
+        URL as VCS software would accept it
         """
         if '+' in url:
             url = url.split('+', 1)[1]
@@ -435,13 +432,12 @@ class GitRepo(BaseRepo):
             url = url.replace('ssh://', '')
         return url
 
-    def get_git_version(self):
+    def get_git_version(self) -> str:
         """Return current version of git binary
 
         Returns
         -------
-        str
-            git version
+        git version
         """
         VERSION_PFX = 'git version '
         version = self.run(['version'])
@@ -451,15 +447,14 @@ class GitRepo(BaseRepo):
             version = ''
         return '.'.join(version.split('.')[:3])
 
-    def status(self):
+    def status(self) -> dict:
         """Retrieve status of project in dict format.
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
 
         Returns
         -------
-        dict
-            Status of current checked out repository
+        Status of current checked out repository
 
         Examples
         --------
@@ -476,14 +471,13 @@ class GitRepo(BaseRepo):
         """
         return extract_status(self.run(['status', '-sb', '--porcelain=2']))
 
-    def get_current_remote_name(self):
+    def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.
 
         Returns
         -------
-        str
-            If upstream the same, returns ``branch_name``.
-            If upstream mismatches, returns ``remote_name/branch_name``.
+        If upstream the same, returns ``branch_name``.
+        If upstream mismatches, returns ``remote_name/branch_name``.
         """
         match = self.status()
 
