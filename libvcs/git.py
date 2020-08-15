@@ -131,7 +131,7 @@ class GitRepo(BaseRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, repo_dir, **kwargs):
         """A git repository.
 
         Parameters
@@ -149,7 +149,7 @@ class GitRepo(BaseRepo):
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
 
-        BaseRepo.__init__(self, url, **kwargs)
+        BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):

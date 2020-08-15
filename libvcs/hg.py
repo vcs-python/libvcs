@@ -21,8 +21,8 @@ class MercurialRepo(BaseRepo):
     bin_name = 'hg'
     schemes = ('hg', 'hg+http', 'hg+https', 'hg+file')
 
-    def __init__(self, url, **kwargs):
-        BaseRepo.__init__(self, url, **kwargs)
+    def __init__(self, url, repo_dir, **kwargs):
+        BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
     def obtain(self):
         self.check_destination()
