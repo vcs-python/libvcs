@@ -37,7 +37,7 @@ class SubversionRepo(BaseRepo):
     bin_name = 'svn'
     schemes = ('svn', 'svn+ssh', 'svn+http', 'svn+https', 'svn+svn')
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, repo_dir, **kwargs):
         """A svn repository.
 
         Parameters
@@ -58,7 +58,7 @@ class SubversionRepo(BaseRepo):
             self.svn_trust_cert = False
 
         self.rev = kwargs.get('rev')
-        BaseRepo.__init__(self, url, **kwargs)
+        BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
     def _user_pw_args(self):
         args = []
