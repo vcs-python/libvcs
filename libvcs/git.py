@@ -145,8 +145,6 @@ class GitRepo(BaseRepo):
         """
         if 'git_shallow' not in kwargs:
             self.git_shallow = False
-        if 'git_submodules' not in kwargs:
-            self.git_submodules = []
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
 
@@ -185,7 +183,6 @@ class GitRepo(BaseRepo):
         self.info('Initializing submodules.')
         self.run(['submodule', 'init'], log_in_real_time=True)
         cmd = ['submodule', 'update', '--recursive', '--init']
-        cmd.extend(self.git_submodules)
         self.run(cmd, log_in_real_time=True)
 
     def update_repo(self):
@@ -335,7 +332,6 @@ class GitRepo(BaseRepo):
                 return
 
         cmd = ['submodule', 'update', '--recursive', '--init']
-        cmd.extend(self.git_submodules)
         self.run(cmd, log_in_real_time=True)
 
     def remotes(self, flat=False):
