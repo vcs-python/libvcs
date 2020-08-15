@@ -99,7 +99,6 @@ d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 [[package]]
 category = "dev"
 description = "Python package for providing Mozilla's CA Bundle."
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "certifi"
 optional = false
 python-versions = "*"
@@ -108,7 +107,6 @@ version = "2020.6.20"
 [[package]]
 category = "dev"
 description = "Universal encoding detector for Python 2 and 3"
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "chardet"
 optional = false
 python-versions = "*"
@@ -176,7 +174,7 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2)", "pytes
 [[package]]
 category = "dev"
 description = "Backports and enhancements for the contextlib module"
-marker = "python_version < \"3\""
+marker = "python_version < \"3.4\""
 name = "contextlib2"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -282,7 +280,6 @@ version = "3.3.0"
 [[package]]
 category = "dev"
 description = "Internationalized Domain Names in Applications (IDNA)"
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "idna"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -365,7 +362,7 @@ marker = "python_version >= \"3.6\""
 name = "isort"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "5.3.2"
+version = "5.4.1"
 
 [package.extras]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
@@ -659,7 +656,7 @@ marker = "python_version >= \"3\""
 name = "pytest-cov"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.10.0"
+version = "2.10.1"
 
 [package.dependencies]
 coverage = ">=4.4"
@@ -839,7 +836,7 @@ description = "Python documentation generator"
 name = "sphinx"
 optional = false
 python-versions = ">=3.5"
-version = "3.2.0"
+version = "3.2.1"
 
 [package.dependencies]
 Jinja2 = ">=2.3"
@@ -1000,7 +997,6 @@ version = "3.7.4.3"
 [[package]]
 category = "dev"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
-marker = "python_version < \"3\" or python_version >= \"3\""
 name = "urllib3"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
@@ -1028,7 +1024,7 @@ version = ">=1.2.1"
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version >= \"3\" and python_version < \"3.8\" or python_version < \"3\""
+marker = "python_version < \"3.8\" or python_version >= \"3\" and python_version < \"3.8\""
 name = "zipp"
 optional = false
 python-versions = ">=2.7"
@@ -1046,7 +1042,7 @@ testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version >= \"3\" and python_version < \"3.8\""
+marker = "python_version >= \"3\" and python_version < \"3.8\" or python_version < \"3.8\""
 name = "zipp"
 optional = false
 python-versions = ">=3.6"
@@ -1217,8 +1213,8 @@ iniconfig = [
 isort = [
     {file = "isort-4.3.21-py2.py3-none-any.whl", hash = "sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd"},
     {file = "isort-4.3.21.tar.gz", hash = "sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1"},
-    {file = "isort-5.3.2-py3-none-any.whl", hash = "sha256:5196bd2f5b23dc91215734b1c96c6d28390061d69860a948094c12635d6d64e6"},
-    {file = "isort-5.3.2.tar.gz", hash = "sha256:ba83762132a8661d3525f87a86549712fb7d8da79eeb452e01f327ada9e87920"},
+    {file = "isort-5.4.1-py3-none-any.whl", hash = "sha256:819fa99f2a9323025ade768e94b2e27447cd9b0a64595a90f21595e11151b788"},
+    {file = "isort-5.4.1.tar.gz", hash = "sha256:a4fb5fffc46494cda15e33a996c8e724f8e3db19682b84cc7c990b57f2941e9f"},
 ]
 jinja2 = [
     {file = "Jinja2-2.11.2-py2.py3-none-any.whl", hash = "sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035"},
@@ -1323,8 +1319,8 @@ pytest = [
 pytest-cov = [
     {file = "pytest-cov-2.9.0.tar.gz", hash = "sha256:b6a814b8ed6247bd81ff47f038511b57fe1ce7f4cc25b9106f1a4b106f1d9322"},
     {file = "pytest_cov-2.9.0-py2.py3-none-any.whl", hash = "sha256:c87dfd8465d865655a8213859f1b4749b43448b5fae465cb981e16d52a811424"},
-    {file = "pytest-cov-2.10.0.tar.gz", hash = "sha256:1a629dc9f48e53512fcbfda6b07de490c374b0c83c55ff7a1720b3fccff0ac87"},
-    {file = "pytest_cov-2.10.0-py2.py3-none-any.whl", hash = "sha256:6e6d18092dce6fad667cd7020deed816f858ad3b49d5b5e2b1cc1c97a4dba65c"},
+    {file = "pytest-cov-2.10.1.tar.gz", hash = "sha256:47bd0ce14056fdd79f93e1713f88fad7bdcc583dcd7783da86ef2f085a0bb88e"},
+    {file = "pytest_cov-2.10.1-py2.py3-none-any.whl", hash = "sha256:45ec2d5182f89a81fc3eb29e3d1ed3113b9e9a873bcddb2a71faaab066110191"},
 ]
 pytest-mock = [
     {file = "pytest-mock-2.0.0.tar.gz", hash = "sha256:b35eb281e93aafed138db25c8772b95d3756108b601947f89af503f8c629413f"},
@@ -1397,8 +1393,8 @@ snowballstemmer = [
 sphinx = [
     {file = "Sphinx-1.8.5-py2.py3-none-any.whl", hash = "sha256:9f3e17c64b34afc653d7c5ec95766e03043cc6d80b0de224f59b6b6e19d37c3c"},
     {file = "Sphinx-1.8.5.tar.gz", hash = "sha256:c7658aab75c920288a8cf6f09f244c6cfdae30d82d803ac1634d9f223a80ca08"},
-    {file = "Sphinx-3.2.0-py3-none-any.whl", hash = "sha256:f7db5b76c42c8b5ef31853c2de7178ef378b985d7793829ec071e120dac1d0ca"},
-    {file = "Sphinx-3.2.0.tar.gz", hash = "sha256:cf2d5bc3c6c930ab0a1fbef3ad8a82994b1bf4ae923f8098a05c7e5516f07177"},
+    {file = "Sphinx-3.2.1-py3-none-any.whl", hash = "sha256:ce6fd7ff5b215af39e2fcd44d4a321f6694b4530b6f2b2109b64d120773faea0"},
+    {file = "Sphinx-3.2.1.tar.gz", hash = "sha256:321d6d9b16fa381a5306e5a0b76cd48ffbc588e6340059a729c6fdd66087e0e8"},
 ]
 sphinx-issues = [
     {file = "sphinx-issues-1.2.0.tar.gz", hash = "sha256:845294736c7ac4c09c706f13431f709e1164037cbb00f6bf623ae16eccf509f3"},
