@@ -68,7 +68,7 @@ class SubversionRepo(BaseRepo):
         return args
 
     def obtain(self, quiet=None):
-        self.check_destination()
+        self.ensure_dir()
 
         url, rev = self.url, self.rev
 
@@ -124,7 +124,7 @@ class SubversionRepo(BaseRepo):
         return revision
 
     def update_repo(self, dest=None):
-        self.check_destination()
+        self.ensure_dir()
         if os.path.isdir(os.path.join(self.path, '.svn')):
             dest = self.path if not dest else dest
 

@@ -127,7 +127,7 @@ class BaseRepo(RepoLoggingAdapter, object):
             cwd=cwd,
         )
 
-    def check_destination(self, *args, **kwargs):
+    def ensure_dir(self, *args, **kwargs):
         """Assure destination path exists. If not, create directories."""
         if os.path.exists(self.path):
             return True

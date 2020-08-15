@@ -24,12 +24,12 @@ def test_repr_base():
     assert '<BaseRepo hello>' == str_repo
 
 
-def test_check_destination_creates_parent_if_not_exist(tmpdir):
+def test_ensure_dir_creates_parent_if_not_exist(tmpdir):
     parentdir = tmpdir.join('parentdir')  # doesn't exist yet
     repo_dir = parentdir.join('myrepo')
     repo = BaseRepo(url='file://path/to/myrepo', repo_dir=str(repo_dir))
 
-    repo.check_destination()
+    repo.ensure_dir()
     assert parentdir.check()
 
 

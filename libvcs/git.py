@@ -167,7 +167,7 @@ class GitRepo(BaseRepo):
 
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist."""
-        self.check_destination()
+        self.ensure_dir()
 
         url = self.url
 
@@ -188,7 +188,7 @@ class GitRepo(BaseRepo):
         self.run(cmd, log_in_real_time=True)
 
     def update_repo(self):
-        self.check_destination()
+        self.ensure_dir()
 
         if not os.path.isdir(os.path.join(self.path, '.git')):
             self.obtain()
