@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """Git Repo object for libvcs.
 
-From https://github.com/saltstack/salt (Apache License):
+.. todo::
 
-- [`GitRepo.remote`](libvcs.git.GitRepo.remote) (renamed to ``remote``)
-- [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
+    From https://github.com/saltstack/salt (Apache License):
 
-From pip (MIT Licnese):
+    - [`GitRepo.remote`](libvcs.git.GitRepo.remote) (renamed to ``remote``)
+    - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
 
-- [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
-- [`GitRepo.convert_pip_url`](libvcs.git.GitRepo.convert_pip_url`) (``get_url_rev``)
-- [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
-- [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
+    From pip (MIT Licnese):
+
+    - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
+    - [`GitRepo.convert_pip_url`](libvcs.git.GitRepo.convert_pip_url`) (``get_url_rev``)
+    - [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
+    - [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
 """  # NOQA: E501
 from __future__ import absolute_import, print_function, unicode_literals
 
@@ -52,8 +54,7 @@ def extract_status(value) -> GitStatus:
 
     Returns
     -------
-    dict
-        Dictionary of git repo's status
+    Dictionary of git repo's status
     """
     pattern = re.compile(
         r"""[\n\r]?
