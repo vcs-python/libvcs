@@ -2,15 +2,17 @@
 
 Here are the changes for libvcs.
 
-## current
+## libvcs 0.9-current
 
 Generally speaking, refactor / magic is in the process of being stripped
 out in the next few releases. The API is subject to change significantly
 in pre-1.0 builds.
 
+- Big version bump (0.5 -> 0.9)
 - Remove Python 2.7 support
 - Add annotations
 - Change `libvcs.git.GitRepo.status()` to return `GitStatus` named tuple
+- Breaking change: Repo objects now require `repo_dir` to be passed
 
 ## libvcs 0.5 (2020-08-11)
 
