@@ -25,7 +25,7 @@ class MercurialRepo(BaseRepo):
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
     def obtain(self):
-        self.check_destination()
+        self.ensure_dir()
 
         self.run(['clone', '--noupdate', '-q', self.url, self.path])
         self.run(['update', '-q'])
@@ -34,7 +34,7 @@ class MercurialRepo(BaseRepo):
         return self.run(['parents', '--template={rev}'])
 
     def update_repo(self):
-        self.check_destination()
+        self.ensure_dir()
         if not os.path.isdir(os.path.join(self.path, '.hg')):
             self.obtain()
             self.update_repo()
