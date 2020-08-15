@@ -371,7 +371,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        [`GitRemote`](libvcs.git.GitRemote)
+        libvcs.git.GitRemote
             Remote name and url in tuple form
         """
 
