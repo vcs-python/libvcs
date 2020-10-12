@@ -181,7 +181,12 @@ def test_get_remotes(git_repo):
     assert 'origin' in git_repo.remotes()
 
 
-@pytest.mark.parametrize('repo_name,new_repo_url', [['myrepo', 'file:///apples'],])
+@pytest.mark.parametrize(
+    'repo_name,new_repo_url',
+    [
+        ['myrepo', 'file:///apples'],
+    ],
+)
 def test_set_remote(git_repo, repo_name, new_repo_url):
     mynewremote = git_repo.set_remote(name=repo_name, url='file:///')
 
@@ -321,19 +326,31 @@ def test_extract_status_b(fixture, expected_result):
     [
         [
             '# branch.ab +1 -83',
-            {"branch_ab": '+1 -83', "branch_ahead": '1', "branch_behind": '83',},
+            {
+                "branch_ab": '+1 -83',
+                "branch_ahead": '1',
+                "branch_behind": '83',
+            },
         ],
         [
             """
             # branch.ab +0 -0
             """,
-            {"branch_ab": '+0 -0', "branch_ahead": '0', "branch_behind": '0',},
+            {
+                "branch_ab": '+0 -0',
+                "branch_ahead": '0',
+                "branch_behind": '0',
+            },
         ],
         [
             """
             # branch.ab +1 -83
             """,
-            {"branch_ab": '+1 -83', "branch_ahead": '1', "branch_behind": '83',},
+            {
+                "branch_ab": '+1 -83',
+                "branch_ahead": '1',
+                "branch_behind": '83',
+            },
         ],
         [
             """
