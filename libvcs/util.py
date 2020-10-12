@@ -123,7 +123,7 @@ def run(
     check_returncode=True,
     callback=None,
 ):
-    """ Run 'cmd' in a shell and return the combined contents of stdout and
+    """Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
 
     Parameters
@@ -159,7 +159,11 @@ def run(
             run(['git', 'pull'], callback=progrses_cb)
     """
     proc = subprocess.Popen(
-        cmd, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
+        cmd,
+        shell=shell,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        cwd=cwd,
     )
 
     all_output = []

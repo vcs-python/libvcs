@@ -394,7 +394,7 @@ class GitRepo(BaseRepo):
 
         Parameters
         ----------
-        url : str 
+        url : str
             PIP-style url
 
         Returns
@@ -447,7 +447,7 @@ class GitRepo(BaseRepo):
         --------
 
         >>> git_repo.status()
-        { 
+        {
             "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
             "branch_head": 'fix-current-remote-name',
             "branch_upstream": 'origin/fix-current-remote-name',
