@@ -75,6 +75,7 @@ isort = [
 
 ### Lint ###
 flake8 = "*"
+"backports.functools_lru_cache" = "!=1.6.2,!=1.6.3" # https://github.com/jaraco/backports.functools_lru_cache/pull/16
 
 [tool.poetry.extras]
 docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull"]
