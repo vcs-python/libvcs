@@ -1,45 +1,57 @@
-# -*- coding: utf-8 -*-
 """Git Repo object for libvcs.
 
-From https://github.com/saltstack/salt (Apache License):
+.. todo::
 
-- [`GitRepo.remote`](libvcs.git.GitRepo.remote) (renamed to ``remote``)
-- [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
+    From https://github.com/saltstack/salt (Apache License):
 
-From pip (MIT Licnese):
+    - [`GitRepo.remote`](libvcs.git.GitRepo.remote) (renamed to ``remote``)
+    - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
 
-- [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
-- [`GitRepo.get_url_and_revision_from_pip_url`](libvcs.git.GitRepo.get_url_and_revision_from_pip_url`) (``get_url_rev``)
-- [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
-- [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
+    From pip (MIT Licnese):
+
+    - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
+    - [`GitRepo.convert_pip_url`](libvcs.git.GitRepo.convert_pip_url`) (``get_url_rev``)
+    - [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
+    - [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
 """  # NOQA: E501
-from __future__ import absolute_import, print_function, unicode_literals
-
-import collections
 import logging
 import os
 import re
+from typing import Dict, NamedTuple, Optional
+from urllib import parse as urlparse
 
 from . import exc
-from ._compat import urlparse
-from .base import BaseRepo
+from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
 
-GitRemote = collections.namedtuple('GitRemote', ['name', 'fetch_url', 'push_url'])
-"""Structure containing git repo information.
 
-Supports `collections.namedtuple._asdict()`
-"""
+class GitRemote(NamedTuple):
+    """Structure containing git repo information.
+
+    Supports `collections.namedtuple._asdict()`
+    """
+
+    name: str
+    fetch_url: str
+    push_url: str
 
 
-def extract_status(value):
+class GitStatus(NamedTuple):
+    branch_oid: Optional[str]
+    branch_head: Optional[str]
+    branch_upstream: Optional[str]
+    branch_ab: Optional[str]
+    branch_ahead: Optional[str]
+    branch_behind: Optional[str]
+
+
+def extract_status(value) -> GitStatus:
     """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
     Returns
     -------
-    dict
-        Dictionary of git repo's status
+    Dictionary of git repo's status
     """
     pattern = re.compile(
         r"""[\n\r]?
@@ -85,14 +97,39 @@ def extract_status(value):
         re.VERBOSE | re.MULTILINE,
     )
     matches = pattern.search(value)
-    return matches.groupdict()
+    return GitStatus(**matches.groupdict())
+
+
+def convert_pip_url(pip_url: str) -> VCSLocation:
+    """
+    Prefixes stub URLs like 'user@hostname:user/repo.git' with 'ssh://'.
+    That's required because although they use SSH they sometimes doesn't
+    work with a ssh:// scheme (e.g. Github). But we need a scheme for
+    parsing. Hence we remove it again afterwards and return it as a stub.
+    The manpage for git-clone(1) refers to this as the "scp-like styntax".
+    """
+    if '://' not in pip_url:
+        assert 'file:' not in pip_url
+        pip_url = pip_url.replace('git+', 'git+ssh://')
+        url, rev = base_convert_pip_url(pip_url)
+        url = url.replace('ssh://', '')
+    elif 'github.com:' in pip_url:
+        raise exc.LibVCSException(
+            "Repo %s is malformatted, please use the convention %s for"
+            "ssh / private GitHub repositories."
+            % (pip_url, "git+https://github.com/username/repo.git")
+        )
+    else:
+        url, rev = base_convert_pip_url(pip_url)
+
+    return VCSLocation(url=url, rev=rev)
 
 
 class GitRepo(BaseRepo):
     bin_name = 'git'
     schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, repo_dir, **kwargs):
         """A git repository.
 
         Parameters
@@ -105,12 +142,17 @@ class GitRepo(BaseRepo):
         """
         if 'git_shallow' not in kwargs:
             self.git_shallow = False
-        if 'git_submodules' not in kwargs:
-            self.git_submodules = []
         if 'tls_verify' not in kwargs:
             self.tls_verify = False
 
-        BaseRepo.__init__(self, url, **kwargs)
+        BaseRepo.__init__(self, url, repo_dir, **kwargs)
+
+    @classmethod
+    def from_pip_url(cls, pip_url, *args, **kwargs):
+        url, rev = convert_pip_url(pip_url)
+        self = cls(url=url, rev=rev, *args, **kwargs)
+
+        return self
 
     def get_revision(self):
         """Return current revision. Initial repositories return 'initial'."""
@@ -119,34 +161,9 @@ class GitRepo(BaseRepo):
         except exc.CommandError:
             return 'initial'
 
-    @classmethod
-    def get_url_and_revision_from_pip_url(cls, pip_url):
-        """
-        Prefixes stub URLs like 'user@hostname:user/repo.git' with 'ssh://'.
-        That's required because although they use SSH they sometimes doesn't
-        work with a ssh:// scheme (e.g. Github). But we need a scheme for
-        parsing. Hence we remove it again afterwards and return it as a stub.
-        The manpage for git-clone(1) refers to this as the "scp-like styntax".
-        """
-        if '://' not in pip_url:
-            assert 'file:' not in pip_url
-            pip_url = pip_url.replace('git+', 'git+ssh://')
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
-            url = url.replace('ssh://', '')
-        elif 'github.com:' in pip_url:
-            raise exc.LibVCSException(
-                "Repo %s is malformatted, please use the convention %s for"
-                "ssh / private GitHub repositories."
-                % (pip_url, "git+https://github.com/username/repo.git")
-            )
-        else:
-            url, rev = super(GitRepo, cls).get_url_and_revision_from_pip_url(pip_url)
-
-        return url, rev
-
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist."""
-        self.check_destination()
+        self.ensure_dir()
 
         url = self.url
 
@@ -163,11 +180,10 @@ class GitRepo(BaseRepo):
         self.info('Initializing submodules.')
         self.run(['submodule', 'init'], log_in_real_time=True)
         cmd = ['submodule', 'update', '--recursive', '--init']
-        cmd.extend(self.git_submodules)
         self.run(cmd, log_in_real_time=True)
 
     def update_repo(self):
-        self.check_destination()
+        self.ensure_dir()
 
         if not os.path.isdir(os.path.join(self.path, '.git')):
             self.obtain()
@@ -313,10 +329,9 @@ class GitRepo(BaseRepo):
                 return
 
         cmd = ['submodule', 'update', '--recursive', '--init']
-        cmd.extend(self.git_submodules)
         self.run(cmd, log_in_real_time=True)
 
-    def remotes(self, flat=False):
+    def remotes(self, flat=False) -> Dict:
         """Return remotes like git remote -v.
 
         Parameters
@@ -326,8 +341,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        dict
-            dict of git upstream / remote URLs
+        dict of git upstream / remote URLs
         """
         remotes = {}
 
@@ -340,7 +354,7 @@ class GitRepo(BaseRepo):
             )
         return remotes
 
-    def remote(self, name, **kwargs):
+    def remote(self, name, **kwargs) -> GitRemote:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters
@@ -350,8 +364,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        [`GitRemote`](libvcs.git.GitRemote)
-            Remote name and url in tuple form
+        Remote name and url in tuple form
         """
 
         try:
@@ -389,7 +402,7 @@ class GitRepo(BaseRepo):
         return self.remote(name=name)
 
     @staticmethod
-    def chomp_protocol(url):
+    def chomp_protocol(url) -> str:
         """Return clean VCS url from RFC-style url
 
         Parameters
@@ -399,8 +412,7 @@ class GitRepo(BaseRepo):
 
         Returns
         -------
-        str
-            URL as VCS software would accept it
+        URL as VCS software would accept it
         """
         if '+' in url:
             url = url.split('+', 1)[1]
@@ -417,13 +429,12 @@ class GitRepo(BaseRepo):
             url = url.replace('ssh://', '')
         return url
 
-    def get_git_version(self):
+    def get_git_version(self) -> str:
         """Return current version of git binary
 
         Returns
         -------
-        str
-            git version
+        git version
         """
         VERSION_PFX = 'git version '
         version = self.run(['version'])
@@ -433,15 +444,14 @@ class GitRepo(BaseRepo):
             version = ''
         return '.'.join(version.split('.')[:3])
 
-    def status(self):
+    def status(self) -> dict:
         """Retrieve status of project in dict format.
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
 
         Returns
         -------
-        dict
-            Status of current checked out repository
+        Status of current checked out repository
 
         Examples
         --------
@@ -458,17 +468,16 @@ class GitRepo(BaseRepo):
         """
         return extract_status(self.run(['status', '-sb', '--porcelain=2']))
 
-    def get_current_remote_name(self):
+    def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.
 
         Returns
         -------
-        str
-            If upstream the same, returns ``branch_name``.
-            If upstream mismatches, returns ``remote_name/branch_name``.
+        If upstream the same, returns ``branch_name``.
+        If upstream mismatches, returns ``remote_name/branch_name``.
         """
         match = self.status()
 
-        if match['branch_upstream'] is None:  # no upstream set
-            return match['branch_head']
-        return match['branch_upstream'].replace('/' + match['branch_head'], '')
+        if match.branch_upstream is None:  # no upstream set
+            return match.branch_head
+        return match.branch_upstream.replace('/' + match.branch_head, '')

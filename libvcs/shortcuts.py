@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
 """Shortcuts"""
-from __future__ import absolute_import, print_function, unicode_literals
+from typing import Union
 
 from libvcs import GitRepo, MercurialRepo, SubversionRepo
 from libvcs.exc import InvalidPipURL, InvalidVCS
 
 
-def create_repo(url, vcs, **kwargs):
+def create_repo(url, vcs, **kwargs) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
     r"""Return a object representation of a VCS repository.
-
-    Returns
-    -------
-    `libvcs.svn.SubversionRepo`, `libvcs.git.GitRepo`, or `libvcs.hg.MercurialRepo`.
 
     Examples
     --------
-
     >>> from libvcs.shortcuts import create_repo
     >>>
     >>> r = create_repo(
@@ -46,12 +40,10 @@ def create_repo(url, vcs, **kwargs):
         raise InvalidVCS('VCS %s is not a valid VCS' % vcs)
 
 
-def create_repo_from_pip_url(pip_url, **kwargs):
+def create_repo_from_pip_url(
+    pip_url, **kwargs
+) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
     r"""Return a object representation of a VCS repository via pip-style url.
-
-    Returns
-    -------
-    `libvcs.svn.SubversionRepo`, `libvcs.git.GitRepo`, or `libvcs.hg.MercurialRepo`.
 
     Examples
     --------

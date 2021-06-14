@@ -1,36 +1,26 @@
 # API Reference
 
-## Creating a repo object
+## Create from VCS url
 
 Helper methods are available in ``libvcs.shortcuts`` which
 can return a repo object from a single entry-point.
 
 ```eval_rst
-.. autofunction:: libvcs.shortcuts.create_repo
-
-.. autofunction:: libvcs.shortcuts.create_repo_from_pip_url
+.. automodule:: libvcs.shortcuts
+   :members:
 ```
 
-## Instantiating a repo by hand
-
-Tools like :func:`libvcs.shortcuts.create_repo` and
-:func:`libvcs.shortcuts.create_repo_from_pip_url` are just wrappers
-around instantiated these classes.
-
 See examples below of git, mercurial, and subversion.
+
+## Instantiating a repo by hand
 
 ### Git
 
 ```eval_rst
-.. autoclass:: libvcs.git.GitRepo
+.. automodule:: libvcs.git
    :members:
    :show-inheritance:
-
-.. autoclass:: libvcs.git.GitRemote
-   :members:
-   :show-inheritance:
-
-.. autofunction:: libvcs.git.extract_status
+   :inherited-members:
 ```
 
 ### Mercurial
@@ -38,9 +28,10 @@ See examples below of git, mercurial, and subversion.
 aka ``hg(1)``
 
 ```eval_rst
-.. autoclass:: libvcs.hg.MercurialRepo
+.. automodule:: libvcs.hg
    :members:
    :show-inheritance:
+   :inherited-members:
 ```
 
 ### Subversion
@@ -48,19 +39,20 @@ aka ``hg(1)``
 aka ``svn(1)``
 
 ```eval_rst
-.. autoclass:: libvcs.svn.SubversionRepo
+.. automodule:: libvcs.svn
    :members:
    :show-inheritance:
+   :inherited-members:
 ```
 
-### Adding your own VCS
+### Under the hood
 
-Extending libvcs can be done through subclassing ``BaseRepo``.
+Adding your own VCS / Extending libvcs can be done through subclassing ``BaseRepo``.
 
 ```eval_rst
-.. autoclass:: libvcs.base.BaseRepo
-    :members:
-    :show-inheritance:
+.. automodule:: libvcs.base
+   :members:
+   :show-inheritance:
 ```
 
 ### Utility stuff

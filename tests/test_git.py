@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests for libvcs git repos."""
-from __future__ import absolute_import, print_function, unicode_literals
-
 import datetime
 import os
 import textwrap
@@ -9,8 +6,7 @@ import textwrap
 import pytest
 
 from libvcs import exc
-from libvcs._compat import PY2, string_types
-from libvcs.git import GitRemote, GitRepo, extract_status
+from libvcs.git import GitRemote, convert_pip_url as git_convert_pip_url, extract_status
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
@@ -81,7 +77,7 @@ def test_repo_update_handle_cases(tmpdir, git_remote, mocker):
 
 def test_progress_callback(tmpdir, git_remote, mocker):
     def progress_callback_spy(output, timestamp):
-        assert isinstance(output, string_types)
+        assert isinstance(output, str)
         assert isinstance(timestamp, datetime.datetime)
 
     progress_callback = mocker.Mock(
@@ -120,7 +116,8 @@ def test_remotes(parentdir, git_remote):
 
 def test_git_get_url_and_rev_from_pip_url():
     pip_url = 'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
-    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+
+    url, rev = git_convert_pip_url(pip_url)
     assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
     assert rev is None
 
@@ -128,14 +125,14 @@ def test_git_get_url_and_rev_from_pip_url():
         'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git',
         'eucalyptus',
     )
-    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    url, rev = git_convert_pip_url(pip_url)
     assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
     assert rev == 'eucalyptus'
 
     # the git manual refers to this as "scp-like syntax"
     # https://git-scm.com/docs/git-clone
     pip_url = '%s@%s' % ('git+user@hostname:user/repo.git', 'eucalyptus')
-    url, rev = GitRepo.get_url_and_revision_from_pip_url(pip_url)
+    url, rev = git_convert_pip_url(pip_url)
     assert 'user@hostname:user/repo.git' == url
     assert rev == 'eucalyptus'
 
@@ -264,7 +261,7 @@ def test_extract_status():
     assert {
         "branch_oid": 'd4ccd4d6af04b53949f89fbf0cdae13719dc5a08',
         "branch_head": 'fix-current-remote-name',
-    }.items() <= extract_status(FIXTURE_A).items()
+    }.items() <= extract_status(FIXTURE_A)._asdict().items()
 
 
 @pytest.mark.parametrize(
@@ -311,14 +308,10 @@ def test_extract_status():
     ],
 )
 def test_extract_status_b(fixture, expected_result):
-    if PY2:
-        assert (
-            extract_status(textwrap.dedent(fixture)).items() <= expected_result.items()
-        )
-    else:
-        assert (
-            extract_status(textwrap.dedent(fixture)).items() >= expected_result.items()
-        )
+    assert (
+        extract_status(textwrap.dedent(fixture))._asdict().items()
+        >= expected_result.items()
+    )
 
 
 @pytest.mark.parametrize(
@@ -365,4 +358,7 @@ def test_extract_status_b(fixture, expected_result):
     ],
 )
 def test_extract_status_c(fixture, expected_result):
-    assert expected_result.items() <= extract_status(textwrap.dedent(fixture)).items()
+    assert (
+        expected_result.items()
+        <= extract_status(textwrap.dedent(fixture))._asdict().items()
+    )
