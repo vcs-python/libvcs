@@ -20,6 +20,7 @@ alabaster = "<0.8"
 [[package]]
 category = "dev"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\""
 name = "appdirs"
 optional = false
 python-versions = "*"
@@ -74,28 +75,37 @@ testing = ["pytest (>=4.6)", "pytest-black (>=0.3.7)", "pytest-mypy", "pytest-fl
 [[package]]
 category = "dev"
 description = "The uncompromising code formatter."
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\""
 name = "black"
 optional = false
-python-versions = ">=3.6"
-version = "20.8b1"
+python-versions = ">=3.6.2"
+version = "21.6b0"
 
 [package.dependencies]
 appdirs = "*"
 click = ">=7.1.2"
 mypy-extensions = ">=0.4.3"
-pathspec = ">=0.6,<1"
+pathspec = ">=0.8.1,<1"
 regex = ">=2020.1.8"
 toml = ">=0.10.1"
-typed-ast = ">=1.4.0"
-typing-extensions = ">=3.7.4"
 
 [package.dependencies.dataclasses]
 python = "<3.7"
 version = ">=0.6"
 
+[package.dependencies.typed-ast]
+python = "<3.8"
+version = ">=1.4.2"
+
+[package.dependencies.typing-extensions]
+python = "<3.8"
+version = ">=3.7.4"
+
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
-d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
+d = ["aiohttp (>=3.6.0)", "aiohttp-cors (>=0.4.0)"]
+python2 = ["typed-ast (>=1.4.2)"]
+uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 category = "dev"
@@ -116,6 +126,7 @@ version = "4.0.0"
 [[package]]
 category = "dev"
 description = "Composable command line interface toolkit"
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\""
 name = "click"
 optional = false
 python-versions = ">=3.6"
@@ -143,7 +154,7 @@ requests = ">=2.7.9"
 [[package]]
 category = "dev"
 description = "Cross-platform colored terminal text."
-marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\" and platform_system == \"Windows\" or sys_platform == \"win32\""
 name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -174,7 +185,7 @@ toml = ["toml"]
 [[package]]
 category = "dev"
 description = "A backport of the dataclasses module for Python 3.6"
-marker = "python_version < \"3.7\""
+marker = "python_version >= \"3.6.2\" and python_version < \"3.7\""
 name = "dataclasses"
 optional = false
 python-versions = "*"
@@ -224,7 +235,7 @@ version = "1.2.0"
 [[package]]
 category = "dev"
 description = "Read metadata from Python packages"
-marker = "python_version < \"3.8\""
+marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\""
 name = "importlib-metadata"
 optional = false
 python-versions = ">=3.6"
@@ -295,6 +306,7 @@ version = "0.6.1"
 [[package]]
 category = "dev"
 description = "Experimental type system extensions for programs checked with the mypy typechecker."
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\""
 name = "mypy-extensions"
 optional = false
 python-versions = "*"
@@ -314,6 +326,7 @@ pyparsing = ">=2.0.2"
 [[package]]
 category = "dev"
 description = "Utility library for gitignore style pattern matching of file paths."
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\""
 name = "pathspec"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -466,6 +479,7 @@ sphinx = ">=1.3.1"
 [[package]]
 category = "dev"
 description = "Alternative regular expression module, to replace re."
+marker = "python_version >= \"3.6.2\" and python_version < \"4.0.0\""
 name = "regex"
 optional = false
 python-versions = "*"
@@ -642,6 +656,7 @@ version = "0.10.2"
 [[package]]
 category = "dev"
 description = "a fork of Python 2 and 3 ast modules with type comment support"
+marker = "python_version >= \"3.6.2\" and python_version < \"3.8\""
 name = "typed-ast"
 optional = false
 python-versions = "*"
@@ -650,6 +665,7 @@ version = "1.4.3"
 [[package]]
 category = "dev"
 description = "Backported and Experimental Type Hints for Python 3.5+"
+marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\""
 name = "typing-extensions"
 optional = false
 python-versions = "*"
@@ -671,7 +687,7 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version < \"3.8\""
+marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\""
 name = "zipp"
 optional = false
 python-versions = ">=3.6"
@@ -689,7 +705,7 @@ lint = []
 test = []
 
 [metadata]
-content-hash = "7ad579149bbfef2dd0832b44dc547037826203a4f6b0ac16c0089b72ed6510fb"
+content-hash = "80eb30ae30df51d36c12994c8e5a9e78340f54bcd7a4765024f75ebe0cfac4a5"
 lock-version = "1.0"
 python-versions = "^3.6"
 
@@ -723,7 +739,8 @@ babel = [
     {file = "backports.functools_lru_cache-1.6.4.tar.gz", hash = "sha256:d5ed2169378b67d3c545e5600d363a923b09c456dab1593914935a68ad478271"},
 ]
 black = [
-    {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
+    {file = "black-21.6b0-py3-none-any.whl", hash = "sha256:dfb8c5a069012b2ab1e972e7b908f5fb42b6bbabcba0a788b86dc05067c7d9c7"},
+    {file = "black-21.6b0.tar.gz", hash = "sha256:dc132348a88d103016726fe360cb9ede02cecf99b76e3660ce6c596be132ce04"},
 ]
 certifi = [
     {file = "certifi-2021.5.30-py2.py3-none-any.whl", hash = "sha256:50b1e4f8446b06f41be7dd6338db18e0990601dce795c2b1686458aa7e8fa7d8"},
