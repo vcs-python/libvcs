@@ -43,6 +43,7 @@ recommonmark = "^0.6.0"
 alagitpull = "~0.1.0"
 sphinx-issues = "^1.2.0"
 sphinx-autodoc-typehints = "^1.11.0"
+pydoc-markdown = {version = "^3.13.0", python=">=3.6"}
 
 ### Testing ###
 pytest = "*"
@@ -63,7 +64,7 @@ flake8 = "*"
 "backports.functools_lru_cache" = "!=1.6.2,!=1.6.3" # https://github.com/jaraco/backports.functools_lru_cache/pull/16
 
 [tool.poetry.extras]
-docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull", "sphinx-autodoc-typehints"]
+docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull", "pydoc-markdown"]
 test = ["pytest", "pathlib2", "pytest-rerunfailures", "pytest-mock"]
 coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
