@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Git Repo object for libvcs.
 
 .. todo::
@@ -15,8 +14,6 @@
     - [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
     - [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
 """  # NOQA: E501
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 import os
 import re

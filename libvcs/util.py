@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 """Utility functions for libvcs."""
-from __future__ import absolute_import, print_function, unicode_literals
-
 import datetime
 import errno
 import logging
@@ -17,7 +14,7 @@ console_encoding = sys.__stdout__.encoding
 
 
 def console_to_str(s):
-    """ From pypa/pip project, pip.backwardwardcompat. License MIT. """
+    """From pypa/pip project, pip.backwardwardcompat. License MIT."""
     try:
         return s.decode(console_encoding)
     except UnicodeDecodeError:

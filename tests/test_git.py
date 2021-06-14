@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests for libvcs git repos."""
-from __future__ import absolute_import, print_function, unicode_literals
-
 import datetime
 import os
 import textwrap

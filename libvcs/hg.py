@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Mercurial Repo object for libvcs.
 
 .. todo::
@@ -9,8 +8,6 @@
    - [`MercurialRepo.get_url`](libvcs.hg.MercurialRepo.get_url)
    - [`MercurialRepo.get_revision`](libvcs.hg.MercurialRepo.get_revision)
 """  # NOQA E5
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 import os
 

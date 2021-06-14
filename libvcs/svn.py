@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Subversion object for libvcs.
 
 The follow are from saltstack/salt (Apache license):
@@ -13,8 +12,6 @@ The following are pypa/pip (MIT license):
 - [`SubversionRepo.get_revision`](libvcs.svn.SubversionRepo.get_revision)
 - [`get_rev_options`](libvcs.svn.get_rev_options)
 """  # NOQA: E5
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 import os
 import re

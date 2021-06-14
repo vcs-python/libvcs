@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 """tests for libvcs repo abstract base class."""
-from __future__ import absolute_import, print_function, unicode_literals
-
 from libvcs.base import BaseRepo, convert_pip_url
 from libvcs.shortcuts import create_repo
 
