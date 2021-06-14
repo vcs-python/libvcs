@@ -43,7 +43,7 @@ recommonmark = "^0.6.0"
 alagitpull = "~0.1.0"
 sphinx-issues = "^1.2.0"
 sphinx-autodoc-typehints = "^1.11.0"
-pydoc-markdown = {version = "^3.10.1", python=">=3.6"}
+pydoc-markdown = {version = "^3.13.0", python=">=3.6"}
 
 ### Testing ###
 pytest = "*"
