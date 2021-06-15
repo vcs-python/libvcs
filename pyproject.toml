@@ -39,6 +39,7 @@ python = "^3.6"
 [tool.poetry.dev-dependencies]
 ### Docs ###
 sphinx = "*"
+docutils = "~0.16.0"  # Pin below 17 to avoid recommonmark#220
 recommonmark = "^0.7.1"
 alagitpull = "~0.1.0"
 sphinx-issues = "^1.2.0"
@@ -63,7 +64,7 @@ flake8 = "*"
 "backports.functools_lru_cache" = "!=1.6.2,!=1.6.3" # https://github.com/jaraco/backports.functools_lru_cache/pull/16
 
 [tool.poetry.extras]
-docs = ["sphinx", "recommonmark", "sphinx-issues", "alagitpull", "sphinx-autodoc-typehints"]
+docs = ["sphinx", "docutils", "recommonmark", "sphinx-issues", "alagitpull", "sphinx-autodoc-typehints"]
 test = ["pytest", "pathlib2", "pytest-rerunfailures", "pytest-mock"]
 coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
