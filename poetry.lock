@@ -469,7 +469,7 @@ description = "A docutils-compatibility bridge to CommonMark, enabling you to wr
 name = "recommonmark"
 optional = false
 python-versions = "*"
-version = "0.6.0"
+version = "0.7.1"
 
 [package.dependencies]
 commonmark = ">=0.8.1"
@@ -665,7 +665,7 @@ version = "1.4.3"
 [[package]]
 category = "dev"
 description = "Backported and Experimental Type Hints for Python 3.5+"
-marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\""
+marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\" or python_version >= \"3.6.2\" and python_version < \"3.8\" and (python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\")"
 name = "typing-extensions"
 optional = false
 python-versions = "*"
@@ -687,7 +687,7 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 [[package]]
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\""
+marker = "python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\" or python_version >= \"3.6.2\" and python_version < \"3.8\" and (python_version >= \"3.6.2\" and python_version < \"3.8\" or python_version < \"3.8\")"
 name = "zipp"
 optional = false
 python-versions = ">=3.6"
@@ -705,7 +705,7 @@ lint = []
 test = []
 
 [metadata]
-content-hash = "80eb30ae30df51d36c12994c8e5a9e78340f54bcd7a4765024f75ebe0cfac4a5"
+content-hash = "2617bf3c3ed2322299c9586d2c29f5f2817130dba21735110c9e257793c50b81"
 lock-version = "1.0"
 python-versions = "^3.6"
 
@@ -954,8 +954,8 @@ pytz = [
     {file = "pytz-2021.1.tar.gz", hash = "sha256:83a4a90894bf38e243cf052c8b58f381bfe9a7a483f6a9cab140bc7f702ac4da"},
 ]
 recommonmark = [
-    {file = "recommonmark-0.6.0-py2.py3-none-any.whl", hash = "sha256:2ec4207a574289355d5b6ae4ae4abb29043346ca12cdd5f07d374dc5987d2852"},
-    {file = "recommonmark-0.6.0.tar.gz", hash = "sha256:29cd4faeb6c5268c633634f2d69aef9431e0f4d347f90659fd0aab20e541efeb"},
+    {file = "recommonmark-0.7.1-py2.py3-none-any.whl", hash = "sha256:1b1db69af0231efce3fa21b94ff627ea33dee7079a01dd0a7f8482c3da148b3f"},
+    {file = "recommonmark-0.7.1.tar.gz", hash = "sha256:bdb4db649f2222dcd8d2d844f0006b958d627f732415d399791ee436a3686d67"},
 ]
 regex = [
     {file = "regex-2021.4.4-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:619d71c59a78b84d7f18891fe914446d07edd48dc8328c8e149cbe0929b4e000"},
