@@ -5,7 +5,7 @@
 Helper methods are available in ``libvcs.shortcuts`` which
 can return a repo object from a single entry-point.
 
-```eval_rst
+```{eval-rst}
 .. automodule:: libvcs.shortcuts
    :members:
 ```
@@ -16,7 +16,7 @@ See examples below of git, mercurial, and subversion.
 
 ### Git
 
-```eval_rst
+```{eval-rst}
 .. automodule:: libvcs.git
    :members:
    :show-inheritance:
@@ -27,7 +27,7 @@ See examples below of git, mercurial, and subversion.
 
 aka ``hg(1)``
 
-```eval_rst
+```{eval-rst}
 .. automodule:: libvcs.hg
    :members:
    :show-inheritance:
@@ -38,7 +38,7 @@ aka ``hg(1)``
 
 aka ``svn(1)``
 
-```eval_rst
+```{eval-rst}
 .. automodule:: libvcs.svn
    :members:
    :show-inheritance:
@@ -49,7 +49,7 @@ aka ``svn(1)``
 
 Adding your own VCS / Extending libvcs can be done through subclassing ``BaseRepo``.
 
-```eval_rst
+```{eval-rst}
 .. automodule:: libvcs.base
    :members:
    :show-inheritance:
@@ -57,7 +57,7 @@ Adding your own VCS / Extending libvcs can be done through subclassing ``BaseRep
 
 ### Utility stuff
 
-```eval_rst
+```{eval-rst}
 .. automodule:: libvcs.util
    :members:
 ```

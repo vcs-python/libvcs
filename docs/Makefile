@@ -2,7 +2,7 @@
 #
 SHELL := /bin/bash
 PYVERSION=$(shell python -c "import sys;v=sys.version_info[0];sys.stdout.write(str(v))")
-HTTP_PORT     = 8068
+HTTP_PORT     = 8064
 
 # You can set these variables from the command line.
 SPHINXOPTS    =

@@ -4,7 +4,6 @@ import sys
 from os.path import dirname, relpath
 
 import alagitpull
-from recommonmark.transform import AutoStructify
 
 import libvcs
 
@@ -25,7 +24,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'alagitpull',
     'sphinx_issues',
-    'recommonmark',
+    'myst_parser',
 ]
 
 issues_github_path = about['__github__'].replace('https://github.com/', '')
@@ -38,18 +37,7 @@ master_doc = 'index'
 
 # app setup hook
 def setup(app):
-    app.add_config_value(
-        'recommonmark_config',
-        {
-            #'url_resolver': lambda url: github_doc_root + url,
-            'enable_auto_toc_tree': True,
-            'auto_toc_tree_section': 'Contents',
-            'auto_code_block': True,
-            'enable_eval_rst': True,
-        },
-        True,
-    )
-    app.add_transform(AutoStructify)
+    pass
 
 
 project = about['__title__']
