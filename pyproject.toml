@@ -44,7 +44,6 @@ sphinx-issues = "^1.2.0"
 sphinx-autodoc-typehints = "^1.12.0"
 myst_parser = "^0.15.0"
 
-
 ### Testing ###
 pytest = "*"
 pytest-rerunfailures = "*"
@@ -61,7 +60,6 @@ isort = "*"
 
 ### Lint ###
 flake8 = "*"
-"backports.functools_lru_cache" = "!=1.6.2,!=1.6.3" # https://github.com/jaraco/backports.functools_lru_cache/pull/16
 
 [tool.poetry.extras]
 docs = ["sphinx", "myst_parser", "sphinx-issues", "alagitpull", "sphinx-autodoc-typehints"]
