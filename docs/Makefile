@@ -1,7 +1,6 @@
 # Makefile for Sphinx documentation
 #
 SHELL := /bin/bash
-PYVERSION=$(shell python -c "import sys;v=sys.version_info[0];sys.stdout.write(str(v))")
 HTTP_PORT     = 8064
 
 # You can set these variables from the command line.
@@ -159,7 +158,7 @@ checkbuild:
 	rm -rf $(BUILDDIR)
 	$(SPHINXBUILD) -n -q ./ $(BUILDDIR)
 
-WATCH_FILES= find .. -type f -not -path '*/\.*' | grep -i '.*[.]rst\$\|.*[.]md\$\|.*[.]py\$\|CHANGES\|TODO\|.*conf\.py' 2> /dev/null
+WATCH_FILES= find .. -type f -not -path '*/\.*' | grep -i '.*[.]\(rst\|md\)\$\|.*[.]py\$\|CHANGES\|TODO\|.*conf\.py' 2> /dev/null
 
 watch:
 	if command -v entr > /dev/null; then ${WATCH_FILES} | entr -c $(MAKE) html; else $(MAKE) html; fi
