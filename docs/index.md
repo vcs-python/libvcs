@@ -3,6 +3,7 @@
 # libvcs - vcs abstraction layer
 
 ```{include} ../README.md
+
 ```
 
 ## Table of contents
@@ -15,5 +16,3 @@ developing
 history
 
 ```
-
-
