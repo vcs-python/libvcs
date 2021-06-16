@@ -2,9 +2,7 @@
 
 # libvcs - vcs abstraction layer
 
-```{eval-rst}
-.. include:: ../README.rst
-    :start-line: 3
+```{include} ../README.md
 ```
 
 ## Table of contents
