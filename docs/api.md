@@ -2,7 +2,7 @@
 
 ## Create from VCS url
 
-Helper methods are available in ``libvcs.shortcuts`` which
+Helper methods are available in `libvcs.shortcuts` which
 can return a repo object from a single entry-point.
 
 ```{eval-rst}
@@ -25,7 +25,7 @@ See examples below of git, mercurial, and subversion.
 
 ### Mercurial
 
-aka ``hg(1)``
+aka `hg(1)`
 
 ```{eval-rst}
 .. automodule:: libvcs.hg
@@ -36,7 +36,7 @@ aka ``hg(1)``
 
 ### Subversion
 
-aka ``svn(1)``
+aka `svn(1)`
 
 ```{eval-rst}
 .. automodule:: libvcs.svn
@@ -47,7 +47,7 @@ aka ``svn(1)``
 
 ### Under the hood
 
-Adding your own VCS / Extending libvcs can be done through subclassing ``BaseRepo``.
+Adding your own VCS / Extending libvcs can be done through subclassing `BaseRepo`.
 
 ```{eval-rst}
 .. automodule:: libvcs.base

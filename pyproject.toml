@@ -26,7 +26,7 @@ classifiers = [
   "Topic :: System :: Shells"
 ]
 homepage = "http://github.com/vcs-python/libvcs/"
-readme = "README.rst"
+readme = "README.md"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/vcs-python/libvcs/issues"
