@@ -1,5 +1,12 @@
 # Changelog
 
+## Current
+
+- _Add your latest changes from PRs here_
+- #279: Update poetry to 1.1
+  - CI: Use poetry 1.1.7 and `install-poetry.py` installer
+  - Relock poetry.lock at 1.1 (w/ 1.1.7's fix)
+
 ## libvcs 0.10 (2021-06-16)
 
 - #311: Convert to markdown
