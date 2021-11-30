@@ -62,6 +62,8 @@ class BaseRepo(RepoLoggingAdapter, object):
         self.parent_dir = os.path.dirname(repo_dir)
         self.repo_name = os.path.basename(os.path.normpath(repo_dir))
         self.path = repo_dir
+        if 'rev' in kwargs:
+            self.rev = kwargs['rev']
 
         # Register more schemes with urlparse for various version control
         # systems
