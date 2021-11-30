@@ -71,7 +71,7 @@ def extract_status(value) -> GitStatus:
             (?P<branch_head>
                 .*
             )
-            
+
         )?
         (
             #
@@ -284,7 +284,14 @@ class GitRepo(BaseRepo):
                 except exc.CommandError:
                     self.error("Failed to stash changes")
 
-            # Pull changes from the remote branch
+            # Checkout the remote branch
+            try:
+                process = self.run(['checkout', git_tag])
+            except exc.CommandError:
+                self.error("Failed to checkout tag: '%s'" % git_tag)
+                return
+
+            # Rebase changes from the remote branch
             try:
                 process = self.run(['rebase', git_remote_name + '/' + git_tag])
             except exc.CommandError as e:
