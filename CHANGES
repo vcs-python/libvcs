@@ -4,6 +4,7 @@
 
 - _Add your latest changes from PRs here_
 - #295: Checkout remote branch before git rebase
+- #293: Fix revision handling with pip-urls.
 - #279: Update poetry to 1.1
   - CI: Use poetry 1.1.7 and `install-poetry.py` installer
   - Relock poetry.lock at 1.1 (w/ 1.1.7's fix)
