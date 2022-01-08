@@ -32,6 +32,7 @@ readme = "README.md"
 "Bug Tracker" = "https://github.com/vcs-python/libvcs/issues"
 Documentation = "https://libvcs.git-pull.com"
 Repository = "https://github.com/vcs-python/libvcs"
+Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 
 [tool.poetry.dependencies]
 python = "^3.7"
