@@ -27,6 +27,12 @@ classifiers = [
 ]
 homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.md"
+packages = [
+    { include = "libvcs" }
+]
+include = [
+    { path = "tests", format = "sdist" }
+]
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/vcs-python/libvcs/issues"
