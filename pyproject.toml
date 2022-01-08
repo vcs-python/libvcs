@@ -34,7 +34,7 @@ Documentation = "https://libvcs.git-pull.com"
 Repository = "https://github.com/vcs-python/libvcs"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 
 [tool.poetry.dev-dependencies]
 ### Docs ###
