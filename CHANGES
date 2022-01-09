@@ -3,6 +3,8 @@
 ## Current
 - _Add your latest changes from PRs here_
 
+## libvcs 0.11.0, "Phebe" (2022-01-08)
+
 #### Compatibility
 - Add python 3.10 (#300)
 - Drop python 3.6 (#300)
