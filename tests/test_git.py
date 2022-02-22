@@ -10,7 +10,7 @@ from libvcs.git import GitRemote, convert_pip_url as git_convert_pip_url, extrac
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
-if not which('git'):
+if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 
@@ -20,59 +20,59 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
     note: this behaviors differently from git(1)'s use of the word "bare".
     running `git rev-parse --is-bare-repository` would return false.
     """
-    repo_name = 'my_git_project'
+    repo_name = "my_git_project"
 
-    run(['git', 'init', repo_name], cwd=str(tmpdir))
+    run(["git", "init", repo_name], cwd=str(tmpdir))
 
     bare_repo_dir = tmpdir.join(repo_name)
 
     git_repo = create_repo_from_pip_url(
         **{
-            'pip_url': 'git+file://' + str(bare_repo_dir),
-            'repo_dir': str(tmpdir.join('obtaining a bare repo')),
+            "pip_url": "git+file://" + str(bare_repo_dir),
+            "repo_dir": str(tmpdir.join("obtaining a bare repo")),
         }
     )
 
     git_repo.obtain()
-    assert git_repo.get_revision() == 'initial'
+    assert git_repo.get_revision() == "initial"
 
 
 def test_repo_git_obtain_full(tmpdir, git_remote):
     git_repo = create_repo_from_pip_url(
         **{
-            'pip_url': 'git+file://' + git_remote,
-            'repo_dir': str(tmpdir.join('myrepo')),
+            "pip_url": "git+file://" + git_remote,
+            "repo_dir": str(tmpdir.join("myrepo")),
         }
     )
 
     git_repo.obtain()
 
-    test_repo_revision = run(['git', 'rev-parse', 'HEAD'], cwd=git_remote)
+    test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote)
 
     assert git_repo.get_revision() == test_repo_revision
-    assert os.path.exists(str(tmpdir.join('myrepo')))
+    assert os.path.exists(str(tmpdir.join("myrepo")))
 
 
 def test_repo_update_handle_cases(tmpdir, git_remote, mocker):
     git_repo = create_repo_from_pip_url(
         **{
-            'pip_url': 'git+file://' + git_remote,
-            'repo_dir': str(tmpdir.join('myrepo')),
+            "pip_url": "git+file://" + git_remote,
+            "repo_dir": str(tmpdir.join("myrepo")),
         }
     )
 
     git_repo.obtain()  # clone initial repo
-    mocka = mocker.spy(git_repo, 'run')
+    mocka = mocker.spy(git_repo, "run")
     git_repo.update_repo()
 
-    mocka.assert_any_call(['symbolic-ref', '--short', 'HEAD'])
+    mocka.assert_any_call(["symbolic-ref", "--short", "HEAD"])
 
     mocka.reset_mock()
 
     # will only look up symbolic-ref if no rev specified for object
-    git_repo.rev = 'HEAD'
+    git_repo.rev = "HEAD"
     git_repo.update_repo()
-    assert mocker.call(['symbolic-ref', '--short', 'HEAD']) not in mocka.mock_calls
+    assert mocker.call(["symbolic-ref", "--short", "HEAD"]) not in mocka.mock_calls
 
 
 def test_progress_callback(tmpdir, git_remote, mocker):
@@ -81,17 +81,17 @@ def test_progress_callback(tmpdir, git_remote, mocker):
         assert isinstance(timestamp, datetime.datetime)
 
     progress_callback = mocker.Mock(
-        name='progress_callback_stub', side_effect=progress_callback_spy
+        name="progress_callback_stub", side_effect=progress_callback_spy
     )
 
-    run(['git', 'rev-parse', 'HEAD'], cwd=git_remote)
+    run(["git", "rev-parse", "HEAD"], cwd=git_remote)
 
     # create a new repo with the repo as a remote
     git_repo = create_repo_from_pip_url(
         **{
-            'pip_url': 'git+file://' + git_remote,
-            'repo_dir': str(tmpdir.join('myrepo')),
-            'progress_callback': progress_callback,
+            "pip_url": "git+file://" + git_remote,
+            "repo_dir": str(tmpdir.join("myrepo")),
+            "progress_callback": progress_callback,
         }
     )
     git_repo.obtain()
@@ -100,12 +100,12 @@ def test_progress_callback(tmpdir, git_remote, mocker):
 
 
 def test_remotes(parentdir, git_remote):
-    repo_name = 'myrepo'
-    remote_name = 'myremote'
-    remote_url = 'https://localhost/my/git/repo.git'
+    repo_name = "myrepo"
+    remote_name = "myremote"
+    remote_url = "https://localhost/my/git/repo.git"
 
     git_repo = create_repo_from_pip_url(
-        pip_url='git+file://{git_remote}'.format(git_remote=git_remote),
+        pip_url="git+file://{git_remote}".format(git_remote=git_remote),
         repo_dir=os.path.join(str(parentdir), repo_name),
     )
     git_repo.obtain()
@@ -115,37 +115,37 @@ def test_remotes(parentdir, git_remote):
 
 
 def test_git_get_url_and_rev_from_pip_url():
-    pip_url = 'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
+    pip_url = "git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git"
 
     url, rev = git_convert_pip_url(pip_url)
-    assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
+    assert "ssh://git@bitbucket.example.com:7999/PROJ/repo.git" == url
     assert rev is None
 
-    pip_url = '%s@%s' % (
-        'git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git',
-        'eucalyptus',
+    pip_url = "%s@%s" % (
+        "git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git",
+        "eucalyptus",
     )
     url, rev = git_convert_pip_url(pip_url)
-    assert 'ssh://git@bitbucket.example.com:7999/PROJ/repo.git' == url
-    assert rev == 'eucalyptus'
+    assert "ssh://git@bitbucket.example.com:7999/PROJ/repo.git" == url
+    assert rev == "eucalyptus"
 
     # the git manual refers to this as "scp-like syntax"
     # https://git-scm.com/docs/git-clone
-    pip_url = '%s@%s' % ('git+user@hostname:user/repo.git', 'eucalyptus')
+    pip_url = "%s@%s" % ("git+user@hostname:user/repo.git", "eucalyptus")
     url, rev = git_convert_pip_url(pip_url)
-    assert 'user@hostname:user/repo.git' == url
-    assert rev == 'eucalyptus'
+    assert "user@hostname:user/repo.git" == url
+    assert rev == "eucalyptus"
 
 
 def test_remotes_preserves_git_ssh(parentdir, git_remote):
     # Regression test for #14
-    repo_name = 'myexamplegit'
+    repo_name = "myexamplegit"
     repo_dir = os.path.join(str(parentdir), repo_name)
-    remote_name = 'myremote'
-    remote_url = 'git+ssh://git@github.com/tony/AlgoXY.git'
+    remote_name = "myremote"
+    remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
 
     git_repo = create_repo_from_pip_url(
-        pip_url='git+file://{git_remote}'.format(git_remote=git_remote),
+        pip_url="git+file://{git_remote}".format(git_remote=git_remote),
         repo_dir=repo_dir,
     )
     git_repo.obtain()
@@ -159,95 +159,95 @@ def test_remotes_preserves_git_ssh(parentdir, git_remote):
 
 def test_private_ssh_format(pip_url_kwargs):
     pip_url_kwargs.update(
-        **{'pip_url': 'git+ssh://github.com:' + '/tmp/omg/private_ssh_repo'}
+        **{"pip_url": "git+ssh://github.com:" + "/tmp/omg/private_ssh_repo"}
     )
 
     with pytest.raises(exc.LibVCSException) as excinfo:
         create_repo_from_pip_url(**pip_url_kwargs)
-    excinfo.match(r'is malformatted')
+    excinfo.match(r"is malformatted")
 
 
 def test_ls_remotes(git_repo):
     remotes = git_repo.remotes()
 
-    assert 'origin' in remotes
-    assert 'origin' in git_repo.remotes(flat=True)
+    assert "origin" in remotes
+    assert "origin" in git_repo.remotes(flat=True)
 
 
 def test_get_remotes(git_repo):
-    assert 'origin' in git_repo.remotes()
+    assert "origin" in git_repo.remotes()
 
 
 @pytest.mark.parametrize(
-    'repo_name,new_repo_url',
+    "repo_name,new_repo_url",
     [
-        ['myrepo', 'file:///apples'],
+        ["myrepo", "file:///apples"],
     ],
 )
 def test_set_remote(git_repo, repo_name, new_repo_url):
-    mynewremote = git_repo.set_remote(name=repo_name, url='file:///')
+    mynewremote = git_repo.set_remote(name=repo_name, url="file:///")
 
-    assert 'file:///' in mynewremote, 'set_remote returns remote'
+    assert "file:///" in mynewremote, "set_remote returns remote"
 
-    assert 'file:///' in git_repo.remote(name=repo_name), 'remote returns remote'
+    assert "file:///" in git_repo.remote(name=repo_name), "remote returns remote"
 
-    assert 'myrepo' in git_repo.remotes(), '.remotes() returns new remote'
+    assert "myrepo" in git_repo.remotes(), ".remotes() returns new remote"
 
     with pytest.raises(
         exc.CommandError,
-        match='.*remote {repo_name} already exists.*'.format(repo_name=repo_name),
+        match=".*remote {repo_name} already exists.*".format(repo_name=repo_name),
     ):
-        mynewremote = git_repo.set_remote(name='myrepo', url=new_repo_url)
+        mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url)
 
-    mynewremote = git_repo.set_remote(name='myrepo', url=new_repo_url, overwrite=True)
+    mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url, overwrite=True)
 
     assert new_repo_url in git_repo.remote(
-        name='myrepo'
-    ), 'Running remove_set should overwrite previous remote'
+        name="myrepo"
+    ), "Running remove_set should overwrite previous remote"
 
 
 def test_get_git_version(git_repo):
-    expected_version = git_repo.run(['--version']).replace('git version ', '')
+    expected_version = git_repo.run(["--version"]).replace("git version ", "")
     assert git_repo.get_git_version()
     assert expected_version == git_repo.get_git_version()
 
 
 def test_get_current_remote_name(git_repo):
-    assert git_repo.get_current_remote_name() == 'origin'
+    assert git_repo.get_current_remote_name() == "origin"
 
-    new_branch = 'another-branch-with-no-upstream'
-    git_repo.run(['checkout', '-B', new_branch])
+    new_branch = "another-branch-with-no-upstream"
+    git_repo.run(["checkout", "-B", new_branch])
     assert (
         git_repo.get_current_remote_name() == new_branch
-    ), 'branch w/o upstream should return branch only'
+    ), "branch w/o upstream should return branch only"
 
-    new_remote_name = 'new_remote_name'
+    new_remote_name = "new_remote_name"
     git_repo.set_remote(
-        name=new_remote_name, url='file://' + git_repo.path, overwrite=True
+        name=new_remote_name, url="file://" + git_repo.path, overwrite=True
     )
-    git_repo.run(['fetch', new_remote_name])
+    git_repo.run(["fetch", new_remote_name])
     git_repo.run(
-        ['branch', '--set-upstream-to', '{}/{}'.format(new_remote_name, new_branch)]
+        ["branch", "--set-upstream-to", "{}/{}".format(new_remote_name, new_branch)]
     )
     assert (
         git_repo.get_current_remote_name() == new_remote_name
-    ), 'Should reflect new upstream branch (different remote)'
+    ), "Should reflect new upstream branch (different remote)"
 
-    upstream = '{}/{}'.format(new_remote_name, 'master')
+    upstream = "{}/{}".format(new_remote_name, "master")
 
-    git_repo.run(['branch', '--set-upstream-to', upstream])
+    git_repo.run(["branch", "--set-upstream-to", upstream])
     assert (
         git_repo.get_current_remote_name() == upstream
-    ), 'Should reflect upstream branch (differente remote+branch)'
+    ), "Should reflect upstream branch (differente remote+branch)"
 
-    git_repo.run(['checkout', 'master'])
+    git_repo.run(["checkout", "master"])
 
     # Different remote, different branch
-    remote = '{}/{}'.format(new_remote_name, new_branch)
-    git_repo.run(['branch', '--set-upstream-to', remote])
+    remote = "{}/{}".format(new_remote_name, new_branch)
+    git_repo.run(["branch", "--set-upstream-to", remote])
     assert (
         git_repo.get_current_remote_name() == remote
-    ), 'Should reflect new upstream branch (different branch)'
+    ), "Should reflect new upstream branch (different branch)"
 
 
 def test_extract_status():
@@ -259,13 +259,13 @@ def test_extract_status():
     """  # NOQA: E501
     )
     assert {
-        "branch_oid": 'd4ccd4d6af04b53949f89fbf0cdae13719dc5a08',
-        "branch_head": 'fix-current-remote-name',
+        "branch_oid": "d4ccd4d6af04b53949f89fbf0cdae13719dc5a08",
+        "branch_head": "fix-current-remote-name",
     }.items() <= extract_status(FIXTURE_A)._asdict().items()
 
 
 @pytest.mark.parametrize(
-    'fixture,expected_result',
+    "fixture,expected_result",
     [
         [
             """
@@ -277,17 +277,17 @@ def test_extract_status():
         1 .M N... 100644 100644 100644 302ca2c18d4c295ce217bff5f93e1ba342dc6665 302ca2c18d4c295ce217bff5f93e1ba342dc6665 tests/test_git.py
     """,  # NOQA: E501
             {
-                "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
-                "branch_head": 'fix-current-remote-name',
-                "branch_upstream": 'origin/fix-current-remote-name',
-                "branch_ab": '+0 -0',
-                "branch_ahead": '0',
-                "branch_behind": '0',
+                "branch_oid": "de6185fde0806e5c7754ca05676325a1ea4d6348",
+                "branch_head": "fix-current-remote-name",
+                "branch_upstream": "origin/fix-current-remote-name",
+                "branch_ab": "+0 -0",
+                "branch_ahead": "0",
+                "branch_behind": "0",
             },
         ],
         [
-            '# branch.upstream moo/origin/myslash/remote',
-            {"branch_upstream": 'moo/origin/myslash/remote'},
+            "# branch.upstream moo/origin/myslash/remote",
+            {"branch_upstream": "moo/origin/myslash/remote"},
         ],
         [
             """
@@ -297,12 +297,12 @@ def test_extract_status():
             # branch.ab +0 -0
             """,
             {
-                "branch_oid": 'c3c5323abc5dca78d9bdeba6c163c2a37b452e69',
-                "branch_head": 'libvcs-0.4.0',
-                "branch_upstream": 'origin/libvcs-0.4.0',
-                "branch_ab": '+0 -0',
-                "branch_ahead": '0',
-                "branch_behind": '0',
+                "branch_oid": "c3c5323abc5dca78d9bdeba6c163c2a37b452e69",
+                "branch_head": "libvcs-0.4.0",
+                "branch_upstream": "origin/libvcs-0.4.0",
+                "branch_ab": "+0 -0",
+                "branch_ahead": "0",
+                "branch_behind": "0",
             },
         ],
     ],
@@ -315,14 +315,14 @@ def test_extract_status_b(fixture, expected_result):
 
 
 @pytest.mark.parametrize(
-    'fixture,expected_result',
+    "fixture,expected_result",
     [
         [
-            '# branch.ab +1 -83',
+            "# branch.ab +1 -83",
             {
-                "branch_ab": '+1 -83',
-                "branch_ahead": '1',
-                "branch_behind": '83',
+                "branch_ab": "+1 -83",
+                "branch_ahead": "1",
+                "branch_behind": "83",
             },
         ],
         [
@@ -330,9 +330,9 @@ def test_extract_status_b(fixture, expected_result):
             # branch.ab +0 -0
             """,
             {
-                "branch_ab": '+0 -0',
-                "branch_ahead": '0',
-                "branch_behind": '0',
+                "branch_ab": "+0 -0",
+                "branch_ahead": "0",
+                "branch_behind": "0",
             },
         ],
         [
@@ -340,9 +340,9 @@ def test_extract_status_b(fixture, expected_result):
             # branch.ab +1 -83
             """,
             {
-                "branch_ab": '+1 -83',
-                "branch_ahead": '1',
-                "branch_behind": '83',
+                "branch_ab": "+1 -83",
+                "branch_ahead": "1",
+                "branch_behind": "83",
             },
         ],
         [
@@ -350,9 +350,9 @@ def test_extract_status_b(fixture, expected_result):
             # branch.ab +9999999 -9999999
             """,
             {
-                "branch_ab": '+9999999 -9999999',
-                "branch_ahead": '9999999',
-                "branch_behind": '9999999',
+                "branch_ab": "+9999999 -9999999",
+                "branch_ahead": "9999999",
+                "branch_behind": "9999999",
             },
         ],
     ],

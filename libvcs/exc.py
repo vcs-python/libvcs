@@ -19,16 +19,16 @@ class CommandError(LibVCSException):
         self.output = output
         if cmd:
             if isinstance(cmd, list):
-                cmd = ' '.join(cmd)
+                cmd = " ".join(cmd)
             self.cmd = cmd
 
     def __str__(self):
         message = self.message.format(returncode=self.returncode, cmd=self.cmd)
         if len(self.output.strip()):
-            message += '\n%s' % self.output
+            message += "\n%s" % self.output
         return message
 
-    message = 'Command failed with code {returncode}: {cmd}'
+    message = "Command failed with code {returncode}: {cmd}"
 
 
 class CommandTimeoutError(CommandError):
@@ -48,8 +48,8 @@ class InvalidPipURL(LibVCSException):
         return self.message
 
     message = (
-        'Repo URL %s requires a vcs scheme. Prepend the vcs (hg+, git+, svn+)'
-        'to the repo URL. e.g: git+https://github.com/freebsd/freebsd.git'
+        "Repo URL %s requires a vcs scheme. Prepend the vcs (hg+, git+, svn+)"
+        "to the repo URL. e.g: git+https://github.com/freebsd/freebsd.git"
     )
 
 

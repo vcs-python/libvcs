@@ -7,11 +7,11 @@ from .hg import MercurialRepo
 from .svn import SubversionRepo
 
 __all__ = [
-    'GitRepo',
-    'MercurialRepo',
-    'SubversionRepo',
-    'BaseRepo',
-    'RepoLoggingAdapter',
+    "GitRepo",
+    "MercurialRepo",
+    "SubversionRepo",
+    "BaseRepo",
+    "RepoLoggingAdapter",
 ]
 
 logger = logging.getLogger(__name__)

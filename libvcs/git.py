@@ -108,12 +108,12 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     parsing. Hence we remove it again afterwards and return it as a stub.
     The manpage for git-clone(1) refers to this as the "scp-like styntax".
     """
-    if '://' not in pip_url:
-        assert 'file:' not in pip_url
-        pip_url = pip_url.replace('git+', 'git+ssh://')
+    if "://" not in pip_url:
+        assert "file:" not in pip_url
+        pip_url = pip_url.replace("git+", "git+ssh://")
         url, rev = base_convert_pip_url(pip_url)
-        url = url.replace('ssh://', '')
-    elif 'github.com:' in pip_url:
+        url = url.replace("ssh://", "")
+    elif "github.com:" in pip_url:
         raise exc.LibVCSException(
             "Repo %s is malformatted, please use the convention %s for"
             "ssh / private GitHub repositories."
@@ -126,8 +126,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 
 
 class GitRepo(BaseRepo):
-    bin_name = 'git'
-    schemes = ('git', 'git+http', 'git+https', 'git+ssh', 'git+git', 'git+file')
+    bin_name = "git"
+    schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
     def __init__(self, url, repo_dir, **kwargs):
         """A git repository.
@@ -140,9 +140,9 @@ class GitRepo(BaseRepo):
         tls_verify : bool
             Should certificate for https be checked (default False)
         """
-        if 'git_shallow' not in kwargs:
+        if "git_shallow" not in kwargs:
             self.git_shallow = False
-        if 'tls_verify' not in kwargs:
+        if "tls_verify" not in kwargs:
             self.tls_verify = False
 
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
@@ -157,9 +157,9 @@ class GitRepo(BaseRepo):
     def get_revision(self):
         """Return current revision. Initial repositories return 'initial'."""
         try:
-            return self.run(['rev-parse', '--verify', 'HEAD'])
+            return self.run(["rev-parse", "--verify", "HEAD"])
         except exc.CommandError:
-            return 'initial'
+            return "initial"
 
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist."""
@@ -167,46 +167,46 @@ class GitRepo(BaseRepo):
 
         url = self.url
 
-        cmd = ['clone', '--progress']
+        cmd = ["clone", "--progress"]
         if self.git_shallow:
-            cmd.extend(['--depth', '1'])
+            cmd.extend(["--depth", "1"])
         if self.tls_verify:
-            cmd.extend(['-c', 'http.sslVerify=false'])
+            cmd.extend(["-c", "http.sslVerify=false"])
         cmd.extend([url, self.path])
 
-        self.info('Cloning.')
+        self.info("Cloning.")
         self.run(cmd, log_in_real_time=True)
 
-        self.info('Initializing submodules.')
-        self.run(['submodule', 'init'], log_in_real_time=True)
-        cmd = ['submodule', 'update', '--recursive', '--init']
+        self.info("Initializing submodules.")
+        self.run(["submodule", "init"], log_in_real_time=True)
+        cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
 
     def update_repo(self):
         self.ensure_dir()
 
-        if not os.path.isdir(os.path.join(self.path, '.git')):
+        if not os.path.isdir(os.path.join(self.path, ".git")):
             self.obtain()
             self.update_repo()
             return
 
         # Get requested revision or tag
-        url, git_tag = self.url, getattr(self, 'rev', None)
+        url, git_tag = self.url, getattr(self, "rev", None)
 
         if not git_tag:
             self.debug("No git revision set, defaulting to origin/master")
-            symref = self.run(['symbolic-ref', '--short', 'HEAD'])
+            symref = self.run(["symbolic-ref", "--short", "HEAD"])
             if symref:
                 git_tag = symref.rstrip()
             else:
-                git_tag = 'origin/master'
+                git_tag = "origin/master"
         self.debug("git_tag: %s" % git_tag)
 
         self.info("Updating to '%s'." % git_tag)
 
         # Get head sha
         try:
-            head_sha = self.run(['rev-list', '--max-count=1', 'HEAD'])
+            head_sha = self.run(["rev-list", "--max-count=1", "HEAD"])
         except exc.CommandError:
             self.error("Failed to get the hash for HEAD")
             return
@@ -215,7 +215,7 @@ class GitRepo(BaseRepo):
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
-        show_ref_output = self.run(['show-ref', git_tag], check_returncode=False)
+        show_ref_output = self.run(["show-ref", git_tag], check_returncode=False)
         self.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
         self.debug("is_remote_ref: %s" % is_remote_ref)
@@ -226,14 +226,14 @@ class GitRepo(BaseRepo):
 
         if "refs/remotes/%s" % git_tag in show_ref_output:
             m = re.match(
-                r'^[0-9a-f]{40} refs/remotes/'
-                r'(?P<git_remote_name>[^/]+)/'
-                r'(?P<git_tag>.+)$',
+                r"^[0-9a-f]{40} refs/remotes/"
+                r"(?P<git_remote_name>[^/]+)/"
+                r"(?P<git_tag>.+)$",
                 show_ref_output,
                 re.MULTILINE,
             )
-            git_remote_name = m.group('git_remote_name')
-            git_tag = m.group('git_tag')
+            git_remote_name = m.group("git_remote_name")
+            git_tag = m.group("git_tag")
         self.debug("git_remote_name: %s" % git_remote_name)
         self.debug("git_tag: %s" % git_tag)
 
@@ -243,9 +243,9 @@ class GitRepo(BaseRepo):
             error_code = 0
             tag_sha = self.run(
                 [
-                    'rev-list',
-                    '--max-count=1',
-                    git_remote_name + '/' + git_tag if is_remote_ref else git_tag,
+                    "rev-list",
+                    "--max-count=1",
+                    git_remote_name + "/" + git_tag if is_remote_ref else git_tag,
                 ]
             )
         except exc.CommandError as e:
@@ -260,7 +260,7 @@ class GitRepo(BaseRepo):
             return
 
         try:
-            process = self.run(['fetch'], log_in_real_time=True)
+            process = self.run(["fetch"], log_in_real_time=True)
         except exc.CommandError:
             self.error("Failed to fetch repository '%s'" % url)
             return
@@ -268,7 +268,7 @@ class GitRepo(BaseRepo):
         if is_remote_ref:
             # Check if stash is needed
             try:
-                process = self.run(['status', '--porcelain'])
+                process = self.run(["status", "--porcelain"])
             except exc.CommandError:
                 self.error("Failed to get the status")
                 return
@@ -278,30 +278,30 @@ class GitRepo(BaseRepo):
             # to be able to perform git pull --rebase
             if need_stash:
                 # If Git < 1.7.6, uses --quiet --all
-                git_stash_save_options = '--quiet'
+                git_stash_save_options = "--quiet"
                 try:
-                    process = self.run(['stash', 'save', git_stash_save_options])
+                    process = self.run(["stash", "save", git_stash_save_options])
                 except exc.CommandError:
                     self.error("Failed to stash changes")
 
             # Checkout the remote branch
             try:
-                process = self.run(['checkout', git_tag])
+                process = self.run(["checkout", git_tag])
             except exc.CommandError:
                 self.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
             # Rebase changes from the remote branch
             try:
-                process = self.run(['rebase', git_remote_name + '/' + git_tag])
+                process = self.run(["rebase", git_remote_name + "/" + git_tag])
             except exc.CommandError as e:
-                if 'invalid_upstream' in str(e):
+                if "invalid_upstream" in str(e):
                     self.error(e)
                 else:
                     # Rebase failed: Restore previous state.
-                    self.run(['rebase', '--abort'])
+                    self.run(["rebase", "--abort"])
                     if need_stash:
-                        self.run(['stash', 'pop', '--index', '--quiet'])
+                        self.run(["stash", "pop", "--index", "--quiet"])
 
                     self.error(
                         "\nFailed to rebase in: '%s'.\n"
@@ -311,16 +311,16 @@ class GitRepo(BaseRepo):
 
             if need_stash:
                 try:
-                    process = self.run(['stash', 'pop', '--index', '--quiet'])
+                    process = self.run(["stash", "pop", "--index", "--quiet"])
                 except exc.CommandError:
                     # Stash pop --index failed: Try again dropping the index
-                    self.run(['reset', '--hard', '--quiet'])
+                    self.run(["reset", "--hard", "--quiet"])
                     try:
-                        process = self.run(['stash', 'pop', '--quiet'])
+                        process = self.run(["stash", "pop", "--quiet"])
                     except exc.CommandError:
                         # Stash pop failed: Restore previous state.
-                        self.run(['reset', '--hard', '--quiet', head_sha])
-                        self.run(['stash', 'pop', '--index', '--quiet'])
+                        self.run(["reset", "--hard", "--quiet", head_sha])
+                        self.run(["stash", "pop", "--index", "--quiet"])
                         self.error(
                             "\nFailed to rebase in: '%s'.\n"
                             "You will have to resolve the "
@@ -330,12 +330,12 @@ class GitRepo(BaseRepo):
 
         else:
             try:
-                process = self.run(['checkout', git_tag])
+                process = self.run(["checkout", git_tag])
             except exc.CommandError:
                 self.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
-        cmd = ['submodule', 'update', '--recursive', '--init']
+        cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
 
     def remotes(self, flat=False) -> Dict:
@@ -352,8 +352,8 @@ class GitRepo(BaseRepo):
         """
         remotes = {}
 
-        cmd = self.run(['remote'])
-        ret = filter(None, cmd.split('\n'))
+        cmd = self.run(["remote"])
+        ret = filter(None, cmd.split("\n"))
 
         for remote_name in ret:
             remotes[remote_name] = (
@@ -375,10 +375,10 @@ class GitRepo(BaseRepo):
         """
 
         try:
-            ret = self.run(['remote', 'show', '-n', name])
-            lines = ret.split('\n')
-            remote_fetch_url = lines[1].replace('Fetch URL: ', '').strip()
-            remote_push_url = lines[2].replace('Push  URL: ', '').strip()
+            ret = self.run(["remote", "show", "-n", name])
+            lines = ret.split("\n")
+            remote_fetch_url = lines[1].replace("Fetch URL: ", "").strip()
+            remote_push_url = lines[2].replace("Push  URL: ", "").strip()
             if remote_fetch_url != name and remote_push_url != name:
                 return GitRemote(
                     name=name, fetch_url=remote_fetch_url, push_url=remote_push_url
@@ -403,9 +403,9 @@ class GitRepo(BaseRepo):
         url = self.chomp_protocol(url)
 
         if self.remote(name) and overwrite:
-            self.run(['remote', 'set-url', name, url])
+            self.run(["remote", "set-url", name, url])
         else:
-            self.run(['remote', 'add', name, url])
+            self.run(["remote", "add", name, url])
         return self.remote(name=name)
 
     @staticmethod
@@ -421,19 +421,19 @@ class GitRepo(BaseRepo):
         -------
         URL as VCS software would accept it
         """
-        if '+' in url:
-            url = url.split('+', 1)[1]
+        if "+" in url:
+            url = url.split("+", 1)[1]
         scheme, netloc, path, query, frag = urlparse.urlsplit(url)
         rev = None
-        if '@' in path:
-            path, rev = path.rsplit('@', 1)
-        url = urlparse.urlunsplit((scheme, netloc, path, query, ''))
-        if url.startswith('ssh://git@github.com/'):
-            url = url.replace('ssh://', 'git+ssh://')
-        elif '://' not in url:
-            assert 'file:' not in url
-            url = url.replace('git+', 'git+ssh://')
-            url = url.replace('ssh://', '')
+        if "@" in path:
+            path, rev = path.rsplit("@", 1)
+        url = urlparse.urlunsplit((scheme, netloc, path, query, ""))
+        if url.startswith("ssh://git@github.com/"):
+            url = url.replace("ssh://", "git+ssh://")
+        elif "://" not in url:
+            assert "file:" not in url
+            url = url.replace("git+", "git+ssh://")
+            url = url.replace("ssh://", "")
         return url
 
     def get_git_version(self) -> str:
@@ -443,13 +443,13 @@ class GitRepo(BaseRepo):
         -------
         git version
         """
-        VERSION_PFX = 'git version '
-        version = self.run(['version'])
+        VERSION_PFX = "git version "
+        version = self.run(["version"])
         if version.startswith(VERSION_PFX):
             version = version[len(VERSION_PFX) :].split()[0]
         else:
-            version = ''
-        return '.'.join(version.split('.')[:3])
+            version = ""
+        return ".".join(version.split(".")[:3])
 
     def status(self) -> dict:
         """Retrieve status of project in dict format.
@@ -473,7 +473,7 @@ class GitRepo(BaseRepo):
             "branch_behind": '0'
         }
         """
-        return extract_status(self.run(['status', '-sb', '--porcelain=2']))
+        return extract_status(self.run(["status", "-sb", "--porcelain=2"]))
 
     def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.
@@ -487,4 +487,4 @@ class GitRepo(BaseRepo):
 
         if match.branch_upstream is None:  # no upstream set
             return match.branch_head
-        return match.branch_upstream.replace('/' + match.branch_head, '')
+        return match.branch_upstream.replace("/" + match.branch_head, "")

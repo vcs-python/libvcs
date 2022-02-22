@@ -30,14 +30,14 @@ def create_repo(url, vcs, **kwargs) -> Union[GitRepo, MercurialRepo, SubversionR
     |myrepo| (git)  git pull
     Already up-to-date.
     """
-    if vcs == 'git':
+    if vcs == "git":
         return GitRepo(url, **kwargs)
-    elif vcs == 'hg':
+    elif vcs == "hg":
         return MercurialRepo(url, **kwargs)
-    elif vcs == 'svn':
+    elif vcs == "svn":
         return SubversionRepo(url, **kwargs)
     else:
-        raise InvalidVCS('VCS %s is not a valid VCS' % vcs)
+        raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
 
 
 def create_repo_from_pip_url(
@@ -66,11 +66,11 @@ def create_repo_from_pip_url(
     |myrepo| (git)  git pull
     Already up-to-date.
     """
-    if pip_url.startswith('git+'):
+    if pip_url.startswith("git+"):
         return GitRepo.from_pip_url(pip_url, **kwargs)
-    elif pip_url.startswith('hg+'):
+    elif pip_url.startswith("hg+"):
         return MercurialRepo.from_pip_url(pip_url, **kwargs)
-    elif pip_url.startswith('svn+'):
+    elif pip_url.startswith("svn+"):
         return SubversionRepo.from_pip_url(pip_url, **kwargs)
     else:
         raise InvalidPipURL(pip_url)

@@ -18,13 +18,13 @@ def console_to_str(s):
     try:
         return s.decode(console_encoding)
     except UnicodeDecodeError:
-        return s.decode('utf_8')
+        return s.decode("utf_8")
     except AttributeError:  # for tests, #13
         return s
 
 
 def which(
-    exe=None, default_paths=['/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin']
+    exe=None, default_paths=["/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/bin"]
 ):
     """Return path of bin. Python clone of /usr/bin/which.
 
@@ -55,19 +55,19 @@ def which(
     # $PATH is changing. This also keeps order, where 'first came, first
     # win' for cases to find optional alternatives
     search_path = (
-        os.environ.get('PATH') and os.environ['PATH'].split(os.pathsep) or list()
+        os.environ.get("PATH") and os.environ["PATH"].split(os.pathsep) or list()
     )
     for default_path in default_paths:
         if default_path not in search_path:
             search_path.append(default_path)
-    os.environ['PATH'] = os.pathsep.join(search_path)
+    os.environ["PATH"] = os.pathsep.join(search_path)
     for path in search_path:
         full_path = os.path.join(path, exe)
         if _is_executable_file_or_link(full_path):
             return full_path
     logger.info(
-        '\'{0}\' could not be found in the following search path: '
-        '\'{1}\''.format(exe, search_path)
+        "'{0}' could not be found in the following search path: "
+        "'{1}'".format(exe, search_path)
     )
 
     return None
@@ -87,7 +87,7 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else:
-            raise Exception('Could not create directory %s' % path)
+            raise Exception("Could not create directory %s" % path)
 
 
 class RepoLoggingAdapter(logging.LoggerAdapter):
@@ -116,8 +116,8 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         """Add additional context information for loggers."""
         prefixed_dict = {}
-        prefixed_dict['repo_vcs'] = self.bin_name
-        prefixed_dict['repo_name'] = self.repo_name
+        prefixed_dict["repo_vcs"] = self.bin_name
+        prefixed_dict["repo_name"] = self.repo_name
 
         kwargs["extra"] = prefixed_dict
 
@@ -188,14 +188,14 @@ def run(
             if line:
                 callback(output=line, timestamp=datetime.datetime.now())
     if callback and callable(callback):
-        callback(output='\r', timestamp=datetime.datetime.now())
+        callback(output="\r", timestamp=datetime.datetime.now())
 
     lines = filter(None, (line.strip() for line in proc.stdout.readlines()))
-    all_output = console_to_str(b'\n'.join(lines))
+    all_output = console_to_str(b"\n".join(lines))
     if code:
         stderr_lines = filter(None, (line.strip() for line in proc.stderr.readlines()))
-        all_output = console_to_str(b''.join(stderr_lines))
-    output = ''.join(all_output)
+        all_output = console_to_str(b"".join(stderr_lines))
+    output = "".join(all_output)
     if code != 0 and check_returncode:
         raise exc.CommandError(output=output, returncode=code, cmd=cmd)
     return output

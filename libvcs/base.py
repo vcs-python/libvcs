@@ -21,13 +21,13 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         "The format is <vcs>+<protocol>://<url>, "
         "e.g. svn+http://myrepo/svn/MyApp#egg=MyApp"
     )
-    assert '+' in pip_url, error_message % pip_url
-    url = pip_url.split('+', 1)[1]
+    assert "+" in pip_url, error_message % pip_url
+    url = pip_url.split("+", 1)[1]
     scheme, netloc, path, query, frag = urlparse.urlsplit(url)
     rev = None
-    if '@' in path:
-        path, rev = path.rsplit('@', 1)
-    url = urlparse.urlunsplit((scheme, netloc, path, query, ''))
+    if "@" in path:
+        path, rev = path.rsplit("@", 1)
+    url = urlparse.urlunsplit((scheme, netloc, path, query, ""))
     return VCSLocation(url=url, rev=rev)
 
 
@@ -42,7 +42,7 @@ class BaseRepo(RepoLoggingAdapter, object):
     log_in_real_time = None
 
     #: vcs app name, e.g. 'git'
-    bin_name = ''
+    bin_name = ""
 
     def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
         """
@@ -62,15 +62,15 @@ class BaseRepo(RepoLoggingAdapter, object):
         self.parent_dir = os.path.dirname(repo_dir)
         self.repo_name = os.path.basename(os.path.normpath(repo_dir))
         self.path = repo_dir
-        if 'rev' in kwargs:
-            self.rev = kwargs['rev']
+        if "rev" in kwargs:
+            self.rev = kwargs["rev"]
 
         # Register more schemes with urlparse for various version control
         # systems
-        if hasattr(self, 'schemes'):
+        if hasattr(self, "schemes"):
             urlparse.uses_netloc.extend(self.schemes)
             # Python >= 2.7.4, 3.3 doesn't have uses_fragment
-            if getattr(urlparse, 'uses_fragment', None):
+            if getattr(urlparse, "uses_fragment", None):
                 urlparse.uses_fragment.extend(self.schemes)
 
         RepoLoggingAdapter.__init__(self, logger, {})
@@ -112,7 +112,7 @@ class BaseRepo(RepoLoggingAdapter, object):
         """
 
         if cwd is None:
-            cwd = getattr(self, 'path', None)
+            cwd = getattr(self, "path", None)
 
         cmd = [self.bin_name] + cmd
 
@@ -136,7 +136,7 @@ class BaseRepo(RepoLoggingAdapter, object):
 
         if not os.path.exists(self.path):
             self.debug(
-                'Repo directory for %s does not exist @ %s'
+                "Repo directory for %s does not exist @ %s"
                 % (self.repo_name, self.path)
             )
             mkdir_p(self.path)

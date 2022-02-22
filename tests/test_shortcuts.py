@@ -6,21 +6,21 @@ from libvcs.shortcuts import create_repo, create_repo_from_pip_url
 
 
 @pytest.mark.parametrize(
-    'repo_dict,repo_class,raises_exception',
+    "repo_dict,repo_class,raises_exception",
     [
-        ({'pip_url': 'git+https://github.com/freebsd/freebsd.git'}, GitRepo, False),
+        ({"pip_url": "git+https://github.com/freebsd/freebsd.git"}, GitRepo, False),
         (
-            {'pip_url': 'hg+https://bitbucket.org/birkenfeld/sphinx'},
+            {"pip_url": "hg+https://bitbucket.org/birkenfeld/sphinx"},
             MercurialRepo,
             False,
         ),
         (
-            {'pip_url': 'svn+http://svn.code.sf.net/p/docutils/code/trunk'},
+            {"pip_url": "svn+http://svn.code.sf.net/p/docutils/code/trunk"},
             SubversionRepo,
             False,
         ),
         (
-            {'pip_url': 'sv+http://svn.code.sf.net/p/docutils/code/trunk'},
+            {"pip_url": "sv+http://svn.code.sf.net/p/docutils/code/trunk"},
             None,
             InvalidPipURL,
         ),
@@ -28,7 +28,7 @@ from libvcs.shortcuts import create_repo, create_repo_from_pip_url
 )
 def test_create_repo_from_pip_url(repo_dict, repo_class, raises_exception, tmpdir):
     # add parent_dir via fixture
-    repo_dict['repo_dir'] = str(tmpdir.join('repo_name'))
+    repo_dict["repo_dir"] = str(tmpdir.join("repo_name"))
 
     if raises_exception:
         with pytest.raises(raises_exception):
@@ -39,25 +39,25 @@ def test_create_repo_from_pip_url(repo_dict, repo_class, raises_exception, tmpdi
 
 
 @pytest.mark.parametrize(
-    'repo_dict,repo_class,raises_exception',
+    "repo_dict,repo_class,raises_exception",
     [
         (
-            {'url': 'https://github.com/freebsd/freebsd.git', 'vcs': 'git'},
+            {"url": "https://github.com/freebsd/freebsd.git", "vcs": "git"},
             GitRepo,
             False,
         ),
         (
-            {'url': 'https://bitbucket.org/birkenfeld/sphinx', 'vcs': 'hg'},
+            {"url": "https://bitbucket.org/birkenfeld/sphinx", "vcs": "hg"},
             MercurialRepo,
             False,
         ),
         (
-            {'url': 'http://svn.code.sf.net/p/docutils/code/trunk', 'vcs': 'svn'},
+            {"url": "http://svn.code.sf.net/p/docutils/code/trunk", "vcs": "svn"},
             SubversionRepo,
             False,
         ),
         (
-            {'url': 'http://svn.code.sf.net/p/docutils/code/trunk', 'vcs': 'svna'},
+            {"url": "http://svn.code.sf.net/p/docutils/code/trunk", "vcs": "svna"},
             None,
             InvalidVCS,
         ),
@@ -65,7 +65,7 @@ def test_create_repo_from_pip_url(repo_dict, repo_class, raises_exception, tmpdi
 )
 def test_create_repo(repo_dict, repo_class, raises_exception, tmpdir):
     # add parent_dir via fixture
-    repo_dict['repo_dir'] = str(tmpdir.join('repo_name'))
+    repo_dict["repo_dir"] = str(tmpdir.join("repo_name"))
 
     if raises_exception:
         with pytest.raises(raises_exception):
