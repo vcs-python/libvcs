@@ -5,11 +5,11 @@
 
 ## libvcs 0.11.0, "Phebe" (2022-01-08)
 
-#### Compatibility
+### Compatibility
 - Add python 3.10 (#300)
 - Drop python 3.6 (#300)
 
-#### Development
+### Development
 - Poetry: 1.1.7 -> 1.1.12 (#300)
 - Add `.pre-commit-config.yaml`
 
