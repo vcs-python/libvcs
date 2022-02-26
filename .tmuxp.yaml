@@ -22,4 +22,4 @@ windows:
   - focus: true
   - pane
   - pane
-  - make dev
+  - make start
