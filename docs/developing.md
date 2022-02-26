@@ -21,6 +21,15 @@ Rerun tests on file change: `make watch_test` (requires [entr(1)])
 
 Default preview server: http://localhost:8068
 
+[sphinx-autobuild] will automatically build the docs, watch for file changes and launch a server.
+
+From home directory: `make start_docs`
+From inside `docs/`: `make start`
+
+[sphinx-autobuild]: https://github.com/executablebooks/sphinx-autobuild
+
+### Manual documentation (the hard way)
+
 `cd docs/` and `make html` to build. `make serve` to start http server.
 
 Helpers:
@@ -30,6 +39,7 @@ Rebuild docs on file change: `make watch_docs` (requires [entr(1)])
 
 Rebuild docs and run server via one terminal: `make dev_docs` (requires above, and a
 `make(1)` with `-J` support, e.g. GNU Make)
+
 
 ## Formatting / Linting
 

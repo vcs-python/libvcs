@@ -172,3 +172,6 @@ serve:
 
 dev:
 	$(MAKE) -j watch serve
+
+start:
+	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} $(O)
