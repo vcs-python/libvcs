@@ -32,6 +32,9 @@ watch_docs:
 start_docs:
 	$(MAKE) -C docs start
 
+design_docs:
+	$(MAKE) -C docs design
+
 flake8:
 	poetry run flake8
 
