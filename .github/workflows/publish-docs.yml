@@ -32,6 +32,8 @@ jobs:
               - 'examples/**'
             python_files:
               - 'libvcs/**'
+              - pyproject.toml
+              - poetry.lock
 
       - name: Should publish
         if: steps.changes.outputs.docs == 'true' || steps.changes.outputs.root_docs == 'true' || steps.changes.outputs.python_files == 'true'
