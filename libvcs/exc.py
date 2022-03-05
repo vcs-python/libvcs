@@ -42,7 +42,7 @@ class InvalidPipURL(LibVCSException):
 
     def __init__(self, url):
         self.url = url
-        super(InvalidPipURL, self).__init__()
+        super().__init__()
 
     def __str__(self):
         return self.message

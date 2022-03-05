@@ -105,7 +105,7 @@ def test_remotes(parentdir, git_remote):
     remote_url = "https://localhost/my/git/repo.git"
 
     git_repo = create_repo_from_pip_url(
-        pip_url="git+file://{git_remote}".format(git_remote=git_remote),
+        pip_url=f"git+file://{git_remote}",
         repo_dir=os.path.join(str(parentdir), repo_name),
     )
     git_repo.obtain()
@@ -121,7 +121,7 @@ def test_git_get_url_and_rev_from_pip_url():
     assert "ssh://git@bitbucket.example.com:7999/PROJ/repo.git" == url
     assert rev is None
 
-    pip_url = "%s@%s" % (
+    pip_url = "{}@{}".format(
         "git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git",
         "eucalyptus",
     )
@@ -131,7 +131,7 @@ def test_git_get_url_and_rev_from_pip_url():
 
     # the git manual refers to this as "scp-like syntax"
     # https://git-scm.com/docs/git-clone
-    pip_url = "%s@%s" % ("git+user@hostname:user/repo.git", "eucalyptus")
+    pip_url = "{}@{}".format("git+user@hostname:user/repo.git", "eucalyptus")
     url, rev = git_convert_pip_url(pip_url)
     assert "user@hostname:user/repo.git" == url
     assert rev == "eucalyptus"
@@ -145,7 +145,7 @@ def test_remotes_preserves_git_ssh(parentdir, git_remote):
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
 
     git_repo = create_repo_from_pip_url(
-        pip_url="git+file://{git_remote}".format(git_remote=git_remote),
+        pip_url=f"git+file://{git_remote}",
         repo_dir=repo_dir,
     )
     git_repo.obtain()
@@ -195,7 +195,7 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
 
     with pytest.raises(
         exc.CommandError,
-        match=".*remote {repo_name} already exists.*".format(repo_name=repo_name),
+        match=f".*remote {repo_name} already exists.*",
     ):
         mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url)
 
@@ -226,9 +226,7 @@ def test_get_current_remote_name(git_repo):
         name=new_remote_name, url="file://" + git_repo.path, overwrite=True
     )
     git_repo.run(["fetch", new_remote_name])
-    git_repo.run(
-        ["branch", "--set-upstream-to", "{}/{}".format(new_remote_name, new_branch)]
-    )
+    git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])
     assert (
         git_repo.get_current_remote_name() == new_remote_name
     ), "Should reflect new upstream branch (different remote)"
@@ -243,7 +241,7 @@ def test_get_current_remote_name(git_repo):
     git_repo.run(["checkout", "master"])
 
     # Different remote, different branch
-    remote = "{}/{}".format(new_remote_name, new_branch)
+    remote = f"{new_remote_name}/{new_branch}"
     git_repo.run(["branch", "--set-upstream-to", remote])
     assert (
         git_repo.get_current_remote_name() == remote

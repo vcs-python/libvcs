@@ -66,8 +66,8 @@ def which(
         if _is_executable_file_or_link(full_path):
             return full_path
     logger.info(
-        "'{0}' could not be found in the following search path: "
-        "'{1}'".format(exe, search_path)
+        "'{}' could not be found in the following search path: "
+        "'{}'".format(exe, search_path)
     )
 
     return None

@@ -31,7 +31,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class BaseRepo(RepoLoggingAdapter, object):
+class BaseRepo(RepoLoggingAdapter):
 
     """Base class for repositories.
 
@@ -89,7 +89,7 @@ class BaseRepo(RepoLoggingAdapter, object):
         check_returncode=True,
         log_in_real_time=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Return combined stderr/stdout from a command.
 
@@ -144,4 +144,4 @@ class BaseRepo(RepoLoggingAdapter, object):
         return True
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.repo_name)
+        return f"<{self.__class__.__name__} {self.repo_name}>"
