@@ -8,8 +8,6 @@ If you see this, we're publishing to S3 automatically
 class LibVCSException(Exception):
     """Standard exception raised by libvcs."""
 
-    pass
-
 
 class CommandError(LibVCSException):
     """This exception is raised on non-zero return codes."""
@@ -34,8 +32,6 @@ class CommandError(LibVCSException):
 class CommandTimeoutError(CommandError):
     """CommandError which gets raised when a subprocess exceeds its timeout."""
 
-    pass
-
 
 class InvalidPipURL(LibVCSException):
     """Invalid pip-style URL."""
@@ -55,5 +51,3 @@ class InvalidPipURL(LibVCSException):
 
 class InvalidVCS(LibVCSException):
     """Invalid VCS."""
-
-    pass
