@@ -1,4 +1,6 @@
 """tests for libvcs repo abstract base class."""
+import pathlib
+
 from libvcs.base import BaseRepo, convert_pip_url
 from libvcs.shortcuts import create_repo
 
@@ -21,13 +23,13 @@ def test_repr_base():
     assert "<BaseRepo hello>" == str_repo
 
 
-def test_ensure_dir_creates_parent_if_not_exist(tmpdir):
-    parentdir = tmpdir.join("parentdir")  # doesn't exist yet
-    repo_dir = parentdir.join("myrepo")
+def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
+    parentdir = tmp_path / "parentdir"  # doesn't exist yet
+    repo_dir = parentdir / "myrepo"
     repo = BaseRepo(url="file://path/to/myrepo", repo_dir=str(repo_dir))
 
     repo.ensure_dir()
-    assert parentdir.check()
+    assert parentdir.is_dir()
 
 
 def test_convert_pip_url():

@@ -1,17 +1,20 @@
+import pathlib
+
 import pytest
 
 from libvcs.util import mkdir_p, which
 
 
-def test_mkdir_p(tmpdir):
-    path = tmpdir.join("file").ensure()
+def test_mkdir_p(tmp_path: pathlib.Path):
+    path = tmp_path / "file"
+    path.write_text("", encoding="utf-8")
 
     with pytest.raises(Exception) as excinfo:
         mkdir_p(str(path))
     excinfo.match(r"Could not create directory %s" % path)
 
     # already exists is a noop
-    mkdir_p(str(tmpdir))
+    mkdir_p(str(tmp_path))
 
 
 def test_which_no_hg_found(monkeypatch):

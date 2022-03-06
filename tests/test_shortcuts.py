@@ -1,3 +1,5 @@
+import pathlib
+
 import pytest
 
 from libvcs import GitRepo, MercurialRepo, SubversionRepo
@@ -26,9 +28,11 @@ from libvcs.shortcuts import create_repo, create_repo_from_pip_url
         ),
     ],
 )
-def test_create_repo_from_pip_url(repo_dict, repo_class, raises_exception, tmpdir):
+def test_create_repo_from_pip_url(
+    tmp_path: pathlib.Path, repo_dict, repo_class, raises_exception
+):
     # add parent_dir via fixture
-    repo_dict["repo_dir"] = str(tmpdir.join("repo_name"))
+    repo_dict["repo_dir"] = str(tmp_path / "repo_name")
 
     if raises_exception:
         with pytest.raises(raises_exception):
@@ -63,9 +67,9 @@ def test_create_repo_from_pip_url(repo_dict, repo_class, raises_exception, tmpdi
         ),
     ],
 )
-def test_create_repo(repo_dict, repo_class, raises_exception, tmpdir):
+def test_create_repo(tmp_path: pathlib.Path, repo_dict, repo_class, raises_exception):
     # add parent_dir via fixture
-    repo_dict["repo_dir"] = str(tmpdir.join("repo_name"))
+    repo_dict["repo_dir"] = str(tmp_path / "repo_name")
 
     if raises_exception:
         with pytest.raises(raises_exception):

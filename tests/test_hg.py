@@ -1,5 +1,6 @@
 """Tests for libvcs hg repos."""
 import os
+import pathlib
 
 import pytest
 
@@ -14,7 +15,7 @@ if not which("hg"):
 def hg_remote(parentdir, scope="session"):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
-    repo_path = str(parentdir.join(name))
+    repo_path = str(parentdir / name)
 
     run(["hg", "init", name], cwd=str(parentdir))
 
@@ -27,23 +28,23 @@ def hg_remote(parentdir, scope="session"):
     return repo_path
 
 
-def test_repo_mercurial(tmpdir, parentdir, hg_remote):
+def test_repo_mercurial(tmp_path: pathlib.Path, parentdir, hg_remote):
     repo_name = "my_mercurial_project"
 
     mercurial_repo = create_repo_from_pip_url(
         **{
             "pip_url": "hg+file://" + hg_remote,
-            "repo_dir": str(parentdir.join(repo_name)),
+            "repo_dir": str(parentdir / repo_name),
         }
     )
 
-    run(["hg", "init", mercurial_repo.repo_name], cwd=str(tmpdir))
+    run(["hg", "init", mercurial_repo.repo_name], cwd=str(tmp_path))
 
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=str(parentdir.join(repo_name))
+        ["hg", "parents", "--template={rev}"], cwd=str(parentdir / repo_name)
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
-    assert os.path.exists(str(tmpdir.join(repo_name)))
+    assert os.path.exists(str(tmp_path / repo_name))
