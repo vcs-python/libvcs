@@ -7,7 +7,7 @@ from libvcs.util import mkdir_p, which
 
 def test_mkdir_p(tmp_path: pathlib.Path):
     path = tmp_path / "file"
-    path.write_text("", encoding="utf-8")
+    path.touch()
 
     with pytest.raises(Exception) as excinfo:
         mkdir_p(path)
