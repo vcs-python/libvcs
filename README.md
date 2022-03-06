@@ -1,5 +1,4 @@
-`libvcs` - abstraction layer for vcs, powers
-[vcspull](https://www.github.com/vcs-python/vcspull/).
+`libvcs` - abstraction layer for vcs, powers [vcspull](https://www.github.com/vcs-python/vcspull/).
 
 [![Python Package](https://img.shields.io/pypi/v/libvcs.svg)](http://badge.fury.io/py/libvcs)
 [![Docs](https://github.com/vcs-python/libvcs/workflows/Publish%20Docs/badge.svg)](https://github.com/vcs-python/libvcs/actions?query=workflow%3A%22Publish+Docs%22)
@@ -25,9 +24,8 @@ $ ptpython
 
 # Usage
 
-Create a
-[Repo](https://libvcs.git-pull.com/api.html#creating-a-repo-object)
-object of the project to inspect / checkout / update:
+Create a [Repo](https://libvcs.git-pull.com/api.html#creating-a-repo-object) object of the project
+to inspect / checkout / update:
 
 ```python
 >>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
@@ -59,10 +57,9 @@ u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 
 # Donations
 
-Your donations fund development of new features, testing and support.
-Your money will go directly to maintenance and development of the
-project. If you are an individual, feel free to give whatever feels
-right for the value you get out of the project.
+Your donations fund development of new features, testing and support. Your money will go directly to
+maintenance and development of the project. If you are an individual, feel free to give whatever
+feels right for the value you get out of the project.
 
 See donation options at <https://www.git-pull.com/support.html>.
 

@@ -1,14 +1,16 @@
 # Changelog
 
 ## Current
+
 - _Add your latest changes from PRs here_
 
 ### Development
+
 - Run pyupgrade formatting (#305)
-- Tests: Move from pytest `tmp_dir` (`py.path.local`) to `tmp_path`
-  (`pathlib.Path`)
+- Tests: Move from pytest `tmp_dir` (`py.path.local`) to `tmp_path` (`pathlib.Path`)
 
 ### Documentation
+
 - Move to furo theme
 - Root: `make start_docs`, `make design_docs`
 - docs/: `make start`, `make design`
@@ -16,10 +18,12 @@
 ## libvcs 0.11.0, "Phebe" (2022-01-08)
 
 ### Compatibility
+
 - Add python 3.10 (#300)
 - Drop python 3.6 (#300)
 
 ### Development
+
 - Poetry: 1.1.7 -> 1.1.12 (#300)
 - Add `.pre-commit-config.yaml`
 
@@ -37,9 +41,8 @@
 
 ## libvcs 0.9 (2021-06-14)
 
-Generally speaking, refactor / magic is in the process of being stripped
-out in the next few releases. The API is subject to change significantly
-in pre-1.0 builds.
+Generally speaking, refactor / magic is in the process of being stripped out in the next few
+releases. The API is subject to change significantly in pre-1.0 builds.
 
 [#271]:
 
@@ -59,11 +62,11 @@ in pre-1.0 builds.
   - Move sphinx api format to Numpy-style
 
   - Move from reStructuredText to Markdown (via recommonmark). The master plan is to eliminate
-    docutils and sphinx as a bottleneck completely in favor of something else (e.g. gatsby with
-    a source that inspects our modules and can source intersphinx)
+    docutils and sphinx as a bottleneck completely in favor of something else (e.g. gatsby with a
+    source that inspects our modules and can source intersphinx)
 
-  - Move from RTD to GitHub Action, full support of poetry extras packages, deploys straight to
-    S3 and CloudFront
+  - Move from RTD to GitHub Action, full support of poetry extras packages, deploys straight to S3
+    and CloudFront
 
 - [#270] Build and publish packages via poetry
 - [#270] Overhaul development docs
@@ -81,16 +84,13 @@ in pre-1.0 builds.
 
 ## libvcs 0.4.3 (2020-08-01)
 
-- \[bug\] `libvcs.git.extract_status()` Fix issue capturing branch
-  names with special characters
+- \[bug\] `libvcs.git.extract_status()` Fix issue capturing branch names with special characters
 
 ## libvcs 0.4.2 (2020-08-01)
 
-- \[bug\] `libvcs.git.GitRepo.get_current_remote_name()` Handle case
-  where upstream is unpushed
+- \[bug\] `libvcs.git.GitRepo.get_current_remote_name()` Handle case where upstream is unpushed
 - \[feature\] `libvcs.git.GitRepo.status()` - Retrieve status of repo
-- \[feature\] `libvcs.git.extract_status()` - Return structured info
-  from `git status`
+- \[feature\] `libvcs.git.extract_status()` - Return structured info from `git status`
 
 ## libvcs 0.4.1 (2020-08-01)
 
@@ -100,29 +100,24 @@ in pre-1.0 builds.
 
 **Breaking changes**
 
-Internal functionality relating to remotes have been reorganized to
-avoid implicit behavior.
+Internal functionality relating to remotes have been reorganized to avoid implicit behavior.
 
-- `~libvcs.git.GitRepo` methods have been renamed, they will be
-  deprecated in 0.5:
+- `~libvcs.git.GitRepo` methods have been renamed, they will be deprecated in 0.5:
 
   - `GitRepo.remotes_get` renamed to `libvcs.git.GitRepo.remotes()`
   - `GitRepo.remote_get` renamed to `libvcs.git.GitRepo.remote()`
-  - `GitRepo.remote_set` renamed to
-    `libvcs.git.GitRepo.set_remote()`
+  - `GitRepo.remote_set` renamed to `libvcs.git.GitRepo.set_remote()`
 
-- `~libvcs.git.GitRepo` the `remotes` argument is deprecated and no
-  longer used. Use `libvcs.git.GitRepo.set_remote` after repo is
-  instantiated.
+- `~libvcs.git.GitRepo` the `remotes` argument is deprecated and no longer used. Use
+  `libvcs.git.GitRepo.set_remote` after repo is instantiated.
 
-- `libvcs.git.GitRepo.obtain` no longer set remotes based on a `dict`
-  passed to `~libvcs.git.GitRepo`. This was deemed to specialized /
-  implicit.
+- `libvcs.git.GitRepo.obtain` no longer set remotes based on a `dict` passed to
+  `~libvcs.git.GitRepo`. This was deemed to specialized / implicit.
 
 - `libvcs.git.GitRepo.set_remote()` (formerly `remote_set`)
 
-  The new method accepts `name` and `url` (in that order). `name` no
-  longer has a default value (was `origin`).
+  The new method accepts `name` and `url` (in that order). `name` no longer has a default value (was
+  `origin`).
 
 - `libvcs.git.GitRepo.remote()` (formerly `remote_get`):
 
@@ -130,15 +125,12 @@ avoid implicit behavior.
 
     The default value of `'origin'` has been removed
 
-  - Now returns `~libvcs.git.GitRemote` (a
-    :py`collections.namedtuple` object)
+  - Now returns `~libvcs.git.GitRemote` (a :py`collections.namedtuple` object)
 
-    The tuple is similar to the old output, except there is an
-    additional value at the beginning, the name of the remote, e.g.
-    `('origin', '<fetch_url>', '<push_url>')`
+    The tuple is similar to the old output, except there is an additional value at the beginning,
+    the name of the remote, e.g. `('origin', '<fetch_url>', '<push_url>')`
 
-- `libvcs.git.GitRepo.remotes()` (formerly `remotes_get`) are now
-  methods instead of properties.
+- `libvcs.git.GitRepo.remotes()` (formerly `remotes_get`) are now methods instead of properties.
 
   Passing `flat=True` to return a `dict` of `tuple` instead of `dict`
 
@@ -155,8 +147,7 @@ avoid implicit behavior.
 
 - `258` `libvcs.git.GitRepo.remote_set`
   - Fix updating of remote URLs
-  - Add new param: `overwrite`, usage:
-    `repo.remote_set(url, 'origin', overwrite=True)`
+  - Add new param: `overwrite`, usage: `repo.remote_set(url, 'origin', overwrite=True)`
 
 ## libvcs 0.3.1post1 (2020-07-26)
 
@@ -168,8 +159,7 @@ avoid implicit behavior.
 - Fix issue with subprocess.Popen loud warning on Python 3.8
 - [#296] - Move from Pipfile to poetry
 - Sort imports
-- Add isort package, isort configuration in setup.cfg, and
-  `make isort` task to Makefile.
+- Add isort package, isort configuration in setup.cfg, and `make isort` task to Makefile.
 - Add `project_urls` to setup.py
 
 [#296] https://github.com/vcs-python/libvcs/pull/296
@@ -199,16 +189,14 @@ avoid implicit behavior.
 
 ## libvcs 0.2.1 (2016-09-13)
 
-- Update pytest to 3.0.2, remove unused pytest-raisesregexp
-  dependency.
-- Fix bug in `which` when executable is not found. Allow specifying
-  search paths manually.
+- Update pytest to 3.0.2, remove unused pytest-raisesregexp dependency.
+- Fix bug in `which` when executable is not found. Allow specifying search paths manually.
 - Better support for missing VCS when testing on git and subversion.
 
 ## libvcs 0.2.0 (2016-06-24)
 
-- [#9] Support for `progress_callback` to use realtime output from
-  commands in progress (such as `git fetch`).
+- [#9] Support for `progress_callback` to use realtime output from commands in progress (such as
+  `git fetch`).
 - [#9] More tests, internal factoring and documentation, thanks @jcfr
 - [#9] Official support for pypy, pypy3
 - [#11] : Fix unbound local when updating git repos
@@ -227,8 +215,8 @@ avoid implicit behavior.
 
 - `6` Remove log module. Logging defaults.
 
-  The library user can still use formatters and set log levels, for an
-  example, see the vcspull logging setup.
+  The library user can still use formatters and set log levels, for an example, see the vcspull
+  logging setup.
 
   An example:
 
@@ -244,8 +232,7 @@ avoid implicit behavior.
         vcslogger.addHandler(logging.StreamHandler())
         vcslogger.setLevel(level)
 
-  You can also use `logging.Formatter` variables `repo_name` and
-  `repo_vcs` with repos:
+  You can also use `logging.Formatter` variables `repo_name` and `repo_vcs` with repos:
 
         repo_channel = logging.StreamHandler()
         repo_formatter = logging.Formatter(
@@ -272,8 +259,7 @@ avoid implicit behavior.
 
 ## libvcs 0.1.2 (2016-06-20)
 
-- change signature on `create_repo_from_pip_url` to accept `pip_url`
-  insetad of `url`.
+- change signature on `create_repo_from_pip_url` to accept `pip_url` insetad of `url`.
 - `Base` to accept `repo_dir` instead of `name` and `parent_dir`.
 
 ## libvcs 0.1.1 (2016-06-20)

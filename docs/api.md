@@ -2,8 +2,8 @@
 
 ## Create from VCS url
 
-Helper methods are available in `libvcs.shortcuts` which
-can return a repo object from a single entry-point.
+Helper methods are available in `libvcs.shortcuts` which can return a repo object from a single
+entry-point.
 
 ```{eval-rst}
 .. automodule:: libvcs.shortcuts
