@@ -17,9 +17,9 @@ def svn_remote(parentdir, scope="session"):
     server_dirname = "server_dir"
     server_dir = parentdir / server_dirname
 
-    run(["svnadmin", "create", str(server_dir)])
+    run(["svnadmin", "create", server_dir])
 
-    return str(server_dir)
+    return server_dir
 
 
 def test_repo_svn(tmp_path: pathlib.Path, svn_remote):
@@ -27,8 +27,8 @@ def test_repo_svn(tmp_path: pathlib.Path, svn_remote):
 
     svn_repo = create_repo_from_pip_url(
         **{
-            "pip_url": "svn+file://" + svn_remote,
-            "repo_dir": str(tmp_path / repo_name),
+            "pip_url": f"svn+file://{svn_remote}",
+            "repo_dir": tmp_path / repo_name,
         }
     )
 
@@ -38,4 +38,4 @@ def test_repo_svn(tmp_path: pathlib.Path, svn_remote):
     assert svn_repo.get_revision() == 0
     assert svn_repo.get_revision_file("./") == 0
 
-    assert os.path.exists(str(tmp_path / repo_name))
+    assert os.path.exists(tmp_path / repo_name)

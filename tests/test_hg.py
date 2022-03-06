@@ -15,9 +15,9 @@ if not which("hg"):
 def hg_remote(parentdir, scope="session"):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
-    repo_path = str(parentdir / name)
+    repo_path = parentdir / name
 
-    run(["hg", "init", name], cwd=str(parentdir))
+    run(["hg", "init", name], cwd=parentdir)
 
     testfile_filename = "testfile.test"
 
@@ -33,18 +33,18 @@ def test_repo_mercurial(tmp_path: pathlib.Path, parentdir, hg_remote):
 
     mercurial_repo = create_repo_from_pip_url(
         **{
-            "pip_url": "hg+file://" + hg_remote,
-            "repo_dir": str(parentdir / repo_name),
+            "pip_url": f"hg+file://{hg_remote}",
+            "repo_dir": parentdir / repo_name,
         }
     )
 
-    run(["hg", "init", mercurial_repo.repo_name], cwd=str(tmp_path))
+    run(["hg", "init", mercurial_repo.repo_name], cwd=tmp_path)
 
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=str(parentdir / repo_name)
+        ["hg", "parents", "--template={rev}"], cwd=parentdir / repo_name
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
-    assert os.path.exists(str(tmp_path / repo_name))
+    assert os.path.exists(tmp_path / repo_name)

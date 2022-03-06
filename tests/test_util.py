@@ -10,11 +10,11 @@ def test_mkdir_p(tmp_path: pathlib.Path):
     path.write_text("", encoding="utf-8")
 
     with pytest.raises(Exception) as excinfo:
-        mkdir_p(str(path))
+        mkdir_p(path)
     excinfo.match(r"Could not create directory %s" % path)
 
     # already exists is a noop
-    mkdir_p(str(tmp_path))
+    mkdir_p(tmp_path)
 
 
 def test_which_no_hg_found(monkeypatch):

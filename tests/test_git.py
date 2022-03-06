@@ -23,14 +23,14 @@ def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
     """
     repo_name = "my_git_project"
 
-    run(["git", "init", repo_name], cwd=str(tmp_path))
+    run(["git", "init", repo_name], cwd=tmp_path)
 
     bare_repo_dir = tmp_path / repo_name
 
     git_repo = create_repo_from_pip_url(
         **{
-            "pip_url": "git+file://" + str(bare_repo_dir),
-            "repo_dir": str(tmp_path / "obtaining a bare repo"),
+            "pip_url": f"git+file://{bare_repo_dir}",
+            "repo_dir": tmp_path / "obtaining a bare repo",
         }
     )
 
@@ -41,8 +41,8 @@ def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
 def test_repo_git_obtain_full(tmp_path: pathlib.Path, git_remote):
     git_repo = create_repo_from_pip_url(
         **{
-            "pip_url": "git+file://" + git_remote,
-            "repo_dir": str(tmp_path / "myrepo"),
+            "pip_url": f"git+file://{git_remote}",
+            "repo_dir": tmp_path / "myrepo",
         }
     )
 
@@ -51,14 +51,14 @@ def test_repo_git_obtain_full(tmp_path: pathlib.Path, git_remote):
     test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote)
 
     assert git_repo.get_revision() == test_repo_revision
-    assert os.path.exists(str(tmp_path / "myrepo"))
+    assert os.path.exists(tmp_path / "myrepo")
 
 
 def test_repo_update_handle_cases(tmp_path: pathlib.Path, git_remote, mocker):
     git_repo = create_repo_from_pip_url(
         **{
-            "pip_url": "git+file://" + git_remote,
-            "repo_dir": str(tmp_path / "myrepo"),
+            "pip_url": f"git+file://{git_remote}",
+            "repo_dir": tmp_path / "myrepo",
         }
     )
 
@@ -90,8 +90,8 @@ def test_progress_callback(tmp_path: pathlib.Path, git_remote, mocker):
     # create a new repo with the repo as a remote
     git_repo = create_repo_from_pip_url(
         **{
-            "pip_url": "git+file://" + git_remote,
-            "repo_dir": str(tmp_path / "myrepo"),
+            "pip_url": f"git+file://{git_remote}",
+            "repo_dir": tmp_path / "myrepo",
             "progress_callback": progress_callback,
         }
     )
@@ -107,7 +107,7 @@ def test_remotes(parentdir, git_remote):
 
     git_repo = create_repo_from_pip_url(
         pip_url=f"git+file://{git_remote}",
-        repo_dir=os.path.join(str(parentdir), repo_name),
+        repo_dir=parentdir / repo_name,
     )
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
@@ -141,7 +141,7 @@ def test_git_get_url_and_rev_from_pip_url():
 def test_remotes_preserves_git_ssh(parentdir, git_remote):
     # Regression test for #14
     repo_name = "myexamplegit"
-    repo_dir = os.path.join(str(parentdir), repo_name)
+    repo_dir = parentdir / repo_name
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
 
@@ -160,7 +160,7 @@ def test_remotes_preserves_git_ssh(parentdir, git_remote):
 
 def test_private_ssh_format(pip_url_kwargs):
     pip_url_kwargs.update(
-        **{"pip_url": "git+ssh://github.com:" + "/tmp/omg/private_ssh_repo"}
+        **{"pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo"}
     )
 
     with pytest.raises(exc.LibVCSException) as excinfo:
@@ -224,7 +224,7 @@ def test_get_current_remote_name(git_repo):
 
     new_remote_name = "new_remote_name"
     git_repo.set_remote(
-        name=new_remote_name, url="file://" + git_repo.path, overwrite=True
+        name=new_remote_name, url=f"file://{git_repo.path}", overwrite=True
     )
     git_repo.run(["fetch", new_remote_name])
     git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])

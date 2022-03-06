@@ -26,7 +26,7 @@ def test_repr_base():
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
     parentdir = tmp_path / "parentdir"  # doesn't exist yet
     repo_dir = parentdir / "myrepo"
-    repo = BaseRepo(url="file://path/to/myrepo", repo_dir=str(repo_dir))
+    repo = BaseRepo(url="file://path/to/myrepo", repo_dir=repo_dir)
 
     repo.ensure_dir()
     assert parentdir.is_dir()

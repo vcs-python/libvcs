@@ -32,7 +32,7 @@ def test_create_repo_from_pip_url(
     tmp_path: pathlib.Path, repo_dict, repo_class, raises_exception
 ):
     # add parent_dir via fixture
-    repo_dict["repo_dir"] = str(tmp_path / "repo_name")
+    repo_dict["repo_dir"] = tmp_path / "repo_name"
 
     if raises_exception:
         with pytest.raises(raises_exception):
@@ -69,7 +69,7 @@ def test_create_repo_from_pip_url(
 )
 def test_create_repo(tmp_path: pathlib.Path, repo_dict, repo_class, raises_exception):
     # add parent_dir via fixture
-    repo_dict["repo_dir"] = str(tmp_path / "repo_name")
+    repo_dict["repo_dir"] = tmp_path / "repo_name"
 
     if raises_exception:
         with pytest.raises(raises_exception):
