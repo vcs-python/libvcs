@@ -1,6 +1,7 @@
 """Tests for libvcs git repos."""
 import datetime
 import os
+import pathlib
 import textwrap
 
 import pytest
@@ -14,7 +15,7 @@ if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 
-def test_repo_git_obtain_initial_commit_repo(tmpdir):
+def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
     """initial commit repos return 'initial'.
 
     note: this behaviors differently from git(1)'s use of the word "bare".
@@ -22,14 +23,14 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
     """
     repo_name = "my_git_project"
 
-    run(["git", "init", repo_name], cwd=str(tmpdir))
+    run(["git", "init", repo_name], cwd=str(tmp_path))
 
-    bare_repo_dir = tmpdir.join(repo_name)
+    bare_repo_dir = tmp_path / repo_name
 
     git_repo = create_repo_from_pip_url(
         **{
             "pip_url": "git+file://" + str(bare_repo_dir),
-            "repo_dir": str(tmpdir.join("obtaining a bare repo")),
+            "repo_dir": str(tmp_path / "obtaining a bare repo"),
         }
     )
 
@@ -37,11 +38,11 @@ def test_repo_git_obtain_initial_commit_repo(tmpdir):
     assert git_repo.get_revision() == "initial"
 
 
-def test_repo_git_obtain_full(tmpdir, git_remote):
+def test_repo_git_obtain_full(tmp_path: pathlib.Path, git_remote):
     git_repo = create_repo_from_pip_url(
         **{
             "pip_url": "git+file://" + git_remote,
-            "repo_dir": str(tmpdir.join("myrepo")),
+            "repo_dir": str(tmp_path / "myrepo"),
         }
     )
 
@@ -50,14 +51,14 @@ def test_repo_git_obtain_full(tmpdir, git_remote):
     test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote)
 
     assert git_repo.get_revision() == test_repo_revision
-    assert os.path.exists(str(tmpdir.join("myrepo")))
+    assert os.path.exists(str(tmp_path / "myrepo"))
 
 
-def test_repo_update_handle_cases(tmpdir, git_remote, mocker):
+def test_repo_update_handle_cases(tmp_path: pathlib.Path, git_remote, mocker):
     git_repo = create_repo_from_pip_url(
         **{
             "pip_url": "git+file://" + git_remote,
-            "repo_dir": str(tmpdir.join("myrepo")),
+            "repo_dir": str(tmp_path / "myrepo"),
         }
     )
 
@@ -75,7 +76,7 @@ def test_repo_update_handle_cases(tmpdir, git_remote, mocker):
     assert mocker.call(["symbolic-ref", "--short", "HEAD"]) not in mocka.mock_calls
 
 
-def test_progress_callback(tmpdir, git_remote, mocker):
+def test_progress_callback(tmp_path: pathlib.Path, git_remote, mocker):
     def progress_callback_spy(output, timestamp):
         assert isinstance(output, str)
         assert isinstance(timestamp, datetime.datetime)
@@ -90,7 +91,7 @@ def test_progress_callback(tmpdir, git_remote, mocker):
     git_repo = create_repo_from_pip_url(
         **{
             "pip_url": "git+file://" + git_remote,
-            "repo_dir": str(tmpdir.join("myrepo")),
+            "repo_dir": str(tmp_path / "myrepo"),
             "progress_callback": progress_callback,
         }
     )
