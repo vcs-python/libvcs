@@ -8,16 +8,16 @@
 
 # Setup
 
-```sh
+```console
 $ pip install --user libvcs
 ```
 
 Open up python:
 
-```sh
+```console
 $ python
 
-# or for nice autocomplete and syntax highlighting
+// or for nice autocomplete and syntax highlighting
 $ pip install --user ptpython
 $ ptpython
 ```

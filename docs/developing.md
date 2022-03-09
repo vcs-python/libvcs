@@ -2,17 +2,19 @@
 
 [poetry] is a required package to develop.
 
-`git clone https://github.com/vcs-python/libvcs.git`
-
-`cd libvcs`
-
-`poetry install -E "docs test coverage lint format"`
+```
+git clone https://github.com/vcs-python/libvcs.git
+cd libvcs
+poetry install -E "docs test coverage lint format"
+```
 
 Makefile commands prefixed with `watch_` will watch files and rerun.
 
 ## Tests
 
-`poetry run py.test`
+```
+poetry run py.test
+```
 
 Helpers: `make test` Rerun tests on file change: `make watch_test` (requires [entr(1)])
 
