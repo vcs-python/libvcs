@@ -1,5 +1,6 @@
 """Tests for libvcs git repos."""
 import datetime
+import getpass
 import os
 import pathlib
 import textwrap
@@ -13,6 +14,27 @@ from libvcs.util import run, which
 
 if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def gitconfig(user_path: pathlib.Path):
+    gitconfig = user_path / ".gitconfig"
+    gitconfig.write_text(
+        textwrap.dedent(
+            f"""
+  [user]
+    email = libvcs@git-pull.com
+    name = {getpass.getuser()}
+    """
+        ),
+        encoding="utf-8",
+    )
+    return gitconfig
+
+
+@pytest.fixture(autouse=True)
+def gitconfig_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
+    monkeypatch.setenv("HOME", str(user_path))
 
 
 def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):

@@ -1,5 +1,6 @@
 import getpass
 import pathlib
+import shutil
 from typing import Dict
 
 import pytest
@@ -21,10 +22,15 @@ def user_path(home_path: pathlib.Path):
 
 
 @pytest.fixture(scope="function")
-def parentdir(tmp_path: pathlib.Path):
+def parentdir(user_path: pathlib.Path, request: pytest.FixtureRequest):
     """Return temporary directory for repository checkout guaranteed unique."""
-    dir = tmp_path / "repo"
-    dir.mkdir()
+    dir = user_path / "repos"
+    dir.mkdir(exist_ok=True)
+
+    def clean():
+        shutil.rmtree(dir)
+
+    request.addfinalizer(clean)
     return dir
 
 
