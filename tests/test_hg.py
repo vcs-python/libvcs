@@ -12,7 +12,7 @@ if not which("hg"):
 
 
 @pytest.fixture
-def hg_remote(parentdir, scope="session"):
+def hg_remote(parentdir):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
     repo_path = parentdir / name
