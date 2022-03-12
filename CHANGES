@@ -15,7 +15,9 @@
 ### Development
 
 - Run pyupgrade formatting (#305)
-- Tests: Move from pytest `tmp_dir` (`py.path.local`) to `tmp_path` (`pathlib.Path`)
+- Tests:
+  - Move from pytest `tmp_dir` (`py.path.local`) to `tmp_path` (`pathlib.Path`)
+  - Text fixture updates: Use home directory via `tmp_path_factory`, generate config for git and hg.
 
 ### Documentation
 
