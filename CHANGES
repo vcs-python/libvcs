@@ -4,6 +4,8 @@
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.11.1 (2022-03-12)
+
 ### Potential command injection via mercurial URLs
 
 - By setting a mercurial URL with an alias it is possible to execute arbitrary shell commands via
