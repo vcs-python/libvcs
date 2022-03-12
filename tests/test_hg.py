@@ -94,4 +94,6 @@ def test_vulnerability_2022_03_12_command_injection(
     with pytest.raises(Exception):
         mercurial_repo.update_repo()
 
-    assert pathlib.Path(random_dir / "HELLO").exists()
+    assert not pathlib.Path(
+        random_dir / "HELLO"
+    ).exists(), "Prevent command injection in hg aliases"
