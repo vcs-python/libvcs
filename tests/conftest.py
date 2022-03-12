@@ -1,3 +1,4 @@
+import getpass
 import pathlib
 from typing import Dict
 
@@ -5,6 +6,18 @@ import pytest
 
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run
+
+
+@pytest.fixture(autouse=True, scope="session")
+def home_path(tmp_path_factory: pytest.TempPathFactory):
+    return tmp_path_factory.mktemp("home")
+
+
+@pytest.fixture(autouse=True, scope="session")
+def user_path(home_path: pathlib.Path):
+    p = home_path / getpass.getuser()
+    p.mkdir()
+    return p
 
 
 @pytest.fixture(scope="function")
