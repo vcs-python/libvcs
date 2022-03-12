@@ -122,14 +122,14 @@ def test_progress_callback(tmp_path: pathlib.Path, git_remote, mocker):
     assert progress_callback.called
 
 
-def test_remotes(parentdir, git_remote):
+def test_remotes(repos_path, git_remote):
     repo_name = "myrepo"
     remote_name = "myremote"
     remote_url = "https://localhost/my/git/repo.git"
 
     git_repo = create_repo_from_pip_url(
         pip_url=f"git+file://{git_remote}",
-        repo_dir=parentdir / repo_name,
+        repo_dir=repos_path / repo_name,
     )
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
@@ -160,10 +160,10 @@ def test_git_get_url_and_rev_from_pip_url():
     assert rev == "eucalyptus"
 
 
-def test_remotes_preserves_git_ssh(parentdir, git_remote):
+def test_remotes_preserves_git_ssh(repos_path, git_remote):
     # Regression test for #14
     repo_name = "myexamplegit"
-    repo_dir = parentdir / repo_name
+    repo_dir = repos_path / repo_name
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
 

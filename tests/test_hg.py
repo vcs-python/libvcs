@@ -37,12 +37,12 @@ def hgrc_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
 
 
 @pytest.fixture
-def hg_remote(parentdir):
+def hg_remote(repos_path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "test_hg_repo"
-    repo_path = parentdir / name
+    repo_path = repos_path / name
 
-    run(["hg", "init", name], cwd=parentdir)
+    run(["hg", "init", name], cwd=repos_path)
 
     testfile_filename = "testfile.test"
 
@@ -53,13 +53,13 @@ def hg_remote(parentdir):
     return repo_path
 
 
-def test_repo_mercurial(tmp_path: pathlib.Path, parentdir, hg_remote):
+def test_repo_mercurial(tmp_path: pathlib.Path, repos_path, hg_remote):
     repo_name = "my_mercurial_project"
 
     mercurial_repo = create_repo_from_pip_url(
         **{
             "pip_url": f"hg+file://{hg_remote}",
-            "repo_dir": parentdir / repo_name,
+            "repo_dir": repos_path / repo_name,
         }
     )
 
@@ -68,7 +68,7 @@ def test_repo_mercurial(tmp_path: pathlib.Path, parentdir, hg_remote):
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=parentdir / repo_name
+        ["hg", "parents", "--template={rev}"], cwd=repos_path / repo_name
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision

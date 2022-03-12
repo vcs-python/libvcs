@@ -12,10 +12,10 @@ if not which("svn"):
 
 
 @pytest.fixture
-def svn_remote(parentdir, scope="session"):
+def svn_remote(repos_path, scope="session"):
     """Create a git repo with 1 commit, used as a remote."""
     server_dirname = "server_dir"
-    server_dir = parentdir / server_dirname
+    server_dir = repos_path / server_dirname
 
     run(["svnadmin", "create", server_dir])
 

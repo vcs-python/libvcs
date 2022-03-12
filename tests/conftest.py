@@ -22,7 +22,7 @@ def user_path(home_path: pathlib.Path):
 
 
 @pytest.fixture(scope="function")
-def parentdir(user_path: pathlib.Path, request: pytest.FixtureRequest):
+def repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
     """Return temporary directory for repository checkout guaranteed unique."""
     dir = user_path / "repos"
     dir.mkdir(exist_ok=True)
@@ -35,12 +35,12 @@ def parentdir(user_path: pathlib.Path, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def pip_url_kwargs(parentdir: pathlib.Path, git_remote: pathlib.Path):
+def pip_url_kwargs(repos_path: pathlib.Path, git_remote: pathlib.Path):
     """Return kwargs for :func:`create_repo_from_pip_url`."""
     repo_name = "repo_clone"
     return {
         "pip_url": f"git+file://{git_remote}",
-        "repo_dir": parentdir / repo_name,
+        "repo_dir": repos_path / repo_name,
     }
 
 
@@ -53,12 +53,12 @@ def git_repo(pip_url_kwargs: Dict):
 
 
 @pytest.fixture
-def git_remote(parentdir: pathlib.Path):
+def git_remote(repos_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
-    repo_dir = parentdir / name
+    repo_dir = repos_path / name
 
-    run(["git", "init", name], cwd=parentdir)
+    run(["git", "init", name], cwd=repos_path)
 
     testfile_filename = "testfile.test"
 

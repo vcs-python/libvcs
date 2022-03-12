@@ -24,12 +24,12 @@ def test_repr_base():
 
 
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
-    parentdir = tmp_path / "parentdir"  # doesn't exist yet
-    repo_dir = parentdir / "myrepo"
+    repos_path = tmp_path / "repos_path"  # doesn't exist yet
+    repo_dir = repos_path / "myrepo"
     repo = BaseRepo(url="file://path/to/myrepo", repo_dir=repo_dir)
 
     repo.ensure_dir()
-    assert parentdir.is_dir()
+    assert repos_path.is_dir()
 
 
 def test_convert_pip_url():
