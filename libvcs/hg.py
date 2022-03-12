@@ -26,7 +26,9 @@ class MercurialRepo(BaseRepo):
     def obtain(self):
         self.ensure_dir()
 
-        self.run(["clone", "--noupdate", "-q", self.url, self.path])
+        # Double hyphens between [OPTION]... -- SOURCE [DEST] prevent command injections
+        # via aliases
+        self.run(["clone", "--noupdate", "-q", "--", self.url, self.path])
         self.run(["update", "-q"])
 
     def get_revision(self):

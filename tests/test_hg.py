@@ -5,7 +5,7 @@ import textwrap
 
 import pytest
 
-from libvcs.shortcuts import create_repo_from_pip_url
+from libvcs.shortcuts import create_repo, create_repo_from_pip_url
 from libvcs.util import run, which
 
 if not which("hg"):
@@ -72,3 +72,28 @@ def test_repo_mercurial(tmp_path: pathlib.Path, repos_path, hg_remote):
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
+
+
+def test_vulnerability_2022_03_12_command_injection(
+    monkeypatch: pytest.MonkeyPatch,
+    user_path: pathlib.Path,
+    tmp_path: pathlib.Path,
+    hg_remote,
+):
+    """Prevent hg aliases from executed arbitrary commands via URLs.
+
+    As of 0.11 this code path is/was only executed via .obtain(), so this only would
+    effect explicit invocation of .object() or update_repo() of uncloned destination.
+    """
+    random_dir = tmp_path / "random"
+    random_dir.mkdir()
+    monkeypatch.chdir(str(random_dir))
+    mercurial_repo = create_repo(
+        url="--config=alias.clone=!touch ./HELLO", vcs="hg", repo_dir="./"
+    )
+    with pytest.raises(Exception):
+        mercurial_repo.update_repo()
+
+    assert not pathlib.Path(
+        random_dir / "HELLO"
+    ).exists(), "Prevent command injection in hg aliases"

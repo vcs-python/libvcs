@@ -4,6 +4,12 @@
 
 - _Add your latest changes from PRs here_
 
+### Potential command injection via mercurial URLs
+
+- By setting a mercurial URL with an alias it is possible to execute arbitrary shell commands via
+  `.obtain()` or in the case of uncloned destinations, `.update_repo()`. (#306, credit: Alessio
+  Della Libera)
+
 ### Development
 
 - Run pyupgrade formatting (#305)
