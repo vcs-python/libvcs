@@ -20,6 +20,7 @@ See examples below of git, mercurial, and subversion.
 .. automodule:: libvcs.git
    :members:
    :show-inheritance:
+   :undoc-members:
    :inherited-members:
 ```
 
@@ -31,6 +32,7 @@ aka `hg(1)`
 .. automodule:: libvcs.hg
    :members:
    :show-inheritance:
+   :undoc-members:
    :inherited-members:
 ```
 
@@ -42,6 +44,7 @@ aka `svn(1)`
 .. automodule:: libvcs.svn
    :members:
    :show-inheritance:
+   :undoc-members:
    :inherited-members:
 ```
 
