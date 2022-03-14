@@ -6,11 +6,15 @@
 
 ## libvcs 0.11.1 (2022-03-12)
 
-### Potential command injection via mercurial URLs
+### CVE-2022-21187: Command Injection with mercurial repositories
 
 - By setting a mercurial URL with an alias it is possible to execute arbitrary shell commands via
-  `.obtain()` or in the case of uncloned destinations, `.update_repo()`. (#306, credit: Alessio
-  Della Libera)
+  `.obtain()` or in the case of uncloned destinations, `.update_repo()`.
+  ([#306](https://github.com/vcs-python/libvcs/pull/306), credit: Alessio Della Libera)
+
+  See also: [cve.mitre.org](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-21187),
+  [nvd.nist.gov](https://nvd.nist.gov/vuln/detail/CVE-2022-21187),
+  [snyk](https://security.snyk.io/vuln/SNYK-PYTHON-LIBVCS-2421204).
 
 ### Development
 
