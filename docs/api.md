@@ -2,6 +2,13 @@
 
 # API Reference
 
+:::{warning}
+
+All APIs are considered experimental and subject to break pre-1.0. They can and will break between
+versions.
+
+:::
+
 ## Create from VCS url
 
 Helper methods are available in `libvcs.shortcuts` which can return a repo object from a single
