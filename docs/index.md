@@ -1,7 +1,5 @@
 (index)=
 
-# libvcs - vcs abstraction layer
-
 ```{include} ../README.md
 
 ```

@@ -1,12 +1,9 @@
-`libvcs` - abstraction layer for vcs, powers [vcspull](https://www.github.com/vcs-python/vcspull/).
+# `libvcs` &middot; [![Python Package](https://img.shields.io/pypi/v/libvcs.svg)](http://badge.fury.io/py/libvcs) [![Docs](https://github.com/vcs-python/libvcs/workflows/Publish%20Docs/badge.svg)](https://github.com/vcs-python/libvcs/actions?query=workflow%3A%22Publish+Docs%22) [![Build Status](https://github.com/vcs-python/libvcs/workflows/tests/badge.svg)](https://github.com/vcs-python/libvcs/actions?query=workflow%3A%22tests%22) [![Code Coverage](https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg)](https://codecov.io/gh/vcs-python/libvcs) [![License](https://img.shields.io/github/license/vcs-python/libvcs.svg)](https://github.com/vcs-python/libvcs/blob/master/LICENSE)
 
-[![Python Package](https://img.shields.io/pypi/v/libvcs.svg)](http://badge.fury.io/py/libvcs)
-[![Docs](https://github.com/vcs-python/libvcs/workflows/Publish%20Docs/badge.svg)](https://github.com/vcs-python/libvcs/actions?query=workflow%3A%22Publish+Docs%22)
-[![Build Status](https://github.com/vcs-python/libvcs/workflows/tests/badge.svg)](https://github.com/vcs-python/libvcs/actions?query=workflow%3A%22tests%22)
-[![Code Coverage](https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg)](https://codecov.io/gh/vcs-python/libvcs)
-[![License](https://img.shields.io/github/license/vcs-python/libvcs.svg)](https://github.com/vcs-python/libvcs/blob/master/LICENSE)
+libvcs is an abstraction layer for vcs systems. powers
+[vcspull](https://www.github.com/vcs-python/vcspull/).
 
-# Setup
+## Setup
 
 ```console
 $ pip install --user libvcs
@@ -22,7 +19,7 @@ $ pip install --user ptpython
 $ ptpython
 ```
 
-# Usage
+## Usage
 
 Create a [Repo](https://libvcs.git-pull.com/api.html#creating-a-repo-object) object of the project
 to inspect / checkout / update:
@@ -55,7 +52,7 @@ Get revision:
 u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 ```
 
-# Donations
+## Donations
 
 Your donations fund development of new features, testing and support. Your money will go directly to
 maintenance and development of the project. If you are an individual, feel free to give whatever
@@ -63,7 +60,7 @@ feels right for the value you get out of the project.
 
 See donation options at <https://www.git-pull.com/support.html>.
 
-# More information
+## More information
 
 - Python support: Python 2.7, >= 3.4, pypy
 - VCS supported: git(1), svn(1), hg(1)
