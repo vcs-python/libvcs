@@ -13,7 +13,7 @@ $ pip install --user libvcs
 Upgrading:
 
 ```console
-$ pip install --user --user libvcs
+$ pip install --user --upgrade libvcs
 ```
 
 (developmental-releases)=
