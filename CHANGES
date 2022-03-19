@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 - Python 3.7 and 3.8 dropped (#308)
 
+  Maintenance and bug support exists in
+  [`v0.11.x`](https://github.com/vcs-python/libvcs/tree/v0.11.x)
+
+
 - _Add your latest changes from PRs here_
 
 ## libvcs 0.11.1 (2022-03-12)
