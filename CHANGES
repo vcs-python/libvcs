@@ -1,6 +1,19 @@
 # Changelog
 
-## Current
+To install the unreleased libvcs version, see
+[developmental releases](https://libvcs.git-pull.com/quickstart.html#developmental-releases).
+
+[pip](https://pip.pypa.io/en/stable/):
+
+```console
+$ pip install --user --upgrade --pre libvcs
+```
+
+## current - unrelased
+
+### Compatibility
+
+- Python 3.7 and 3.8 dropped (#308)
 
 - _Add your latest changes from PRs here_
 
