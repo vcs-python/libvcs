@@ -165,17 +165,36 @@ def test_git_get_url_and_rev_from_pip_url():
     assert rev == "eucalyptus"
 
 
-def test_remotes_preserves_git_ssh(repos_path, git_remote):
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda git_remote, repo_dir, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": str(repo_dir),
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda git_remote, repo_dir, **kwargs: {
+                "pip_url": f"git+file://{git_remote}",
+                "repo_dir": repo_dir,
+            },
+        ],
+    ],
+)
+def test_remotes_preserves_git_ssh(
+    repos_path, git_remote, constructor, lazy_constructor_options
+):
     # Regression test for #14
     repo_name = "myexamplegit"
     repo_dir = repos_path / repo_name
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
 
-    git_repo = GitRepo(
-        url=f"file://{git_remote}",
-        repo_dir=str(repo_dir),
-    )
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
 
