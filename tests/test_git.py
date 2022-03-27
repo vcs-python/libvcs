@@ -127,15 +127,32 @@ def test_progress_callback(tmp_path: pathlib.Path, git_remote, mocker):
     assert progress_callback.called
 
 
-def test_remotes(repos_path, git_remote):
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "pip_url": f"git+file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+            },
+        ],
+    ],
+)
+def test_remotes(repos_path, git_remote, constructor, lazy_constructor_options):
     repo_name = "myrepo"
     remote_name = "myremote"
     remote_url = "https://localhost/my/git/repo.git"
 
-    git_repo = create_repo_from_pip_url(
-        pip_url=f"git+file://{git_remote}",
-        repo_dir=repos_path / repo_name,
-    )
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
 
