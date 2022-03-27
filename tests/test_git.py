@@ -4,6 +4,7 @@ import getpass
 import os
 import pathlib
 import textwrap
+from typing import Callable
 
 import pytest
 
@@ -21,6 +22,10 @@ from libvcs.util import run, which
 
 if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
+
+
+RepoTestFactory = Callable[..., GitRepo]
+RepoTestFactoryLazyKwargs = Callable[..., dict]
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -44,7 +49,31 @@ def gitconfig_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
     monkeypatch.setenv("HOME", str(user_path))
 
 
-def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda bare_repo_dir, tmp_path, **kwargs: {
+                "url": f"file://{bare_repo_dir}",
+                "repo_dir": tmp_path / "obtaining a bare repo",
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda bare_repo_dir, tmp_path, **kwargs: {
+                "pip_url": f"git+file://{bare_repo_dir}",
+                "repo_dir": tmp_path / "obtaining a bare repo",
+            },
+        ],
+    ],
+)
+def test_repo_git_obtain_initial_commit_repo(
+    tmp_path: pathlib.Path,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+):
     """initial commit repos return 'initial'.
 
     note: this behaviors differently from git(1)'s use of the word "bare".
@@ -55,13 +84,7 @@ def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
     run(["git", "init", repo_name], cwd=tmp_path)
 
     bare_repo_dir = tmp_path / repo_name
-
-    git_repo = create_repo_from_pip_url(
-        **{
-            "pip_url": f"git+file://{bare_repo_dir}",
-            "repo_dir": tmp_path / "obtaining a bare repo",
-        }
-    )
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
 
     git_repo.obtain()
     assert git_repo.get_revision() == "initial"
@@ -90,8 +113,8 @@ def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
 def test_repo_git_obtain_full(
     tmp_path: pathlib.Path,
     git_remote,
-    constructor,
-    lazy_constructor_options,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
 ):
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
@@ -124,10 +147,10 @@ def test_repo_git_obtain_full(
 )
 def test_repo_update_handle_cases(
     tmp_path: pathlib.Path,
-    git_remote,
+    git_remote: pathlib.Path,
     mocker: MockerFixture,
-    constructor,
-    lazy_constructor_options,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
 ):
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
@@ -167,7 +190,11 @@ def test_repo_update_handle_cases(
     ],
 )
 def test_progress_callback(
-    tmp_path: pathlib.Path, git_remote, mocker, constructor, lazy_constructor_options
+    tmp_path: pathlib.Path,
+    git_remote: pathlib.Path,
+    mocker: MockerFixture,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
 ):
     def progress_callback_spy(output, timestamp):
         assert isinstance(output, str)
@@ -206,7 +233,12 @@ def test_progress_callback(
         ],
     ],
 )
-def test_remotes(repos_path, git_remote, constructor, lazy_constructor_options):
+def test_remotes(
+    repos_path: pathlib.Path,
+    git_remote: pathlib.Path,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+):
     repo_name = "myrepo"
     remote_name = "myremote"
     remote_url = "https://localhost/my/git/repo.git"
@@ -262,7 +294,10 @@ def test_git_get_url_and_rev_from_pip_url():
     ],
 )
 def test_remotes_preserves_git_ssh(
-    repos_path, git_remote, constructor, lazy_constructor_options
+    repos_path: pathlib.Path,
+    git_remote: pathlib.Path,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
 ):
     # Regression test for #14
     repo_name = "myexamplegit"
@@ -280,7 +315,31 @@ def test_remotes_preserves_git_ssh(
     )
 
 
-def test_private_ssh_format(pip_url_kwargs):
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda bare_repo_dir, tmp_path, **kwargs: {
+                "url": f"file://{bare_repo_dir}",
+                "repo_dir": tmp_path / "obtaining a bare repo",
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda bare_repo_dir, tmp_path, **kwargs: {
+                "pip_url": f"git+file://{bare_repo_dir}",
+                "repo_dir": tmp_path / "obtaining a bare repo",
+            },
+        ],
+    ],
+)
+def test_private_ssh_format(
+    pip_url_kwargs: dict,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+):
     pip_url_kwargs.update(
         **{"pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo"}
     )
@@ -290,14 +349,14 @@ def test_private_ssh_format(pip_url_kwargs):
     excinfo.match(r"is malformatted")
 
 
-def test_ls_remotes(git_repo):
+def test_ls_remotes(git_repo: GitRepo):
     remotes = git_repo.remotes()
 
     assert "origin" in remotes
     assert "origin" in git_repo.remotes(flat=True)
 
 
-def test_get_remotes(git_repo):
+def test_get_remotes(git_repo: GitRepo):
     assert "origin" in git_repo.remotes()
 
 
@@ -307,7 +366,7 @@ def test_get_remotes(git_repo):
         ["myrepo", "file:///apples"],
     ],
 )
-def test_set_remote(git_repo, repo_name, new_repo_url):
+def test_set_remote(git_repo: GitRepo, repo_name: str, new_repo_url: str):
     mynewremote = git_repo.set_remote(name=repo_name, url="file:///")
 
     assert "file:///" in mynewremote, "set_remote returns remote"
@@ -329,13 +388,13 @@ def test_set_remote(git_repo, repo_name, new_repo_url):
     ), "Running remove_set should overwrite previous remote"
 
 
-def test_get_git_version(git_repo):
+def test_get_git_version(git_repo: GitRepo):
     expected_version = git_repo.run(["--version"]).replace("git version ", "")
     assert git_repo.get_git_version()
     assert expected_version == git_repo.get_git_version()
 
 
-def test_get_current_remote_name(git_repo):
+def test_get_current_remote_name(git_repo: GitRepo):
     assert git_repo.get_current_remote_name() == "origin"
 
     new_branch = "another-branch-with-no-upstream"
@@ -428,7 +487,7 @@ def test_extract_status():
         ],
     ],
 )
-def test_extract_status_b(fixture, expected_result):
+def test_extract_status_b(fixture: str, expected_result: dict):
     assert (
         extract_status(textwrap.dedent(fixture))._asdict().items()
         >= expected_result.items()
@@ -478,7 +537,7 @@ def test_extract_status_b(fixture, expected_result):
         ],
     ],
 )
-def test_extract_status_c(fixture, expected_result):
+def test_extract_status_c(fixture: str, expected_result: dict):
     assert (
         expected_result.items()
         <= extract_status(textwrap.dedent(fixture))._asdict().items()
