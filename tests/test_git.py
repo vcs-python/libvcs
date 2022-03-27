@@ -67,14 +67,33 @@ def test_repo_git_obtain_initial_commit_repo(tmp_path: pathlib.Path):
     assert git_repo.get_revision() == "initial"
 
 
-def test_repo_git_obtain_full(tmp_path: pathlib.Path, git_remote):
-    git_repo = create_repo_from_pip_url(
-        **{
-            "pip_url": f"git+file://{git_remote}",
-            "repo_dir": tmp_path / "myrepo",
-        }
-    )
-
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda git_remote, tmp_path, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": tmp_path / "myrepo",
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda git_remote, tmp_path, **kwargs: {
+                "pip_url": f"git+file://{git_remote}",
+                "repo_dir": tmp_path / "myrepo",
+            },
+        ],
+    ],
+)
+def test_repo_git_obtain_full(
+    tmp_path: pathlib.Path,
+    git_remote,
+    constructor,
+    lazy_constructor_options,
+):
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
 
     test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote)
