@@ -7,6 +7,8 @@ import textwrap
 
 import pytest
 
+from pytest_mock import MockerFixture
+
 from libvcs import exc
 from libvcs.git import (
     GitRemote,
@@ -102,7 +104,11 @@ def test_repo_git_obtain_full(tmp_path: pathlib.Path, git_remote):
     ],
 )
 def test_repo_update_handle_cases(
-    tmp_path: pathlib.Path, git_remote, mocker, constructor, lazy_constructor_options
+    tmp_path: pathlib.Path,
+    git_remote,
+    mocker: MockerFixture,
+    constructor,
+    lazy_constructor_options,
 ):
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
