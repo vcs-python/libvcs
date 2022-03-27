@@ -8,7 +8,12 @@ import textwrap
 import pytest
 
 from libvcs import exc
-from libvcs.git import GitRemote, convert_pip_url as git_convert_pip_url, extract_status
+from libvcs.git import (
+    GitRemote,
+    GitRepo,
+    convert_pip_url as git_convert_pip_url,
+    extract_status,
+)
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
@@ -167,9 +172,9 @@ def test_remotes_preserves_git_ssh(repos_path, git_remote):
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
 
-    git_repo = create_repo_from_pip_url(
-        pip_url=f"git+file://{git_remote}",
-        repo_dir=repo_dir,
+    git_repo = GitRepo(
+        url=f"file://{git_remote}",
+        repo_dir=str(repo_dir),
     )
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
