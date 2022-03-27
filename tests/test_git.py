@@ -81,14 +81,30 @@ def test_repo_git_obtain_full(tmp_path: pathlib.Path, git_remote):
     assert os.path.exists(tmp_path / "myrepo")
 
 
-def test_repo_update_handle_cases(tmp_path: pathlib.Path, git_remote, mocker):
-    git_repo = create_repo_from_pip_url(
-        **{
-            "pip_url": f"git+file://{git_remote}",
-            "repo_dir": tmp_path / "myrepo",
-        }
-    )
-
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda git_remote, tmp_path, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": tmp_path / "myrepo",
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda git_remote, tmp_path, **kwargs: {
+                "pip_url": f"git+file://{git_remote}",
+                "repo_dir": tmp_path / "myrepo",
+            },
+        ],
+    ],
+)
+def test_repo_update_handle_cases(
+    tmp_path: pathlib.Path, git_remote, mocker, constructor, lazy_constructor_options
+):
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
     mocka = mocker.spy(git_repo, "run")
     git_repo.update_repo()
@@ -103,7 +119,31 @@ def test_repo_update_handle_cases(tmp_path: pathlib.Path, git_remote, mocker):
     assert mocker.call(["symbolic-ref", "--short", "HEAD"]) not in mocka.mock_calls
 
 
-def test_progress_callback(tmp_path: pathlib.Path, git_remote, mocker):
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options",
+    [
+        [
+            GitRepo,
+            lambda git_remote, tmp_path, progress_callback, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": tmp_path / "myrepo",
+                "progress_callback": progress_callback,
+            },
+        ],
+        [
+            create_repo_from_pip_url,
+            lambda git_remote, tmp_path, progress_callback, **kwargs: {
+                "pip_url": f"git+file://{git_remote}",
+                "repo_dir": tmp_path / "myrepo",
+                "progress_callback": progress_callback,
+            },
+        ],
+    ],
+)
+def test_progress_callback(
+    tmp_path: pathlib.Path, git_remote, mocker, constructor, lazy_constructor_options
+):
     def progress_callback_spy(output, timestamp):
         assert isinstance(output, str)
         assert isinstance(timestamp, datetime.datetime)
@@ -115,13 +155,7 @@ def test_progress_callback(tmp_path: pathlib.Path, git_remote, mocker):
     run(["git", "rev-parse", "HEAD"], cwd=git_remote)
 
     # create a new repo with the repo as a remote
-    git_repo = create_repo_from_pip_url(
-        **{
-            "pip_url": f"git+file://{git_remote}",
-            "repo_dir": tmp_path / "myrepo",
-            "progress_callback": progress_callback,
-        }
-    )
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
 
     assert progress_callback.called
