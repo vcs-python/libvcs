@@ -17,7 +17,7 @@
 import logging
 import os
 import re
-from typing import Dict, NamedTuple, Optional
+from typing import Dict, NamedTuple, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from . import exc
@@ -125,11 +125,20 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
+class RemoteDict(TypedDict):
+    fetch: str
+    push: str
+
+
+FullRemoteDict = Dict[str, RemoteDict]
+RemotesArgs = Union[None, FullRemoteDict, Dict[str, str]]
+
+
 class GitRepo(BaseRepo):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
-    def __init__(self, url, repo_dir, **kwargs):
+    def __init__(self, url, repo_dir, remotes: RemotesArgs = None, **kwargs):
         """A git repository.
 
         Parameters
@@ -144,6 +153,19 @@ class GitRepo(BaseRepo):
             self.git_shallow = False
         if "tls_verify" not in kwargs:
             self.tls_verify = False
+
+        self._remotes: Union[FullRemoteDict, None]
+
+        if remotes is None:
+            self._remotes: FullRemoteDict = {"origin": url}
+        elif isinstance(remotes, dict):
+            self._remotes: FullRemoteDict = remotes
+            for remote_name, url in remotes.items():
+                if isinstance(str, dict):
+                    remotes[remote_name] = {
+                        "fetch": url,
+                        "push": url,
+                    }
 
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
@@ -160,6 +182,28 @@ class GitRepo(BaseRepo):
             return self.run(["rev-parse", "--verify", "HEAD"])
         except exc.CommandError:
             return "initial"
+
+    def set_remotes(self, overwrite: bool = False):
+        remotes = self._remotes
+        if isinstance(remotes, dict):
+            for remote_name, url in remotes.items():
+                existing_remote = self.remote(remote_name)
+                if isinstance(url, dict) and "fetch" in url:
+                    if not existing_remote or existing_remote.fetch_url != url:
+                        self.set_remote(
+                            name=remote_name, url=url["fetch"], overwrite=overwrite
+                        )
+                    if "push" in url:
+                        if not existing_remote or existing_remote.push_url != url:
+                            self.set_remote(
+                                name=remote_name,
+                                url=url["push"],
+                                push=True,
+                                overwrite=overwrite,
+                            )
+                else:
+                    if not existing_remote or existing_remote.fetch_url != url:
+                        self.set_remote(name=remote_name, url=url, overwrite=overwrite)
 
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist."""
@@ -181,6 +225,8 @@ class GitRepo(BaseRepo):
         self.run(["submodule", "init"], log_in_real_time=True)
         cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
+
+        self.set_remotes()
 
     def update_repo(self):
         self.ensure_dir()
@@ -388,7 +434,7 @@ class GitRepo(BaseRepo):
         except exc.LibVCSException:
             return None
 
-    def set_remote(self, name, url, overwrite=False):
+    def set_remote(self, name, url, push: bool = False, overwrite=False):
         """Set remote with name and URL like git remote add.
 
         Parameters
