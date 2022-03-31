@@ -138,7 +138,7 @@ class GitRepo(BaseRepo):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
-    def __init__(self, url, repo_dir, remotes: RemotesArgs = None, **kwargs):
+    def __init__(self, url: str, repo_dir: str, remotes: RemotesArgs = None, **kwargs):
         """A git repository.
 
         Parameters
