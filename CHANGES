@@ -18,6 +18,10 @@ $ pip install --user --upgrade --pre libvcs
   Maintenance and bug support exists in
   [`v0.11.x`](https://github.com/vcs-python/libvcs/tree/v0.11.x)
 
+### Development
+
+- Add codeql analysis (:issue:`303`)
+- git test suite: Lots of parametrization (:issue:`309`)
 
 - _Add your latest changes from PRs here_
 
