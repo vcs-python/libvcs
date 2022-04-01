@@ -5,7 +5,9 @@ from libvcs import GitRepo, MercurialRepo, SubversionRepo
 from libvcs.exc import InvalidPipURL, InvalidVCS
 
 
-def create_repo(url, vcs, **kwargs) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
+def create_repo(
+    url, vcs, progress_callback=None, **kwargs
+) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
     r"""Return a object representation of a VCS repository.
 
     Examples
