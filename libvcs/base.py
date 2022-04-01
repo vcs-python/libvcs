@@ -143,5 +143,11 @@ class BaseRepo(RepoLoggingAdapter):
 
         return True
 
+    def update_repo(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def obtain(self, *args, **kwargs):
+        raise NotImplementedError
+
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.repo_name}>"
