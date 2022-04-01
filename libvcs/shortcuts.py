@@ -44,11 +44,11 @@ def create_repo(
     Already up-to-date.
     """
     if vcs == "git":
-        return GitRepo(url, **kwargs)
+        return GitRepo(url, progress_callback=progress_callback, **kwargs)
     elif vcs == "hg":
-        return MercurialRepo(url, **kwargs)
+        return MercurialRepo(url, progress_callback=progress_callback, **kwargs)
     elif vcs == "svn":
-        return SubversionRepo(url, **kwargs)
+        return SubversionRepo(url, progress_callback=progress_callback, **kwargs)
     else:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
 
