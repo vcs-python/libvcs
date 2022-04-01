@@ -17,18 +17,32 @@ DEFAULT_VCS_CLASS_MAP: Dict[DEFAULT_VCS_LITERAL, DEFAULT_VCS_CLASS_UNION] = {
 
 
 def create_repo(
-    url, vcs, progress_callback=None, *args, **kwargs
+    vcs: DEFAULT_VCS_LITERAL,
+    repo_dir: str,
+    options: Dict,
+    progress_callback=None,
+    *args,
+    **kwargs
 ) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
     r"""Return a object representation of a VCS repository.
+
+    Parameters
+    ----------
+    progress_callback : func
+        See :class:`libvcs.base.BaseRepo`
 
     Examples
     --------
     >>> from libvcs.shortcuts import create_repo
     >>>
     >>> r = create_repo(
-    ...     url='https://www.github.com/you/myrepo',
     ...     vcs='git',
-    ...     repo_dir='/tmp/myrepo'
+    ...     repo_dir='/tmp/myrepo',
+    ...     options={  # VCS-specific params
+    ...         'remotes': {
+    ...             'origin': 'https://www.github.com/you/myrepo'
+    ...         }
+    ...     }
     ... )
 
     >>> r.update_repo()
@@ -43,13 +57,15 @@ def create_repo(
     |myrepo| (git)  git pull
     Already up-to-date.
     """
-    if vcs == "git":
-        return GitRepo(url, progress_callback=progress_callback, *args, **kwargs)
-    elif vcs == "hg":
-        return MercurialRepo(url, progress_callback=progress_callback, *args, **kwargs)
-    elif vcs == "svn":
-        return SubversionRepo(url, progress_callback=progress_callback, *args, **kwargs)
-    else:
+    try:
+        return DEFAULT_VCS_CLASS_MAP[vcs](
+            repo_dir=repo_dir,
+            options=options,
+            progress_callback=progress_callback,
+            *args,
+            **kwargs
+        )
+    except KeyError:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
 
 
