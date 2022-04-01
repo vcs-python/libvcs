@@ -89,6 +89,7 @@ html_sidebars = {
 
 # sphinx.ext.autodoc
 autoclass_content = "both"
+autodoc_member_order = "bysource"
 
 # sphinxext.opengraph
 ogp_site_url = about["__docs__"]
