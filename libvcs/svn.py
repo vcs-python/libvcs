@@ -55,6 +55,7 @@ class SubversionRepo(BaseRepo):
             self.svn_trust_cert = False
 
         self.rev = kwargs.get("rev")
+        self.url = url
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
     def _user_pw_args(self):

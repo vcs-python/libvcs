@@ -4,7 +4,7 @@ import pytest
 
 from libvcs import GitRepo, MercurialRepo, SubversionRepo
 from libvcs.exc import InvalidPipURL, InvalidVCS
-from libvcs.shortcuts import create_repo, create_repo_from_pip_url
+from libvcs.shortcuts import create_repo_from_pip_url, create_repo_legacy
 
 
 @pytest.mark.parametrize(
@@ -67,13 +67,15 @@ def test_create_repo_from_pip_url(
         ),
     ],
 )
-def test_create_repo(tmp_path: pathlib.Path, repo_dict, repo_class, raises_exception):
+def test_create_repo_legacy(
+    tmp_path: pathlib.Path, repo_dict, repo_class, raises_exception
+):
     # add parent_dir via fixture
     repo_dict["repo_dir"] = tmp_path / "repo_name"
 
     if raises_exception:
         with pytest.raises(raises_exception):
-            create_repo(**repo_dict)
+            create_repo_legacy(**repo_dict)
     else:
-        repo = create_repo(**repo_dict)
+        repo = create_repo_legacy(**repo_dict)
         assert isinstance(repo, repo_class)

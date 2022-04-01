@@ -22,6 +22,7 @@ class MercurialRepo(BaseRepo):
 
     def __init__(self, url, repo_dir, **kwargs):
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
+        self.url = url
 
     def obtain(self, *args, **kwargs):
         self.ensure_dir()

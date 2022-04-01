@@ -44,7 +44,7 @@ class BaseRepo(RepoLoggingAdapter):
     #: vcs app name, e.g. 'git'
     bin_name = ""
 
-    def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
+    def __init__(self, repo_dir, progress_callback=None, *args, **kwargs):
         """
         Parameters
         ----------
@@ -58,7 +58,6 @@ class BaseRepo(RepoLoggingAdapter):
             >>> create_repo(..., progress_callback=progress_cb)
         """
         self.progress_callback = progress_callback
-        self.url = url
         self.parent_dir = os.path.dirname(repo_dir)
         self.repo_name = os.path.basename(os.path.normpath(repo_dir))
         self.path = repo_dir

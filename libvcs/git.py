@@ -134,17 +134,20 @@ FullRemoteDict = Dict[str, RemoteDict]
 RemotesArgs = Union[None, FullRemoteDict, Dict[str, str]]
 
 
+class GitOptions(TypedDict):
+    remotes: RemotesArgs
+
+
 class GitRepo(BaseRepo):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
-    def __init__(self, url: str, repo_dir: str, remotes: RemotesArgs = None, **kwargs):
+    def __init__(self, repo_dir: str, options: GitOptions, *args, **kwargs):
         """A git repository.
 
         Parameters
         ----------
-        url : str
-            URL of repo
+        options : FullRemoteDict
 
         tls_verify : bool
             Should certificate for https be checked (default False)
@@ -190,20 +193,16 @@ class GitRepo(BaseRepo):
         if "tls_verify" not in kwargs:
             self.tls_verify = False
 
-        self._remotes: Union[FullRemoteDict, None]
+        self._remotes: FullRemoteDict = options["remotes"]
+        for remote_name, url in self._remotes.items():
+            if isinstance(str, dict):
+                self._remotes[remote_name] = {
+                    "fetch": url,
+                    "push": url,
+                }
 
-        if remotes is None:
-            self._remotes: FullRemoteDict = {"origin": url}
-        elif isinstance(remotes, dict):
-            self._remotes: FullRemoteDict = remotes
-            for remote_name, url in remotes.items():
-                if isinstance(str, dict):
-                    remotes[remote_name] = {
-                        "fetch": url,
-                        "push": url,
-                    }
-
-        BaseRepo.__init__(self, url, repo_dir, **kwargs)
+        BaseRepo.__init__(self, repo_dir, options, *args, **kwargs)
+        self.url = self._remotes["origin"]["fetch"]
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
