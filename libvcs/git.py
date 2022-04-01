@@ -264,13 +264,16 @@ class GitRepo(BaseRepo):
 
         self.set_remotes()
 
-    def update_repo(self):
+    def update_repo(self, set_remotes: bool = False):
         self.ensure_dir()
 
         if not os.path.isdir(os.path.join(self.path, ".git")):
             self.obtain()
             self.update_repo()
             return
+
+        if set_remotes:
+            self.set_remotes(overwrite=True)
 
         # Get requested revision or tag
         url, git_tag = self.url, getattr(self, "rev", None)
