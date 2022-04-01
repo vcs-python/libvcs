@@ -299,6 +299,73 @@ def test_remotes(
         ) == git_repo.remote(expected_remote_name)
 
 
+@pytest.mark.parametrize(
+    # Postpone evaluation of options so fixture variables can interpolate
+    "constructor,lazy_constructor_options,lazy_remote_dict,lazy_remote_expected",
+    [
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "origin": f"file://{git_remote}",
+                },
+            },
+            lambda git_remote, **kwargs: {
+                "second_remote": f"file://{git_remote}",
+            },
+            lambda git_remote, **kwargs: {
+                "origin": f"file://{git_remote}",
+                "second_remote": f"file://{git_remote}",
+            },
+        ],
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "origin": f"file://{git_remote}",
+                },
+            },
+            lambda git_remote, **kwargs: {
+                "origin": "https://github.com/vcs-python/libvcs",
+            },
+            lambda git_remote, **kwargs: {
+                "origin": "https://github.com/vcs-python/libvcs",
+            },
+        ],
+    ],
+)
+def test_remotes_update_repo(
+    repos_path: pathlib.Path,
+    git_remote: pathlib.Path,
+    constructor: RepoTestFactory,
+    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    lazy_remote_dict: RepoTestFactoryRemotesLazyExpected,
+    lazy_remote_expected: RepoTestFactoryRemotesLazyExpected,
+):
+    repo_name = "myrepo"
+    remote_name = "myremote"
+    remote_url = "https://localhost/my/git/repo.git"
+
+    git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
+    git_repo.obtain()
+
+    git_repo._remotes = lazy_remote_dict(**locals())
+    git_repo.update_repo(set_remotes=True)
+
+    expected = lazy_remote_expected(**locals())
+    assert len(expected.keys()) > 0
+    for expected_remote_name, expected_remote_url in expected.items():
+        assert (
+            expected_remote_name,
+            expected_remote_url,
+            expected_remote_url,
+        ) == git_repo.remote(expected_remote_name)
+
+
 def test_git_get_url_and_rev_from_pip_url():
     pip_url = "git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git"
 
