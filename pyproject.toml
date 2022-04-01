@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "libvcs"
-version = "0.12.0b2"
+version = "0.12.0b3"
 description = "vcs abstraction layer"
 license = "MIT"
 authors = ["Tony Narlock <tony@git-pull.com>"]
