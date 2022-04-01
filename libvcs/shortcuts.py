@@ -98,7 +98,7 @@ def create_repo_legacy(
     --------
     >>> from libvcs.shortcuts import create_repo_legacy
     >>>
-    >>> r = create_repo(
+    >>> r = create_repo_legacy(
     ...     url='https://www.github.com/you/myrepo',
     ...     vcs='git',
     ...     repo_dir='/tmp/myrepo'
