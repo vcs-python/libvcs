@@ -48,7 +48,7 @@ class BaseRepo(RepoLoggingAdapter):
         """
         Parameters
         ----------
-        callback : func
+        progress_callback : func
             Retrieve live progress from ``sys.stderr`` (useful for certain vcs commands
             like ``git pull``. Use ``progress_callback``:
 
