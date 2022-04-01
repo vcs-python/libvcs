@@ -51,6 +51,11 @@ $ pip install --user --upgrade --pre libvcs
 
 - Add codeql analysis (:issue:`303`)
 - git test suite: Lots of parametrization (:issue:`309`)
+- New constants for `str` -> class mappings
+
+  - {data}`libvcs.shortcuts.DEFAULT_VCS_CLASS_MAP`
+  - {data}`libvcs.shortcuts.DEFAULT_VCS_CLASS_UNION`
+  - {data}`libvcs.shortcuts.DEFAULT_VCS_LITERAL`
 
 - _Add your latest changes from PRs here_
 
