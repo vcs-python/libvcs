@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 
 from libvcs import exc
 from libvcs.git import (
+    FullRemoteDict,
     GitRemote,
     GitRepo,
     convert_pip_url as git_convert_pip_url,
@@ -26,6 +27,7 @@ if not which("git"):
 
 RepoTestFactory = Callable[..., GitRepo]
 RepoTestFactoryLazyKwargs = Callable[..., dict]
+RepoTestFactoryRemotesLazyExpected = Callable[..., FullRemoteDict]
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -215,13 +217,52 @@ def test_progress_callback(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    "constructor,lazy_constructor_options,lazy_remote_expected",
     [
         [
             GitRepo,
             lambda git_remote, repos_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote}",
                 "repo_dir": repos_path / repo_name,
+            },
+            lambda git_remote, **kwargs: {"origin": f"file://{git_remote}"},
+        ],
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {"origin": f"file://{git_remote}"},
+            },
+            lambda git_remote, **kwargs: {"origin": f"file://{git_remote}"},
+        ],
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "origin": f"file://{git_remote}",
+                    "second_remote": f"file://{git_remote}",
+                },
+            },
+            lambda git_remote, **kwargs: {
+                "origin": f"file://{git_remote}",
+                "second_remote": f"file://{git_remote}",
+            },
+        ],
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "second_remote": f"file://{git_remote}",
+                },
+            },
+            lambda git_remote, **kwargs: {
+                "origin": f"file://{git_remote}",
+                "second_remote": f"file://{git_remote}",
             },
         ],
         [
@@ -230,6 +271,7 @@ def test_progress_callback(
                 "pip_url": f"git+file://{git_remote}",
                 "repo_dir": repos_path / repo_name,
             },
+            lambda git_remote, **kwargs: {"origin": f"file://{git_remote}"},
         ],
     ],
 )
@@ -238,6 +280,7 @@ def test_remotes(
     git_remote: pathlib.Path,
     constructor: RepoTestFactory,
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    lazy_remote_expected: RepoTestFactoryRemotesLazyExpected,
 ):
     repo_name = "myrepo"
     remote_name = "myremote"
@@ -245,9 +288,15 @@ def test_remotes(
 
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
-    git_repo.set_remote(name=remote_name, url=remote_url)
 
-    assert (remote_name, remote_url, remote_url) == git_repo.remote(remote_name)
+    expected = lazy_remote_expected(**locals())
+    assert len(expected.keys()) > 0
+    for expected_remote_name, expected_remote_url in expected.items():
+        assert (
+            expected_remote_name,
+            expected_remote_url,
+            expected_remote_url,
+        ) == git_repo.remote(expected_remote_name)
 
 
 def test_git_get_url_and_rev_from_pip_url():
