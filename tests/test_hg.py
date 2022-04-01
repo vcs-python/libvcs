@@ -5,7 +5,7 @@ import textwrap
 
 import pytest
 
-from libvcs.shortcuts import create_repo, create_repo_from_pip_url
+from libvcs.shortcuts import create_repo_from_pip_url, create_repo_legacy
 from libvcs.util import run, which
 
 if not which("hg"):
@@ -88,7 +88,7 @@ def test_vulnerability_2022_03_12_command_injection(
     random_dir = tmp_path / "random"
     random_dir.mkdir()
     monkeypatch.chdir(str(random_dir))
-    mercurial_repo = create_repo(
+    mercurial_repo = create_repo_legacy(
         url="--config=alias.clone=!touch ./HELLO", vcs="hg", repo_dir="./"
     )
     with pytest.raises(Exception):
