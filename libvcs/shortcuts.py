@@ -17,7 +17,7 @@ DEFAULT_VCS_CLASS_MAP: Dict[DEFAULT_VCS_LITERAL, DEFAULT_VCS_CLASS_UNION] = {
 
 
 def create_repo(
-    url, vcs, progress_callback=None, **kwargs
+    url, vcs, progress_callback=None, *args, **kwargs
 ) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
     r"""Return a object representation of a VCS repository.
 
@@ -44,11 +44,11 @@ def create_repo(
     Already up-to-date.
     """
     if vcs == "git":
-        return GitRepo(url, progress_callback=progress_callback, **kwargs)
+        return GitRepo(url, progress_callback=progress_callback, *args, **kwargs)
     elif vcs == "hg":
-        return MercurialRepo(url, progress_callback=progress_callback, **kwargs)
+        return MercurialRepo(url, progress_callback=progress_callback, *args, **kwargs)
     elif vcs == "svn":
-        return SubversionRepo(url, progress_callback=progress_callback, **kwargs)
+        return SubversionRepo(url, progress_callback=progress_callback, *args, **kwargs)
     else:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
 
