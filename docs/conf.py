@@ -87,6 +87,9 @@ html_sidebars = {
     ]
 }
 
+# sphinx.ext.autodoc
+autoclass_content = "both"
+
 # sphinxext.opengraph
 ogp_site_url = about["__docs__"]
 ogp_image = "_static/img/icons/icon-192x192.png"
