@@ -148,6 +148,42 @@ class GitRepo(BaseRepo):
 
         tls_verify : bool
             Should certificate for https be checked (default False)
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import os
+            from libvcs.git import GitRepo
+
+            checkout = os.path.dirname(os.path.abspath(__name__)) + '/' + 'my_libvcs'
+
+            repo = GitRepo(
+               url="https://github.com/vcs-python/libvcs",
+               repo_dir=checkout,
+               remotes={
+                   'gitlab': 'https://gitlab.com/vcs-python/libvcs'
+               }
+            )
+
+        .. code-block:: python
+
+            import os
+            from libvcs.git import GitRepo
+
+            checkout = os.path.dirname(os.path.abspath(__name__)) + '/' + 'my_libvcs'
+
+            repo = GitRepo(
+               url="https://github.com/vcs-python/libvcs",
+               repo_dir=checkout,
+               remotes={
+                   'gitlab': {
+                       'fetch': 'https://gitlab.com/vcs-python/libvcs',
+                       'push': 'https://gitlab.com/vcs-python/libvcs',
+                   },
+               }
+            )
         """
         if "git_shallow" not in kwargs:
             self.git_shallow = False
