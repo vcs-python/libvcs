@@ -13,7 +13,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### What's new
 
-- `GitRepo` now accepts remotes in `__init__`
+- {class}`libvcs.git.GitRepo` now accepts remotes in `__init__`
 
   ```python
   repo = GitRepo(
@@ -37,6 +37,8 @@ $ pip install --user --upgrade --pre libvcs
       }
   )
   ```
+
+- {meth}`libvcs.git.GitRepo.update_repo` now accepts `set_remotes=True`
 
 ### Compatibility
 
