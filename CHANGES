@@ -11,6 +11,35 @@ $ pip install --user --upgrade --pre libvcs
 
 ## current - unrelased
 
+### What's new
+
+- {class}`libvcs.git.GitRepo` now accepts remotes in `__init__`
+
+  ```python
+  repo = GitRepo(
+      url="https://github.com/vcs-python/libvcs",
+      repo_dir=checkout,
+      remotes={
+          'gitlab': 'https://gitlab.com/vcs-python/libvcs',
+      }
+  )
+  ```
+
+  ```python
+  repo = GitRepo(
+      url="https://github.com/vcs-python/libvcs",
+      repo_dir=checkout,
+      remotes={
+          'gitlab': {
+              'fetch': 'https://gitlab.com/vcs-python/libvcs',
+              'push': 'https://gitlab.com/vcs-python/libvcs',
+          },
+      }
+  )
+  ```
+
+- {meth}`libvcs.git.GitRepo.update_repo` now accepts `set_remotes=True`
+
 ### Compatibility
 
 - Python 3.7 and 3.8 dropped (#308)

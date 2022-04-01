@@ -17,7 +17,7 @@
 import logging
 import os
 import re
-from typing import Dict, NamedTuple, Optional
+from typing import Dict, NamedTuple, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from . import exc
@@ -125,11 +125,20 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
+class RemoteDict(TypedDict):
+    fetch: str
+    push: str
+
+
+FullRemoteDict = Dict[str, RemoteDict]
+RemotesArgs = Union[None, FullRemoteDict, Dict[str, str]]
+
+
 class GitRepo(BaseRepo):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
-    def __init__(self, url, repo_dir, **kwargs):
+    def __init__(self, url: str, repo_dir: str, remotes: RemotesArgs = None, **kwargs):
         """A git repository.
 
         Parameters
@@ -139,11 +148,60 @@ class GitRepo(BaseRepo):
 
         tls_verify : bool
             Should certificate for https be checked (default False)
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import os
+            from libvcs.git import GitRepo
+
+            checkout = os.path.dirname(os.path.abspath(__name__)) + '/' + 'my_libvcs'
+
+            repo = GitRepo(
+               url="https://github.com/vcs-python/libvcs",
+               repo_dir=checkout,
+               remotes={
+                   'gitlab': 'https://gitlab.com/vcs-python/libvcs'
+               }
+            )
+
+        .. code-block:: python
+
+            import os
+            from libvcs.git import GitRepo
+
+            checkout = os.path.dirname(os.path.abspath(__name__)) + '/' + 'my_libvcs'
+
+            repo = GitRepo(
+               url="https://github.com/vcs-python/libvcs",
+               repo_dir=checkout,
+               remotes={
+                   'gitlab': {
+                       'fetch': 'https://gitlab.com/vcs-python/libvcs',
+                       'push': 'https://gitlab.com/vcs-python/libvcs',
+                   },
+               }
+            )
         """
         if "git_shallow" not in kwargs:
             self.git_shallow = False
         if "tls_verify" not in kwargs:
             self.tls_verify = False
+
+        self._remotes: Union[FullRemoteDict, None]
+
+        if remotes is None:
+            self._remotes: FullRemoteDict = {"origin": url}
+        elif isinstance(remotes, dict):
+            self._remotes: FullRemoteDict = remotes
+            for remote_name, url in remotes.items():
+                if isinstance(str, dict):
+                    remotes[remote_name] = {
+                        "fetch": url,
+                        "push": url,
+                    }
 
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
@@ -160,6 +218,28 @@ class GitRepo(BaseRepo):
             return self.run(["rev-parse", "--verify", "HEAD"])
         except exc.CommandError:
             return "initial"
+
+    def set_remotes(self, overwrite: bool = False):
+        remotes = self._remotes
+        if isinstance(remotes, dict):
+            for remote_name, url in remotes.items():
+                existing_remote = self.remote(remote_name)
+                if isinstance(url, dict) and "fetch" in url:
+                    if not existing_remote or existing_remote.fetch_url != url:
+                        self.set_remote(
+                            name=remote_name, url=url["fetch"], overwrite=overwrite
+                        )
+                    if "push" in url:
+                        if not existing_remote or existing_remote.push_url != url:
+                            self.set_remote(
+                                name=remote_name,
+                                url=url["push"],
+                                push=True,
+                                overwrite=overwrite,
+                            )
+                else:
+                    if not existing_remote or existing_remote.fetch_url != url:
+                        self.set_remote(name=remote_name, url=url, overwrite=overwrite)
 
     def obtain(self):
         """Retrieve the repository, clone if doesn't exist."""
@@ -182,13 +262,18 @@ class GitRepo(BaseRepo):
         cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
 
-    def update_repo(self):
+        self.set_remotes()
+
+    def update_repo(self, set_remotes: bool = False):
         self.ensure_dir()
 
         if not os.path.isdir(os.path.join(self.path, ".git")):
             self.obtain()
             self.update_repo()
             return
+
+        if set_remotes:
+            self.set_remotes(overwrite=True)
 
         # Get requested revision or tag
         url, git_tag = self.url, getattr(self, "rev", None)
@@ -388,7 +473,7 @@ class GitRepo(BaseRepo):
         except exc.LibVCSException:
             return None
 
-    def set_remote(self, name, url, overwrite=False):
+    def set_remote(self, name, url, push: bool = False, overwrite=False):
         """Set remote with name and URL like git remote add.
 
         Parameters
