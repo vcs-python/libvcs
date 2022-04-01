@@ -2,13 +2,11 @@
 import pathlib
 
 from libvcs.base import BaseRepo, convert_pip_url
-from libvcs.shortcuts import create_repo_legacy
+from libvcs.shortcuts import create_repo
 
 
 def test_repr():
-    repo = create_repo_legacy(
-        url="file://path/to/myrepo", repo_dir="/hello/", vcs="git"
-    )
+    repo = create_repo(url="file://path/to/myrepo", repo_dir="/hello/", vcs="git")
 
     str_repo = str(repo)
     assert "GitRepo" in str_repo

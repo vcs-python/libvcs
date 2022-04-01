@@ -25,10 +25,10 @@ Create a [Repo](https://libvcs.git-pull.com/api.html#creating-a-repo-object) obj
 to inspect / checkout / update:
 
 ```python
->>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo_legacy
+>>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
 
 # repo is an object representation of a vcs repository.
->>> r = create_repo_legacy(url='https://www.github.com/vcs-python/libtmux',
+>>> r = create_repo(url='https://www.github.com/vcs-python/libtmux',
 ...                 vcs='git',
 ...                 repo_dir='/tmp/libtmux')
 
