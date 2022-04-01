@@ -120,7 +120,7 @@ class SubversionRepo(BaseRepo):
             revision = max(revision, localrev)
         return revision
 
-    def update_repo(self, dest=None):
+    def update_repo(self, dest=None, *args, **kwargs):
         self.ensure_dir()
         if os.path.isdir(os.path.join(self.path, ".svn")):
             dest = self.path if not dest else dest

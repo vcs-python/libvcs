@@ -241,7 +241,7 @@ class GitRepo(BaseRepo):
                     if not existing_remote or existing_remote.fetch_url != url:
                         self.set_remote(name=remote_name, url=url, overwrite=overwrite)
 
-    def obtain(self):
+    def obtain(self, *args, **kwargs):
         """Retrieve the repository, clone if doesn't exist."""
         self.ensure_dir()
 
@@ -264,7 +264,7 @@ class GitRepo(BaseRepo):
 
         self.set_remotes()
 
-    def update_repo(self, set_remotes: bool = False):
+    def update_repo(self, set_remotes: bool = False, *args, **kwargs):
         self.ensure_dir()
 
         if not os.path.isdir(os.path.join(self.path, ".git")):

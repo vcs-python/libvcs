@@ -23,7 +23,7 @@ class MercurialRepo(BaseRepo):
     def __init__(self, url, repo_dir, **kwargs):
         BaseRepo.__init__(self, url, repo_dir, **kwargs)
 
-    def obtain(self):
+    def obtain(self, *args, **kwargs):
         self.ensure_dir()
 
         # Double hyphens between [OPTION]... -- SOURCE [DEST] prevent command injections
@@ -34,7 +34,7 @@ class MercurialRepo(BaseRepo):
     def get_revision(self):
         return self.run(["parents", "--template={rev}"])
 
-    def update_repo(self):
+    def update_repo(self, *args, **kwargs):
         self.ensure_dir()
         if not os.path.isdir(os.path.join(self.path, ".hg")):
             self.obtain()
