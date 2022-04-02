@@ -32,6 +32,11 @@ jobs:
       - name: Lint with flake8
         run: poetry run flake8
 
+      - name: Print python versions
+        run: |
+          python -V
+          poetry run python -V
+
       - name: Test with pytest
         run: poetry run py.test --cov=./ --cov-report=xml
 
