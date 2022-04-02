@@ -195,17 +195,22 @@ class GitRepo(BaseRepo):
         self._remotes: Union[FullRemoteDict, None]
 
         if remotes is None:
-            self._remotes: FullRemoteDict = {"origin": url}
+            self._remotes: FullRemoteDict = {"origin": {"fetch": url, "push": url}}
         elif isinstance(remotes, dict):
             self._remotes: FullRemoteDict = remotes
             for remote_name, url in remotes.items():
-                if isinstance(str, dict):
+                if isinstance(url, str):
                     remotes[remote_name] = {
                         "fetch": url,
                         "push": url,
                     }
 
         BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
+        self.url = (
+            self._remotes.get("origin")["fetch"]
+            if self._remotes.get("origin")
+            else next(iter(self._remotes.items()))[1]["fetch"]
+        )
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
@@ -227,12 +232,17 @@ class GitRepo(BaseRepo):
             for remote_name, url in remotes.items():
                 existing_remote = self.remote(remote_name)
                 if isinstance(url, dict) and "fetch" in url:
-                    if not existing_remote or existing_remote.fetch_url != url:
+                    if not existing_remote or existing_remote.fetch_url != url["fetch"]:
                         self.set_remote(
                             name=remote_name, url=url["fetch"], overwrite=overwrite
                         )
+                        # refresh if we're setting it, so push can be checked
+                        existing_remote = self.remote(remote_name)
                     if "push" in url:
-                        if not existing_remote or existing_remote.push_url != url:
+                        if (
+                            not existing_remote
+                            or existing_remote.push_url != url["push"]
+                        ):
                             self.set_remote(
                                 name=remote_name,
                                 url=url["push"],
@@ -271,7 +281,7 @@ class GitRepo(BaseRepo):
 
         if not os.path.isdir(os.path.join(self.path, ".git")):
             self.obtain()
-            self.update_repo()
+            self.update_repo(set_remotes=set_remotes)
             return
 
         if set_remotes:
