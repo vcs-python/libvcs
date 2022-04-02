@@ -23,9 +23,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
 
-      - name: Add ~/.local/bin to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
       - name: Install dependencies
         run: poetry install -E "docs test coverage lint format"
 
