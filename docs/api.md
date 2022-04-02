@@ -21,6 +21,13 @@ entry-point.
 
 See examples below of git, mercurial, and subversion.
 
+## Constants
+
+```{eval-rst}
+.. automodule:: libvcs.constants
+   :members:
+```
+
 ## Instantiating a repo by hand
 
 ### Git

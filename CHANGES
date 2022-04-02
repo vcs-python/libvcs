@@ -55,9 +55,9 @@ $ pip install --user --upgrade --pre libvcs
   [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (:issue:`316`)
 - New constants for `str` -> class mappings
 
-  - {data}`libvcs.shortcuts.DEFAULT_VCS_CLASS_MAP`
-  - {data}`libvcs.shortcuts.DEFAULT_VCS_CLASS_UNION`
-  - {data}`libvcs.shortcuts.DEFAULT_VCS_LITERAL`
+  - {data}`libvcs.constants.DEFAULT_VCS_CLASS_MAP`
+  - {data}`libvcs.constants.DEFAULT_VCS_CLASS_UNION`
+  - {data}`libvcs.constants.DEFAULT_VCS_LITERAL`
 
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
