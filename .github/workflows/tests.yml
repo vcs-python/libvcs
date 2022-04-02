@@ -24,7 +24,10 @@ jobs:
           cache: 'poetry'
 
       - name: Install dependencies
-        run: poetry install -E "docs test coverage lint format"
+        run: |
+          # This is required to do as of @actions/checkout@v3 to prevent default python from being used
+          poetry env use ${{ matrix.python-version }}
+          poetry install -E "docs test coverage lint format"
 
       - name: Lint with flake8
         run: poetry run flake8
