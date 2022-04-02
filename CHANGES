@@ -51,6 +51,8 @@ $ pip install --user --upgrade --pre libvcs
 
 - Add codeql analysis (:issue:`303`)
 - git test suite: Lots of parametrization (:issue:`309`)
+- CI: Use poetry caching from
+  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (:issue:`316`)
 - New constants for `str` -> class mappings
 
   - {data}`libvcs.shortcuts.DEFAULT_VCS_CLASS_MAP`
