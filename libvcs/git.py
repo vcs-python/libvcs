@@ -138,7 +138,9 @@ class GitRepo(BaseRepo):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
-    def __init__(self, url: str, repo_dir: str, remotes: RemotesArgs = None, **kwargs):
+    def __init__(
+        self, url: str, repo_dir: str, remotes: RemotesArgs = None, *args, **kwargs
+    ):
         """A git repository.
 
         Parameters
@@ -203,7 +205,7 @@ class GitRepo(BaseRepo):
                         "push": url,
                     }
 
-        BaseRepo.__init__(self, url, repo_dir, **kwargs)
+        BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
