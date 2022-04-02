@@ -126,8 +126,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 
 
 class RemoteDict(TypedDict):
-    fetch: str
-    push: str
+    fetch_url: str
+    push_url: str
 
 
 FullRemoteDict = Dict[str, RemoteDict]
@@ -195,21 +195,23 @@ class GitRepo(BaseRepo):
         self._remotes: Union[FullRemoteDict, None]
 
         if remotes is None:
-            self._remotes: FullRemoteDict = {"origin": {"fetch": url, "push": url}}
+            self._remotes: FullRemoteDict = {
+                "origin": {"fetch_url": url, "push_url": url}
+            }
         elif isinstance(remotes, dict):
             self._remotes: FullRemoteDict = remotes
             for remote_name, url in remotes.items():
                 if isinstance(url, str):
                     remotes[remote_name] = {
-                        "fetch": url,
-                        "push": url,
+                        "fetch_url": url,
+                        "push_url": url,
                     }
 
         BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
         self.url = (
-            self._remotes.get("origin")["fetch"]
+            self._remotes.get("origin")["fetch_url"]
             if self._remotes.get("origin")
-            else next(iter(self._remotes.items()))[1]["fetch"]
+            else next(iter(self._remotes.items()))[1]["fetch_url"]
         )
 
     @classmethod
@@ -231,21 +233,24 @@ class GitRepo(BaseRepo):
         if isinstance(remotes, dict):
             for remote_name, url in remotes.items():
                 existing_remote = self.remote(remote_name)
-                if isinstance(url, dict) and "fetch" in url:
-                    if not existing_remote or existing_remote.fetch_url != url["fetch"]:
+                if isinstance(url, dict) and "fetch_url" in url:
+                    if (
+                        not existing_remote
+                        or existing_remote.fetch_url != url["fetch_url"]
+                    ):
                         self.set_remote(
-                            name=remote_name, url=url["fetch"], overwrite=overwrite
+                            name=remote_name, url=url["fetch_url"], overwrite=overwrite
                         )
                         # refresh if we're setting it, so push can be checked
                         existing_remote = self.remote(remote_name)
-                    if "push" in url:
+                    if "push_url" in url:
                         if (
                             not existing_remote
-                            or existing_remote.push_url != url["push"]
+                            or existing_remote.push_url != url["push_url"]
                         ):
                             self.set_remote(
                                 name=remote_name,
-                                url=url["push"],
+                                url=url["push_url"],
                                 push=True,
                                 overwrite=overwrite,
                             )
@@ -357,7 +362,7 @@ class GitRepo(BaseRepo):
             return
 
         try:
-            process = self.run(["fetch"], log_in_real_time=True)
+            process = self.run(["fetch_url"], log_in_real_time=True)
         except exc.CommandError:
             self.error("Failed to fetch repository '%s'" % url)
             return
