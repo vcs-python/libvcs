@@ -59,6 +59,9 @@ $ pip install --user --upgrade --pre libvcs
   - {data}`libvcs.shortcuts.DEFAULT_VCS_CLASS_UNION`
   - {data}`libvcs.shortcuts.DEFAULT_VCS_LITERAL`
 
+- Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
+  doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
+
 - _Add your latest changes from PRs here_
 
 ## libvcs 0.11.1 (2022-03-12)
