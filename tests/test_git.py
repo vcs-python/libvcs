@@ -313,11 +313,50 @@ def test_remotes(
                 },
             },
             lambda git_remote, **kwargs: {
-                "second_remote": f"file://{git_remote}",
+                "second_remote": GitRemote(
+                    **{
+                        "name": "second_remote",
+                        "fetch_url": f"file://{git_remote}",
+                        "push_url": f"file://{git_remote}",
+                    }
+                )
             },
             lambda git_remote, **kwargs: {
-                "origin": f"file://{git_remote}",
-                "second_remote": f"file://{git_remote}",
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=f"file://{git_remote}",
+                    fetch_url=f"file://{git_remote}",
+                ),
+                "second_remote": GitRemote(
+                    name="second_remote",
+                    push_url=f"file://{git_remote}",
+                    fetch_url=f"file://{git_remote}",
+                ),
+            },
+        ],
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "origin": f"file://{git_remote}",
+                    # accepts short-hand form since it's inputted in the constructor
+                    "second_remote": f"file://{git_remote}",
+                },
+            },
+            lambda git_remote, **kwargs: {},
+            lambda git_remote, **kwargs: {
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=f"file://{git_remote}",
+                    fetch_url=f"file://{git_remote}",
+                ),
+                "second_remote": GitRemote(
+                    name="second_remote",
+                    push_url=f"file://{git_remote}",
+                    fetch_url=f"file://{git_remote}",
+                ),
             },
         ],
         [
@@ -330,10 +369,20 @@ def test_remotes(
                 },
             },
             lambda git_remote, **kwargs: {
-                "origin": "https://github.com/vcs-python/libvcs",
+                "origin": GitRemote(
+                    **{
+                        "name": "second_remote",
+                        "fetch_url": "https://github.com/vcs-python/libvcs",
+                        "push_url": "https://github.com/vcs-python/libvcs",
+                    }
+                )
             },
             lambda git_remote, **kwargs: {
-                "origin": "https://github.com/vcs-python/libvcs",
+                "origin": GitRemote(
+                    name="origin",
+                    push_url="https://github.com/vcs-python/libvcs",
+                    fetch_url="https://github.com/vcs-python/libvcs",
+                ),
             },
         ],
     ],
@@ -353,17 +402,13 @@ def test_remotes_update_repo(
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
 
-    git_repo._remotes = lazy_remote_dict(**locals())
+    git_repo._remotes |= lazy_remote_dict(**locals())
     git_repo.update_repo(set_remotes=True)
 
     expected = lazy_remote_expected(**locals())
     assert len(expected.keys()) > 0
     for expected_remote_name, expected_remote_url in expected.items():
-        assert (
-            expected_remote_name,
-            expected_remote_url,
-            expected_remote_url,
-        ) == git_repo.remote(expected_remote_name)
+        assert expected_remote_url == git_repo.remote(expected_remote_name)
 
 
 def test_git_get_url_and_rev_from_pip_url():

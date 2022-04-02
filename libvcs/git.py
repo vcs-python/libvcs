@@ -130,6 +130,7 @@ class RemoteDict(TypedDict):
     push_url: str
 
 
+GitRepoRemoteDict = Dict[str, GitRemote]
 FullRemoteDict = Dict[str, RemoteDict]
 RemotesArgs = Union[None, FullRemoteDict, Dict[str, str]]
 
@@ -192,26 +193,27 @@ class GitRepo(BaseRepo):
         if "tls_verify" not in kwargs:
             self.tls_verify = False
 
-        self._remotes: Union[FullRemoteDict, None]
+        self._remotes: GitRepoRemoteDict
 
         if remotes is None:
-            self._remotes: FullRemoteDict = {
-                "origin": {"fetch_url": url, "push_url": url}
+            self._remotes: GitRepoRemoteDict = {
+                "origin": GitRemote(name="origin", fetch_url=url, push_url=url)
             }
         elif isinstance(remotes, dict):
-            self._remotes: FullRemoteDict = remotes
+            self._remotes = {}
             for remote_name, url in remotes.items():
                 if isinstance(url, str):
-                    remotes[remote_name] = {
-                        "fetch_url": url,
-                        "push_url": url,
-                    }
+                    self._remotes[remote_name] = GitRemote(
+                        name=remote_name,
+                        fetch_url=url,
+                        push_url=url,
+                    )
 
         BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
         self.url = (
-            self._remotes.get("origin")["fetch_url"]
-            if self._remotes.get("origin")
-            else next(iter(self._remotes.items()))[1]["fetch_url"]
+            self._remotes.get("origin").fetch_url
+            if "origin" in self._remotes
+            else next(iter(self._remotes.items()))[1].fetch_url
         )
 
     @classmethod
@@ -231,32 +233,42 @@ class GitRepo(BaseRepo):
     def set_remotes(self, overwrite: bool = False):
         remotes = self._remotes
         if isinstance(remotes, dict):
-            for remote_name, url in remotes.items():
+            for remote_name, git_remote in remotes.items():
+
                 existing_remote = self.remote(remote_name)
-                if isinstance(url, dict) and "fetch_url" in url:
+                if isinstance(git_remote, GitRemote):
                     if (
                         not existing_remote
-                        or existing_remote.fetch_url != url["fetch_url"]
+                        or existing_remote.fetch_url != git_remote.fetch_url
                     ):
                         self.set_remote(
-                            name=remote_name, url=url["fetch_url"], overwrite=overwrite
+                            name=remote_name,
+                            url=git_remote.fetch_url,
+                            overwrite=overwrite,
                         )
                         # refresh if we're setting it, so push can be checked
                         existing_remote = self.remote(remote_name)
-                    if "push_url" in url:
+                    if git_remote.push_url:
                         if (
                             not existing_remote
-                            or existing_remote.push_url != url["push_url"]
+                            or existing_remote.push_url != git_remote.push_url
                         ):
                             self.set_remote(
                                 name=remote_name,
-                                url=url["push_url"],
+                                url=git_remote.push_url,
                                 push=True,
                                 overwrite=overwrite,
                             )
                 else:
-                    if not existing_remote or existing_remote.fetch_url != url:
-                        self.set_remote(name=remote_name, url=url, overwrite=overwrite)
+                    if (
+                        not existing_remote
+                        or existing_remote.fetch_url != git_remote.fetch_url
+                    ):
+                        self.set_remote(
+                            name=remote_name,
+                            url=git_remote.fetch_url,
+                            overwrite=overwrite,
+                        )
 
     def obtain(self, *args, **kwargs):
         """Retrieve the repository, clone if doesn't exist."""
