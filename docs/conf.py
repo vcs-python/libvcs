@@ -21,6 +21,7 @@ with open("../libvcs/__about__.py") as fp:
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
@@ -90,6 +91,7 @@ html_sidebars = {
 # sphinx.ext.autodoc
 autoclass_content = "both"
 autodoc_member_order = "bysource"
+autosummary_generate = True
 
 # sphinxext.opengraph
 ogp_site_url = about["__docs__"]
