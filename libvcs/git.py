@@ -201,20 +201,26 @@ class GitRepo(BaseRepo):
             }
         elif isinstance(remotes, dict):
             self._remotes = {}
-            for remote_name, url in remotes.items():
-                if isinstance(url, str):
+            for remote_name, remote_url in remotes.items():
+                if isinstance(remote_url, str):
                     self._remotes[remote_name] = GitRemote(
                         name=remote_name,
-                        fetch_url=url,
-                        push_url=url,
+                        fetch_url=remote_url,
+                        push_url=remote_url,
                     )
-                elif isinstance(url, dict):
+                elif isinstance(remote_url, dict):
                     self._remotes[remote_name] = GitRemote(
-                        **{**url, "name": remote_name}
+                        **{**remote_url, "name": remote_name}
                     )
-                elif isinstance(url, GitRemote):
-                    self._remotes[remote_name] = url
+                elif isinstance(remote_url, GitRemote):
+                    self._remotes[remote_name] = remote_url
 
+        if url and "origin" not in self._remotes:
+            self._remotes["origin"] = GitRemote(
+                name="origin",
+                fetch_url=url,
+                push_url=url,
+            )
         BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
         self.url = self.chomp_protocol(
             (
