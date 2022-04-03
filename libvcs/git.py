@@ -388,7 +388,7 @@ class GitRepo(BaseRepo):
             return
 
         try:
-            process = self.run(["fetch_url"], log_in_real_time=True)
+            process = self.run(["fetch"], log_in_real_time=True)
         except exc.CommandError:
             self.error("Failed to fetch repository '%s'" % url)
             return
