@@ -208,14 +208,20 @@ class GitRepo(BaseRepo):
                         fetch_url=url,
                         push_url=url,
                     )
+                if isinstance(url, dict):
+                    self._remotes[remote_name] = GitRemote(
+                        **{**url, "name": remote_name}
+                    )
                 elif isinstance(url, GitRemote):
                     self._remotes[remote_name] = url
 
         BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
-        self.url = (
-            self._remotes.get("origin").fetch_url
-            if "origin" in self._remotes
-            else next(iter(self._remotes.items()))[1].fetch_url
+        self.url = self.chomp_protocol(
+            (
+                self._remotes.get("origin")
+                if "origin" in self._remotes
+                else next(iter(self._remotes.items()))[1]
+            ).fetch_url
         )
 
     @classmethod
@@ -293,7 +299,7 @@ class GitRepo(BaseRepo):
         cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
 
-        self.set_remotes()
+        self.set_remotes(overwrite=True)
 
     def update_repo(self, set_remotes: bool = False, *args, **kwargs):
         self.ensure_dir()
