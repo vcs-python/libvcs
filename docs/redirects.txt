@@ -1,1 +1,5 @@
-"api.md" "api/index.md"
+"api.md" "states/index.md"
+"api/base.md" "states/base.md"
+"api/git.md" "states/git.md"
+"api/hg.md" "states/hg.md"
+"api/svn.md" "states/svn.md"

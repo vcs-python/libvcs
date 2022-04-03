@@ -9,7 +9,7 @@
 :hidden:
 
 quickstart
-api/index
+states/index
 ```
 
 ```{toctree}
