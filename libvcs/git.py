@@ -208,7 +208,7 @@ class GitRepo(BaseRepo):
                         fetch_url=url,
                         push_url=url,
                     )
-                if isinstance(url, dict):
+                elif isinstance(url, dict):
                     self._remotes[remote_name] = GitRemote(
                         **{**url, "name": remote_name}
                     )
