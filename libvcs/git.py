@@ -182,8 +182,8 @@ class GitRepo(BaseRepo):
                repo_dir=checkout,
                remotes={
                    'gitlab': {
-                       'fetch': 'https://gitlab.com/vcs-python/libvcs',
-                       'push': 'https://gitlab.com/vcs-python/libvcs',
+                       'fetch_url': 'https://gitlab.com/vcs-python/libvcs',
+                       'push_url': 'https://gitlab.com/vcs-python/libvcs',
                    },
                }
             )
