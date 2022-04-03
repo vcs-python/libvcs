@@ -208,6 +208,8 @@ class GitRepo(BaseRepo):
                         fetch_url=url,
                         push_url=url,
                     )
+                elif isinstance(url, GitRemote):
+                    self._remotes[remote_name] = url
 
         BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
         self.url = (

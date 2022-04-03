@@ -266,6 +266,46 @@ def test_progress_callback(
             },
         ],
         [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "origin": GitRemote(
+                        name="origin",
+                        fetch_url=f"file://{git_remote}",
+                        push_url=f"file://{git_remote}",
+                    ),
+                    "second_remote": GitRemote(
+                        name="second_remote",
+                        fetch_url=f"file://{git_remote}",
+                        push_url=f"file://{git_remote}",
+                    ),
+                },
+            },
+            lambda git_remote, **kwargs: {
+                "origin": f"file://{git_remote}",
+                "second_remote": f"file://{git_remote}",
+            },
+        ],
+        [
+            GitRepo,
+            lambda git_remote, repos_path, repo_name, **kwargs: {
+                "url": f"file://{git_remote}",
+                "repo_dir": repos_path / repo_name,
+                "remotes": {
+                    "second_remote": GitRemote(
+                        name="second_remote",
+                        fetch_url=f"file://{git_remote}",
+                        push_url=f"file://{git_remote}",
+                    ),
+                },
+            },
+            lambda git_remote, **kwargs: {
+                "second_remote": f"file://{git_remote}",
+            },
+        ],
+        [
             create_repo_from_pip_url,
             lambda git_remote, repos_path, repo_name, **kwargs: {
                 "pip_url": f"git+file://{git_remote}",
