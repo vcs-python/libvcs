@@ -9,6 +9,15 @@ versions.
 
 :::
 
+```{toctree}
+:caption: API
+
+git
+hg
+svn
+base
+```
+
 ## Create from VCS url
 
 Helper methods are available in `libvcs.shortcuts` which can return a repo object from a single
@@ -28,53 +37,7 @@ See examples below of git, mercurial, and subversion.
    :members:
 ```
 
-## Instantiating a repo by hand
-
-### Git
-
-```{eval-rst}
-.. automodule:: libvcs.git
-   :members:
-   :show-inheritance:
-   :undoc-members:
-   :inherited-members:
-```
-
-### Mercurial
-
-aka `hg(1)`
-
-```{eval-rst}
-.. automodule:: libvcs.hg
-   :members:
-   :show-inheritance:
-   :undoc-members:
-   :inherited-members:
-```
-
-### Subversion
-
-aka `svn(1)`
-
-```{eval-rst}
-.. automodule:: libvcs.svn
-   :members:
-   :show-inheritance:
-   :undoc-members:
-   :inherited-members:
-```
-
-### Under the hood
-
-Adding your own VCS / Extending libvcs can be done through subclassing `BaseRepo`.
-
-```{eval-rst}
-.. automodule:: libvcs.base
-   :members:
-   :show-inheritance:
-```
-
-### Utility stuff
+## Utility stuff
 
 ```{eval-rst}
 .. automodule:: libvcs.util
