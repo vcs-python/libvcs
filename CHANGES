@@ -11,9 +11,14 @@ $ pip install --user --upgrade --pre libvcs
 
 ## libvcs 0.12.0 (unreleased, beta 0)
 
+### Breaking
+
+- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been moved to
+  `libvcs.states.{module}.{Module}Repo`
+
 ### What's new
 
-- {class}`libvcs.git.GitRepo` now accepts remotes in `__init__`
+- {class}`libvcs.states.git.GitRepo` now accepts remotes in `__init__`
 
   ```python
   repo = GitRepo(
@@ -38,7 +43,7 @@ $ pip install --user --upgrade --pre libvcs
   )
   ```
 
-- {meth}`libvcs.git.GitRepo.update_repo` now accepts `set_remotes=True`
+- {meth}`libvcs.states.git.GitRepo.update_repo` now accepts `set_remotes=True`
 
 ### Compatibility
 
@@ -55,9 +60,9 @@ $ pip install --user --upgrade --pre libvcs
   [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (:issue:`316`)
 - New constants for `str` -> class mappings
 
-  - {data}`libvcs.constants.DEFAULT_VCS_CLASS_MAP`
-  - {data}`libvcs.constants.DEFAULT_VCS_CLASS_UNION`
-  - {data}`libvcs.constants.DEFAULT_VCS_LITERAL`
+  - {data}`libvcs.states.constants.DEFAULT_VCS_CLASS_MAP`
+  - {data}`libvcs.states.constants.DEFAULT_VCS_CLASS_UNION`
+  - {data}`libvcs.states.constants.DEFAULT_VCS_LITERAL`
 
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
