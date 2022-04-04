@@ -2,8 +2,8 @@ import pathlib
 
 import pytest
 
+from libvcs.cmd.core import which
 from libvcs.conftest import CreateRepoCallbackFixtureProtocol
-from libvcs.util import which
 
 
 @pytest.mark.skipif(not which("git"), reason="git is not available")

@@ -45,6 +45,6 @@ See examples below of git, mercurial, and subversion.
 ## Utility stuff
 
 ```{eval-rst}
-.. automodule:: libvcs.util
+.. automodule:: libvcs.cmd.core
    :members:
 ```
