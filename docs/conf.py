@@ -20,8 +20,10 @@ with open("../libvcs/__about__.py") as fp:
     exec(fp.read(), about)
 
 extensions = [
+    "sphinx_toolbox.more_autodoc.augment_defaults",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx_toolbox.more_autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.napoleon",
@@ -39,11 +41,6 @@ source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 master_doc = "index"
 
-# app setup hook
-def setup(app):
-    pass
-
-
 project = about["__title__"]
 copyright = about["__copyright__"]
 
@@ -54,6 +51,10 @@ exclude_patterns = ["_build"]
 
 pygments_style = "monokai"
 pygments_dark_style = "monokai"
+
+github_username = "vcs-python"
+github_repository = "libvcs"
+docutils_tab_width = 4
 
 html_css_files = ["css/custom.css"]
 html_static_path = ["_static"]
