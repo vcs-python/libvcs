@@ -1,16 +1,16 @@
-# Mercurial (hg)
+# `libvcs.states.hg`
 
-aka `hg(1)`
+For mercurial, aka `hg(1)`.
 
 ```{eval-rst}
 .. autosummary::
    :recursive:
 
-   libvcs.hg.MercurialRepo
+   libvcs.states.hg.MercurialRepo
 ```
 
 ```{eval-rst}
-.. automodule:: libvcs.hg
+.. automodule:: libvcs.states.hg
    :members:
    :show-inheritance:
    :undoc-members:

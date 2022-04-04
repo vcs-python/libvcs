@@ -11,14 +11,14 @@ import pytest
 from pytest_mock import MockerFixture
 
 from libvcs import exc
-from libvcs.git import (
+from libvcs.shortcuts import create_repo_from_pip_url
+from libvcs.states.git import (
     FullRemoteDict,
     GitRemote,
     GitRepo,
     convert_pip_url as git_convert_pip_url,
     extract_status,
 )
-from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run, which
 
 if not which("git"):

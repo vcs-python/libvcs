@@ -1,8 +1,8 @@
 """tests for libvcs repo abstract base class."""
 import pathlib
 
-from libvcs.base import BaseRepo, convert_pip_url
 from libvcs.shortcuts import create_repo
+from libvcs.states.base import BaseRepo, convert_pip_url
 
 
 def test_repr():

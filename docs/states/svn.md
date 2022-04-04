@@ -1,15 +1,16 @@
-# Git
+# `libvcs.states.svn`
+
+For subversion, aka `svn(1)`
 
 ```{eval-rst}
 .. autosummary::
    :recursive:
 
-   libvcs.git.GitRemote
-   libvcs.git.GitRepo
+   libvcs.states.svn.SubversionRepo
 ```
 
 ```{eval-rst}
-.. automodule:: libvcs.git
+.. automodule:: libvcs.states.svn
    :members:
    :show-inheritance:
    :undoc-members:

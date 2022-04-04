@@ -20,8 +20,8 @@ import re
 from typing import Dict, NamedTuple, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
-from . import exc
-from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
+from .. import exc
+from ..states.base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
 

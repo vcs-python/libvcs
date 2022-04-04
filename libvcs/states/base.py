@@ -4,7 +4,7 @@ import os
 from typing import NamedTuple
 from urllib import parse as urlparse
 
-from .util import RepoLoggingAdapter, mkdir_p, run
+from ..util import RepoLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
 
