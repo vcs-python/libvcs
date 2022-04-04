@@ -5,8 +5,8 @@ import textwrap
 
 import pytest
 
+from libvcs.cmd.core import run, which
 from libvcs.shortcuts import create_repo, create_repo_from_pip_url
-from libvcs.util import run, which
 
 if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")

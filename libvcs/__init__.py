@@ -1,11 +1,11 @@
 """Repo package for libvcs."""
 import logging
 
+from .cmd.core import RepoLoggingAdapter
 from .states.base import BaseRepo
 from .states.git import GitRepo
 from .states.hg import MercurialRepo
 from .states.svn import SubversionRepo
-from .util import RepoLoggingAdapter
 
 __all__ = [
     "GitRepo",

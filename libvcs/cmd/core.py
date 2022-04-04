@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-from . import exc
+from .. import exc
 
 logger = logging.getLogger(__name__)
 
