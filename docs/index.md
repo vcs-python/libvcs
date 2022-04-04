@@ -9,6 +9,7 @@
 :hidden:
 
 quickstart
+cmd/index
 states/index
 ```
 
