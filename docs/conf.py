@@ -22,7 +22,6 @@ with open("../libvcs/__about__.py") as fp:
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.napoleon",
