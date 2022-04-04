@@ -4,16 +4,31 @@ from typing import TYPE_CHECKING, Literal, Sequence, Union
 from .core import run
 
 if TYPE_CHECKING:
-    from subprocess import _CMD
+    # from subprocess import _CMD
+    # from _typeshed import StrOrBytesPath
+
+    from os import PathLike
+
+    StrOrBytesPath = str | bytes | PathLike[str] | PathLike[bytes]  # stable
+
+    _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 
 class Svn:
     def __init__(self, dir: pathlib.Path):
+        """Lite, typed, pythonic wrapper for svn(1).
+
+        Parameters
+        ----------
+        dir :
+            Operates as PATH in the corresonding svn subcommand.
+        """
         self.dir: pathlib.Path = dir
 
     def run(self, args: "_CMD", quiet: Union[bool, None] = None, **kwargs):
         """
-        Passing None means the flag won't be passed unless otherwise stated.
+        Passing None to a subcommand option, the flag won't be passed unless otherwise
+        stated.
 
         Wraps svn's `Options
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.html#svn.ref.svn.sw>`_.
