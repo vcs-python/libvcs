@@ -8,7 +8,7 @@ from libvcs.exc import InvalidPipURL, InvalidVCS
 def create_repo(
     url, vcs, progress_callback=None, *args, **kwargs
 ) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
-    r"""Return a object representation of a VCS repository.
+    r"""Return an object representation of a VCS repository.
 
     Examples
     --------
@@ -45,7 +45,7 @@ def create_repo(
 def create_repo_from_pip_url(
     pip_url, **kwargs
 ) -> Union[GitRepo, MercurialRepo, SubversionRepo]:
-    r"""Return a object representation of a VCS repository via pip-style url.
+    r"""Return an object representation of a VCS repository via pip-style url.
 
     Examples
     --------
