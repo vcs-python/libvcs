@@ -67,3 +67,14 @@ def git_remote(repos_path: pathlib.Path):
     run(["git", "commit", "-m", "test file for %s" % name], cwd=repo_dir)
 
     return repo_dir
+
+
+@pytest.fixture
+def svn_remote(repos_path, scope="session"):
+    """Create a git repo with 1 commit, used as a remote."""
+    server_dirname = "server_dir"
+    server_dir = repos_path / server_dirname
+
+    run(["svnadmin", "create", server_dir])
+
+    return server_dir
