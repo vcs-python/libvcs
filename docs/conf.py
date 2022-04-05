@@ -8,15 +8,15 @@ from pathlib import Path
 import libvcs
 
 # Get the project root dir, which is the parent dir of this
-cwd = Path.cwd()
-project_root = cwd.parent
+doc_path = Path(__file__).parent
+project_root = doc_path.parent
 
 sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(cwd / "_ext"))
+sys.path.insert(0, str(doc_path / "_ext"))
 
 # package data
 about = {}
-with open("../libvcs/__about__.py") as fp:
+with open(project_root / "libvcs" / "__about__.py") as fp:
     exec(fp.read(), about)
 
 extensions = [
