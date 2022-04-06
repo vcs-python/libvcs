@@ -590,16 +590,21 @@ class GitRepo(BaseRepo):
 
         Examples
         --------
-
+        >>> git_remote = getfixture('git_remote')
+        >>> tmp_path = getfixture('tmp_path')
+        >>> git_repo = GitRepo(
+        ...     url=f'file://{str(git_remote)}',
+        ...     repo_dir=str(tmp_path)
+        ... )
+        >>> git_repo.obtain()
         >>> git_repo.status()
-        {
-            "branch_oid": 'de6185fde0806e5c7754ca05676325a1ea4d6348',
-            "branch_head": 'fix-current-remote-name',
-            "branch_upstream": 'origin/fix-current-remote-name',
-            "branch_ab": '+0 -0',
-            "branch_ahead": '0',
-            "branch_behind": '0'
-        }
+        GitStatus(\
+branch_oid='...', branch_head='master', \
+branch_upstream='origin/master', \
+branch_ab='+0 -0', \
+branch_ahead='0', \
+branch_behind='0'\
+)
         """
         return extract_status(self.run(["status", "-sb", "--porcelain=2"]))
 

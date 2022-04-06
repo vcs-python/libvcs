@@ -49,7 +49,8 @@ def create_repo_from_pip_url(
     >>> git_remote = getfixture('git_remote')
     >>> r = create_repo_from_pip_url(
     ...         pip_url=f'git+{str(git_remote)}',
-    ...         repo_dir=str(tmp_path))
+    ...         repo_dir=str(tmp_path)
+    ...     )
 
     >>> isinstance(r, GitRepo)
     True

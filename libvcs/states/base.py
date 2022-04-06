@@ -52,10 +52,29 @@ class BaseRepo(RepoLoggingAdapter):
             Retrieve live progress from ``sys.stderr`` (useful for certain vcs commands
             like ``git pull``. Use ``progress_callback``:
 
+            >>> import os
+            >>> import sys
+            >>> tmp_path = getfixture('tmp_path')
+            >>> git_remote = getfixture('git_remote')
             >>> def progress_cb(output, timestamp):
-            >>>     sys.stdout.write(output)
-            >>>     sys.stdout.flush()
-            >>> create_repo(..., progress_callback=progress_cb)
+            ...     sys.stdout.write(output)
+            ...     sys.stdout.flush()
+            >>> class Repo(BaseRepo):
+            ...     bin_name = 'git'
+            ...     def obtain(self, *args, **kwargs):
+            ...         self.ensure_dir()
+            ...         self.run([
+            ...             'clone', '--progress', self.url, self.path],
+            ...             log_in_real_time=True
+            ...         )
+            >>> r = Repo(
+            ...     url=f'file://{str(git_remote)}',
+            ...     repo_dir=str(tmp_path),
+            ...     progress_callback=progress_cb
+            ... )
+            >>> r.obtain()
+            >>> assert os.path.exists(r.path)
+            >>> assert os.path.exists(r.path + '/.git')
         """
         self.progress_callback = progress_callback
         self.url = url
