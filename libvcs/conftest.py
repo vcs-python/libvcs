@@ -36,7 +36,7 @@ def user_path(home_path: pathlib.Path):
     return p
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True)
 def gitconfig(user_path: pathlib.Path):
     gitconfig = user_path / ".gitconfig"
     gitconfig.write_text(
