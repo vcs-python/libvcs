@@ -12,6 +12,11 @@ from libvcs.util import run
 
 
 @pytest.fixture(autouse=True)
+def home_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
+    monkeypatch.setenv("HOME", str(user_path))
+
+
+@pytest.fixture(autouse=True)
 def add_doctest_fixtures(
     doctest_namespace, tmp_path: pathlib.Path, git_remote: pathlib.Path
 ):
