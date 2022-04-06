@@ -54,10 +54,11 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
-- Add codeql analysis (:issue:`303`)
-- git test suite: Lots of parametrization (:issue:`309`)
+- Add codeql analysis ({issue}`#303`)
+- git test suite: Lots of parametrization ({issue}`#309`)
 - CI: Use poetry caching from
-  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (:issue:`316`)
+  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0),
+  ({issue}`#316`)
 - New constants for `str` -> class mappings
 
   - {data}`libvcs.states.constants.DEFAULT_VCS_CLASS_MAP`
@@ -66,10 +67,13 @@ $ pip install --user --upgrade --pre libvcs
 
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
+- Add [doctest](https://docs.python.org/3/library/doctest.html) w/
+  [pytest + doctest](https://docs.pytest.org/en/7.1.x/how-to/doctest.html), ({issue}`#321`).
 
 ### Documentation
 
 - API: Split documentation of modules to separate pages
+- Fix sphinx-issues ({issue}`#321`)
 
 - _Add your latest changes from PRs here_
 
