@@ -45,7 +45,7 @@ class BaseRepo(RepoLoggingAdapter):
     bin_name = ""
 
     def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
-        """
+        r"""
         Parameters
         ----------
         progress_callback : func
@@ -54,8 +54,6 @@ class BaseRepo(RepoLoggingAdapter):
 
             >>> import os
             >>> import sys
-            >>> tmp_path = getfixture('tmp_path')
-            >>> git_remote = getfixture('git_remote')
             >>> def progress_cb(output, timestamp):
             ...     sys.stdout.write(output)
             ...     sys.stdout.flush()
@@ -72,7 +70,12 @@ class BaseRepo(RepoLoggingAdapter):
             ...     repo_dir=str(tmp_path),
             ...     progress_callback=progress_cb
             ... )
-            >>> r.obtain()
+            >>> r.obtain()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS +REPORT_CDIFF
+            Cloning into '...'...
+            remote: Enumerating objects: ..., done...
+            remote: Counting objects: 100% (...), done...
+            remote: Total ... (delta 0), reused 0 (delta 0), pack-reused 0...
+            Receiving objects: 100% (...), done...
             >>> assert os.path.exists(r.path)
             >>> assert os.path.exists(r.path + '/.git')
         """
