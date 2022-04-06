@@ -10,6 +10,14 @@ from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.util import run
 
 
+@pytest.fixture(autouse=True)
+def add_doctest_fixtures(
+    doctest_namespace, tmp_path: pathlib.Path, git_remote: pathlib.Path
+):
+    doctest_namespace["tmp_path"] = tmp_path
+    doctest_namespace["git_remote"] = git_remote
+
+
 @pytest.fixture(autouse=True, scope="session")
 def home_path(tmp_path_factory: pytest.TempPathFactory):
     return tmp_path_factory.mktemp("home")
