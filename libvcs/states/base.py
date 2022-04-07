@@ -31,12 +31,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class BaseRepo(RepoLoggingAdapter):
-
-    """Base class for repositories.
-
-    Extends :py:class:`logging.LoggerAdapter`.
-    """
+class BaseRepo:
+    """Base class for repositories."""
 
     #: log command output to buffer
     log_in_real_time = None
@@ -95,7 +91,8 @@ class BaseRepo(RepoLoggingAdapter):
             if getattr(urlparse, "uses_fragment", None):
                 urlparse.uses_fragment.extend(self.schemes)
 
-        RepoLoggingAdapter.__init__(self, logger, {})
+        # Logging
+        self.log: RepoLoggingAdapter = RepoLoggingAdapter(logger, {})
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
@@ -157,7 +154,7 @@ class BaseRepo(RepoLoggingAdapter):
             mkdir_p(self.parent_dir)
 
         if not os.path.exists(self.path):
-            self.debug(
+            self.log.debug(
                 "Repo directory for %s does not exist @ %s"
                 % (self.repo_name, self.path)
             )

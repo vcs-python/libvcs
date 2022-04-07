@@ -297,10 +297,10 @@ class GitRepo(BaseRepo):
             cmd.extend(["-c", "http.sslVerify=false"])
         cmd.extend([url, self.path])
 
-        self.info("Cloning.")
+        self.log.info("Cloning.")
         self.run(cmd, log_in_real_time=True)
 
-        self.info("Initializing submodules.")
+        self.log.info("Initializing submodules.")
         self.run(["submodule", "init"], log_in_real_time=True)
         cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
@@ -322,31 +322,31 @@ class GitRepo(BaseRepo):
         url, git_tag = self.url, getattr(self, "rev", None)
 
         if not git_tag:
-            self.debug("No git revision set, defaulting to origin/master")
+            self.log.debug("No git revision set, defaulting to origin/master")
             symref = self.run(["symbolic-ref", "--short", "HEAD"])
             if symref:
                 git_tag = symref.rstrip()
             else:
                 git_tag = "origin/master"
-        self.debug("git_tag: %s" % git_tag)
+        self.log.debug("git_tag: %s" % git_tag)
 
-        self.info("Updating to '%s'." % git_tag)
+        self.log.info("Updating to '%s'." % git_tag)
 
         # Get head sha
         try:
             head_sha = self.run(["rev-list", "--max-count=1", "HEAD"])
         except exc.CommandError:
-            self.error("Failed to get the hash for HEAD")
+            self.log.error("Failed to get the hash for HEAD")
             return
 
-        self.debug("head_sha: %s" % head_sha)
+        self.log.debug("head_sha: %s" % head_sha)
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
         show_ref_output = self.run(["show-ref", git_tag], check_returncode=False)
-        self.debug("show_ref_output: %s" % show_ref_output)
+        self.log.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
-        self.debug("is_remote_ref: %s" % is_remote_ref)
+        self.log.debug("is_remote_ref: %s" % is_remote_ref)
 
         # show-ref output is in the form "<sha> refs/remotes/<remote>/<tag>"
         # we must strip the remote from the tag.
@@ -362,8 +362,8 @@ class GitRepo(BaseRepo):
             )
             git_remote_name = m.group("git_remote_name")
             git_tag = m.group("git_tag")
-        self.debug("git_remote_name: %s" % git_remote_name)
-        self.debug("git_tag: %s" % git_tag)
+        self.log.debug("git_remote_name: %s" % git_remote_name)
+        self.log.debug("git_tag: %s" % git_tag)
 
         # This will fail if the tag does not exist (it probably has not
         # been fetched yet).
@@ -379,18 +379,18 @@ class GitRepo(BaseRepo):
         except exc.CommandError as e:
             error_code = e.returncode
             tag_sha = ""
-        self.debug("tag_sha: %s" % tag_sha)
+        self.log.debug("tag_sha: %s" % tag_sha)
 
         # Is the hash checkout out what we want?
         somethings_up = (error_code, is_remote_ref, tag_sha != head_sha)
         if all(not x for x in somethings_up):
-            self.info("Already up-to-date.")
+            self.log.info("Already up-to-date.")
             return
 
         try:
             process = self.run(["fetch"], log_in_real_time=True)
         except exc.CommandError:
-            self.error("Failed to fetch repository '%s'" % url)
+            self.log.error("Failed to fetch repository '%s'" % url)
             return
 
         if is_remote_ref:
@@ -398,7 +398,7 @@ class GitRepo(BaseRepo):
             try:
                 process = self.run(["status", "--porcelain"])
             except exc.CommandError:
-                self.error("Failed to get the status")
+                self.log.error("Failed to get the status")
                 return
             need_stash = len(process) > 0
 
@@ -410,13 +410,13 @@ class GitRepo(BaseRepo):
                 try:
                     process = self.run(["stash", "save", git_stash_save_options])
                 except exc.CommandError:
-                    self.error("Failed to stash changes")
+                    self.log.error("Failed to stash changes")
 
             # Checkout the remote branch
             try:
                 process = self.run(["checkout", git_tag])
             except exc.CommandError:
-                self.error("Failed to checkout tag: '%s'" % git_tag)
+                self.log.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
             # Rebase changes from the remote branch
@@ -424,14 +424,14 @@ class GitRepo(BaseRepo):
                 process = self.run(["rebase", git_remote_name + "/" + git_tag])
             except exc.CommandError as e:
                 if "invalid_upstream" in str(e):
-                    self.error(e)
+                    self.log.error(e)
                 else:
                     # Rebase failed: Restore previous state.
                     self.run(["rebase", "--abort"])
                     if need_stash:
                         self.run(["stash", "pop", "--index", "--quiet"])
 
-                    self.error(
+                    self.log.error(
                         "\nFailed to rebase in: '%s'.\n"
                         "You will have to resolve the conflicts manually" % self.path
                     )
@@ -449,7 +449,7 @@ class GitRepo(BaseRepo):
                         # Stash pop failed: Restore previous state.
                         self.run(["reset", "--hard", "--quiet", head_sha])
                         self.run(["stash", "pop", "--index", "--quiet"])
-                        self.error(
+                        self.log.error(
                             "\nFailed to rebase in: '%s'.\n"
                             "You will have to resolve the "
                             "conflicts manually" % self.path
@@ -460,7 +460,7 @@ class GitRepo(BaseRepo):
             try:
                 process = self.run(["checkout", git_tag])
             except exc.CommandError:
-                self.error("Failed to checkout tag: '%s'" % git_tag)
+                self.log.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
         cmd = ["submodule", "update", "--recursive", "--init"]
