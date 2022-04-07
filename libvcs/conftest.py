@@ -16,18 +16,6 @@ def home_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
     monkeypatch.setenv("HOME", str(user_path))
 
 
-@pytest.fixture(autouse=True)
-def add_doctest_fixtures(
-    doctest_namespace: dict[str, Any],
-    tmp_path: pathlib.Path,
-    git_remote: pathlib.Path,
-    gitconfig: pathlib.Path,
-):
-    doctest_namespace["tmp_path"] = tmp_path
-    doctest_namespace["gitconfig"] = gitconfig
-    doctest_namespace["git_remote"] = git_remote
-
-
 @pytest.fixture(autouse=True, scope="session")
 def home_path(tmp_path_factory: pytest.TempPathFactory):
     return tmp_path_factory.mktemp("home")
@@ -54,6 +42,18 @@ def gitconfig(user_path: pathlib.Path):
         encoding="utf-8",
     )
     return gitconfig
+
+
+@pytest.fixture(autouse=True)
+def add_doctest_fixtures(
+    doctest_namespace: dict[str, Any],
+    tmp_path: pathlib.Path,
+    git_remote: pathlib.Path,
+    gitconfig: pathlib.Path,
+):
+    doctest_namespace["tmp_path"] = tmp_path
+    doctest_namespace["gitconfig"] = gitconfig
+    doctest_namespace["git_remote"] = git_remote
 
 
 @pytest.fixture(scope="function")
