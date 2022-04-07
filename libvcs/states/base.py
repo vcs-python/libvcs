@@ -75,11 +75,20 @@ class BaseRepo:
             >>> assert os.path.exists(r.path)
             >>> assert os.path.exists(r.path + '/.git')
         """
-        self.progress_callback = progress_callback
         self.url = url
+
+        #: Callback for run updates
+        self.progress_callback = progress_callback
+
+        #: Parent directory
         self.parent_dir = os.path.dirname(repo_dir)
-        self.repo_name = os.path.basename(os.path.normpath(repo_dir))
+
+        #: Checkout path
         self.path = repo_dir
+
+        #: Base name of checkout
+        self.repo_name = os.path.basename(os.path.normpath(repo_dir))
+
         if "rev" in kwargs:
             self.rev = kwargs["rev"]
 
@@ -91,7 +100,7 @@ class BaseRepo:
             if getattr(urlparse, "uses_fragment", None):
                 urlparse.uses_fragment.extend(self.schemes)
 
-        # Logging
+        #: Logging attribute
         self.log: RepoLoggingAdapter = RepoLoggingAdapter(logger, {})
 
     @classmethod
