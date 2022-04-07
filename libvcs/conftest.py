@@ -55,6 +55,7 @@ def add_doctest_fixtures(
     tmp_path: pathlib.Path,
     git_remote: pathlib.Path,
     gitconfig: pathlib.Path,
+    home_default: pathlib.Path,
 ):
     doctest_namespace["tmp_path"] = tmp_path
     doctest_namespace["gitconfig"] = gitconfig
