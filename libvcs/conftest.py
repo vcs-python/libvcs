@@ -94,7 +94,9 @@ def git_repo(pip_url_kwargs: Dict):
 
 
 @pytest.fixture
-def git_remote(repos_path: pathlib.Path):
+def git_remote(
+    repos_path: pathlib.Path, gitconfig: pathlib.Path, home_default: pathlib.Path
+):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
     repo_dir = repos_path / name
