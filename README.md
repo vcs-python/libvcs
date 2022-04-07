@@ -13,9 +13,15 @@ Open up python:
 
 ```console
 $ python
+```
 
-// or for nice autocomplete and syntax highlighting
+Or for nice autocompletion and highlighting:
+
+```console
 $ pip install --user ptpython
+```
+
+```console
 $ ptpython
 ```
 
