@@ -61,8 +61,8 @@ class BaseRepo(RepoLoggingAdapter):
             ...     bin_name = 'git'
             ...     def obtain(self, *args, **kwargs):
             ...         self.ensure_dir()
-            ...         self.run([
-            ...             'clone', '--progress', self.url, self.path],
+            ...         self.run(
+            ...             ['clone', '--progress', self.url, self.path],
             ...             log_in_real_time=True
             ...         )
             >>> r = Repo(
