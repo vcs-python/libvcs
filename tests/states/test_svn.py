@@ -5,21 +5,10 @@ import pathlib
 import pytest
 
 from libvcs.shortcuts import create_repo_from_pip_url
-from libvcs.util import run, which
+from libvcs.util import which
 
 if not which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
-
-
-@pytest.fixture
-def svn_remote(repos_path, scope="session"):
-    """Create a git repo with 1 commit, used as a remote."""
-    server_dirname = "server_dir"
-    server_dir = repos_path / server_dirname
-
-    run(["svnadmin", "create", server_dir])
-
-    return server_dir
 
 
 def test_repo_svn(tmp_path: pathlib.Path, svn_remote):

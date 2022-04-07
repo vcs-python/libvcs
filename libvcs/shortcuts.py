@@ -12,25 +12,18 @@ def create_repo(
 
     Examples
     --------
+    >>> tmp_path = getfixture('tmp_path')
+    >>> git_remote = getfixture('git_remote')
     >>> from libvcs.shortcuts import create_repo
     >>>
     >>> r = create_repo(
-    ...     url='https://www.github.com/you/myrepo',
+    ...     url=f'file://{str(git_remote)}',
     ...     vcs='git',
-    ...     repo_dir='/tmp/myrepo'
+    ...     repo_dir=str(tmp_path)
     ... )
 
-    >>> r.update_repo()
-    |myrepo| (git)  Repo directory for myrepo (git) does not exist @ \
-        /tmp/myrepo
-    |myrepo| (git)  Cloning.
-    |myrepo| (git)  git clone https://www.github.com/tony/myrepo \
-        /tmp/myrepo
-    Cloning into '/tmp/myrepo'...
-    Checking connectivity... done.
-    |myrepo| (git)  git fetch
-    |myrepo| (git)  git pull
-    Already up-to-date.
+    >>> isinstance(r, GitRepo)
+    True
     """
     if vcs == "git":
         return GitRepo(url, progress_callback=progress_callback, *args, **kwargs)
@@ -52,21 +45,15 @@ def create_repo_from_pip_url(
 
     >>> from libvcs.shortcuts import create_repo_from_pip_url
 
+    >>> tmp_path = getfixture('tmp_path')
+    >>> git_remote = getfixture('git_remote')
     >>> r = create_repo_from_pip_url(
-    ...         pip_url='git+https://www.github.com/you/myrepo',
-    ...         repo_dir='/tmp/myrepo')
+    ...         pip_url=f'git+{str(git_remote)}',
+    ...         repo_dir=str(tmp_path)
+    ...     )
 
-    >>> r.update_repo()
-    |myrepo| (git)  Repo directory for myrepo (git) does not exist @ \
-        /tmp/myrepo
-    |myrepo| (git)  Cloning.
-    |myrepo| (git)  git clone https://www.github.com/tony/myrepo \
-        /tmp/myrepo
-    Cloning into '/tmp/myrepo'...
-    Checking connectivity... done.
-    |myrepo| (git)  git fetch
-    |myrepo| (git)  git pull
-    Already up-to-date.
+    >>> isinstance(r, GitRepo)
+    True
     """
     if pip_url.startswith("git+"):
         return GitRepo.from_pip_url(pip_url, **kwargs)

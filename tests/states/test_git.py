@@ -1,6 +1,5 @@
 """Tests for libvcs git repos."""
 import datetime
-import getpass
 import os
 import pathlib
 import textwrap
@@ -28,27 +27,6 @@ if not which("git"):
 RepoTestFactory = Callable[..., GitRepo]
 RepoTestFactoryLazyKwargs = Callable[..., dict]
 RepoTestFactoryRemotesLazyExpected = Callable[..., FullRemoteDict]
-
-
-@pytest.fixture(autouse=True, scope="module")
-def gitconfig(user_path: pathlib.Path):
-    gitconfig = user_path / ".gitconfig"
-    gitconfig.write_text(
-        textwrap.dedent(
-            f"""
-  [user]
-    email = libvcs@git-pull.com
-    name = {getpass.getuser()}
-    """
-        ),
-        encoding="utf-8",
-    )
-    return gitconfig
-
-
-@pytest.fixture(autouse=True)
-def gitconfig_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
-    monkeypatch.setenv("HOME", str(user_path))
 
 
 @pytest.mark.parametrize(

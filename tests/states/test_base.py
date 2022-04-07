@@ -1,5 +1,8 @@
 """tests for libvcs repo abstract base class."""
 import pathlib
+import sys
+
+import pytest
 
 from libvcs.shortcuts import create_repo
 from libvcs.states.base import BaseRepo, convert_pip_url
@@ -37,3 +40,29 @@ def test_convert_pip_url():
 
     assert url, rev == "therev"
     assert url, rev == "file://path/to/myrepo"
+
+
+def test_progress_callback(
+    capsys: pytest.LogCaptureFixture, tmp_path: pathlib.Path, git_remote: pathlib.Path
+):
+    def progress_cb(output, timestamp):
+        sys.stdout.write(output)
+        sys.stdout.flush()
+
+    class Repo(BaseRepo):
+        bin_name = "git"
+
+        def obtain(self, *args, **kwargs):
+            self.ensure_dir()
+            self.run(
+                ["clone", "--progress", self.url, self.path], log_in_real_time=True
+            )
+
+    r = Repo(
+        url=f"file://{str(git_remote)}",
+        repo_dir=str(tmp_path),
+        progress_callback=progress_cb,
+    )
+    r.obtain()
+    captured = capsys.readouterr()
+    assert "Cloning into" in captured.out

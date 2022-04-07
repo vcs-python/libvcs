@@ -3,6 +3,7 @@ omit =
     */_*
     pkg/*
     */log.py
+    */conftest.py
 
 [report]
 exclude_lines =
