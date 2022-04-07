@@ -12,10 +12,7 @@ def create_repo(
 
     Examples
     --------
-    >>> tmp_path = getfixture('tmp_path')
-    >>> git_remote = getfixture('git_remote')
     >>> from libvcs.shortcuts import create_repo
-    >>>
     >>> r = create_repo(
     ...     url=f'file://{str(git_remote)}',
     ...     vcs='git',
@@ -44,14 +41,10 @@ def create_repo_from_pip_url(
     --------
 
     >>> from libvcs.shortcuts import create_repo_from_pip_url
-
-    >>> tmp_path = getfixture('tmp_path')
-    >>> git_remote = getfixture('git_remote')
     >>> r = create_repo_from_pip_url(
-    ...         pip_url=f'git+{str(git_remote)}',
-    ...         repo_dir=str(tmp_path)
-    ...     )
-
+    ...     pip_url=f'git+{str(git_remote)}',
+    ...     repo_dir=str(tmp_path)
+    ... )
     >>> isinstance(r, GitRepo)
     True
     """

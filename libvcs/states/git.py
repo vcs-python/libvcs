@@ -590,8 +590,6 @@ class GitRepo(BaseRepo):
 
         Examples
         --------
-        >>> git_remote = getfixture('git_remote')
-        >>> tmp_path = getfixture('tmp_path')
         >>> git_repo = GitRepo(
         ...     url=f'file://{str(git_remote)}',
         ...     repo_dir=str(tmp_path)
