@@ -2,6 +2,7 @@
 import getpass
 import pathlib
 import shutil
+import textwrap
 from typing import Dict
 
 import pytest
@@ -28,6 +29,22 @@ def user_path(home_path: pathlib.Path):
     p = home_path / getpass.getuser()
     p.mkdir()
     return p
+
+
+@pytest.fixture(autouse=True, scope="module")
+def gitconfig(user_path: pathlib.Path):
+    gitconfig = user_path / ".gitconfig"
+    gitconfig.write_text(
+        textwrap.dedent(
+            f"""
+  [user]
+    email = libvcs@git-pull.com
+    name = {getpass.getuser()}
+    """
+        ),
+        encoding="utf-8",
+    )
+    return gitconfig
 
 
 @pytest.fixture(scope="function")
