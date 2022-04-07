@@ -31,12 +31,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class BaseRepo(RepoLoggingAdapter):
-
-    """Base class for repositories.
-
-    Extends :py:class:`logging.LoggerAdapter`.
-    """
+class BaseRepo:
+    """Base class for repositories."""
 
     #: log command output to buffer
     log_in_real_time = None
@@ -79,11 +75,20 @@ class BaseRepo(RepoLoggingAdapter):
             >>> assert os.path.exists(r.path)
             >>> assert os.path.exists(r.path + '/.git')
         """
-        self.progress_callback = progress_callback
         self.url = url
+
+        #: Callback for run updates
+        self.progress_callback = progress_callback
+
+        #: Parent directory
         self.parent_dir = os.path.dirname(repo_dir)
-        self.repo_name = os.path.basename(os.path.normpath(repo_dir))
+
+        #: Checkout path
         self.path = repo_dir
+
+        #: Base name of checkout
+        self.repo_name = os.path.basename(os.path.normpath(repo_dir))
+
         if "rev" in kwargs:
             self.rev = kwargs["rev"]
 
@@ -95,7 +100,8 @@ class BaseRepo(RepoLoggingAdapter):
             if getattr(urlparse, "uses_fragment", None):
                 urlparse.uses_fragment.extend(self.schemes)
 
-        RepoLoggingAdapter.__init__(self, logger, {})
+        #: Logging attribute
+        self.log: RepoLoggingAdapter = RepoLoggingAdapter(logger, {})
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
@@ -157,7 +163,7 @@ class BaseRepo(RepoLoggingAdapter):
             mkdir_p(self.parent_dir)
 
         if not os.path.exists(self.path):
-            self.debug(
+            self.log.debug(
                 "Repo directory for %s does not exist @ %s"
                 % (self.repo_name, self.path)
             )
