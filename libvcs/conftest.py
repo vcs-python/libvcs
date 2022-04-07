@@ -29,18 +29,23 @@ def user_path(home_path: pathlib.Path):
 
 
 @pytest.fixture(autouse=True)
-def gitconfig(user_path: pathlib.Path):
+def gitconfig(user_path: pathlib.Path, home_default: pathlib.Path):
     gitconfig = user_path / ".gitconfig"
+    user_email = "libvcs@git-pull.com"
     gitconfig.write_text(
         textwrap.dedent(
             f"""
   [user]
-    email = libvcs@git-pull.com
+    email = {user_email}
     name = {getpass.getuser()}
     """
         ),
         encoding="utf-8",
     )
+
+    output = run(["git", "config", "--get", "user.email"])
+    assert user_email in output, "Should use our fixture config and home directory"
+
     return gitconfig
 
 
