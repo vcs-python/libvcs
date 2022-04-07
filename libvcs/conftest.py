@@ -3,7 +3,7 @@ import getpass
 import pathlib
 import shutil
 import textwrap
-from typing import Dict
+from typing import Any, Dict
 
 import pytest
 
@@ -18,9 +18,13 @@ def home_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
 
 @pytest.fixture(autouse=True)
 def add_doctest_fixtures(
-    doctest_namespace, tmp_path: pathlib.Path, git_remote: pathlib.Path
+    doctest_namespace: dict[str, Any],
+    tmp_path: pathlib.Path,
+    git_remote: pathlib.Path,
+    gitconfig: pathlib.Path,
 ):
     doctest_namespace["tmp_path"] = tmp_path
+    doctest_namespace["gitconfig"] = gitconfig
     doctest_namespace["git_remote"] = git_remote
 
 
