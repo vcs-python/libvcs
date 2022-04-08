@@ -93,7 +93,7 @@ def mkdir_p(path):
 
 class CmdLoggingAdapter(logging.LoggerAdapter):
 
-    """Adapter for adding Repo related content to logger.
+    """Adapter for adding command-related content to logger.
 
     Extends `logging.LoggerAdapter`'s functionality.
 
@@ -103,7 +103,7 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
     Any class that subclasses this will have its class attributes for:
 
     - :attr:`~.bin_name` -> ``bin_name``
-    - :attr:`~.repo_name` -> ``repo_name``
+    - :attr:`~.keyword` -> ``keyword``
 
     Added to a dictionary of context information in :py:meth:`
     logging.LoggerAdapter.process()` to be made use of when the user of this
@@ -111,11 +111,11 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
     results.
     """
 
-    def __init__(self, bin_name: str, repo_name: str, *args, **kwargs):
+    def __init__(self, bin_name: str, keyword: str, *args, **kwargs):
         #: bin_name
         self.bin_name = bin_name
-        #: name of repository
-        self.repo_name = repo_name
+        #: directory basename, name of repository, hint, etc.
+        self.keyword = keyword
 
         logging.LoggerAdapter.__init__(self, *args, **kwargs)
 
@@ -123,7 +123,7 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict["bin_name"] = self.bin_name
-        prefixed_dict["repo_name"] = self.repo_name
+        prefixed_dict["keyword"] = self.keyword
 
         kwargs["extra"] = prefixed_dict
 

@@ -1,7 +1,7 @@
 """Base class for Repository objects."""
 import logging
 import os
-from typing import NamedTuple
+from typing import AnyStr, NamedTuple
 from urllib import parse as urlparse
 
 from ..util import CmdLoggingAdapter, mkdir_p, run
@@ -102,7 +102,7 @@ class BaseRepo:
 
         #: Logging attribute
         self.log: CmdLoggingAdapter = CmdLoggingAdapter(
-            bin_name=self.bin_name, repo_name=self.repo_name, logger=logger, extra={}
+            bin_name=self.bin_name, keyword=self.repo_name, logger=logger, extra={}
         )
 
     @classmethod
