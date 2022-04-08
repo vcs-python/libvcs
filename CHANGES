@@ -19,6 +19,7 @@ $ pip install --user --upgrade --pre libvcs
   `libvcs.states.{module}.{Module}Repo`
 - Logging functions moved to {attr}`libvcs.states.base.BaseRepo.log` ({issue}`#322`)
 - Rename `RepoLoggingAdapter` to `CmdLoggingAdapter`
+- `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 
 ### What's new
 
