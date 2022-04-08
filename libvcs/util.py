@@ -92,23 +92,19 @@ def mkdir_p(path):
 
 
 class CmdLoggingAdapter(logging.LoggerAdapter):
+    """Adapter for additional command-related data to :py:mod:`logging`.
 
-    """Adapter for adding command-related content to logger.
+    Extends :py:class:`logging.LoggerAdapter`'s functionality.
 
-    Extends `logging.LoggerAdapter`'s functionality.
+    Mixes in additional context via :py:meth:`logging.LoggerAdapter.process()` for
+    :class:`logging.Formatter` when emitting log entries.
 
-    The standard library :py:mod:`logging` facility is pretty complex, so this
-    warrants and explanation of what's happening.
-
-    Any class that subclasses this will have its class attributes for:
-
-    - :attr:`~.bin_name` -> ``bin_name``
-    - :attr:`~.keyword` -> ``keyword``
-
-    Added to a dictionary of context information in :py:meth:`
-    logging.LoggerAdapter.process()` to be made use of when the user of this
-    library wishes to use a custom :class:`logging.Formatter` to output
-    results.
+    Parameters
+    ----------
+    bin_name : str
+        name of the command or vcs tool being wrapped, e.g. 'git'
+    keyword : str
+        directory basename, name of repo, hint, etc. e.g. 'django'
     """
 
     def __init__(self, bin_name: str, keyword: str, *args, **kwargs):
