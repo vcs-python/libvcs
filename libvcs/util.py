@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess
 import sys
+from typing import Callable, Union
 
 from . import exc
 
@@ -130,12 +131,12 @@ class RepoLoggingAdapter(logging.LoggerAdapter):
 
 
 def run(
-    cmd,
-    shell=False,
-    cwd=None,
-    log_in_real_time=True,
-    check_returncode=True,
-    callback=None,
+    cmd: Union[str, list[str]],
+    shell: bool = False,
+    cwd: Union[str, None] = None,
+    log_in_real_time: bool = True,
+    check_returncode: bool = True,
+    callback: Union[Callable[[str, datetime.datetime], None], None] = None,
 ):
     """Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
