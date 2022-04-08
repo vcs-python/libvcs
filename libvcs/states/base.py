@@ -1,7 +1,7 @@
 """Base class for Repository objects."""
 import logging
 import os
-from typing import AnyStr, NamedTuple
+from typing import NamedTuple
 from urllib import parse as urlparse
 
 from ..util import CmdLoggingAdapter, mkdir_p, run
