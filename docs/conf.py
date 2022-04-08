@@ -26,6 +26,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.napoleon",
+    "sphinx.ext.linkcode",
     "sphinx_inline_tabs",
     "sphinx_issues",
     "sphinx_copybutton",
