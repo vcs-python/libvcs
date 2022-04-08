@@ -11,6 +11,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ## libvcs 0.12.0 (unreleased, beta 0)
 
+- _Add your latest changes from PRs here_
+
 ### Breaking
 
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been moved to
@@ -75,8 +77,6 @@ $ pip install --user --upgrade --pre libvcs
 
 - API: Split documentation of modules to separate pages
 - Fix sphinx-issues ({issue}`#321`)
-
-- _Add your latest changes from PRs here_
 
 ## libvcs 0.11.1 (2022-03-12)
 
