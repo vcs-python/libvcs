@@ -101,7 +101,9 @@ class BaseRepo:
                 urlparse.uses_fragment.extend(self.schemes)
 
         #: Logging attribute
-        self.log: RepoLoggingAdapter = RepoLoggingAdapter(logger, {})
+        self.log: RepoLoggingAdapter = RepoLoggingAdapter(
+            bin_name=self.bin_name, repo_name=self.repo_name, logger=logger, extra={}
+        )
 
     @classmethod
     def from_pip_url(cls, pip_url, *args, **kwargs):
