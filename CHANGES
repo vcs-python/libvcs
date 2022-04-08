@@ -18,6 +18,7 @@ $ pip install --user --upgrade --pre libvcs
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been moved to
   `libvcs.states.{module}.{Module}Repo`
 - Logging functions moved to {attr}`libvcs.states.base.BaseRepo.log` ({issue}`#322`)
+- Rename `RepoLoggingAdapter` to `CmdLoggingAdapter`
 
 ### What's new
 
