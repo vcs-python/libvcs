@@ -91,7 +91,7 @@ def mkdir_p(path):
             raise Exception("Could not create directory %s" % path)
 
 
-class RepoLoggingAdapter(logging.LoggerAdapter):
+class CmdLoggingAdapter(logging.LoggerAdapter):
 
     """Adapter for adding Repo related content to logger.
 

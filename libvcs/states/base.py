@@ -4,7 +4,7 @@ import os
 from typing import NamedTuple
 from urllib import parse as urlparse
 
-from ..util import RepoLoggingAdapter, mkdir_p, run
+from ..util import CmdLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class BaseRepo:
                 urlparse.uses_fragment.extend(self.schemes)
 
         #: Logging attribute
-        self.log: RepoLoggingAdapter = RepoLoggingAdapter(
+        self.log: CmdLoggingAdapter = CmdLoggingAdapter(
             bin_name=self.bin_name, repo_name=self.repo_name, logger=logger, extra={}
         )
 
