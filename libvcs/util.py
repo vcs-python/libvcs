@@ -5,9 +5,10 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 from . import exc
+from .types import StrOrBytesPath
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
 def run(
     cmd: Union[str, list[str]],
     shell: bool = False,
-    cwd: Union[str, None] = None,
+    cwd: Optional[StrOrBytesPath] = None,
     log_in_real_time: bool = True,
     check_returncode: bool = True,
     callback: Union[Callable[[str, datetime.datetime], None], None] = None,
