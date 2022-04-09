@@ -1,4 +1,5 @@
 from os import PathLike
+from typing import Union
 
 # See also, if this type is baked in in typing in the future
 # - https://stackoverflow.com/q/53418046/1396928
@@ -7,5 +8,5 @@ from os import PathLike
 # OptionalPathLike = TypeVar("OptionalPathLike", str, pathlib.Path, None)
 
 
-StrOrBytesPath = str | bytes | PathLike[str] | PathLike[bytes]  # stable
-StrOrPath = str | PathLike[str]  # stable
+StrOrBytesPath = Union[str, bytes, PathLike[str], PathLike[bytes]]  # stable
+StrOrPath = Union[str, PathLike[str]]  # stable
