@@ -50,7 +50,9 @@ jobs:
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies [w/ docs]
-        run: poetry install --extras "docs lint"
+        run: |
+          poetry env use ${{ matrix.python-version }}
+          poetry install --extras "docs lint"
 
       - name: Build documentation
         run: |
