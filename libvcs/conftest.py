@@ -56,10 +56,12 @@ def add_doctest_fixtures(
     home_default: pathlib.Path,
     gitconfig: pathlib.Path,
     git_remote: pathlib.Path,
+    svn_remote: pathlib.Path,
 ):
     doctest_namespace["tmp_path"] = tmp_path
     doctest_namespace["gitconfig"] = gitconfig
     doctest_namespace["git_remote"] = git_remote
+    doctest_namespace["svn_remote"] = svn_remote
 
 
 @pytest.fixture(scope="function")
