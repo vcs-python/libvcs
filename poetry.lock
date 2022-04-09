@@ -834,7 +834,7 @@ testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pytest (>=4.0.0)", "pytes
 name = "typing-extensions"
 version = "4.1.1"
 description = "Backported and Experimental Type Hints for Python 3.6+"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -902,7 +902,7 @@ test = []
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "3e0c76ed614f2badbfce6fba37947a37588b00bddefc3fc8df902426ac30c34f"
+content-hash = "69d3aedf7b3490feb68b06f298737ca101ef4588d8c63a0c042990b1f2b414f0"
 
 [metadata.files]
 alabaster = [
