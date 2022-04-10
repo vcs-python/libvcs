@@ -17,6 +17,14 @@ $ pip install --user --upgrade --pre libvcs
 
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been moved to
   `libvcs.states.{module}.{Module}Repo`
+- `repo_dir` param is renamed to `dir`:
+
+  Before: `GitRepo(url='...', repo_dir='...')`
+
+  After: `GitRepo(url='...', dir='...')`
+
+  {issue}`#324`
+
 - Logging functions moved to {attr}`libvcs.states.base.BaseRepo.log` ({issue}`#322`)
 - Rename `RepoLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`

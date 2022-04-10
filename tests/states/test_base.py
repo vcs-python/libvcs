@@ -9,7 +9,7 @@ from libvcs.states.base import BaseRepo, convert_pip_url
 
 
 def test_repr():
-    repo = create_repo(url="file://path/to/myrepo", repo_dir="/hello/", vcs="git")
+    repo = create_repo(url="file://path/to/myrepo", dir="/hello/", vcs="git")
 
     str_repo = str(repo)
     assert "GitRepo" in str_repo
@@ -18,7 +18,7 @@ def test_repr():
 
 
 def test_repr_base():
-    repo = BaseRepo(url="file://path/to/myrepo", repo_dir="/hello/")
+    repo = BaseRepo(url="file://path/to/myrepo", dir="/hello/")
 
     str_repo = str(repo)
     assert "Repo" in str_repo
@@ -28,8 +28,8 @@ def test_repr_base():
 
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
     projects_path = tmp_path / "projects_path"  # doesn't exist yet
-    repo_dir = projects_path / "myrepo"
-    repo = BaseRepo(url="file://path/to/myrepo", repo_dir=repo_dir)
+    dir = projects_path / "myrepo"
+    repo = BaseRepo(url="file://path/to/myrepo", dir=dir)
 
     repo.ensure_dir()
     assert projects_path.is_dir()
@@ -62,7 +62,7 @@ def test_progress_callback(
 
     r = Repo(
         url=f"file://{str(git_remote_repo)}",
-        repo_dir=str(tmp_path),
+        dir=str(tmp_path),
         progress_callback=progress_cb,
     )
     r.obtain()

@@ -40,7 +40,7 @@ class BaseRepo:
     #: vcs app name, e.g. 'git'
     bin_name = ""
 
-    def __init__(self, url, repo_dir, progress_callback=None, *args, **kwargs):
+    def __init__(self, url, dir, progress_callback=None, *args, **kwargs):
         r"""
         Parameters
         ----------
@@ -63,7 +63,7 @@ class BaseRepo:
             ...         )
             >>> r = Repo(
             ...     url=f'file://{create_git_remote_repo()}',
-            ...     repo_dir=str(tmp_path),
+            ...     dir=str(tmp_path),
             ...     progress_callback=progress_cb
             ... )
             >>> r.obtain()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS +REPORT_CDIFF
@@ -81,13 +81,13 @@ class BaseRepo:
         self.progress_callback = progress_callback
 
         #: Parent directory
-        self.parent_dir = os.path.dirname(repo_dir)
+        self.parent_dir = os.path.dirname(dir)
 
         #: Checkout path
-        self.path = repo_dir
+        self.path = dir
 
         #: Base name of checkout
-        self.repo_name = os.path.basename(os.path.normpath(repo_dir))
+        self.repo_name = os.path.basename(os.path.normpath(dir))
 
         if "rev" in kwargs:
             self.rev = kwargs["rev"]

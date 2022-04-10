@@ -140,7 +140,7 @@ class GitRepo(BaseRepo):
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
     def __init__(
-        self, url: str, repo_dir: str, remotes: GitRemotesArgs = None, *args, **kwargs
+        self, url: str, dir: str, remotes: GitRemotesArgs = None, *args, **kwargs
     ):
         """A git repository.
 
@@ -164,7 +164,7 @@ class GitRepo(BaseRepo):
 
             repo = GitRepo(
                url="https://github.com/vcs-python/libvcs",
-               repo_dir=checkout,
+               dir=checkout,
                remotes={
                    'gitlab': 'https://gitlab.com/vcs-python/libvcs'
                }
@@ -179,7 +179,7 @@ class GitRepo(BaseRepo):
 
             repo = GitRepo(
                url="https://github.com/vcs-python/libvcs",
-               repo_dir=checkout,
+               dir=checkout,
                remotes={
                    'gitlab': {
                        'fetch_url': 'https://gitlab.com/vcs-python/libvcs',
@@ -221,7 +221,7 @@ class GitRepo(BaseRepo):
                 fetch_url=url,
                 push_url=url,
             )
-        BaseRepo.__init__(self, url, repo_dir, *args, **kwargs)
+        BaseRepo.__init__(self, url, dir, *args, **kwargs)
         self.url = self.chomp_protocol(
             (
                 self._remotes.get("origin")
@@ -592,7 +592,7 @@ class GitRepo(BaseRepo):
         --------
         >>> git_repo = GitRepo(
         ...     url=f'file://{create_git_remote_repo()}',
-        ...     repo_dir=tmp_path
+        ...     dir=tmp_path
         ... )
         >>> git_repo.obtain()
         >>> git_repo.status()

@@ -34,14 +34,17 @@ to inspect / checkout / update:
 >>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
 
 # repo is an object representation of a vcs repository.
->>> r = create_repo(url='https://www.github.com/vcs-python/libtmux',
-...                 vcs='git',
-...                 repo_dir='/tmp/libtmux')
+>>> r = create_repo(
+...     url='https://www.github.com/vcs-python/libtmux',
+...     vcs='git',
+...     dir='/tmp/libtmux'
+... )
 
 # or via pip-style URL
 >>> r = create_repo_from_pip_url(
-...         pip_url='git+https://www.github.com/vcs-python/libtmux',
-...         repo_dir='/tmp/libtmux')
+...     pip_url='git+https://www.github.com/vcs-python/libtmux',
+...     dir='/tmp/libtmux'
+... )
 ```
 
 Update / clone repo:
