@@ -13,7 +13,7 @@ from libvcs import exc
 from libvcs.conftest import CreateRepoCallbackFixtureProtocol
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.states.git import (
-    FullRemoteDict,
+    GitFullRemoteDict,
     GitRemote,
     GitRepo,
     convert_pip_url as git_convert_pip_url,
@@ -27,7 +27,7 @@ if not which("git"):
 
 RepoTestFactory = Callable[..., GitRepo]
 RepoTestFactoryLazyKwargs = Callable[..., dict]
-RepoTestFactoryRemotesLazyExpected = Callable[..., FullRemoteDict]
+RepoTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
 
 
 @pytest.mark.parametrize(

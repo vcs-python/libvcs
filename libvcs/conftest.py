@@ -9,7 +9,7 @@ import pytest
 
 from faker import Faker
 
-from libvcs.states.git import GitRepo, RemoteDict
+from libvcs.states.git import GitRemoteDict, GitRepo
 from libvcs.util import run, which
 
 skip_if_git_missing = pytest.mark.skipif(
@@ -224,7 +224,7 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
         url=f"file://{git_remote_repo}",
         repo_dir=str(projects_path / "git_repo"),
         remotes={
-            "origin": RemoteDict(
+            "origin": GitRemoteDict(
                 **{
                     "push_url": f"file://{git_remote_repo}",
                     "fetch_url": f"file://{git_remote_repo}",

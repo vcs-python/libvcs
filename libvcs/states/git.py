@@ -125,14 +125,14 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class RemoteDict(TypedDict):
+class GitRemoteDict(TypedDict):
     fetch_url: str
     push_url: str
 
 
 GitRepoRemoteDict = Dict[str, GitRemote]
-FullRemoteDict = Dict[str, RemoteDict]
-RemotesArgs = Union[None, FullRemoteDict, Dict[str, str]]
+GitFullRemoteDict = Dict[str, GitRemoteDict]
+GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
 
 
 class GitRepo(BaseRepo):
@@ -140,7 +140,7 @@ class GitRepo(BaseRepo):
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
     def __init__(
-        self, url: str, repo_dir: str, remotes: RemotesArgs = None, *args, **kwargs
+        self, url: str, repo_dir: str, remotes: GitRemotesArgs = None, *args, **kwargs
     ):
         """A git repository.
 
