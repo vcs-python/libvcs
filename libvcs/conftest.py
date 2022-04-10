@@ -50,8 +50,9 @@ def user_path(home_path: pathlib.Path):
 
 
 @pytest.fixture(autouse=True)
+@pytest.mark.usefixtures("home_default")
 @skip_if_git_missing
-def gitconfig(user_path: pathlib.Path, home_default: pathlib.Path):
+def gitconfig(user_path: pathlib.Path):
     gitconfig = user_path / ".gitconfig"
     user_email = "libvcs@git-pull.com"
     gitconfig.write_text(
