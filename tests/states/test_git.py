@@ -10,6 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from libvcs import exc
+from libvcs.conftest import CreateRepoCallbackFixProtocol
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.states.git import (
     FullRemoteDict,
@@ -722,3 +723,23 @@ def test_extract_status_c(fixture: str, expected_result: dict):
         expected_result.items()
         <= extract_status(textwrap.dedent(fixture))._asdict().items()
     )
+
+
+def test_repo_git_remote_checkout(
+    create_git_remote_repo: CreateRepoCallbackFixProtocol,
+    tmp_path: pathlib.Path,
+    projects_path: pathlib.Path,
+):
+    git_server = create_git_remote_repo()
+    git_repo_checkout_dir = projects_path / "my_git_checkout"
+    git_repo = GitRepo(
+        repo_dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}"
+    )
+
+    git_repo.obtain()
+    git_repo.update_repo()
+
+    assert git_repo.get_revision() == "initial"
+
+    assert git_repo_checkout_dir.exists()
+    assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
