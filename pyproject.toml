@@ -58,6 +58,7 @@ pytest-rerunfailures = "*"
 pytest-mock = "*"
 pytest-watcher = "^0.2.3"
 tox = {version = "^3.24.5", extras = ["test"]}
+Faker = "^13.3.4"
 
 ### Coverage ###
 codecov = "*"
@@ -73,7 +74,7 @@ flake8 = "*"
 
 [tool.poetry.extras]
 docs = ["sphinx", "sphinx-issues", "sphinx-autodoc-typehints", "sphinx-autobuild", "sphinx-copybutton", "sphinxext-opengraph", "sphinx-inline-tabs", "sphinxext-rediraffe", "myst_parser", "furo"]
-test = ["pytest", "pytest-rerunfailures", "pytest-mock", "pytest-watcher"]
+test = ["faker", "pytest", "pytest-rerunfailures", "pytest-mock", "pytest-watcher"]
 coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
 lint = ["flake8"]
