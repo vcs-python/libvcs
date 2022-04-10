@@ -199,26 +199,26 @@ def test_progress_callback(
     [
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {"origin": f"file://{git_remote_repo}"},
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                     "second_remote": f"file://{git_remote_repo}",
@@ -231,9 +231,9 @@ def test_progress_callback(
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "second_remote": f"file://{git_remote_repo}",
                 },
@@ -245,9 +245,9 @@ def test_progress_callback(
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "origin": GitRemote(
                         name="origin",
@@ -268,9 +268,9 @@ def test_progress_callback(
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "second_remote": GitRemote(
                         name="second_remote",
@@ -285,16 +285,16 @@ def test_progress_callback(
         ],
         [
             create_repo_from_pip_url,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
         ],
     ],
 )
 def test_remotes(
-    repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
     constructor: RepoTestFactory,
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
@@ -323,9 +323,9 @@ def test_remotes(
     [
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                 },
@@ -354,9 +354,9 @@ def test_remotes(
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                     # accepts short-hand form since it's inputted in the constructor
@@ -379,9 +379,9 @@ def test_remotes(
         ],
         [
             GitRepo,
-            lambda git_remote_repo, repos_path, repo_name, **kwargs: {
+            lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": repos_path / repo_name,
+                "repo_dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                 },
@@ -406,7 +406,7 @@ def test_remotes(
     ],
 )
 def test_remotes_update_repo(
-    repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
     constructor: RepoTestFactory,
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
@@ -473,14 +473,14 @@ def test_git_get_url_and_rev_from_pip_url():
     ],
 )
 def test_remotes_preserves_git_ssh(
-    repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
     constructor: RepoTestFactory,
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
 ):
     # Regression test for #14
     repo_name = "myexamplegit"
-    repo_dir = repos_path / repo_name
+    repo_dir = projects_path / repo_name
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))

@@ -65,9 +65,9 @@ def add_doctest_fixtures(
 
 
 @pytest.fixture(scope="function")
-def repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
+def projects_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
     """Return temporary directory for repository checkout guaranteed unique."""
-    dir = user_path / "repos"
+    dir = user_path / "projects"
     dir.mkdir(exist_ok=True)
 
     def clean():
@@ -83,12 +83,12 @@ class CreateGitrepoRepoCallbackProtocol(Protocol):
 
 
 def _create_git_remote_repo(
-    repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
     repo_name: str,
     repo_post_init: Optional[CreateGitrepoRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
-    repo_path = repos_path / repo_name
-    run(["git", "init", repo_name], cwd=repos_path)
+    repo_path = projects_path / repo_name
+    run(["git", "init", repo_name], cwd=projects_path)
 
     if repo_post_init is not None and callable(repo_post_init):
         repo_post_init(repo_path=repo_path)
@@ -98,7 +98,7 @@ def _create_git_remote_repo(
 
 @pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
-def git_remote_repo(repos_path: pathlib.Path):
+def git_remote_repo(projects_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
 
@@ -110,17 +110,17 @@ def git_remote_repo(repos_path: pathlib.Path):
         run(["git", "commit", "-m", "test file for %s" % name], cwd=repo_path)
 
     repo_path = _create_git_remote_repo(
-        repos_path=repos_path, repo_name=name, repo_post_init=post_init
+        projects_path=projects_path, repo_name=name, repo_post_init=post_init
     )
 
     return repo_path
 
 
 @pytest.fixture
-def svn_remote_repo(repos_path, scope="session"):
+def svn_remote_repo(projects_path, scope="session"):
     """Create a git repo with 1 commit, used as a remote."""
     server_dirname = "server_dir"
-    server_dir = repos_path / server_dirname
+    server_dir = projects_path / server_dirname
 
     run(["svnadmin", "create", server_dir])
 
@@ -128,11 +128,11 @@ def svn_remote_repo(repos_path, scope="session"):
 
 
 @pytest.fixture
-def git_repo(repos_path: pathlib.Path, git_remote_repo: pathlib.Path):
+def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
     """Create an git repository for tests. Return repo."""
     git_repo = GitRepo(
         url=f"file://{git_remote_repo}",
-        repo_dir=str(repos_path / "git_repo"),
+        repo_dir=str(projects_path / "git_repo"),
         remotes={
             "origin": RemoteDict(
                 **{
