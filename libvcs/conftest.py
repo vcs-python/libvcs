@@ -3,11 +3,11 @@ import getpass
 import pathlib
 import shutil
 import textwrap
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
-from libvcs.shortcuts import create_repo_from_pip_url
+from libvcs.states.git import GitRepo, RemoteDict
 from libvcs.util import run
 
 
@@ -108,18 +108,19 @@ def svn_remote_repo(repos_path, scope="session"):
 
 
 @pytest.fixture
-def pip_url_kwargs(repos_path: pathlib.Path, git_remote_repo: pathlib.Path):
-    """Return kwargs for :func:`create_repo_from_pip_url`."""
-    repo_name = "repo_clone"
-    return {
-        "pip_url": f"git+file://{git_remote_repo}",
-        "repo_dir": repos_path / repo_name,
-    }
-
-
-@pytest.fixture
-def git_repo(pip_url_kwargs: Dict):
+def git_repo(repos_path: pathlib.Path, git_remote_repo: pathlib.Path):
     """Create an git repository for tests. Return repo."""
-    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo = GitRepo(
+        url=f"file://{git_remote_repo}",
+        repo_dir=str(repos_path / "git_repo"),
+        remotes={
+            "origin": RemoteDict(
+                **{
+                    "push_url": f"file://{git_remote_repo}",
+                    "fetch_url": f"file://{git_remote_repo}",
+                }
+            )
+        },
+    )
     git_repo.obtain()
     return git_repo

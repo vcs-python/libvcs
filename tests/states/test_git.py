@@ -515,13 +515,14 @@ def test_remotes_preserves_git_ssh(
     ],
 )
 def test_private_ssh_format(
-    pip_url_kwargs: dict,
+    tmpdir: pathlib.Path,
     constructor: RepoTestFactory,
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
 ):
-    pip_url_kwargs.update(
-        **{"pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo"}
-    )
+    pip_url_kwargs = {
+        "pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo",
+        "repo_dir": tmpdir,
+    }
 
     with pytest.raises(exc.LibVCSException) as excinfo:
         create_repo_from_pip_url(**pip_url_kwargs)
