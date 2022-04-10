@@ -18,6 +18,7 @@ skip_if_git_missing = pytest.mark.skipif(
 skip_if_svn_missing = pytest.mark.skipif(
     not which("svn"), reason="svn is not available"
 )
+skip_if_hg_missing = pytest.mark.skipif(not which("hg"), reason="hg is not available")
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +58,26 @@ def gitconfig(user_path: pathlib.Path, home_default: pathlib.Path):
     assert user_email in output, "Should use our fixture config and home directory"
 
     return gitconfig
+
+
+@pytest.fixture(autouse=True, scope="session")
+@skip_if_hg_missing
+def hgconfig(user_path: pathlib.Path):
+    hgrc = user_path / ".hgrc"
+    hgrc.write_text(
+        textwrap.dedent(
+            f"""
+        [ui]
+        username = libvcs tests <libvcs@git-pull.com>
+        merge = internal:merge
+
+        [trusted]
+        users = {getpass.getuser()}
+    """
+        ),
+        encoding="utf-8",
+    )
+    return hgrc
 
 
 def pytest_ignore_collect(path, config: pytest.Config):

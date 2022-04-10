@@ -1,7 +1,5 @@
 """Tests for libvcs hg repos."""
-import getpass
 import pathlib
-import textwrap
 
 import pytest
 
@@ -10,30 +8,6 @@ from libvcs.util import run, which
 
 if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
-
-
-@pytest.fixture(autouse=True, scope="session")
-def hgrc(user_path: pathlib.Path):
-    hgrc = user_path / ".hgrc"
-    hgrc.write_text(
-        textwrap.dedent(
-            f"""
-        [ui]
-        username = libvcs tests <libvcs@git-pull.com>
-        merge = internal:merge
-
-        [trusted]
-        users = {getpass.getuser()}
-    """
-        ),
-        encoding="utf-8",
-    )
-    return hgrc
-
-
-@pytest.fixture(autouse=True)
-def hgrc_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
-    monkeypatch.setenv("HOME", str(user_path))
 
 
 @pytest.fixture
