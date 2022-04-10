@@ -72,6 +72,7 @@ def gitconfig(user_path: pathlib.Path, home_default: pathlib.Path):
 
 
 @pytest.fixture(autouse=True, scope="session")
+@pytest.mark.usefixtures("home_default")
 @skip_if_hg_missing
 def hgconfig(user_path: pathlib.Path):
     hgrc = user_path / ".hgrc"
@@ -169,7 +170,6 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 
 def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
     testfile_filename = "testfile.test"
-
     run(["touch", testfile_filename], cwd=remote_repo_path)
     run(["git", "add", testfile_filename], cwd=remote_repo_path)
     run(["git", "commit", "-m", "test file for dummyrepo"], cwd=remote_repo_path)
@@ -238,22 +238,60 @@ def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     return remote_repo_path
 
 
-@pytest.fixture
-@skip_if_hg_missing
-def hg_remote_repo(projects_path):
-    """Pre-made, file-based repo for push and pull."""
-    name = "test_hg_repo"
-    repo_path = projects_path / name
+def _create_hg_remote_repo(
+    remote_repos_path: pathlib.Path,
+    remote_repo_name: str,
+    remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+) -> pathlib.Path:
+    """Create a test hg repo to for checkout / commit purposes"""
+    remote_repo_path = remote_repos_path / remote_repo_name
+    run(["hg", "init", remote_repo_name], cwd=remote_repos_path)
 
-    run(["hg", "init", name], cwd=projects_path)
+    if remote_repo_post_init is not None and callable(remote_repo_post_init):
+        remote_repo_post_init(remote_repo_path=remote_repo_path)
 
+    return remote_repo_path
+
+
+def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
     testfile_filename = "testfile.test"
+    run(["touch", testfile_filename], cwd=remote_repo_path)
+    run(["hg", "add", testfile_filename], cwd=remote_repo_path)
+    run(["hg", "commit", "-m", "test file for hg repo"], cwd=remote_repo_path)
 
-    run(["touch", testfile_filename], cwd=repo_path)
-    run(["hg", "add", testfile_filename], cwd=repo_path)
-    run(["hg", "commit", "-m", "test file for %s" % name], cwd=repo_path)
 
-    return repo_path
+@pytest.fixture
+@pytest.mark.usefixtures("hgconfig")
+@skip_if_hg_missing
+def create_hg_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+    """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
+
+    def fn(
+        remote_repos_path: pathlib.Path = remote_repos_path,
+        remote_repo_name: Optional[str] = None,
+        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    ):
+        return _create_hg_remote_repo(
+            remote_repos_path=remote_repos_path,
+            remote_repo_name=remote_repo_name
+            if remote_repo_name is not None
+            else faker.word(),
+            remote_repo_post_init=remote_repo_post_init,
+        )
+
+    return fn
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("hgconfig")
+@skip_if_hg_missing
+def hg_remote_repo(remote_repos_path: pathlib.Path):
+    """Pre-made, file-based repo for push and pull."""
+    return _create_hg_remote_repo(
+        remote_repos_path=remote_repos_path,
+        remote_repo_name="dummyrepo",
+        remote_repo_post_init=hg_remote_repo_single_commit_post_init,
+    )
 
 
 @pytest.fixture
@@ -283,6 +321,7 @@ def add_doctest_fixtures(
     gitconfig: pathlib.Path,
     create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
     create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
+    create_hg_remote_repo: CreateRepoCallbackFixtureProtocol,
 ):
     doctest_namespace["tmp_path"] = tmp_path
     if which("git"):
@@ -292,3 +331,7 @@ def add_doctest_fixtures(
         )
     if which("svn"):
         doctest_namespace["svn_remote_repo"] = create_svn_remote_repo()
+    if which("hg"):
+        doctest_namespace["hg_remote_repo"] = create_hg_remote_repo(
+            remote_repo_post_init=hg_remote_repo_single_commit_post_init
+        )
