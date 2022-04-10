@@ -3,7 +3,7 @@ import getpass
 import pathlib
 import shutil
 import textwrap
-from typing import Any
+from typing import Any, Optional, Protocol
 
 import pytest
 
@@ -77,22 +77,43 @@ def repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
     return dir
 
 
+class CreateGitrepoRepoCallbackProtocol(Protocol):
+    def __call__(self, repo_path: pathlib.Path):
+        ...
+
+
+def _create_git_remote_repo(
+    repos_path: pathlib.Path,
+    repo_name: str,
+    repo_post_init: Optional[CreateGitrepoRepoCallbackProtocol] = None,
+) -> pathlib.Path:
+    repo_path = repos_path / repo_name
+    run(["git", "init", repo_name], cwd=repos_path)
+
+    if repo_post_init is not None and callable(repo_post_init):
+        repo_post_init(repo_path=repo_path)
+
+    return repo_path
+
+
 @pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
 def git_remote_repo(repos_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
-    repo_dir = repos_path / name
 
-    run(["git", "init", name], cwd=repos_path)
+    def post_init(repo_path: pathlib.Path):
+        testfile_filename = "testfile.test"
 
-    testfile_filename = "testfile.test"
+        run(["touch", testfile_filename], cwd=repo_path)
+        run(["git", "add", testfile_filename], cwd=repo_path)
+        run(["git", "commit", "-m", "test file for %s" % name], cwd=repo_path)
 
-    run(["touch", testfile_filename], cwd=repo_dir)
-    run(["git", "add", testfile_filename], cwd=repo_dir)
-    run(["git", "commit", "-m", "test file for %s" % name], cwd=repo_dir)
+    repo_path = _create_git_remote_repo(
+        repos_path=repos_path, repo_name=name, repo_post_init=post_init
+    )
 
-    return repo_dir
+    return repo_path
 
 
 @pytest.fixture
