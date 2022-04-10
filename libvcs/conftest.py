@@ -135,7 +135,7 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
             else faker.word(),
-            remote_repo_post_init=None,
+            remote_repo_post_init=remote_repo_post_init,
         )
 
     return fn
@@ -193,7 +193,7 @@ def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
             else faker.word(),
-            remote_repo_post_init=None,
+            remote_repo_post_init=remote_repo_post_init,
         )
 
     return fn
