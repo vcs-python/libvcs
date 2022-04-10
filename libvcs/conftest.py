@@ -78,24 +78,6 @@ def repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def pip_url_kwargs(repos_path: pathlib.Path, git_remote_repo: pathlib.Path):
-    """Return kwargs for :func:`create_repo_from_pip_url`."""
-    repo_name = "repo_clone"
-    return {
-        "pip_url": f"git+file://{git_remote_repo}",
-        "repo_dir": repos_path / repo_name,
-    }
-
-
-@pytest.fixture
-def git_repo(pip_url_kwargs: Dict):
-    """Create an git repository for tests. Return repo."""
-    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
-    git_repo.obtain()
-    return git_repo
-
-
-@pytest.fixture
 def git_remote_repo(
     repos_path: pathlib.Path, gitconfig: pathlib.Path, home_default: pathlib.Path
 ):
@@ -123,3 +105,21 @@ def svn_remote_repo(repos_path, scope="session"):
     run(["svnadmin", "create", server_dir])
 
     return server_dir
+
+
+@pytest.fixture
+def pip_url_kwargs(repos_path: pathlib.Path, git_remote_repo: pathlib.Path):
+    """Return kwargs for :func:`create_repo_from_pip_url`."""
+    repo_name = "repo_clone"
+    return {
+        "pip_url": f"git+file://{git_remote_repo}",
+        "repo_dir": repos_path / repo_name,
+    }
+
+
+@pytest.fixture
+def git_repo(pip_url_kwargs: Dict):
+    """Create an git repository for tests. Return repo."""
+    git_repo = create_repo_from_pip_url(**pip_url_kwargs)
+    git_repo.obtain()
+    return git_repo
