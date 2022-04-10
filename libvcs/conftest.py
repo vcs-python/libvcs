@@ -55,13 +55,13 @@ def add_doctest_fixtures(
     tmp_path: pathlib.Path,
     home_default: pathlib.Path,
     gitconfig: pathlib.Path,
-    git_remote: pathlib.Path,
-    svn_remote: pathlib.Path,
+    git_remote_repo: pathlib.Path,
+    svn_remote_repo: pathlib.Path,
 ):
     doctest_namespace["tmp_path"] = tmp_path
     doctest_namespace["gitconfig"] = gitconfig
-    doctest_namespace["git_remote"] = git_remote
-    doctest_namespace["svn_remote"] = svn_remote
+    doctest_namespace["git_remote_repo"] = git_remote_repo
+    doctest_namespace["svn_remote_repo"] = svn_remote_repo
 
 
 @pytest.fixture(scope="function")
@@ -78,11 +78,11 @@ def repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def pip_url_kwargs(repos_path: pathlib.Path, git_remote: pathlib.Path):
+def pip_url_kwargs(repos_path: pathlib.Path, git_remote_repo: pathlib.Path):
     """Return kwargs for :func:`create_repo_from_pip_url`."""
     repo_name = "repo_clone"
     return {
-        "pip_url": f"git+file://{git_remote}",
+        "pip_url": f"git+file://{git_remote_repo}",
         "repo_dir": repos_path / repo_name,
     }
 
@@ -96,7 +96,7 @@ def git_repo(pip_url_kwargs: Dict):
 
 
 @pytest.fixture
-def git_remote(
+def git_remote_repo(
     repos_path: pathlib.Path, gitconfig: pathlib.Path, home_default: pathlib.Path
 ):
     """Create a git repo with 1 commit, used as a remote."""
@@ -115,7 +115,7 @@ def git_remote(
 
 
 @pytest.fixture
-def svn_remote(repos_path, scope="session"):
+def svn_remote_repo(repos_path, scope="session"):
     """Create a git repo with 1 commit, used as a remote."""
     server_dirname = "server_dir"
     server_dir = repos_path / server_dirname

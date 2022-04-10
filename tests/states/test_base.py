@@ -43,7 +43,9 @@ def test_convert_pip_url():
 
 
 def test_progress_callback(
-    capsys: pytest.LogCaptureFixture, tmp_path: pathlib.Path, git_remote: pathlib.Path
+    capsys: pytest.LogCaptureFixture,
+    tmp_path: pathlib.Path,
+    git_remote_repo: pathlib.Path,
 ):
     def progress_cb(output, timestamp):
         sys.stdout.write(output)
@@ -59,7 +61,7 @@ def test_progress_callback(
             )
 
     r = Repo(
-        url=f"file://{str(git_remote)}",
+        url=f"file://{str(git_remote_repo)}",
         repo_dir=str(tmp_path),
         progress_callback=progress_cb,
     )

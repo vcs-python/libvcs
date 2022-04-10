@@ -37,7 +37,7 @@ def hgrc_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
 
 
 @pytest.fixture
-def hg_remote(repos_path):
+def hg_remote_repo(repos_path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "test_hg_repo"
     repo_path = repos_path / name
@@ -53,12 +53,12 @@ def hg_remote(repos_path):
     return repo_path
 
 
-def test_repo_mercurial(tmp_path: pathlib.Path, repos_path, hg_remote):
+def test_repo_mercurial(tmp_path: pathlib.Path, repos_path, hg_remote_repo):
     repo_name = "my_mercurial_project"
 
     mercurial_repo = create_repo_from_pip_url(
         **{
-            "pip_url": f"hg+file://{hg_remote}",
+            "pip_url": f"hg+file://{hg_remote_repo}",
             "repo_dir": repos_path / repo_name,
         }
     )
@@ -78,7 +78,7 @@ def test_vulnerability_2022_03_12_command_injection(
     monkeypatch: pytest.MonkeyPatch,
     user_path: pathlib.Path,
     tmp_path: pathlib.Path,
-    hg_remote,
+    hg_remote_repo,
 ):
     """Prevent hg aliases from executed arbitrary commands via URLs.
 

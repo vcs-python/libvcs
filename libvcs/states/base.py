@@ -62,7 +62,7 @@ class BaseRepo:
             ...             log_in_real_time=True
             ...         )
             >>> r = Repo(
-            ...     url=f'file://{str(git_remote)}',
+            ...     url=f'file://{str(git_remote_repo)}',
             ...     repo_dir=str(tmp_path),
             ...     progress_callback=progress_cb
             ... )

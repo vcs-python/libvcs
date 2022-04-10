@@ -247,40 +247,40 @@ class GitRepo(BaseRepo):
     def set_remotes(self, overwrite: bool = False):
         remotes = self._remotes
         if isinstance(remotes, dict):
-            for remote_name, git_remote in remotes.items():
+            for remote_name, git_remote_repo in remotes.items():
 
                 existing_remote = self.remote(remote_name)
-                if isinstance(git_remote, GitRemote):
+                if isinstance(git_remote_repo, GitRemote):
                     if (
                         not existing_remote
-                        or existing_remote.fetch_url != git_remote.fetch_url
+                        or existing_remote.fetch_url != git_remote_repo.fetch_url
                     ):
                         self.set_remote(
                             name=remote_name,
-                            url=git_remote.fetch_url,
+                            url=git_remote_repo.fetch_url,
                             overwrite=overwrite,
                         )
                         # refresh if we're setting it, so push can be checked
                         existing_remote = self.remote(remote_name)
-                    if git_remote.push_url:
+                    if git_remote_repo.push_url:
                         if (
                             not existing_remote
-                            or existing_remote.push_url != git_remote.push_url
+                            or existing_remote.push_url != git_remote_repo.push_url
                         ):
                             self.set_remote(
                                 name=remote_name,
-                                url=git_remote.push_url,
+                                url=git_remote_repo.push_url,
                                 push=True,
                                 overwrite=overwrite,
                             )
                 else:
                     if (
                         not existing_remote
-                        or existing_remote.fetch_url != git_remote.fetch_url
+                        or existing_remote.fetch_url != git_remote_repo.fetch_url
                     ):
                         self.set_remote(
                             name=remote_name,
-                            url=git_remote.fetch_url,
+                            url=git_remote_repo.fetch_url,
                             overwrite=overwrite,
                         )
 
@@ -591,7 +591,7 @@ class GitRepo(BaseRepo):
         Examples
         --------
         >>> git_repo = GitRepo(
-        ...     url=f'file://{str(git_remote)}',
+        ...     url=f'file://{str(git_remote_repo)}',
         ...     repo_dir=str(tmp_path)
         ... )
         >>> git_repo.obtain()

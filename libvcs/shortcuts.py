@@ -14,7 +14,7 @@ def create_repo(
     --------
     >>> from libvcs.shortcuts import create_repo
     >>> r = create_repo(
-    ...     url=f'file://{str(git_remote)}',
+    ...     url=f'file://{str(git_remote_repo)}',
     ...     vcs='git',
     ...     repo_dir=str(tmp_path)
     ... )
@@ -42,7 +42,7 @@ def create_repo_from_pip_url(
 
     >>> from libvcs.shortcuts import create_repo_from_pip_url
     >>> r = create_repo_from_pip_url(
-    ...     pip_url=f'git+{str(git_remote)}',
+    ...     pip_url=f'git+{str(git_remote_repo)}',
     ...     repo_dir=str(tmp_path)
     ... )
     >>> isinstance(r, GitRepo)

@@ -11,12 +11,12 @@ if not which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
 
 
-def test_repo_svn(tmp_path: pathlib.Path, svn_remote):
+def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo):
     repo_name = "my_svn_project"
 
     svn_repo = create_repo_from_pip_url(
         **{
-            "pip_url": f"svn+file://{svn_remote}",
+            "pip_url": f"svn+file://{svn_remote_repo}",
             "repo_dir": tmp_path / repo_name,
         }
     )
