@@ -10,7 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from libvcs import exc
-from libvcs.conftest import CreateRepoCallbackFixProtocol
+from libvcs.conftest import CreateRepoCallbackFixtureProtocol
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.states.git import (
     FullRemoteDict,
@@ -413,7 +413,7 @@ def test_remotes_update_repo(
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
     lazy_remote_dict: RepoTestFactoryRemotesLazyExpected,
     lazy_remote_expected: RepoTestFactoryRemotesLazyExpected,
-    create_git_remote_repo: CreateRepoCallbackFixProtocol,
+    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
 ):
     repo_name = "myrepo"
     remote_name = "myremote"
@@ -729,7 +729,7 @@ def test_extract_status_c(fixture: str, expected_result: dict):
 
 
 def test_repo_git_remote_checkout(
-    create_git_remote_repo: CreateRepoCallbackFixProtocol,
+    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ):

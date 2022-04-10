@@ -97,7 +97,7 @@ class CreateRepoCallbackProtocol(Protocol):
         ...
 
 
-class CreateRepoCallbackFixProtocol(Protocol):
+class CreateRepoCallbackFixtureProtocol(Protocol):
     def __call__(
         self,
         remote_repos_path: Optional[pathlib.Path] = None,

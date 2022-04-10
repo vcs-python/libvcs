@@ -1,10 +1,10 @@
 import pathlib
 
-from libvcs.conftest import CreateRepoCallbackFixProtocol
+from libvcs.conftest import CreateRepoCallbackFixtureProtocol
 
 
 def test_create_git_remote_repo(
-    create_git_remote_repo: CreateRepoCallbackFixProtocol,
+    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ):
@@ -15,7 +15,7 @@ def test_create_git_remote_repo(
 
 
 def test_create_svn_remote_repo(
-    create_svn_remote_repo: CreateRepoCallbackFixProtocol,
+    create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ):
