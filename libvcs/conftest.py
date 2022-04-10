@@ -21,6 +21,17 @@ skip_if_svn_missing = pytest.mark.skipif(
 skip_if_hg_missing = pytest.mark.skipif(not which("hg"), reason="hg is not available")
 
 
+def pytest_ignore_collect(path, config: pytest.Config):
+    if not which("svn") and any(needle in path for needle in ["svn", "subversion"]):
+        return True
+    if not which("git") and "git" in path:
+        return True
+    if not which("hg") and any(needle in path for needle in ["hg", "mercurial"]):
+        return True
+
+    return False
+
+
 @pytest.fixture(autouse=True)
 def home_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
     monkeypatch.setenv("HOME", str(user_path))
@@ -78,17 +89,6 @@ def hgconfig(user_path: pathlib.Path):
         encoding="utf-8",
     )
     return hgrc
-
-
-def pytest_ignore_collect(path, config: pytest.Config):
-    if not which("svn") and any(needle in path for needle in ["svn", "subversion"]):
-        return True
-    if not which("git") and "git" in path:
-        return True
-    if not which("hg") and any(needle in path for needle in ["hg", "mercurial"]):
-        return True
-
-    return False
 
 
 @pytest.fixture(scope="function")
