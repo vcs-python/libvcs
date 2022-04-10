@@ -78,9 +78,8 @@ def repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def git_remote_repo(
-    repos_path: pathlib.Path, gitconfig: pathlib.Path, home_default: pathlib.Path
-):
+@pytest.mark.usefixtures("gitconfig", "home_default")
+def git_remote_repo(repos_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
     repo_dir = repos_path / name
