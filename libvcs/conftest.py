@@ -239,6 +239,24 @@ def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
 
 
 @pytest.fixture
+@skip_if_hg_missing
+def hg_remote_repo(projects_path):
+    """Pre-made, file-based repo for push and pull."""
+    name = "test_hg_repo"
+    repo_path = projects_path / name
+
+    run(["hg", "init", name], cwd=projects_path)
+
+    testfile_filename = "testfile.test"
+
+    run(["touch", testfile_filename], cwd=repo_path)
+    run(["hg", "add", testfile_filename], cwd=repo_path)
+    run(["hg", "commit", "-m", "test file for %s" % name], cwd=repo_path)
+
+    return repo_path
+
+
+@pytest.fixture
 def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
     """Pre-made git clone of remote repo checked out to user's projects dir."""
     git_repo = GitRepo(

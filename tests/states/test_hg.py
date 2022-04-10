@@ -10,23 +10,6 @@ if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 
-@pytest.fixture
-def hg_remote_repo(projects_path):
-    """Create a git repo with 1 commit, used as a remote."""
-    name = "test_hg_repo"
-    repo_path = projects_path / name
-
-    run(["hg", "init", name], cwd=projects_path)
-
-    testfile_filename = "testfile.test"
-
-    run(["touch", testfile_filename], cwd=repo_path)
-    run(["hg", "add", testfile_filename], cwd=repo_path)
-    run(["hg", "commit", "-m", "test file for %s" % name], cwd=repo_path)
-
-    return repo_path
-
-
 def test_repo_mercurial(tmp_path: pathlib.Path, projects_path, hg_remote_repo):
     repo_name = "my_mercurial_project"
 
