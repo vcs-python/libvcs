@@ -387,20 +387,20 @@ def test_remotes(
                     "origin": f"file://{git_remote_repo}",
                 },
             },
-            lambda git_remote_repo, **kwargs: {
+            lambda git_remote_repo, second_git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     **{
                         "name": "second_remote",
-                        "fetch_url": "https://github.com/vcs-python/libvcs",
-                        "push_url": "https://github.com/vcs-python/libvcs",
+                        "fetch_url": f"{second_git_remote_repo!s}",
+                        "push_url": f"{second_git_remote_repo!s}",
                     }
                 )
             },
-            lambda git_remote_repo, **kwargs: {
+            lambda git_remote_repo, second_git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    push_url="https://github.com/vcs-python/libvcs",
-                    fetch_url="https://github.com/vcs-python/libvcs",
+                    fetch_url=f"{second_git_remote_repo!s}",
+                    push_url=f"{second_git_remote_repo!s}",
                 ),
             },
         ],
@@ -413,10 +413,13 @@ def test_remotes_update_repo(
     lazy_constructor_options: RepoTestFactoryLazyKwargs,
     lazy_remote_dict: RepoTestFactoryRemotesLazyExpected,
     lazy_remote_expected: RepoTestFactoryRemotesLazyExpected,
+    create_git_remote_repo: CreateRepoCallbackFixProtocol,
 ):
     repo_name = "myrepo"
     remote_name = "myremote"
     remote_url = "https://localhost/my/git/repo.git"
+
+    second_git_remote_repo = create_git_remote_repo()
 
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
