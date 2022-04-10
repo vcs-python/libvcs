@@ -1,8 +1,12 @@
 import pathlib
 
+import pytest
+
 from libvcs.conftest import CreateRepoCallbackFixtureProtocol
+from libvcs.util import which
 
 
+@pytest.mark.skipif(not which("git"), reason="git is not available")
 def test_create_git_remote_repo(
     create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
@@ -14,6 +18,7 @@ def test_create_git_remote_repo(
     assert git_remote_1 != git_remote_2
 
 
+@pytest.mark.skipif(not which("svn"), reason="svn is not available")
 def test_create_svn_remote_repo(
     create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
     tmp_path: pathlib.Path,

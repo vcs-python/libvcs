@@ -10,7 +10,14 @@ import pytest
 from faker import Faker
 
 from libvcs.states.git import GitRepo, RemoteDict
-from libvcs.util import run
+from libvcs.util import run, which
+
+skip_if_git_missing = pytest.mark.skipif(
+    not which("git"), reason="git is not available"
+)
+skip_if_svn_missing = pytest.mark.skipif(
+    not which("svn"), reason="svn is not available"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -31,6 +38,7 @@ def user_path(home_path: pathlib.Path):
 
 
 @pytest.fixture(autouse=True)
+@skip_if_git_missing
 def gitconfig(user_path: pathlib.Path, home_default: pathlib.Path):
     gitconfig = user_path / ".gitconfig"
     user_email = "libvcs@git-pull.com"
@@ -51,19 +59,15 @@ def gitconfig(user_path: pathlib.Path, home_default: pathlib.Path):
     return gitconfig
 
 
-@pytest.fixture(autouse=True)
-def add_doctest_fixtures(
-    doctest_namespace: dict[str, Any],
-    tmp_path: pathlib.Path,
-    home_default: pathlib.Path,
-    gitconfig: pathlib.Path,
-    git_remote_repo: pathlib.Path,
-    svn_remote_repo: pathlib.Path,
-):
-    doctest_namespace["tmp_path"] = tmp_path
-    doctest_namespace["gitconfig"] = gitconfig
-    doctest_namespace["git_remote_repo"] = git_remote_repo
-    doctest_namespace["svn_remote_repo"] = svn_remote_repo
+def pytest_ignore_collect(path, config: pytest.Config):
+    if not which("svn") and any(needle in path for needle in ["svn", "subversion"]):
+        return True
+    if not which("git") and "git" in path:
+        return True
+    if not which("hg") and any(needle in path for needle in ["hg", "mercurial"]):
+        return True
+
+    return False
 
 
 @pytest.fixture(scope="function")
@@ -122,6 +126,7 @@ def _create_git_remote_repo(
 
 
 @pytest.fixture
+@skip_if_git_missing
 def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     """Factory. Create git remote repo to for clone / push purposes"""
 
@@ -141,26 +146,24 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     return fn
 
 
+def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
+    testfile_filename = "testfile.test"
+
+    run(["touch", testfile_filename], cwd=remote_repo_path)
+    run(["git", "add", testfile_filename], cwd=remote_repo_path)
+    run(["git", "commit", "-m", "test file for dummyrepo"], cwd=remote_repo_path)
+
+
 @pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
+@skip_if_git_missing
 def git_remote_repo(remote_repos_path: pathlib.Path):
     """Pre-made git repo w/ 1 commit, used as a file:// remote to clone and push to."""
-    name = "dummyrepo"
-
-    def post_init(remote_repo_path: pathlib.Path):
-        testfile_filename = "testfile.test"
-
-        run(["touch", testfile_filename], cwd=remote_repo_path)
-        run(["git", "add", testfile_filename], cwd=remote_repo_path)
-        run(["git", "commit", "-m", "test file for %s" % name], cwd=remote_repo_path)
-
-    remote_repo_path = _create_git_remote_repo(
+    return _create_git_remote_repo(
         remote_repos_path=remote_repos_path,
-        remote_repo_name=name,
-        remote_repo_post_init=post_init,
+        remote_repo_name="dummyrepo",
+        remote_repo_post_init=git_remote_repo_single_commit_post_init,
     )
-
-    return remote_repo_path
 
 
 def _create_svn_remote_repo(
@@ -180,6 +183,7 @@ def _create_svn_remote_repo(
 
 
 @pytest.fixture
+@skip_if_svn_missing
 def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -200,6 +204,7 @@ def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 
 
 @pytest.fixture
+@skip_if_svn_missing
 def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
     svn_repo_name = "svn_server_dir"
@@ -229,3 +234,22 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
     )
     git_repo.obtain()
     return git_repo
+
+
+@pytest.fixture(autouse=True)
+def add_doctest_fixtures(
+    doctest_namespace: dict[str, Any],
+    tmp_path: pathlib.Path,
+    home_default: pathlib.Path,
+    gitconfig: pathlib.Path,
+    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
+    create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
+):
+    doctest_namespace["tmp_path"] = tmp_path
+    if which("git"):
+        doctest_namespace["gitconfig"] = gitconfig
+        doctest_namespace["git_remote_repo"] = create_git_remote_repo(
+            remote_repo_post_init=git_remote_repo_single_commit_post_init
+        )
+    if which("svn"):
+        doctest_namespace["svn_remote_repo"] = create_svn_remote_repo()
