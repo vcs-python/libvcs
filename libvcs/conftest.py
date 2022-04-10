@@ -77,7 +77,7 @@ def projects_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
     return dir
 
 
-class CreateGitrepoRepoCallbackProtocol(Protocol):
+class CreateRepoCallbackProtocol(Protocol):
     def __call__(self, repo_path: pathlib.Path):
         ...
 
@@ -85,7 +85,7 @@ class CreateGitrepoRepoCallbackProtocol(Protocol):
 def _create_git_remote_repo(
     projects_path: pathlib.Path,
     repo_name: str,
-    repo_post_init: Optional[CreateGitrepoRepoCallbackProtocol] = None,
+    repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
     repo_path = projects_path / repo_name
     run(["git", "init", repo_name], cwd=projects_path)
@@ -116,15 +116,29 @@ def git_remote_repo(projects_path: pathlib.Path):
     return repo_path
 
 
+def _create_svn_remote_repo(
+    projects_path: pathlib.Path,
+    repo_name: str,
+    repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+) -> pathlib.Path:
+    repo_path = projects_path / repo_name
+    run(["svnadmin", "create", repo_path])
+
+    if repo_post_init is not None and callable(repo_post_init):
+        repo_post_init(repo_path=repo_path)
+
+    return repo_path
+
+
 @pytest.fixture
-def svn_remote_repo(projects_path, scope="session"):
-    """Create a git repo with 1 commit, used as a remote."""
-    server_dirname = "server_dir"
-    server_dir = projects_path / server_dirname
+def svn_remote_repo(projects_path: pathlib.Path):
+    svn_repo_name = "svn_server_dir"
 
-    run(["svnadmin", "create", server_dir])
+    repo_path = _create_svn_remote_repo(
+        projects_path=projects_path, repo_name=svn_repo_name, repo_post_init=None
+    )
 
-    return server_dir
+    return repo_path
 
 
 @pytest.fixture
