@@ -1,4 +1,5 @@
 """pytest fixtures. Live inside libvcs for doctest."""
+import functools
 import getpass
 import pathlib
 import shutil
@@ -327,14 +328,16 @@ def add_doctest_fixtures(
     doctest_namespace["tmp_path"] = tmp_path
     if which("git"):
         doctest_namespace["gitconfig"] = gitconfig
-        doctest_namespace["git_remote_repo"] = create_git_remote_repo(
-            remote_repo_post_init=git_remote_repo_single_commit_post_init
+        doctest_namespace["create_git_remote_repo"] = functools.partial(
+            create_git_remote_repo,
+            remote_repo_post_init=git_remote_repo_single_commit_post_init,
         )
-        doctest_namespace["git_remote_repo_bare"] = create_git_remote_repo()
+        doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
     if which("svn"):
-        doctest_namespace["svn_remote_repo"] = create_svn_remote_repo()
+        doctest_namespace["create_svn_remote_repo"] = create_svn_remote_repo
     if which("hg"):
-        doctest_namespace["hg_remote_repo_bare"] = create_hg_remote_repo()
-        doctest_namespace["hg_remote_repo"] = create_hg_remote_repo(
-            remote_repo_post_init=hg_remote_repo_single_commit_post_init
+        doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
+        doctest_namespace["create_hg_remote_repo"] = functools.partial(
+            create_hg_remote_repo,
+            remote_repo_post_init=hg_remote_repo_single_commit_post_init,
         )

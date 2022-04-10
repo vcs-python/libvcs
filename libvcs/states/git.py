@@ -591,8 +591,8 @@ class GitRepo(BaseRepo):
         Examples
         --------
         >>> git_repo = GitRepo(
-        ...     url=f'file://{str(git_remote_repo)}',
-        ...     repo_dir=str(tmp_path)
+        ...     url=f'file://{create_git_remote_repo()}',
+        ...     repo_dir=tmp_path
         ... )
         >>> git_repo.obtain()
         >>> git_repo.status()
