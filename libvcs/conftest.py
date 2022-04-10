@@ -122,6 +122,22 @@ def _create_git_remote_repo(
 
 
 @pytest.fixture
+def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+    def fn(
+        remote_repos_path: pathlib.Path = remote_repos_path,
+        remote_repo_name: str = faker.word(),
+        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    ):
+        return _create_git_remote_repo(
+            remote_repos_path=remote_repos_path,
+            remote_repo_name=remote_repo_name,
+            remote_repo_post_init=None,
+        )
+
+    return fn
+
+
+@pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
 def git_remote_repo(remote_repos_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
