@@ -19,7 +19,7 @@ def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo):
     svn_repo = create_repo_from_pip_url(
         **{
             "pip_url": f"svn+file://{svn_remote_repo}",
-            "repo_dir": tmp_path / repo_name,
+            "dir": tmp_path / repo_name,
         }
     )
 
@@ -39,9 +39,7 @@ def test_repo_svn_remote_checkout(
 ):
     svn_server = create_svn_remote_repo()
     svn_repo_checkout_dir = projects_path / "my_svn_checkout"
-    svn_repo = SubversionRepo(
-        repo_dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}"
-    )
+    svn_repo = SubversionRepo(dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}")
 
     svn_repo.obtain()
     svn_repo.update_repo()

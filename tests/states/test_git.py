@@ -36,16 +36,16 @@ RepoTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
     [
         [
             GitRepo,
-            lambda bare_repo_dir, tmp_path, **kwargs: {
-                "url": f"file://{bare_repo_dir}",
-                "repo_dir": tmp_path / "obtaining a bare repo",
+            lambda bare_dir, tmp_path, **kwargs: {
+                "url": f"file://{bare_dir}",
+                "dir": tmp_path / "obtaining a bare repo",
             },
         ],
         [
             create_repo_from_pip_url,
-            lambda bare_repo_dir, tmp_path, **kwargs: {
-                "pip_url": f"git+file://{bare_repo_dir}",
-                "repo_dir": tmp_path / "obtaining a bare repo",
+            lambda bare_dir, tmp_path, **kwargs: {
+                "pip_url": f"git+file://{bare_dir}",
+                "dir": tmp_path / "obtaining a bare repo",
             },
         ],
     ],
@@ -64,7 +64,7 @@ def test_repo_git_obtain_initial_commit_repo(
 
     run(["git", "init", repo_name], cwd=tmp_path)
 
-    bare_repo_dir = tmp_path / repo_name
+    bare_dir = tmp_path / repo_name
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
 
     git_repo.obtain()
@@ -79,14 +79,14 @@ def test_repo_git_obtain_initial_commit_repo(
             GitRepo,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": tmp_path / "myrepo",
+                "dir": tmp_path / "myrepo",
             },
         ],
         [
             create_repo_from_pip_url,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
-                "repo_dir": tmp_path / "myrepo",
+                "dir": tmp_path / "myrepo",
             },
         ],
     ],
@@ -114,14 +114,14 @@ def test_repo_git_obtain_full(
             GitRepo,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": tmp_path / "myrepo",
+                "dir": tmp_path / "myrepo",
             },
         ],
         [
             create_repo_from_pip_url,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
-                "repo_dir": tmp_path / "myrepo",
+                "dir": tmp_path / "myrepo",
             },
         ],
     ],
@@ -156,7 +156,7 @@ def test_repo_update_handle_cases(
             GitRepo,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": tmp_path / "myrepo",
+                "dir": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
             },
         ],
@@ -164,7 +164,7 @@ def test_repo_update_handle_cases(
             create_repo_from_pip_url,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
-                "repo_dir": tmp_path / "myrepo",
+                "dir": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
             },
         ],
@@ -202,7 +202,7 @@ def test_progress_callback(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
         ],
@@ -210,7 +210,7 @@ def test_progress_callback(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {"origin": f"file://{git_remote_repo}"},
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
@@ -219,7 +219,7 @@ def test_progress_callback(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                     "second_remote": f"file://{git_remote_repo}",
@@ -234,7 +234,7 @@ def test_progress_callback(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "second_remote": f"file://{git_remote_repo}",
                 },
@@ -248,7 +248,7 @@ def test_progress_callback(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "origin": GitRemote(
                         name="origin",
@@ -271,7 +271,7 @@ def test_progress_callback(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "second_remote": GitRemote(
                         name="second_remote",
@@ -288,7 +288,7 @@ def test_progress_callback(
             create_repo_from_pip_url,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
         ],
@@ -326,7 +326,7 @@ def test_remotes(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                 },
@@ -357,7 +357,7 @@ def test_remotes(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                     # accepts short-hand form since it's inputted in the constructor
@@ -382,7 +382,7 @@ def test_remotes(
             GitRepo,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": projects_path / repo_name,
+                "dir": projects_path / repo_name,
                 "remotes": {
                     "origin": f"file://{git_remote_repo}",
                 },
@@ -462,16 +462,16 @@ def test_git_get_url_and_rev_from_pip_url():
     [
         [
             GitRepo,
-            lambda git_remote_repo, repo_dir, **kwargs: {
+            lambda git_remote_repo, dir, **kwargs: {
                 "url": f"file://{git_remote_repo}",
-                "repo_dir": str(repo_dir),
+                "dir": str(dir),
             },
         ],
         [
             create_repo_from_pip_url,
-            lambda git_remote_repo, repo_dir, **kwargs: {
+            lambda git_remote_repo, dir, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
-                "repo_dir": repo_dir,
+                "dir": dir,
             },
         ],
     ],
@@ -484,7 +484,7 @@ def test_remotes_preserves_git_ssh(
 ):
     # Regression test for #14
     repo_name = "myexamplegit"
-    repo_dir = projects_path / repo_name
+    dir = projects_path / repo_name
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
     git_repo: GitRepo = constructor(**lazy_constructor_options(**locals()))
@@ -504,16 +504,16 @@ def test_remotes_preserves_git_ssh(
     [
         [
             GitRepo,
-            lambda bare_repo_dir, tmp_path, **kwargs: {
-                "url": f"file://{bare_repo_dir}",
-                "repo_dir": tmp_path / "obtaining a bare repo",
+            lambda bare_dir, tmp_path, **kwargs: {
+                "url": f"file://{bare_dir}",
+                "dir": tmp_path / "obtaining a bare repo",
             },
         ],
         [
             create_repo_from_pip_url,
-            lambda bare_repo_dir, tmp_path, **kwargs: {
-                "pip_url": f"git+file://{bare_repo_dir}",
-                "repo_dir": tmp_path / "obtaining a bare repo",
+            lambda bare_dir, tmp_path, **kwargs: {
+                "pip_url": f"git+file://{bare_dir}",
+                "dir": tmp_path / "obtaining a bare repo",
             },
         ],
     ],
@@ -525,7 +525,7 @@ def test_private_ssh_format(
 ):
     pip_url_kwargs = {
         "pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo",
-        "repo_dir": tmpdir,
+        "dir": tmpdir,
     }
 
     with pytest.raises(exc.LibVCSException) as excinfo:
@@ -735,9 +735,7 @@ def test_repo_git_remote_checkout(
 ):
     git_server = create_git_remote_repo()
     git_repo_checkout_dir = projects_path / "my_git_checkout"
-    git_repo = GitRepo(
-        repo_dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}"
-    )
+    git_repo = GitRepo(dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
 
     git_repo.obtain()
     git_repo.update_repo()

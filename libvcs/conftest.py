@@ -301,7 +301,7 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
     """Pre-made git clone of remote repo checked out to user's projects dir."""
     git_repo = GitRepo(
         url=f"file://{git_remote_repo}",
-        repo_dir=str(projects_path / "git_repo"),
+        dir=str(projects_path / "git_repo"),
         remotes={
             "origin": GitRemoteDict(
                 **{
