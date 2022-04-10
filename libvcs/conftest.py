@@ -123,6 +123,8 @@ def _create_git_remote_repo(
 
 @pytest.fixture
 def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+    """Factory. Create git remote repo to for clone / push purposes"""
+
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: str = faker.word(),
@@ -140,7 +142,7 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 @pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
 def git_remote_repo(remote_repos_path: pathlib.Path):
-    """Create a git repo with 1 commit, used as a remote."""
+    """Pre-made git repo w/ 1 commit, used as a file:// remote to clone and push to."""
     name = "dummyrepo"
 
     def post_init(remote_repo_path: pathlib.Path):
@@ -164,6 +166,8 @@ def _create_svn_remote_repo(
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
+    """Create a test SVN repo to for checkout / commit purposes"""
+
     remote_repo_path = remote_repos_path / remote_repo_name
     run(["svnadmin", "create", remote_repo_path])
 
@@ -175,6 +179,8 @@ def _create_svn_remote_repo(
 
 @pytest.fixture
 def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+    """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
+
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: str = faker.word(),
@@ -190,9 +196,9 @@ def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 
 
 @pytest.fixture
-def svn_remote_repo(remote_repos_path: pathlib.Path):
+def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
+    """Pre-made. Local file:// based SVN server."""
     svn_repo_name = "svn_server_dir"
-
     remote_repo_path = _create_svn_remote_repo(
         remote_repos_path=remote_repos_path,
         remote_repo_name=svn_repo_name,
@@ -204,7 +210,7 @@ def svn_remote_repo(remote_repos_path: pathlib.Path):
 
 @pytest.fixture
 def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
-    """Create an git repository for tests. Return repo."""
+    """Pre-made git clone of remote repo checked out to user's projects dir."""
     git_repo = GitRepo(
         url=f"file://{git_remote_repo}",
         repo_dir=str(projects_path / "git_repo"),
