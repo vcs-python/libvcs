@@ -7,6 +7,8 @@ from typing import Any, Optional, Protocol
 
 import pytest
 
+from faker import Faker
+
 from libvcs.states.git import GitRepo, RemoteDict
 from libvcs.util import run
 
@@ -95,6 +97,16 @@ class CreateRepoCallbackProtocol(Protocol):
         ...
 
 
+class CreateRepoCallbackFixProtocol(Protocol):
+    def __call__(
+        self,
+        remote_repos_path: Optional[pathlib.Path] = None,
+        remote_repo_name: Optional[str] = None,
+        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    ):
+        ...
+
+
 def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
@@ -143,6 +155,22 @@ def _create_svn_remote_repo(
         remote_repo_post_init(remote_repo_path=remote_repo_path)
 
     return remote_repo_path
+
+
+@pytest.fixture
+def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+    def fn(
+        remote_repos_path: pathlib.Path = remote_repos_path,
+        remote_repo_name: str = faker.word(),
+        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    ):
+        return _create_svn_remote_repo(
+            remote_repos_path=remote_repos_path,
+            remote_repo_name=remote_repo_name,
+            remote_repo_post_init=None,
+        )
+
+    return fn
 
 
 @pytest.fixture
