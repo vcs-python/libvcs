@@ -127,12 +127,14 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
-        remote_repo_name: str = faker.word(),
+        remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
     ):
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,
-            remote_repo_name=remote_repo_name,
+            remote_repo_name=remote_repo_name
+            if remote_repo_name is not None
+            else faker.word(),
             remote_repo_post_init=None,
         )
 
@@ -183,12 +185,14 @@ def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
-        remote_repo_name: str = faker.word(),
+        remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
     ):
         return _create_svn_remote_repo(
             remote_repos_path=remote_repos_path,
-            remote_repo_name=remote_repo_name,
+            remote_repo_name=remote_repo_name
+            if remote_repo_name is not None
+            else faker.word(),
             remote_repo_post_init=None,
         )
 
