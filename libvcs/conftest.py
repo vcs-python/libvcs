@@ -66,8 +66,21 @@ def add_doctest_fixtures(
 
 @pytest.fixture(scope="function")
 def projects_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
-    """Return temporary directory for repository checkout guaranteed unique."""
+    """User's local checkouts and clones. Emphemeral directory."""
     dir = user_path / "projects"
+    dir.mkdir(exist_ok=True)
+
+    def clean():
+        shutil.rmtree(dir)
+
+    request.addfinalizer(clean)
+    return dir
+
+
+@pytest.fixture(scope="function")
+def remote_repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
+    """System's remote (file-based) repos to clone andpush to. Emphemeral directory."""
+    dir = user_path / "remote_repos"
     dir.mkdir(exist_ok=True)
 
     def clean():
@@ -83,12 +96,12 @@ class CreateRepoCallbackProtocol(Protocol):
 
 
 def _create_git_remote_repo(
-    projects_path: pathlib.Path,
+    remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
-    remote_repo_path = projects_path / remote_repo_name
-    run(["git", "init", remote_repo_name], cwd=projects_path)
+    remote_repo_path = remote_repos_path / remote_repo_name
+    run(["git", "init", remote_repo_name], cwd=remote_repos_path)
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -98,7 +111,7 @@ def _create_git_remote_repo(
 
 @pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
-def git_remote_repo(projects_path: pathlib.Path):
+def git_remote_repo(remote_repos_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
 
@@ -110,7 +123,7 @@ def git_remote_repo(projects_path: pathlib.Path):
         run(["git", "commit", "-m", "test file for %s" % name], cwd=remote_repo_path)
 
     remote_repo_path = _create_git_remote_repo(
-        projects_path=projects_path,
+        remote_repos_path=remote_repos_path,
         remote_repo_name=name,
         remote_repo_post_init=post_init,
     )
@@ -119,11 +132,11 @@ def git_remote_repo(projects_path: pathlib.Path):
 
 
 def _create_svn_remote_repo(
-    projects_path: pathlib.Path,
+    remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
-    remote_repo_path = projects_path / remote_repo_name
+    remote_repo_path = remote_repos_path / remote_repo_name
     run(["svnadmin", "create", remote_repo_path])
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
@@ -133,11 +146,11 @@ def _create_svn_remote_repo(
 
 
 @pytest.fixture
-def svn_remote_repo(projects_path: pathlib.Path):
+def svn_remote_repo(remote_repos_path: pathlib.Path):
     svn_repo_name = "svn_server_dir"
 
     remote_repo_path = _create_svn_remote_repo(
-        projects_path=projects_path,
+        remote_repos_path=remote_repos_path,
         remote_repo_name=svn_repo_name,
         remote_repo_post_init=None,
     )
