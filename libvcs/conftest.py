@@ -78,22 +78,22 @@ def projects_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
 
 
 class CreateRepoCallbackProtocol(Protocol):
-    def __call__(self, repo_path: pathlib.Path):
+    def __call__(self, remote_repo_path: pathlib.Path):
         ...
 
 
 def _create_git_remote_repo(
     projects_path: pathlib.Path,
-    repo_name: str,
-    repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    remote_repo_name: str,
+    remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
-    repo_path = projects_path / repo_name
-    run(["git", "init", repo_name], cwd=projects_path)
+    remote_repo_path = projects_path / remote_repo_name
+    run(["git", "init", remote_repo_name], cwd=projects_path)
 
-    if repo_post_init is not None and callable(repo_post_init):
-        repo_post_init(repo_path=repo_path)
+    if remote_repo_post_init is not None and callable(remote_repo_post_init):
+        remote_repo_post_init(remote_repo_path=remote_repo_path)
 
-    return repo_path
+    return remote_repo_path
 
 
 @pytest.fixture
@@ -102,43 +102,47 @@ def git_remote_repo(projects_path: pathlib.Path):
     """Create a git repo with 1 commit, used as a remote."""
     name = "dummyrepo"
 
-    def post_init(repo_path: pathlib.Path):
+    def post_init(remote_repo_path: pathlib.Path):
         testfile_filename = "testfile.test"
 
-        run(["touch", testfile_filename], cwd=repo_path)
-        run(["git", "add", testfile_filename], cwd=repo_path)
-        run(["git", "commit", "-m", "test file for %s" % name], cwd=repo_path)
+        run(["touch", testfile_filename], cwd=remote_repo_path)
+        run(["git", "add", testfile_filename], cwd=remote_repo_path)
+        run(["git", "commit", "-m", "test file for %s" % name], cwd=remote_repo_path)
 
-    repo_path = _create_git_remote_repo(
-        projects_path=projects_path, repo_name=name, repo_post_init=post_init
+    remote_repo_path = _create_git_remote_repo(
+        projects_path=projects_path,
+        remote_repo_name=name,
+        remote_repo_post_init=post_init,
     )
 
-    return repo_path
+    return remote_repo_path
 
 
 def _create_svn_remote_repo(
     projects_path: pathlib.Path,
-    repo_name: str,
-    repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    remote_repo_name: str,
+    remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
 ) -> pathlib.Path:
-    repo_path = projects_path / repo_name
-    run(["svnadmin", "create", repo_path])
+    remote_repo_path = projects_path / remote_repo_name
+    run(["svnadmin", "create", remote_repo_path])
 
-    if repo_post_init is not None and callable(repo_post_init):
-        repo_post_init(repo_path=repo_path)
+    if remote_repo_post_init is not None and callable(remote_repo_post_init):
+        remote_repo_post_init(remote_repo_path=remote_repo_path)
 
-    return repo_path
+    return remote_repo_path
 
 
 @pytest.fixture
 def svn_remote_repo(projects_path: pathlib.Path):
     svn_repo_name = "svn_server_dir"
 
-    repo_path = _create_svn_remote_repo(
-        projects_path=projects_path, repo_name=svn_repo_name, repo_post_init=None
+    remote_repo_path = _create_svn_remote_repo(
+        projects_path=projects_path,
+        remote_repo_name=svn_repo_name,
+        remote_repo_post_init=None,
     )
 
-    return repo_path
+    return remote_repo_path
 
 
 @pytest.fixture
