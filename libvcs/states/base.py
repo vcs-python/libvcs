@@ -1,9 +1,10 @@
 """Base class for Repository objects."""
 import logging
-import os
+import pathlib
 from typing import NamedTuple
 from urllib import parse as urlparse
 
+from libvcs.types import StrOrPath
 from libvcs.util import CmdLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class BaseRepo:
     #: vcs app name, e.g. 'git'
     bin_name = ""
 
-    def __init__(self, url, dir, progress_callback=None, *args, **kwargs):
+    def __init__(self, url, dir: StrOrPath, progress_callback=None, *args, **kwargs):
         r"""
         Parameters
         ----------
@@ -58,7 +59,7 @@ class BaseRepo:
             ...     def obtain(self, *args, **kwargs):
             ...         self.ensure_dir()
             ...         self.run(
-            ...             ['clone', '--progress', self.url, self.path],
+            ...             ['clone', '--progress', self.url, self.dir],
             ...             log_in_real_time=True
             ...         )
             >>> r = Repo(
@@ -72,22 +73,26 @@ class BaseRepo:
             remote: Counting objects: 100% (...), done...
             remote: Total ... (delta 0), reused 0 (delta 0), pack-reused 0...
             Receiving objects: 100% (...), done...
-            >>> assert os.path.exists(r.path)
-            >>> assert os.path.exists(r.path + '/.git')
+            >>> assert r.dir.exists()
+            >>> assert pathlib.Path(r.dir / '.git').exists()
         """
         self.url = url
 
         #: Callback for run updates
         self.progress_callback = progress_callback
 
-        #: Parent directory
-        self.parent_dir = os.path.dirname(dir)
+        #: Directory to check out
+        self.dir: pathlib.Path
+        if isinstance(dir, pathlib.Path):
+            self.dir = dir
+        else:
+            self.dir = pathlib.Path(dir)
 
-        #: Checkout path
-        self.path = dir
+        #: Parent directory
+        self.parent_dir = self.dir.parent
 
         #: Base name of checkout
-        self.repo_name = os.path.basename(os.path.normpath(dir))
+        self.repo_name = self.dir.stem
 
         if "rev" in kwargs:
             self.rev = kwargs["rev"]
@@ -124,12 +129,12 @@ class BaseRepo:
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
-        using the cwd `libvcs.base.BaseRepo.path` of the repo.
+        using the cwd `libvcs.base.BaseRepo.dir` of the repo.
 
         Parameters
         ----------
         cwd : str
-            dir command is run from, defaults to `libvcs.base.BaseRepo.path`.
+            dir command is run from, defaults to `libvcs.base.BaseRepo.dir`.
 
         check_returncode : bool
             Indicate whether a :exc:`~exc.CommandError` should be raised if return code
@@ -142,7 +147,7 @@ class BaseRepo:
         """
 
         if cwd is None:
-            cwd = getattr(self, "path", None)
+            cwd = getattr(self, "dir", None)
 
         cmd = [self.bin_name] + cmd
 
@@ -158,18 +163,17 @@ class BaseRepo:
 
     def ensure_dir(self, *args, **kwargs):
         """Assure destination path exists. If not, create directories."""
-        if os.path.exists(self.path):
+        if self.dir.exists():
             return True
 
-        if not os.path.exists(self.parent_dir):
+        if not self.parent_dir.exists():
             mkdir_p(self.parent_dir)
 
-        if not os.path.exists(self.path):
+        if not self.dir.exists():
             self.log.debug(
-                "Repo directory for %s does not exist @ %s"
-                % (self.repo_name, self.path)
+                "Repo directory for %s does not exist @ %s" % (self.repo_name, self.dir)
             )
-            mkdir_p(self.path)
+            mkdir_p(self.dir)
 
         return True
 

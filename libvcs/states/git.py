@@ -15,7 +15,7 @@
     - [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
 """  # NOQA: E501
 import logging
-import os
+import pathlib
 import re
 from typing import Dict, NamedTuple, Optional, TypedDict, Union
 from urllib import parse as urlparse
@@ -160,7 +160,7 @@ class GitRepo(BaseRepo):
             import os
             from libvcs.git import GitRepo
 
-            checkout = os.path.dirname(os.path.abspath(__name__)) + '/' + 'my_libvcs'
+            checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
             repo = GitRepo(
                url="https://github.com/vcs-python/libvcs",
@@ -175,7 +175,7 @@ class GitRepo(BaseRepo):
             import os
             from libvcs.git import GitRepo
 
-            checkout = os.path.dirname(os.path.abspath(__name__)) + '/' + 'my_libvcs'
+            checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
             repo = GitRepo(
                url="https://github.com/vcs-python/libvcs",
@@ -295,7 +295,7 @@ class GitRepo(BaseRepo):
             cmd.extend(["--depth", "1"])
         if self.tls_verify:
             cmd.extend(["-c", "http.sslVerify=false"])
-        cmd.extend([url, self.path])
+        cmd.extend([url, self.dir])
 
         self.log.info("Cloning.")
         self.run(cmd, log_in_real_time=True)
@@ -310,7 +310,7 @@ class GitRepo(BaseRepo):
     def update_repo(self, set_remotes: bool = False, *args, **kwargs):
         self.ensure_dir()
 
-        if not os.path.isdir(os.path.join(self.path, ".git")):
+        if not pathlib.Path(self.dir / ".git").is_dir():
             self.obtain()
             self.update_repo(set_remotes=set_remotes)
             return
@@ -433,7 +433,7 @@ class GitRepo(BaseRepo):
 
                     self.log.error(
                         "\nFailed to rebase in: '%s'.\n"
-                        "You will have to resolve the conflicts manually" % self.path
+                        "You will have to resolve the conflicts manually" % self.dir
                     )
                     return
 
@@ -452,7 +452,7 @@ class GitRepo(BaseRepo):
                         self.log.error(
                             "\nFailed to rebase in: '%s'.\n"
                             "You will have to resolve the "
-                            "conflicts manually" % self.path
+                            "conflicts manually" % self.dir
                         )
                         return
 

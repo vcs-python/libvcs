@@ -14,6 +14,7 @@ The following are pypa/pip (MIT license):
 """  # NOQA: E5
 import logging
 import os
+import pathlib
 import re
 from urllib import parse as urlparse
 
@@ -74,7 +75,7 @@ class SubversionRepo(BaseRepo):
             cmd.append("--trust-server-cert")
         cmd.extend(self._user_pw_args())
         cmd.extend(get_rev_options(url, rev))
-        cmd.append(self.path)
+        cmd.append(self.dir)
 
         self.run(cmd)
 
@@ -122,8 +123,8 @@ class SubversionRepo(BaseRepo):
 
     def update_repo(self, dest=None, *args, **kwargs):
         self.ensure_dir()
-        if os.path.isdir(os.path.join(self.path, ".svn")):
-            dest = self.path if not dest else dest
+        if pathlib.Path(self.dir / ".svn").exists():
+            dest = self.dir if not dest else dest
 
             url, rev = self.url, self.rev
 

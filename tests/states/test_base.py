@@ -56,9 +56,7 @@ def test_progress_callback(
 
         def obtain(self, *args, **kwargs):
             self.ensure_dir()
-            self.run(
-                ["clone", "--progress", self.url, self.path], log_in_real_time=True
-            )
+            self.run(["clone", "--progress", self.url, self.dir], log_in_real_time=True)
 
     r = Repo(
         url=f"file://{str(git_remote_repo)}",

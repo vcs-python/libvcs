@@ -589,7 +589,7 @@ def test_get_current_remote_name(git_repo: GitRepo):
 
     new_remote_name = "new_remote_name"
     git_repo.set_remote(
-        name=new_remote_name, url=f"file://{git_repo.path}", overwrite=True
+        name=new_remote_name, url=f"file://{git_repo.dir}", overwrite=True
     )
     git_repo.run(["fetch", new_remote_name])
     git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])

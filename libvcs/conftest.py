@@ -163,7 +163,7 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else faker.word(),
+            else faker.slug(),
             remote_repo_post_init=remote_repo_post_init,
         )
 

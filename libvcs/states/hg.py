@@ -9,7 +9,7 @@
    - [`MercurialRepo.get_revision`](libvcs.hg.MercurialRepo.get_revision)
 """  # NOQA E5
 import logging
-import os
+import pathlib
 
 from .base import BaseRepo
 
@@ -28,7 +28,7 @@ class MercurialRepo(BaseRepo):
 
         # Double hyphens between [OPTION]... -- SOURCE [DEST] prevent command injections
         # via aliases
-        self.run(["clone", "--noupdate", "-q", "--", self.url, self.path])
+        self.run(["clone", "--noupdate", "-q", "--", self.url, self.dir])
         self.run(["update", "-q"])
 
     def get_revision(self):
@@ -36,7 +36,7 @@ class MercurialRepo(BaseRepo):
 
     def update_repo(self, *args, **kwargs):
         self.ensure_dir()
-        if not os.path.isdir(os.path.join(self.path, ".hg")):
+        if not pathlib.Path(self.dir / ".hg").exists():
             self.obtain()
             self.update_repo()
         else:
