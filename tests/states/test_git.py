@@ -10,6 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from libvcs import exc
+from libvcs.cmd.core import run, which
 from libvcs.conftest import CreateRepoCallbackFixtureProtocol
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.states.git import (
@@ -19,7 +20,6 @@ from libvcs.states.git import (
     convert_pip_url as git_convert_pip_url,
     extract_status,
 )
-from libvcs.util import run, which
 
 if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")

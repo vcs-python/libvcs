@@ -7,8 +7,8 @@ import subprocess
 import sys
 from typing import Callable, Optional, Union
 
-from . import exc
-from .types import StrOrBytesPath
+from .. import exc
+from ..types import StrOrBytesPath
 
 logger = logging.getLogger(__name__)
 

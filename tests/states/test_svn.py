@@ -4,10 +4,10 @@ import pathlib
 
 import pytest
 
+from libvcs.cmd.core import which
 from libvcs.conftest import CreateRepoCallbackFixtureProtocol
 from libvcs.shortcuts import create_repo_from_pip_url
 from libvcs.states.svn import SubversionRepo
-from libvcs.util import which
 
 if not which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
