@@ -57,7 +57,6 @@ pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
 pytest-watcher = "^0.2.3"
-tox = {version = "^3.24.5", extras = ["test"]}
 Faker = "^13.3.4"
 
 ### Coverage ###
