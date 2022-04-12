@@ -32,6 +32,25 @@ $ pip install --user --upgrade --pre libvcs
 
 ### What's new
 
+- **Commands**: Experimental command wrappers added ({issue}`#319`):
+
+  - {class}`libvcs.cmd.git.Git`
+
+    - {meth}`libvcs.cmd.git.Git.run`
+    - {meth}`libvcs.cmd.git.Git.clone`
+
+  - {class}`libvcs.cmd.svn.Svn`
+
+    - {meth}`libvcs.cmd.svn.Svn.run`
+    - {meth}`libvcs.cmd.svn.Svn.checkout`
+    - {meth}`libvcs.cmd.svn.Svn.update`
+    - {meth}`libvcs.cmd.svn.Svn.status`
+
+  - {class}`libvcs.cmd.hg.Hg`
+
+    - {meth}`libvcs.cmd.hg.Hg.run`
+    - {meth}`libvcs.cmd.hg.Hg.clone`
+
 - {class}`libvcs.states.git.GitRepo` now accepts remotes in `__init__`
 
   ```python
