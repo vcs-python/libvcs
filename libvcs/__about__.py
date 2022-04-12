@@ -1,7 +1,7 @@
 __title__ = "libvcs"
 __package_name__ = "libvcs"
 __description__ = "vcs abstraction layer"
-__version__ = "0.12.0b25"
+__version__ = "0.12.0b26"
 __author__ = "Tony Narlock"
 __github__ = "https://github.com/vcs-python/libvcs"
 __docs__ = "https://libvcs.git-pull.com"
