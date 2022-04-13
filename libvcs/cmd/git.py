@@ -179,7 +179,6 @@ class Git:
         url: str,
         separate_git_dir: Optional[StrOrBytesPath] = None,
         template: Optional[str] = None,
-        filter: Optional[str] = None,
         depth: Optional[str] = None,
         branch: Optional[str] = None,
         origin: Optional[str] = None,
@@ -206,6 +205,7 @@ class Git:
         no_remote_submodules: Optional[bool] = None,
         verbose: Optional[bool] = None,
         quiet: Optional[bool] = None,
+        **kwargs,
     ):
         """Clone a working copy from an git repo.
 
@@ -236,7 +236,7 @@ class Git:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
             local_flags.append(f"--separate-git-dir={separate_git_dir}")
-        if filter is not None:
+        if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
             local_flags.append(f"--depth {depth}")
