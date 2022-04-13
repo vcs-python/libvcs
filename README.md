@@ -25,29 +25,36 @@ $ pip install --user ptpython
 $ ptpython
 ```
 
-## Usage
+## Commands (experimental)
 
-Create a [Repo](https://libvcs.git-pull.com/api.html#creating-a-repo-object) object of the project
-to inspect / checkout / update:
+Simple [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrappers around `git(1)`,
+`hg(1)`, `svn(1)`. Here is [`Git`](https://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git) w/
+[`Git.clone`](http://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git.clone):
 
 ```python
->>> from libvcs.shortcuts import create_repo_from_pip_url, create_repo
+import pathlib
+from libvcs.cmd.git import Git
 
-# repo is an object representation of a vcs repository.
->>> r = create_repo(
-...     url='https://www.github.com/vcs-python/libtmux',
-...     vcs='git',
-...     dir='/tmp/libtmux'
-... )
+git = Git(dir=pathlib.Path.cwd() / 'my_git_repo')
+git.clone(url='https://github.com/vcs-python/libvcs.git')
 ```
 
-Initialize via "pip-style URLs":
+## States
+
+Create a [`GitRepo`](https://libvcs.git-pull.com/states/git.html#libvcs.states.git.GitRepo) object
+of the project to inspect / checkout / update:
 
 ```python
->>> r = create_repo_from_pip_url(
-...     pip_url='git+https://www.github.com/vcs-python/libtmux',
-...     dir='/tmp/libtmux'
-... )
+import pathlib
+from libvcs.states.git import GitRepo
+
+repo = GitRepo(
+   url="https://github.com/vcs-python/libvcs",
+   dir=pathlib.Path().cwd() / "my_repo",
+   remotes={
+       'gitlab': 'https://gitlab.com/vcs-python/libvcs'
+   }
+)
 ```
 
 Update / clone repo:
