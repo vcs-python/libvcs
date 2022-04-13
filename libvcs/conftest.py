@@ -324,6 +324,7 @@ def add_doctest_fixtures(
     create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
     create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
     create_hg_remote_repo: CreateRepoCallbackFixtureProtocol,
+    git_repo: pathlib.Path,
 ):
     doctest_namespace["tmp_path"] = tmp_path
     if which("git"):
@@ -333,6 +334,7 @@ def add_doctest_fixtures(
             remote_repo_post_init=git_remote_repo_single_commit_post_init,
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
+        doctest_namespace["git_local_clone"] = git_repo
     if which("svn"):
         doctest_namespace["create_svn_remote_repo"] = create_svn_remote_repo
     if which("hg"):
