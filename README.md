@@ -85,7 +85,9 @@ See donation options at <https://www.git-pull.com/support.html>.
 - Source: <https://github.com/vcs-python/libvcs>
 - Docs: <https://libvcs.git-pull.com>
 - Changelog: <https://libvcs.git-pull.com/history.html>
-- API: <https://libvcs.git-pull.com/api.html>
+- API:
+  - [`libvcs.cmd`](https://libvcs.git-pull.com/cmd/): Commands
+  - [`libvcs.states`](https://libvcs.git-pull.com/states/): High-level synchronization commands
 - Issues: <https://github.com/vcs-python/libvcs/issues>
 - Test Coverage: <https://codecov.io/gh/vcs-python/libvcs>
 - pypi: <https://pypi.python.org/pypi/libvcs>
