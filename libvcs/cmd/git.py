@@ -206,6 +206,8 @@ class Git:
         no_remote_submodules: Optional[bool] = None,
         verbose: Optional[bool] = None,
         quiet: Optional[bool] = None,
+        # Special behavior
+        make_parents: Optional[bool] = True,
         **kwargs,
     ):
         """Clone a working copy from an git repo.
@@ -220,6 +222,8 @@ class Git:
             Separate repository (.git/ ) from working tree
         force : bool, optional
             force operation to run
+        make_parents : bool, default: ``True``
+            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
 
         Examples
         --------
@@ -289,6 +293,10 @@ class Git:
             local_flags.append("--remote-submodules")
         if no_remote_submodules is True:
             local_flags.append("--no-remote-submodules")
+
+        # libvcs special behavior
+        if make_parents and not self.dir.exists():
+            self.dir.mkdir(parents=True)
         return self.run(
             ["clone", *local_flags, "--", *required_flags], check_returncode=False
         )
