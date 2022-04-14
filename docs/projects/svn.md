@@ -1,4 +1,4 @@
-# `libvcs.states.svn`
+# `libvcs.projects.svn`
 
 For subversion, aka `svn(1)`
 
@@ -6,11 +6,11 @@ For subversion, aka `svn(1)`
 .. autosummary::
    :recursive:
 
-   libvcs.states.svn.SubversionRepo
+   libvcs.projects.svn.SubversionRepo
 ```
 
 ```{eval-rst}
-.. automodule:: libvcs.states.svn
+.. automodule:: libvcs.projects.svn
    :members:
    :show-inheritance:
    :undoc-members:

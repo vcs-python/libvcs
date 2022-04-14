@@ -16,7 +16,7 @@ $ pip install --user --upgrade --pre libvcs
 ### Breaking
 
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been moved to
-  `libvcs.states.{module}.{Module}Repo`
+  `libvcs.projects.{module}.{Module}Repo`
 - `repo_dir` param is renamed to `dir`:
 
   Before: `GitRepo(url='...', repo_dir='...')`
@@ -26,7 +26,7 @@ $ pip install --user --upgrade --pre libvcs
   {issue}`#324`
 
 - `dir` to `pathlib`, `BaseRepo.path` -> `BaseRepo.dir`
-- Logging functions moved to {attr}`libvcs.states.base.BaseRepo.log` ({issue}`#322`)
+- Logging functions moved to {attr}`libvcs.projects.base.BaseRepo.log` ({issue}`#322`)
 - Rename `RepoLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 
@@ -51,7 +51,7 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.hg.Hg.run`
     - {meth}`libvcs.cmd.hg.Hg.clone`
 
-- {class}`libvcs.states.git.GitRepo` now accepts remotes in `__init__`
+- {class}`libvcs.projects.git.GitRepo` now accepts remotes in `__init__`
 
   ```python
   repo = GitRepo(
@@ -76,7 +76,7 @@ $ pip install --user --upgrade --pre libvcs
   )
   ```
 
-- {meth}`libvcs.states.git.GitRepo.update_repo` now accepts `set_remotes=True`
+- {meth}`libvcs.projects.git.GitRepo.update_repo` now accepts `set_remotes=True`
 
 ### Compatibility
 
@@ -94,9 +94,9 @@ $ pip install --user --upgrade --pre libvcs
   ({issue}`#316`)
 - New constants for `str` -> class mappings
 
-  - {data}`libvcs.states.constants.DEFAULT_VCS_CLASS_MAP`
-  - {data}`libvcs.states.constants.DEFAULT_VCS_CLASS_UNION`
-  - {data}`libvcs.states.constants.DEFAULT_VCS_LITERAL`
+  - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_MAP`
+  - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_UNION`
+  - {data}`libvcs.projects.constants.DEFAULT_VCS_LITERAL`
 
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)

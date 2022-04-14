@@ -11,7 +11,7 @@ import pytest
 from faker import Faker
 
 from libvcs.cmd.core import run, which
-from libvcs.states.git import GitRemoteDict, GitRepo
+from libvcs.projects.git import GitRemoteDict, GitRepo
 
 skip_if_git_missing = pytest.mark.skipif(
     not which("git"), reason="git is not available"

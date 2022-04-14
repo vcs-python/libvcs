@@ -2,10 +2,10 @@
 import logging
 
 from .cmd.core import CmdLoggingAdapter
-from .states.base import BaseRepo
-from .states.git import GitRepo
-from .states.hg import MercurialRepo
-from .states.svn import SubversionRepo
+from .projects.base import BaseRepo
+from .projects.git import GitRepo
+from .projects.hg import MercurialRepo
+from .projects.svn import SubversionRepo
 
 __all__ = [
     "GitRepo",

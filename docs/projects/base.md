@@ -1,6 +1,6 @@
-# `libvcs.states.base`
+# `libvcs.projects.base`
 
-Base objects / classes for states.
+Base objects / classes for projects.
 
 Adding your own VCS / Extending libvcs can be done through subclassing `BaseRepo`.
 
@@ -8,11 +8,11 @@ Adding your own VCS / Extending libvcs can be done through subclassing `BaseRepo
 .. autosummary::
    :recursive:
 
-   libvcs.states.base.BaseRepo
+   libvcs.projects.base.BaseRepo
 ```
 
 ```{eval-rst}
-.. automodule:: libvcs.states.base
+.. automodule:: libvcs.projects.base
    :members:
    :show-inheritance:
 ```
