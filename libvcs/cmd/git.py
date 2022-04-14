@@ -457,3 +457,276 @@ class Git:
         return self.run(
             ["fetch", *local_flags, "--", *required_flags], check_returncode=False
         )
+
+    def pull(
+        self,
+        reftag: Optional[Any] = None,
+        repository: Optional[str] = None,
+        deepen: Optional[str] = None,
+        depth: Optional[str] = None,
+        branch: Optional[str] = None,
+        origin: Optional[str] = None,
+        upload_pack: Optional[str] = None,
+        shallow_since: Optional[str] = None,
+        shallow_exclude: Optional[str] = None,
+        negotiation_tip: Optional[str] = None,
+        jobs: Optional[str] = None,
+        server_option: Optional[str] = None,
+        recurse_submodules: Optional[
+            Union[bool, Literal["yes", "on-demand", "no"]]
+        ] = None,
+        recurse_submodules_default: Optional[
+            Union[bool, Literal["yes", "on-demand"]]
+        ] = None,
+        submodule_prefix: Optional[StrOrBytesPath] = None,
+        #
+        # Pull specific flags
+        #
+        # Options related to git pull
+        # https://git-scm.com/docs/git-pull#_options_related_to_pull
+        #
+        cleanup: Optional[str] = None,
+        rebase: Optional[Union[str, bool]] = None,
+        no_rebase: Optional[bool] = None,
+        strategy: Optional[Union[str, bool]] = None,
+        strategy_option: Optional[str] = None,
+        gpg_sign: Optional[Union[str, bool]] = None,
+        no_gpg_sign: Optional[bool] = None,
+        commit: Optional[bool] = None,
+        no_commit: Optional[bool] = None,
+        edit: Optional[bool] = None,
+        no_edit: Optional[bool] = None,
+        fast_forward_only: Optional[bool] = None,
+        fast_forward: Optional[bool] = None,
+        no_fast_forward: Optional[bool] = None,
+        sign_off: Optional[bool] = None,
+        no_sign_off: Optional[bool] = None,
+        stat: Optional[bool] = None,
+        no_stat: Optional[bool] = None,
+        squash: Optional[bool] = None,
+        no_squash: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        no_verify: Optional[bool] = None,
+        verify_signatures: Optional[bool] = None,
+        no_verify_signatures: Optional[bool] = None,
+        summary: Optional[bool] = None,
+        no_summary: Optional[bool] = None,
+        autostash: Optional[bool] = None,
+        no_autostash: Optional[bool] = None,
+        allow_unrelated_histories: Optional[bool] = None,
+        #
+        # Options related to git fetch
+        # https://git-scm.com/docs/git-pull#_options_related_to_fetching
+        #
+        fetch: Optional[bool] = None,
+        no_fetch: Optional[bool] = None,
+        all: Optional[bool] = None,
+        force: Optional[bool] = None,
+        keep: Optional[bool] = None,
+        multiple: Optional[bool] = None,
+        dry_run: Optional[bool] = None,
+        append: Optional[bool] = None,
+        atomic: Optional[bool] = None,
+        ipv4: Optional[bool] = None,
+        ipv6: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        unshallow: Optional[bool] = None,
+        update_shallow: Optional[bool] = None,
+        negotiate_tip: Optional[bool] = None,
+        no_write_fetch_head: Optional[bool] = None,
+        write_fetch_head: Optional[bool] = None,
+        no_auto_maintenance: Optional[bool] = None,
+        auto_maintenance: Optional[bool] = None,
+        no_write_commit_graph: Optional[bool] = None,
+        write_commit_graph: Optional[bool] = None,
+        prefetch: Optional[bool] = None,
+        prune: Optional[bool] = None,
+        prune_tags: Optional[bool] = None,
+        no_tags: Optional[bool] = None,
+        tags: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        set_upstream: Optional[bool] = None,
+        update_head_ok: Optional[bool] = None,
+        show_forced_updates: Optional[bool] = None,
+        no_show_forced_updates: Optional[bool] = None,
+        negotiate_only: Optional[bool] = None,
+        **kwargs,
+    ):
+        """Download from repo. Wraps `git pull <https://git-scm.com/docs/git-pull>`_.
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> git.pull()
+        'Already up to date.'
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> git.pull(reftag=f'file://{git_remote_repo}')
+        'Already up to date.'
+        >>> git.dir.exists()
+        True
+        """
+        required_flags: list[str] = []
+        if repository:
+            required_flags.insert(0, repository)
+        if reftag:
+            required_flags.insert(0, reftag)
+        local_flags: list[str] = []
+
+        #
+        # Pull-related arguments
+        #
+        if rebase is not None:
+            if isinstance(rebase, str):
+                local_flags.append(f"--rebase={rebase}")
+            else:
+                local_flags.append("--rebase")
+        if no_rebase:
+            local_flags.append("--no-rebase")
+        if strategy is not None:
+            if isinstance(strategy, str):
+                local_flags.append(f"--strategy={strategy}")
+            else:
+                local_flags.append("--strategy")
+        if strategy_option is not None:
+            local_flags.append(f"--strategy-option={strategy_option}")
+        if gpg_sign is not None:
+            if isinstance(gpg_sign, str):
+                local_flags.append(f"--gpg-sign={gpg_sign}")
+            else:
+                local_flags.append("--gpg-sign")
+        if no_gpg_sign:
+            local_flags.append("--no-gpg-sign")
+        if cleanup:
+            local_flags.append("--cleanup")
+        if commit:
+            local_flags.append("--commit")
+        if no_commit:
+            local_flags.append("--no-commit")
+        if fast_forward:
+            local_flags.append("--fast-forward")
+        if fast_forward_only:
+            local_flags.append("--fast-forward-only")
+        if no_fast_forward:
+            local_flags.append("--no-fast-forward")
+        if edit:
+            local_flags.append("--edit")
+        if no_edit:
+            local_flags.append("--no-edit")
+        if sign_off:
+            local_flags.append("--sign_off")
+        if no_sign_off:
+            local_flags.append("--no-sign_off")
+        if stat:
+            local_flags.append("--stat")
+        if no_stat:
+            local_flags.append("--no-stat")
+        if squash:
+            local_flags.append("--squash")
+        if no_squash:
+            local_flags.append("--no-squash")
+        if verify:
+            local_flags.append("--verify")
+        if no_verify:
+            local_flags.append("--no-verify")
+        if verify_signatures:
+            local_flags.append("--verify-signatures")
+        if no_verify_signatures:
+            local_flags.append("--no-verify-signatures")
+        if summary:
+            local_flags.append("--summary")
+        if no_summary:
+            local_flags.append("--no-summary")
+        if autostash:
+            local_flags.append("--autostash")
+        if no_autostash:
+            local_flags.append("--no-autostash")
+        if allow_unrelated_histories:
+            local_flags.append("--allow-unrelated-histories")
+        #
+        # Fetch-related arguments
+        #
+        if submodule_prefix is not None:
+            local_flags.append(f"--submodule-prefix={submodule_prefix}")
+        if (filter := kwargs.pop("filter", None)) is not None:
+            local_flags.append(f"--filter={filter}")
+        if depth is not None:
+            local_flags.append(f"--depth {depth}")
+        if branch is not None:
+            local_flags.append(f"--branch {branch}")
+        if origin is not None:
+            local_flags.append(f"--origin {origin}")
+        if upload_pack is not None:
+            local_flags.append(f"--upload-pack {upload_pack}")
+        if shallow_since is not None:
+            local_flags.append(f"--shallow-since={shallow_since}")
+        if shallow_exclude is not None:
+            local_flags.append(f"--shallow-exclude={shallow_exclude}")
+        if server_option is not None:
+            local_flags.append(f"--server-option={server_option}")
+        if jobs is not None:
+            local_flags.append(f"--jobs {jobs}")
+        if keep:
+            local_flags.append("--keep")
+        if force:
+            local_flags.append("--force")
+        if multiple:
+            local_flags.append("--multiple")
+        if quiet:
+            local_flags.append("--quiet")
+        if progress:
+            local_flags.append("--progress")
+        if verbose:
+            local_flags.append("--verbose")
+        if all:
+            local_flags.append("--all")
+        if atomic:
+            local_flags.append("--atomic")
+        if unshallow:
+            local_flags.append("--unshallow")
+        if append:
+            local_flags.append("--append")
+        if update_shallow:
+            local_flags.append("--update-shallow")
+        if dry_run:
+            local_flags.append("--dry-run")
+        if no_write_fetch_head:
+            local_flags.append("--no-write-fetch-head")
+        if write_fetch_head:
+            local_flags.append("--write-fetch-head")
+        if auto_maintenance:
+            local_flags.append("--auto-maintenance")
+        if no_auto_maintenance:
+            local_flags.append("--no-auto-maintenance")
+        if write_commit_graph:
+            local_flags.append("--write-commit-graph")
+        if no_write_commit_graph:
+            local_flags.append("--no-write-commit-graph")
+        if prefetch:
+            local_flags.append("--prefetch")
+        if prune:
+            local_flags.append("--prune")
+        if prune_tags:
+            local_flags.append("--prune-tags")
+        if tags:
+            local_flags.append("--tags")
+        if no_tags:
+            local_flags.append("--no-tags")
+        if no_recurse_submodules:
+            local_flags.append("--no-recurse-submodules")
+        if set_upstream:
+            local_flags.append("--set-upstream")
+        if update_head_ok:
+            local_flags.append("--update-head-ok")
+        if show_forced_updates:
+            local_flags.append("--show-forced-updates")
+        if no_show_forced_updates:
+            local_flags.append("--no-show-forced-updates")
+        if negotiate_only:
+            local_flags.append("--negotiate-only")
+        return self.run(
+            ["pull", *local_flags, "--", *required_flags], check_returncode=False
+        )
