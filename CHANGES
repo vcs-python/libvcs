@@ -15,19 +15,21 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking
 
-- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been moved to
-  `libvcs.projects.{module}.{Module}Repo`
+- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to
+  `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` ({issue}`#327`)
+- `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` have been moved to
+  `libvcs.projects.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
 
-  Before: `GitRepo(url='...', repo_dir='...')`
+  Before: `GitProject(url='...', repo_dir='...')`
 
-  After: `GitRepo(url='...', dir='...')`
+  After: `GitProject(url='...', dir='...')`
 
   {issue}`#324`
 
-- `dir` to `pathlib`, `BaseRepo.path` -> `BaseRepo.dir`
-- Logging functions moved to {attr}`libvcs.projects.base.BaseRepo.log` ({issue}`#322`)
-- Rename `RepoLoggingAdapter` to `CmdLoggingAdapter`
+- `dir` to `pathlib`, `BaseProject.path` -> `BaseProject.dir`
+- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` ({issue}`#322`)
+- Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 
 ### What's new
@@ -51,10 +53,10 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.hg.Hg.run`
     - {meth}`libvcs.cmd.hg.Hg.clone`
 
-- {class}`libvcs.projects.git.GitRepo` now accepts remotes in `__init__`
+- {class}`libvcs.projects.git.GitProject` now accepts remotes in `__init__`
 
   ```python
-  repo = GitRepo(
+  repo = GitProject(
       url="https://github.com/vcs-python/libvcs",
       repo_dir=checkout,
       remotes={
@@ -64,7 +66,7 @@ $ pip install --user --upgrade --pre libvcs
   ```
 
   ```python
-  repo = GitRepo(
+  repo = GitProject(
       url="https://github.com/vcs-python/libvcs",
       repo_dir=checkout,
       remotes={
@@ -76,7 +78,7 @@ $ pip install --user --upgrade --pre libvcs
   )
   ```
 
-- {meth}`libvcs.projects.git.GitRepo.update_repo` now accepts `set_remotes=True`
+- {meth}`libvcs.projects.git.GitProject.update_repo` now accepts `set_remotes=True`
 
 ### Compatibility
 
