@@ -1,4 +1,5 @@
 import pathlib
+import shlex
 from typing import Any, Literal, Optional, Sequence, Union
 
 from ..types import StrOrBytesPath, StrOrPath
@@ -456,6 +457,199 @@ class Git:
             local_flags.append("--negotiate-only")
         return self.run(
             ["fetch", *local_flags, "--", *required_flags], check_returncode=False
+        )
+
+    def rebase(
+        self,
+        upstream: Optional[str] = None,
+        onto: Optional[str] = None,
+        branch: Optional[str] = None,
+        apply: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        stat: Optional[bool] = None,
+        no_stat: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        no_verify: Optional[bool] = None,
+        fork_point: Optional[bool] = None,
+        no_fork_point: Optional[bool] = None,
+        whitespace: Optional[str] = None,
+        no_whitespace: Optional[bool] = None,
+        commit_date_is_author_date: Optional[bool] = None,
+        ignore_date: Optional[bool] = None,
+        root: Optional[bool] = None,
+        autostash: Optional[bool] = None,
+        no_autostash: Optional[bool] = None,
+        autosquash: Optional[bool] = None,
+        no_autosquash: Optional[bool] = None,
+        reschedule_failed_exec: Optional[bool] = None,
+        no_reschedule_failed_exec: Optional[bool] = None,
+        context: Optional[int] = None,
+        rerere_autoupdate: Optional[bool] = None,
+        no_rerere_autoupdate: Optional[bool] = None,
+        keep_empty: Optional[bool] = None,
+        no_keep_empty: Optional[bool] = None,
+        reapply_cherry_picks: Optional[bool] = None,
+        no_reapply_cherry_picks: Optional[bool] = None,
+        allow_empty_message: Optional[bool] = None,
+        signoff: Optional[bool] = None,
+        keep_base: Optional[bool] = None,
+        strategy: Optional[Union[str, bool]] = None,
+        strategy_option: Optional[str] = None,
+        exec: Optional[str] = None,
+        gpg_sign: Optional[Union[str, bool]] = None,
+        no_gpg_sign: Optional[bool] = None,
+        empty: Optional[Union[str, Literal["drop", "keep", "ask"]]] = None,
+        rebase_merges: Optional[
+            Union[str, Literal["rebase-cousins", "no-rebase-cousins"]]
+        ] = None,
+        #
+        # Interactive
+        #
+        interactive: Optional[bool] = None,
+        edit_todo: Optional[bool] = None,
+        skip: Optional[bool] = None,
+        show_current_patch: Optional[bool] = None,
+        abort: Optional[bool] = None,
+        quit: Optional[bool] = None,
+        **kwargs,
+    ):
+        """Reapply commit on top of another tip.
+
+        Wraps `git rebase <https://git-scm.com/docs/git-rebase>`_.
+
+        Parameters
+        ----------
+        continue : bool
+            Accepted via kwargs
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> git.rebase()
+        'Current branch master is up to date.'
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> git.rebase(upstream='origin')
+        'Current branch master is up to date.'
+        >>> git.dir.exists()
+        True
+        """
+        required_flags: list[str] = []
+        local_flags: list[str] = []
+
+        if upstream:
+            required_flags.insert(0, upstream)
+        if branch:
+            required_flags.insert(0, branch)
+        if onto:
+            local_flags.append(f"--onto {onto}")
+        if context:
+            local_flags.append(f"--C{context}")
+
+        if exec:
+            local_flags.append(f"--exec {shlex.quote(exec)}")
+        if reschedule_failed_exec:
+            local_flags.append("--reschedule-failed-exec")
+        if no_reschedule_failed_exec:
+            local_flags.append("--no-reschedule-failed-exec")
+        if fork_point:
+            local_flags.append("--fork-point")
+        if no_fork_point:
+            local_flags.append("--no-fork-point")
+        if root:
+            local_flags.append("--root")
+        if keep_base:
+            local_flags.append("--keep-base")
+        if autostash:
+            local_flags.append("--autostash")
+        if no_autostash:
+            local_flags.append("--no-autostash")
+
+        if merge:
+            local_flags.append("--merge")
+
+        if verbose:
+            local_flags.append("--verbose")
+        if quiet:
+            local_flags.append("--quiet")
+        if stat:
+            local_flags.append("--stat")
+        if no_stat:
+            local_flags.append("--no-stat")
+
+        if whitespace:
+            local_flags.append("--whitespace")
+        if no_whitespace:
+            local_flags.append("--no-whitespace")
+
+        if rerere_autoupdate:
+            local_flags.append("--rerere-autoupdate")
+        if no_rerere_autoupdate:
+            local_flags.append("--no-rerwre-autoupdate")
+
+        if reapply_cherry_picks:
+            local_flags.append("--reapply-cherry-picks")
+        if no_reapply_cherry_picks:
+            local_flags.append("--no-reapply-cherry-picks")
+
+        if keep_empty:
+            local_flags.append("--keep-empty")
+        if no_keep_empty:
+            local_flags.append("--no-keep-empty")
+
+        if verify:
+            local_flags.append("--verify")
+        if no_verify:
+            local_flags.append("--no-verify")
+
+        if ignore_date:
+            local_flags.append("--ignore-date")
+        if commit_date_is_author_date:
+            local_flags.append("--commit-date-is-author-date")
+
+        if empty is not None:
+            if isinstance(empty, str):
+                local_flags.append(f"--empty={empty}")
+            else:
+                local_flags.append("--empty")
+
+        if rebase_merges is not None:
+            if isinstance(rebase_merges, str):
+                local_flags.append(f"--rebase-merges={rebase_merges}")
+            else:
+                local_flags.append("--rebase-merges")
+
+        if gpg_sign is not None:
+            if isinstance(gpg_sign, str):
+                local_flags.append(f"--gpg-sign={gpg_sign}")
+            else:
+                local_flags.append("--gpg-sign")
+        if no_gpg_sign:
+            local_flags.append("--no-gpg-sign")
+        if signoff:
+            local_flags.append("--signoff")
+
+        #
+        # Interactive
+        #
+        if interactive:
+            local_flags.append("--interactive")
+        if kwargs.get("continue"):
+            local_flags.append("--continue")
+        if abort:
+            local_flags.append("--abort")
+        if edit_todo:
+            local_flags.append("--edit-todo")
+        if show_current_patch:
+            local_flags.append("--show-current-patch")
+        if quit:
+            local_flags.append("--quit")
+
+        return self.run(
+            ["rebase", *local_flags, *required_flags], check_returncode=False
         )
 
     def pull(
