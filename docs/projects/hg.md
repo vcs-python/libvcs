@@ -6,7 +6,7 @@ For mercurial, aka `hg(1)`.
 .. autosummary::
    :recursive:
 
-   libvcs.projects.hg.MercurialRepo
+   libvcs.projects.hg.MercurialProject
 ```
 
 ```{eval-rst}

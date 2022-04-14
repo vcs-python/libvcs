@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from libvcs.projects.base import BaseRepo, convert_pip_url
+from libvcs.projects.base import BaseProject, convert_pip_url
 from libvcs.shortcuts import create_repo
 
 
@@ -12,24 +12,24 @@ def test_repr():
     repo = create_repo(url="file://path/to/myrepo", dir="/hello/", vcs="git")
 
     str_repo = str(repo)
-    assert "GitRepo" in str_repo
+    assert "GitProject" in str_repo
     assert "hello" in str_repo
-    assert "<GitRepo hello>" == str_repo
+    assert "<GitProject hello>" == str_repo
 
 
 def test_repr_base():
-    repo = BaseRepo(url="file://path/to/myrepo", dir="/hello/")
+    repo = BaseProject(url="file://path/to/myrepo", dir="/hello/")
 
     str_repo = str(repo)
-    assert "Repo" in str_repo
+    assert "Project" in str_repo
     assert "hello" in str_repo
-    assert "<BaseRepo hello>" == str_repo
+    assert "<BaseProject hello>" == str_repo
 
 
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
     projects_path = tmp_path / "projects_path"  # doesn't exist yet
     dir = projects_path / "myrepo"
-    repo = BaseRepo(url="file://path/to/myrepo", dir=dir)
+    repo = BaseProject(url="file://path/to/myrepo", dir=dir)
 
     repo.ensure_dir()
     assert projects_path.is_dir()
@@ -51,7 +51,7 @@ def test_progress_callback(
         sys.stdout.write(output)
         sys.stdout.flush()
 
-    class Repo(BaseRepo):
+    class Repo(BaseProject):
         bin_name = "git"
 
         def obtain(self, *args, **kwargs):

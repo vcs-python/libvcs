@@ -2,16 +2,16 @@
 import logging
 
 from .cmd.core import CmdLoggingAdapter
-from .projects.base import BaseRepo
-from .projects.git import GitRepo
-from .projects.hg import MercurialRepo
-from .projects.svn import SubversionRepo
+from .projects.base import BaseProject
+from .projects.git import GitProject
+from .projects.hg import MercurialProject
+from .projects.svn import SubversionProject
 
 __all__ = [
-    "GitRepo",
-    "MercurialRepo",
-    "SubversionRepo",
-    "BaseRepo",
+    "GitProject",
+    "MercurialProject",
+    "SubversionProject",
+    "BaseProject",
     "CmdLoggingAdapter",
 ]
 

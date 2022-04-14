@@ -12,7 +12,7 @@ Compare to:
    :recursive:
 
    libvcs.projects.git.GitRemote
-   libvcs.projects.git.GitRepo
+   libvcs.projects.git.GitProject
 ```
 
 ```{eval-rst}

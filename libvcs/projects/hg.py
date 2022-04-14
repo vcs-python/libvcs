@@ -4,24 +4,24 @@
 
    The following is from pypa/pip (MIT license):
 
-   - [`MercurialRepo.convert_pip_url`](libvcs.hg.convert_pip_url)
-   - [`MercurialRepo.get_url`](libvcs.hg.MercurialRepo.get_url)
-   - [`MercurialRepo.get_revision`](libvcs.hg.MercurialRepo.get_revision)
+   - [`MercurialProject.convert_pip_url`](libvcs.hg.convert_pip_url)
+   - [`MercurialProject.get_url`](libvcs.hg.MercurialProject.get_url)
+   - [`MercurialProject.get_revision`](libvcs.hg.MercurialProject.get_revision)
 """  # NOQA E5
 import logging
 import pathlib
 
-from .base import BaseRepo
+from .base import BaseProject
 
 logger = logging.getLogger(__name__)
 
 
-class MercurialRepo(BaseRepo):
+class MercurialProject(BaseProject):
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
 
     def __init__(self, url, dir, *args, **kwargs):
-        BaseRepo.__init__(self, url, dir, *args, **kwargs)
+        BaseProject.__init__(self, url, dir, *args, **kwargs)
 
     def obtain(self, *args, **kwargs):
         self.ensure_dir()

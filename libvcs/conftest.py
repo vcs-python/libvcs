@@ -11,7 +11,7 @@ import pytest
 from faker import Faker
 
 from libvcs.cmd.core import run, which
-from libvcs.projects.git import GitRemoteDict, GitRepo
+from libvcs.projects.git import GitProject, GitRemoteDict
 
 skip_if_git_missing = pytest.mark.skipif(
     not which("git"), reason="git is not available"
@@ -299,7 +299,7 @@ def hg_remote_repo(remote_repos_path: pathlib.Path):
 @pytest.fixture
 def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
     """Pre-made git clone of remote repo checked out to user's projects dir."""
-    git_repo = GitRepo(
+    git_repo = GitProject(
         url=f"file://{git_remote_repo}",
         dir=str(projects_path / "git_repo"),
         remotes={

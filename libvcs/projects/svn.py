@@ -3,13 +3,13 @@
 
 The follow are from saltstack/salt (Apache license):
 
-- [`SubversionRepo.get_revision_file`](libvcs.svn.SubversionRepo.get_revision_file)
+- [`SubversionProject.get_revision_file`](libvcs.svn.SubversionProject.get_revision_file)
 
 The following are pypa/pip (MIT license):
 
-- [`SubversionRepo.convert_pip_url`](libvcs.svn.SubversionRepo.convert_pip_url)
-- [`SubversionRepo.get_url`](libvcs.svn.SubversionRepo.get_url)
-- [`SubversionRepo.get_revision`](libvcs.svn.SubversionRepo.get_revision)
+- [`SubversionProject.convert_pip_url`](libvcs.svn.SubversionProject.convert_pip_url)
+- [`SubversionProject.get_url`](libvcs.svn.SubversionProject.get_url)
+- [`SubversionProject.get_revision`](libvcs.svn.SubversionProject.get_revision)
 - [`get_rev_options`](libvcs.svn.get_rev_options)
 """  # NOQA: E5
 import logging
@@ -18,7 +18,7 @@ import pathlib
 import re
 from urllib import parse as urlparse
 
-from .base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
+from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class SubversionRepo(BaseRepo):
+class SubversionProject(BaseProject):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
 
@@ -56,7 +56,7 @@ class SubversionRepo(BaseRepo):
             self.svn_trust_cert = False
 
         self.rev = kwargs.get("rev")
-        BaseRepo.__init__(self, url, dir, *args, **kwargs)
+        BaseProject.__init__(self, url, dir, *args, **kwargs)
 
     def _user_pw_args(self):
         args = []

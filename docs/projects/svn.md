@@ -6,7 +6,7 @@ For subversion, aka `svn(1)`
 .. autosummary::
    :recursive:
 
-   libvcs.projects.svn.SubversionRepo
+   libvcs.projects.svn.SubversionProject
 ```
 
 ```{eval-rst}

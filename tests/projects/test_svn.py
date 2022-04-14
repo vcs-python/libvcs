@@ -6,7 +6,7 @@ import pytest
 
 from libvcs.cmd.core import which
 from libvcs.conftest import CreateRepoCallbackFixtureProtocol
-from libvcs.projects.svn import SubversionRepo
+from libvcs.projects.svn import SubversionProject
 from libvcs.shortcuts import create_repo_from_pip_url
 
 if not which("svn"):
@@ -39,7 +39,9 @@ def test_repo_svn_remote_checkout(
 ):
     svn_server = create_svn_remote_repo()
     svn_repo_checkout_dir = projects_path / "my_svn_checkout"
-    svn_repo = SubversionRepo(dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}")
+    svn_repo = SubversionProject(
+        dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}"
+    )
 
     svn_repo.obtain()
     svn_repo.update_repo()
