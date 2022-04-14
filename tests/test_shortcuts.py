@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from libvcs import GitRepo, MercurialRepo, SubversionRepo
+from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs.exc import InvalidPipURL, InvalidVCS
 from libvcs.shortcuts import create_repo, create_repo_from_pip_url
 
@@ -10,15 +10,15 @@ from libvcs.shortcuts import create_repo, create_repo_from_pip_url
 @pytest.mark.parametrize(
     "repo_dict,repo_class,raises_exception",
     [
-        ({"pip_url": "git+https://github.com/freebsd/freebsd.git"}, GitRepo, False),
+        ({"pip_url": "git+https://github.com/freebsd/freebsd.git"}, GitProject, False),
         (
             {"pip_url": "hg+https://bitbucket.org/birkenfeld/sphinx"},
-            MercurialRepo,
+            MercurialProject,
             False,
         ),
         (
             {"pip_url": "svn+http://svn.code.sf.net/p/docutils/code/trunk"},
-            SubversionRepo,
+            SubversionProject,
             False,
         ),
         (
@@ -47,17 +47,17 @@ def test_create_repo_from_pip_url(
     [
         (
             {"url": "https://github.com/freebsd/freebsd.git", "vcs": "git"},
-            GitRepo,
+            GitProject,
             False,
         ),
         (
             {"url": "https://bitbucket.org/birkenfeld/sphinx", "vcs": "hg"},
-            MercurialRepo,
+            MercurialProject,
             False,
         ),
         (
             {"url": "http://svn.code.sf.net/p/docutils/code/trunk", "vcs": "svn"},
-            SubversionRepo,
+            SubversionProject,
             False,
         ),
         (

@@ -1,17 +1,17 @@
-"""Repo package for libvcs."""
+"""Project package for libvcs."""
 import logging
 
 from .cmd.core import CmdLoggingAdapter
-from .states.base import BaseRepo
-from .states.git import GitRepo
-from .states.hg import MercurialRepo
-from .states.svn import SubversionRepo
+from .projects.base import BaseProject
+from .projects.git import GitProject
+from .projects.hg import MercurialProject
+from .projects.svn import SubversionProject
 
 __all__ = [
-    "GitRepo",
-    "MercurialRepo",
-    "SubversionRepo",
-    "BaseRepo",
+    "GitProject",
+    "MercurialProject",
+    "SubversionProject",
+    "BaseProject",
     "CmdLoggingAdapter",
 ]
 

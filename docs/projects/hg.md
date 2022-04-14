@@ -1,16 +1,16 @@
-# `libvcs.states.svn`
+# `libvcs.projects.hg`
 
-For subversion, aka `svn(1)`
+For mercurial, aka `hg(1)`.
 
 ```{eval-rst}
 .. autosummary::
    :recursive:
 
-   libvcs.states.svn.SubversionRepo
+   libvcs.projects.hg.MercurialProject
 ```
 
 ```{eval-rst}
-.. automodule:: libvcs.states.svn
+.. automodule:: libvcs.projects.hg
    :members:
    :show-inheritance:
    :undoc-members:

@@ -4,15 +4,15 @@
 
     From https://github.com/saltstack/salt (Apache License):
 
-    - [`GitRepo.remote`](libvcs.git.GitRepo.remote) (renamed to ``remote``)
-    - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
+    - [`GitProject.remote`](libvcs.git.GitProject.remote) (renamed to ``remote``)
+    - [`GitProject.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
 
     From pip (MIT Licnese):
 
-    - [`GitRepo.remote`](libvcs.git.GitRepo.remote_set) (renamed to ``set_remote``)
-    - [`GitRepo.convert_pip_url`](libvcs.git.GitRepo.convert_pip_url`) (``get_url_rev``)
-    - [`GitRepo.get_revision`](libvcs.git.GitRepo.get_revision)
-    - [`GitRepo.get_git_version`](libvcs.git.GitRepo.get_git_version)
+    - [`GitProject.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
+    - [`GitProject.convert_pip_url`](libvcs.git.GitProject.convert_pip_url`) (``get_url_rev``)
+    - [`GitProject.get_revision`](libvcs.git.GitProject.get_revision)
+    - [`GitProject.get_git_version`](libvcs.git.GitProject.get_git_version)
 """  # NOQA: E501
 import logging
 import pathlib
@@ -21,7 +21,11 @@ from typing import Dict, NamedTuple, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from .. import exc
-from ..states.base import BaseRepo, VCSLocation, convert_pip_url as base_convert_pip_url
+from ..projects.base import (
+    BaseProject,
+    VCSLocation,
+    convert_pip_url as base_convert_pip_url,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,12 +134,12 @@ class GitRemoteDict(TypedDict):
     push_url: str
 
 
-GitRepoRemoteDict = Dict[str, GitRemote]
+GitProjectRemoteDict = Dict[str, GitRemote]
 GitFullRemoteDict = Dict[str, GitRemoteDict]
 GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
 
 
-class GitRepo(BaseRepo):
+class GitProject(BaseProject):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
@@ -158,11 +162,11 @@ class GitRepo(BaseRepo):
         .. code-block:: python
 
             import os
-            from libvcs.git import GitRepo
+            from libvcs.git import GitProject
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
-            repo = GitRepo(
+            repo = GitProject(
                url="https://github.com/vcs-python/libvcs",
                dir=checkout,
                remotes={
@@ -173,11 +177,11 @@ class GitRepo(BaseRepo):
         .. code-block:: python
 
             import os
-            from libvcs.git import GitRepo
+            from libvcs.git import GitProject
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
-            repo = GitRepo(
+            repo = GitProject(
                url="https://github.com/vcs-python/libvcs",
                dir=checkout,
                remotes={
@@ -193,10 +197,10 @@ class GitRepo(BaseRepo):
         if "tls_verify" not in kwargs:
             self.tls_verify = False
 
-        self._remotes: GitRepoRemoteDict
+        self._remotes: GitProjectRemoteDict
 
         if remotes is None:
-            self._remotes: GitRepoRemoteDict = {
+            self._remotes: GitProjectRemoteDict = {
                 "origin": GitRemote(name="origin", fetch_url=url, push_url=url)
             }
         elif isinstance(remotes, dict):
@@ -221,7 +225,7 @@ class GitRepo(BaseRepo):
                 fetch_url=url,
                 push_url=url,
             )
-        BaseRepo.__init__(self, url, dir, *args, **kwargs)
+        BaseProject.__init__(self, url, dir, *args, **kwargs)
         self.url = self.chomp_protocol(
             (
                 self._remotes.get("origin")
@@ -590,7 +594,7 @@ class GitRepo(BaseRepo):
 
         Examples
         --------
-        >>> git_repo = GitRepo(
+        >>> git_repo = GitProject(
         ...     url=f'file://{create_git_remote_repo()}',
         ...     dir=tmp_path
         ... )

@@ -1,4 +1,4 @@
-"""Base class for Repository objects."""
+"""Base class for Projectsitory objects."""
 import logging
 import pathlib
 from typing import NamedTuple
@@ -16,7 +16,7 @@ class VCSLocation(NamedTuple):
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
-    """Return repo URL and revision by parsing `libvcs.base.BaseRepo.url`."""
+    """Return repo URL and revision by parsing `libvcs.base.BaseProject.url`."""
     error_message = (
         "Sorry, '%s' is a malformed VCS url. "
         "The format is <vcs>+<protocol>://<url>, "
@@ -32,7 +32,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class BaseRepo:
+class BaseProject:
     """Base class for repositories."""
 
     #: log command output to buffer
@@ -54,7 +54,7 @@ class BaseRepo:
             >>> def progress_cb(output, timestamp):
             ...     sys.stdout.write(output)
             ...     sys.stdout.flush()
-            >>> class Repo(BaseRepo):
+            >>> class Project(BaseProject):
             ...     bin_name = 'git'
             ...     def obtain(self, *args, **kwargs):
             ...         self.ensure_dir()
@@ -62,7 +62,7 @@ class BaseRepo:
             ...             ['clone', '--progress', self.url, self.dir],
             ...             log_in_real_time=True
             ...         )
-            >>> r = Repo(
+            >>> r = Project(
             ...     url=f'file://{create_git_remote_repo()}',
             ...     dir=str(tmp_path),
             ...     progress_callback=progress_cb
@@ -129,12 +129,12 @@ class BaseRepo:
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
-        using the cwd `libvcs.base.BaseRepo.dir` of the repo.
+        using the cwd `libvcs.base.BaseProject.dir` of the repo.
 
         Parameters
         ----------
         cwd : str
-            dir command is run from, defaults to `libvcs.base.BaseRepo.dir`.
+            dir command is run from, defaults to `libvcs.base.BaseProject.dir`.
 
         check_returncode : bool
             Indicate whether a :exc:`~exc.CommandError` should be raised if return code
@@ -171,7 +171,8 @@ class BaseRepo:
 
         if not self.dir.exists():
             self.log.debug(
-                "Repo directory for %s does not exist @ %s" % (self.repo_name, self.dir)
+                "Project directory for %s does not exist @ %s"
+                % (self.repo_name, self.dir)
             )
             mkdir_p(self.dir)
 

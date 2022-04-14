@@ -10,7 +10,7 @@
 
 quickstart
 cmd/index
-states/index
+projects/index
 ```
 
 ```{toctree}

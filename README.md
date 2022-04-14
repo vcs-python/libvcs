@@ -39,16 +39,17 @@ git = Git(dir=pathlib.Path.cwd() / 'my_git_repo')
 git.clone(url='https://github.com/vcs-python/libvcs.git')
 ```
 
-## States
+## Projects
 
-Create a [`GitRepo`](https://libvcs.git-pull.com/states/git.html#libvcs.states.git.GitRepo) object
+Create a
+[`GitProject`](https://libvcs.git-pull.com/projects/git.html#libvcs.projects.git.GitProject) object
 of the project to inspect / checkout / update:
 
 ```python
 import pathlib
-from libvcs.states.git import GitRepo
+from libvcs.projects.git import GitProject
 
-repo = GitRepo(
+repo = GitProject(
    url="https://github.com/vcs-python/libvcs",
    dir=pathlib.Path().cwd() / "my_repo",
    remotes={
