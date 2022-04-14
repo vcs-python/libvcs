@@ -120,17 +120,17 @@ def remote_repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
     return dir
 
 
-class CreateRepoCallbackProtocol(Protocol):
+class CreateProjectCallbackProtocol(Protocol):
     def __call__(self, remote_repo_path: pathlib.Path):
         ...
 
 
-class CreateRepoCallbackFixtureProtocol(Protocol):
+class CreateProjectCallbackFixtureProtocol(Protocol):
     def __call__(
         self,
         remote_repos_path: Optional[pathlib.Path] = None,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
     ):
         ...
 
@@ -138,7 +138,7 @@ class CreateRepoCallbackFixtureProtocol(Protocol):
 def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
 ) -> pathlib.Path:
     remote_repo_path = remote_repos_path / remote_repo_name
     run(["git", "init", remote_repo_name], cwd=remote_repos_path)
@@ -157,7 +157,7 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
     ):
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -192,7 +192,7 @@ def git_remote_repo(remote_repos_path: pathlib.Path):
 def _create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
 ) -> pathlib.Path:
     """Create a test SVN repo to for checkout / commit purposes"""
 
@@ -213,7 +213,7 @@ def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
     ):
         return _create_svn_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -243,7 +243,7 @@ def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
 def _create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+    remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
 ) -> pathlib.Path:
     """Create a test hg repo to for checkout / commit purposes"""
     remote_repo_path = remote_repos_path / remote_repo_name
@@ -271,7 +271,7 @@ def create_hg_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
     ):
         return _create_hg_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -321,9 +321,9 @@ def add_doctest_fixtures(
     tmp_path: pathlib.Path,
     home_default: pathlib.Path,
     gitconfig: pathlib.Path,
-    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
-    create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
-    create_hg_remote_repo: CreateRepoCallbackFixtureProtocol,
+    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_hg_remote_repo: CreateProjectCallbackFixtureProtocol,
     git_repo: pathlib.Path,
 ):
     doctest_namespace["tmp_path"] = tmp_path

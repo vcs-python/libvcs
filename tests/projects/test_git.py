@@ -11,7 +11,7 @@ from pytest_mock import MockerFixture
 
 from libvcs import exc
 from libvcs.cmd.core import run, which
-from libvcs.conftest import CreateRepoCallbackFixtureProtocol
+from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.git import (
     GitFullRemoteDict,
     GitProject,
@@ -25,9 +25,9 @@ if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 
-RepoTestFactory = Callable[..., GitProject]
-RepoTestFactoryLazyKwargs = Callable[..., dict]
-RepoTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
+ProjectTestFactory = Callable[..., GitProject]
+ProjectTestFactoryLazyKwargs = Callable[..., dict]
+ProjectTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
 
 
 @pytest.mark.parametrize(
@@ -52,8 +52,8 @@ RepoTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
 )
 def test_repo_git_obtain_initial_commit_repo(
     tmp_path: pathlib.Path,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
     """initial commit repos return 'initial'.
 
@@ -94,8 +94,8 @@ def test_repo_git_obtain_initial_commit_repo(
 def test_repo_git_obtain_full(
     tmp_path: pathlib.Path,
     git_remote_repo,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
     git_repo: GitProject = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
@@ -130,8 +130,8 @@ def test_repo_update_handle_cases(
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
     mocker: MockerFixture,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
     git_repo: GitProject = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
@@ -174,8 +174,8 @@ def test_progress_callback(
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
     mocker: MockerFixture,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
     def progress_callback_spy(output, timestamp):
         assert isinstance(output, str)
@@ -297,9 +297,9 @@ def test_progress_callback(
 def test_remotes(
     projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
-    lazy_remote_expected: RepoTestFactoryRemotesLazyExpected,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
+    lazy_remote_expected: ProjectTestFactoryRemotesLazyExpected,
 ):
     repo_name = "myrepo"
     remote_name = "myremote"
@@ -409,11 +409,11 @@ def test_remotes(
 def test_remotes_update_repo(
     projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
-    lazy_remote_dict: RepoTestFactoryRemotesLazyExpected,
-    lazy_remote_expected: RepoTestFactoryRemotesLazyExpected,
-    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
+    lazy_remote_dict: ProjectTestFactoryRemotesLazyExpected,
+    lazy_remote_expected: ProjectTestFactoryRemotesLazyExpected,
+    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
 ):
     repo_name = "myrepo"
     remote_name = "myremote"
@@ -479,8 +479,8 @@ def test_git_get_url_and_rev_from_pip_url():
 def test_remotes_preserves_git_ssh(
     projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
     # Regression test for #14
     repo_name = "myexamplegit"
@@ -520,8 +520,8 @@ def test_remotes_preserves_git_ssh(
 )
 def test_private_ssh_format(
     tmpdir: pathlib.Path,
-    constructor: RepoTestFactory,
-    lazy_constructor_options: RepoTestFactoryLazyKwargs,
+    constructor: ProjectTestFactory,
+    lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
     pip_url_kwargs = {
         "pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo",
@@ -729,7 +729,7 @@ def test_extract_status_c(fixture: str, expected_result: dict):
 
 
 def test_repo_git_remote_checkout(
-    create_git_remote_repo: CreateRepoCallbackFixtureProtocol,
+    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ):

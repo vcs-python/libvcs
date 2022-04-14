@@ -51,14 +51,14 @@ def test_progress_callback(
         sys.stdout.write(output)
         sys.stdout.flush()
 
-    class Repo(BaseProject):
+    class Project(BaseProject):
         bin_name = "git"
 
         def obtain(self, *args, **kwargs):
             self.ensure_dir()
             self.run(["clone", "--progress", self.url, self.dir], log_in_real_time=True)
 
-    r = Repo(
+    r = Project(
         url=f"file://{str(git_remote_repo)}",
         dir=str(tmp_path),
         progress_callback=progress_cb,

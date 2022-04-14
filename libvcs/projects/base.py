@@ -1,4 +1,4 @@
-"""Base class for Repository objects."""
+"""Base class for Projectsitory objects."""
 import logging
 import pathlib
 from typing import NamedTuple
@@ -54,7 +54,7 @@ class BaseProject:
             >>> def progress_cb(output, timestamp):
             ...     sys.stdout.write(output)
             ...     sys.stdout.flush()
-            >>> class Repo(BaseProject):
+            >>> class Project(BaseProject):
             ...     bin_name = 'git'
             ...     def obtain(self, *args, **kwargs):
             ...         self.ensure_dir()
@@ -62,7 +62,7 @@ class BaseProject:
             ...             ['clone', '--progress', self.url, self.dir],
             ...             log_in_real_time=True
             ...         )
-            >>> r = Repo(
+            >>> r = Project(
             ...     url=f'file://{create_git_remote_repo()}',
             ...     dir=str(tmp_path),
             ...     progress_callback=progress_cb
@@ -171,7 +171,8 @@ class BaseProject:
 
         if not self.dir.exists():
             self.log.debug(
-                "Repo directory for %s does not exist @ %s" % (self.repo_name, self.dir)
+                "Project directory for %s does not exist @ %s"
+                % (self.repo_name, self.dir)
             )
             mkdir_p(self.dir)
 

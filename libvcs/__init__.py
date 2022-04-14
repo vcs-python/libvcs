@@ -1,4 +1,4 @@
-"""Repo package for libvcs."""
+"""Project package for libvcs."""
 import logging
 
 from .cmd.core import CmdLoggingAdapter

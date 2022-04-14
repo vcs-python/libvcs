@@ -5,7 +5,7 @@ import pathlib
 import pytest
 
 from libvcs.cmd.core import which
-from libvcs.conftest import CreateRepoCallbackFixtureProtocol
+from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.svn import SubversionProject
 from libvcs.shortcuts import create_repo_from_pip_url
 
@@ -33,7 +33,7 @@ def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo):
 
 
 def test_repo_svn_remote_checkout(
-    create_svn_remote_repo: CreateRepoCallbackFixtureProtocol,
+    create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ):
