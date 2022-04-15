@@ -29,7 +29,7 @@ Helper methods are available in `libvcs.shortcuts` which can return a repo objec
 entry-point.
 
 ```{eval-rst}
-.. automodule:: libvcs.shortcuts
+.. autoapimodule:: libvcs.shortcuts
    :members:
 ```
 
@@ -38,13 +38,13 @@ See examples below of git, mercurial, and subversion.
 ## Constants
 
 ```{eval-rst}
-.. automodule:: libvcs.projects.constants
+.. autoapimodule:: libvcs.projects.constants
    :members:
 ```
 
 ## Utility stuff
 
 ```{eval-rst}
-.. automodule:: libvcs.cmd.core
+.. autoapimodule:: libvcs.cmd.core
    :members:
 ```

@@ -15,8 +15,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking
 
-- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to
-  `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` ({issue}`#327`)
+- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to `GitProject`, `SVNProject`,
+  `MercurialProject`, `BaseProject` ({issue}`#327`)
 - `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` have been moved to
   `libvcs.projects.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
@@ -109,6 +109,7 @@ $ pip install --user --upgrade --pre libvcs
 
 - API: Split documentation of modules to separate pages
 - Fix sphinx-issues ({issue}`#321`)
+- Experiment with sphinx-autoapi ({issue}`#328`) for table of contents support
 
 ## libvcs 0.11.1 (2022-03-12)
 

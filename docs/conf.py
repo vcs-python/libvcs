@@ -21,6 +21,7 @@ with open(project_root / "libvcs" / "__about__.py") as fp:
 
 extensions = [
     "sphinx.ext.autodoc",
+    "autoapi.extension",
     "sphinx.ext.autosummary",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
@@ -94,6 +95,12 @@ html_sidebars = {
 autoclass_content = "both"
 autodoc_member_order = "bysource"
 autosummary_generate = True
+
+# sphinx-autoapi
+autoapi_type = "python"
+autoapi_dirs = [project_root / "libvcs"]
+autoapi_generate_api_docs = False  # when fales, use directives
+suppress_warnings = ["autoapi"]
 
 # sphinxext.opengraph
 ogp_site_url = about["__docs__"]

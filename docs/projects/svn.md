@@ -3,14 +3,7 @@
 For subversion, aka `svn(1)`
 
 ```{eval-rst}
-.. autosummary::
-   :recursive:
-
-   libvcs.projects.svn.SubversionProject
-```
-
-```{eval-rst}
-.. automodule:: libvcs.projects.svn
+.. autoapimodule:: libvcs.projects.svn
    :members:
    :show-inheritance:
    :undoc-members:

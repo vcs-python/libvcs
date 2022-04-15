@@ -8,15 +8,7 @@ Compare to:
 [`ansible.builtin.git`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)
 
 ```{eval-rst}
-.. autosummary::
-   :recursive:
-
-   libvcs.projects.git.GitRemote
-   libvcs.projects.git.GitProject
-```
-
-```{eval-rst}
-.. automodule:: libvcs.projects.git
+.. autoapimodule:: libvcs.projects.git
    :members:
    :show-inheritance:
    :undoc-members:
