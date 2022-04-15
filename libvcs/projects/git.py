@@ -162,7 +162,7 @@ class GitProject(BaseProject):
         .. code-block:: python
 
             import os
-            from libvcs.git import GitProject
+            from libvcs.projects.git import GitProject
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
@@ -177,7 +177,7 @@ class GitProject(BaseProject):
         .. code-block:: python
 
             import os
-            from libvcs.git import GitProject
+            from libvcs.projects.git import GitProject
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
