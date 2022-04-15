@@ -12,5 +12,4 @@ Compare to:
    :members:
    :show-inheritance:
    :undoc-members:
-   :inherited-members:
 ```

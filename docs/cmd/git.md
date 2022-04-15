@@ -11,5 +11,4 @@ Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.h
    :members:
    :show-inheritance:
    :undoc-members:
-   :inherited-members:
 ```
