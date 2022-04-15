@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 """Subversion object for libvcs.
 
-The follow are from saltstack/salt (Apache license):
+.. todo::
 
-- [`SubversionProject.get_revision_file`](libvcs.svn.SubversionProject.get_revision_file)
+    The follow are from saltstack/salt (Apache license):
 
-The following are pypa/pip (MIT license):
+    - [`SubversionProject.get_revision_file`](libvcs.svn.SubversionProject.get_revision_file)
 
-- [`SubversionProject.convert_pip_url`](libvcs.svn.SubversionProject.convert_pip_url)
-- [`SubversionProject.get_url`](libvcs.svn.SubversionProject.get_url)
-- [`SubversionProject.get_revision`](libvcs.svn.SubversionProject.get_revision)
-- [`get_rev_options`](libvcs.svn.get_rev_options)
+    The following are pypa/pip (MIT license):
+
+    - [`SubversionProject.convert_pip_url`](libvcs.svn.SubversionProject.convert_pip_url)
+    - [`SubversionProject.get_url`](libvcs.svn.SubversionProject.get_url)
+    - [`SubversionProject.get_revision`](libvcs.svn.SubversionProject.get_revision)
+    - [`get_rev_options`](libvcs.svn.get_rev_options)
 """  # NOQA: E5
 import logging
 import os
