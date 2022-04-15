@@ -21,11 +21,7 @@ from typing import Dict, NamedTuple, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from .. import exc
-from ..projects.base import (
-    BaseProject,
-    VCSLocation,
-    convert_pip_url as base_convert_pip_url,
-)
+from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
 
