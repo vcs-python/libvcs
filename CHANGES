@@ -31,6 +31,7 @@ $ pip install --user --upgrade --pre libvcs
 - Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` ({issue}`#322`)
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
+- `create_repo` -> `create_project`
 
 ### What's new
 
