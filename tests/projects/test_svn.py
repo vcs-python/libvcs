@@ -7,7 +7,7 @@ import pytest
 from libvcs.cmd.core import which
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.svn import SubversionProject
-from libvcs.shortcuts import create_repo_from_pip_url
+from libvcs.shortcuts import create_project_from_pip_url
 
 if not which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
@@ -16,7 +16,7 @@ if not which("svn"):
 def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo):
     repo_name = "my_svn_project"
 
-    svn_repo = create_repo_from_pip_url(
+    svn_repo = create_project_from_pip_url(
         **{
             "pip_url": f"svn+file://{svn_remote_repo}",
             "dir": tmp_path / repo_name,

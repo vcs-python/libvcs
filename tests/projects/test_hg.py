@@ -4,7 +4,7 @@ import pathlib
 import pytest
 
 from libvcs.cmd.core import run, which
-from libvcs.shortcuts import create_repo, create_repo_from_pip_url
+from libvcs.shortcuts import create_project, create_project_from_pip_url
 
 if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
@@ -13,7 +13,7 @@ if not which("hg"):
 def test_repo_mercurial(tmp_path: pathlib.Path, projects_path, hg_remote_repo):
     repo_name = "my_mercurial_project"
 
-    mercurial_repo = create_repo_from_pip_url(
+    mercurial_repo = create_project_from_pip_url(
         **{
             "pip_url": f"hg+file://{hg_remote_repo}",
             "dir": projects_path / repo_name,
@@ -45,7 +45,7 @@ def test_vulnerability_2022_03_12_command_injection(
     random_dir = tmp_path / "random"
     random_dir.mkdir()
     monkeypatch.chdir(str(random_dir))
-    mercurial_repo = create_repo(
+    mercurial_repo = create_project(
         url="--config=alias.clone=!touch ./HELLO", vcs="hg", dir="./"
     )
     with pytest.raises(Exception):

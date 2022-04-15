@@ -5,11 +5,11 @@ import sys
 import pytest
 
 from libvcs.projects.base import BaseProject, convert_pip_url
-from libvcs.shortcuts import create_repo
+from libvcs.shortcuts import create_project
 
 
 def test_repr():
-    repo = create_repo(url="file://path/to/myrepo", dir="/hello/", vcs="git")
+    repo = create_project(url="file://path/to/myrepo", dir="/hello/", vcs="git")
 
     str_repo = str(repo)
     assert "GitProject" in str_repo

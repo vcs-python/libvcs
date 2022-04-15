@@ -5,15 +5,15 @@ from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs.exc import InvalidPipURL, InvalidVCS
 
 
-def create_repo(
+def create_project(
     url, vcs, progress_callback=None, *args, **kwargs
 ) -> Union[GitProject, MercurialProject, SubversionProject]:
     r"""Return an object representation of a VCS repository.
 
     Examples
     --------
-    >>> from libvcs.shortcuts import create_repo
-    >>> r = create_repo(
+    >>> from libvcs.shortcuts import create_project
+    >>> r = create_project(
     ...     url=f'file://{create_git_remote_repo()}',
     ...     vcs='git',
     ...     dir=tmp_path
@@ -36,7 +36,7 @@ def create_repo(
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
 
 
-def create_repo_from_pip_url(
+def create_project_from_pip_url(
     pip_url, **kwargs
 ) -> Union[GitProject, MercurialProject, SubversionProject]:
     r"""Return an object representation of a VCS repository via pip-style url.
@@ -44,8 +44,8 @@ def create_repo_from_pip_url(
     Examples
     --------
 
-    >>> from libvcs.shortcuts import create_repo_from_pip_url
-    >>> r = create_repo_from_pip_url(
+    >>> from libvcs.shortcuts import create_project_from_pip_url
+    >>> r = create_project_from_pip_url(
     ...     pip_url=f'git+{create_git_remote_repo()}',
     ...     dir=tmp_path
     ... )

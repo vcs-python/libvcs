@@ -19,7 +19,7 @@ from libvcs.projects.git import (
     convert_pip_url as git_convert_pip_url,
     extract_status,
 )
-from libvcs.shortcuts import create_repo_from_pip_url
+from libvcs.shortcuts import create_project_from_pip_url
 
 if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
@@ -42,7 +42,7 @@ ProjectTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda bare_dir, tmp_path, **kwargs: {
                 "pip_url": f"git+file://{bare_dir}",
                 "dir": tmp_path / "obtaining a bare repo",
@@ -83,7 +83,7 @@ def test_repo_git_obtain_initial_commit_repo(
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
@@ -118,7 +118,7 @@ def test_repo_git_obtain_full(
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
@@ -161,7 +161,7 @@ def test_repo_update_handle_cases(
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
@@ -285,7 +285,7 @@ def test_progress_callback(
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
                 "dir": projects_path / repo_name,
@@ -468,7 +468,7 @@ def test_git_get_url_and_rev_from_pip_url():
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda git_remote_repo, dir, **kwargs: {
                 "pip_url": f"git+file://{git_remote_repo}",
                 "dir": dir,
@@ -510,7 +510,7 @@ def test_remotes_preserves_git_ssh(
             },
         ],
         [
-            create_repo_from_pip_url,
+            create_project_from_pip_url,
             lambda bare_dir, tmp_path, **kwargs: {
                 "pip_url": f"git+file://{bare_dir}",
                 "dir": tmp_path / "obtaining a bare repo",
@@ -529,7 +529,7 @@ def test_private_ssh_format(
     }
 
     with pytest.raises(exc.LibVCSException) as excinfo:
-        create_repo_from_pip_url(**pip_url_kwargs)
+        create_project_from_pip_url(**pip_url_kwargs)
     excinfo.match(r"is malformatted")
 
 
