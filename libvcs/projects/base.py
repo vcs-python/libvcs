@@ -16,7 +16,7 @@ class VCSLocation(NamedTuple):
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
-    """Return repo URL and revision by parsing `libvcs.projects.base.BaseProject.url`."""
+    """Parse pip URL via `libvcs.projects.base.BaseProject.url`."""
     error_message = (
         "Sorry, '%s' is a malformed VCS url. "
         "The format is <vcs>+<protocol>://<url>, "
