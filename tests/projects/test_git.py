@@ -16,8 +16,8 @@ from libvcs.projects.git import (
     GitFullRemoteDict,
     GitProject,
     GitRemote,
+    GitStatus,
     convert_pip_url as git_convert_pip_url,
-    extract_status,
 )
 from libvcs.shortcuts import create_project_from_pip_url
 
@@ -315,7 +315,7 @@ def test_remotes(
             expected_remote_name,
             expected_remote_url,
             expected_remote_url,
-        ) == git_repo.remote(expected_remote_name)
+        ) == git_repo.remote(expected_remote_name).to_tuple()
 
 
 @pytest.mark.parametrize(
@@ -493,7 +493,7 @@ def test_remotes_preserves_git_ssh(
     git_repo.set_remote(name=remote_name, url=remote_url)
 
     assert (
-        GitRemote(remote_name, remote_url, remote_url)._asdict()
+        GitRemote(remote_name, remote_url, remote_url).to_dict()
         in git_repo.remotes().values()
     )
 
@@ -553,9 +553,12 @@ def test_get_remotes(git_repo: GitProject):
 def test_set_remote(git_repo: GitProject, repo_name: str, new_repo_url: str):
     mynewremote = git_repo.set_remote(name=repo_name, url="file:///")
 
-    assert "file:///" in mynewremote, "set_remote returns remote"
+    assert "file:///" in mynewremote.fetch_url, "set_remote returns remote"
 
-    assert "file:///" in git_repo.remote(name=repo_name), "remote returns remote"
+    assert isinstance(
+        git_repo.remote(name=repo_name), GitRemote
+    ), "remote() returns GitRemote"
+    assert "file:///" in git_repo.remote(name=repo_name).fetch_url, "new value set"
 
     assert "myrepo" in git_repo.remotes(), ".remotes() returns new remote"
 
@@ -567,8 +570,8 @@ def test_set_remote(git_repo: GitProject, repo_name: str, new_repo_url: str):
 
     mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url, overwrite=True)
 
-    assert new_repo_url in git_repo.remote(
-        name="myrepo"
+    assert (
+        new_repo_url in git_repo.remote(name="myrepo").fetch_url
     ), "Running remove_set should overwrite previous remote"
 
 
@@ -614,7 +617,7 @@ def test_get_current_remote_name(git_repo: GitProject):
     ), "Should reflect new upstream branch (different branch)"
 
 
-def test_extract_status():
+def test_GitRemote_from_stdout():
     FIXTURE_A = textwrap.dedent(
         """
         # branch.oid d4ccd4d6af04b53949f89fbf0cdae13719dc5a08
@@ -625,7 +628,7 @@ def test_extract_status():
     assert {
         "branch_oid": "d4ccd4d6af04b53949f89fbf0cdae13719dc5a08",
         "branch_head": "fix-current-remote-name",
-    }.items() <= extract_status(FIXTURE_A)._asdict().items()
+    }.items() <= GitStatus.from_stdout(FIXTURE_A).to_dict().items()
 
 
 @pytest.mark.parametrize(
@@ -671,9 +674,9 @@ def test_extract_status():
         ],
     ],
 )
-def test_extract_status_b(fixture: str, expected_result: dict):
+def test_GitRemote__from_stdout_b(fixture: str, expected_result: dict):
     assert (
-        extract_status(textwrap.dedent(fixture))._asdict().items()
+        GitStatus.from_stdout(textwrap.dedent(fixture)).to_dict().items()
         >= expected_result.items()
     )
 
@@ -721,10 +724,10 @@ def test_extract_status_b(fixture: str, expected_result: dict):
         ],
     ],
 )
-def test_extract_status_c(fixture: str, expected_result: dict):
+def test_GitRemote__from_stdout_c(fixture: str, expected_result: dict):
     assert (
         expected_result.items()
-        <= extract_status(textwrap.dedent(fixture))._asdict().items()
+        <= GitStatus.from_stdout(textwrap.dedent(fixture)).to_dict().items()
     )
 
 

@@ -32,6 +32,8 @@ $ pip install --user --upgrade --pre libvcs
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 - `create_repo` -> `create_project`
+- `GitRemote` and `GitStatus`: Move to {func}`dataclasses.dataclass` ({issue}`#329`)
+- `extract_status()`: Move to `GitStatus.from_stdout` ({issue}`#329`)
 
 ### What's new
 

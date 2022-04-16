@@ -14,10 +14,11 @@
     - [`GitProject.get_revision`](libvcs.git.GitProject.get_revision)
     - [`GitProject.get_git_version`](libvcs.git.GitProject.get_git_version)
 """  # NOQA: E501
+import dataclasses
 import logging
 import pathlib
 import re
-from typing import Dict, NamedTuple, Optional, TypedDict, Union
+from typing import Dict, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from .. import exc
@@ -26,18 +27,35 @@ from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_
 logger = logging.getLogger(__name__)
 
 
-class GitRemote(NamedTuple):
-    """Structure containing git repo information.
+class GitRemoteDict(TypedDict):
+    """For use when hydrating GitProject via dict."""
 
-    Supports `collections.namedtuple._asdict()`
-    """
+    fetch_url: str
+    push_url: str
+
+
+@dataclasses.dataclass
+class GitRemote:
+    """Structure containing git working copy information."""
 
     name: str
     fetch_url: str
     push_url: str
 
+    def to_dict(self):
+        return dataclasses.asdict(self)
 
-class GitStatus(NamedTuple):
+    def to_tuple(self):
+        return dataclasses.astuple(self)
+
+
+GitProjectRemoteDict = Dict[str, GitRemote]
+GitFullRemoteDict = Dict[str, GitRemoteDict]
+GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
+
+
+@dataclasses.dataclass
+class GitStatus:
     branch_oid: Optional[str]
     branch_head: Optional[str]
     branch_upstream: Optional[str]
@@ -45,59 +63,65 @@ class GitStatus(NamedTuple):
     branch_ahead: Optional[str]
     branch_behind: Optional[str]
 
+    def to_dict(self):
+        return dataclasses.asdict(self)
 
-def extract_status(value) -> GitStatus:
-    """Returns ``git status -sb --porcelain=2`` extracted to a dict
+    def to_tuple(self):
+        return dataclasses.astuple(self)
 
-    Returns
-    -------
-    Dictionary of git repo's status
-    """
-    pattern = re.compile(
-        r"""[\n\r]?
-        (
-            #
-            \W+
-            branch.oid\W+
-            (?P<branch_oid>
-                [a-f0-9]{40}
-            )
-        )?
-        (
-            #
-            \W+
-            branch.head
-            [\W]+
-            (?P<branch_head>
-                .*
-            )
+    @classmethod
+    def from_stdout(cls, value: str):
+        """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
-        )?
-        (
-            #
-            \W+
-            branch.upstream
-            [\W]+
-            (?P<branch_upstream>
-                .*
-            )
-        )?
-        (
-            #
-            \W+
-            branch.ab
-            [\W]+
-            (?P<branch_ab>
-                \+(?P<branch_ahead>\d+)
-                \W{1}
-                \-(?P<branch_behind>\d+)
-            )
-        )?
-        """,
-        re.VERBOSE | re.MULTILINE,
-    )
-    matches = pattern.search(value)
-    return GitStatus(**matches.groupdict())
+        Returns
+        -------
+        Dictionary of git repo's status
+        """
+        pattern = re.compile(
+            r"""[\n\r]?
+            (
+                #
+                \W+
+                branch.oid\W+
+                (?P<branch_oid>
+                    [a-f0-9]{40}
+                )
+            )?
+            (
+                #
+                \W+
+                branch.head
+                [\W]+
+                (?P<branch_head>
+                    .*
+                )
+
+            )?
+            (
+                #
+                \W+
+                branch.upstream
+                [\W]+
+                (?P<branch_upstream>
+                    .*
+                )
+            )?
+            (
+                #
+                \W+
+                branch.ab
+                [\W]+
+                (?P<branch_ab>
+                    \+(?P<branch_ahead>\d+)
+                    \W{1}
+                    \-(?P<branch_behind>\d+)
+                )
+            )?
+            """,
+            re.VERBOSE | re.MULTILINE,
+        )
+        matches = pattern.search(value)
+        return cls(**matches.groupdict())
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
@@ -123,18 +147,6 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         url, rev = base_convert_pip_url(pip_url)
 
     return VCSLocation(url=url, rev=rev)
-
-
-class GitRemoteDict(TypedDict):
-    """For use when hydrating GitProject via dict."""
-
-    fetch_url: str
-    push_url: str
-
-
-GitProjectRemoteDict = Dict[str, GitRemote]
-GitFullRemoteDict = Dict[str, GitRemoteDict]
-GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
 
 
 class GitProject(BaseProject):
@@ -487,7 +499,7 @@ class GitProject(BaseProject):
 
         for remote_name in ret:
             remotes[remote_name] = (
-                self.remote(remote_name) if flat else self.remote(remote_name)._asdict()
+                self.remote(remote_name) if flat else self.remote(remote_name).to_dict()
             )
         return remotes
 
@@ -581,7 +593,7 @@ class GitProject(BaseProject):
             version = ""
         return ".".join(version.split(".")[:3])
 
-    def status(self) -> dict:
+    def status(self):
         """Retrieve status of project in dict format.
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
@@ -606,7 +618,7 @@ branch_ahead='0', \
 branch_behind='0'\
 )
         """
-        return extract_status(self.run(["status", "-sb", "--porcelain=2"]))
+        return GitStatus.from_stdout(self.run(["status", "-sb", "--porcelain=2"]))
 
     def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.
