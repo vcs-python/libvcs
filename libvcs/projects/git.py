@@ -69,59 +69,59 @@ class GitStatus:
     def to_tuple(self):
         return dataclasses.astuple(self)
 
+    @classmethod
+    def from_stdout(cls, value: str):
+        """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
-def extract_status(value) -> GitStatus:
-    """Returns ``git status -sb --porcelain=2`` extracted to a dict
+        Returns
+        -------
+        Dictionary of git repo's status
+        """
+        pattern = re.compile(
+            r"""[\n\r]?
+            (
+                #
+                \W+
+                branch.oid\W+
+                (?P<branch_oid>
+                    [a-f0-9]{40}
+                )
+            )?
+            (
+                #
+                \W+
+                branch.head
+                [\W]+
+                (?P<branch_head>
+                    .*
+                )
 
-    Returns
-    -------
-    Dictionary of git repo's status
-    """
-    pattern = re.compile(
-        r"""[\n\r]?
-        (
-            #
-            \W+
-            branch.oid\W+
-            (?P<branch_oid>
-                [a-f0-9]{40}
-            )
-        )?
-        (
-            #
-            \W+
-            branch.head
-            [\W]+
-            (?P<branch_head>
-                .*
-            )
-
-        )?
-        (
-            #
-            \W+
-            branch.upstream
-            [\W]+
-            (?P<branch_upstream>
-                .*
-            )
-        )?
-        (
-            #
-            \W+
-            branch.ab
-            [\W]+
-            (?P<branch_ab>
-                \+(?P<branch_ahead>\d+)
-                \W{1}
-                \-(?P<branch_behind>\d+)
-            )
-        )?
-        """,
-        re.VERBOSE | re.MULTILINE,
-    )
-    matches = pattern.search(value)
-    return GitStatus(**matches.groupdict())
+            )?
+            (
+                #
+                \W+
+                branch.upstream
+                [\W]+
+                (?P<branch_upstream>
+                    .*
+                )
+            )?
+            (
+                #
+                \W+
+                branch.ab
+                [\W]+
+                (?P<branch_ab>
+                    \+(?P<branch_ahead>\d+)
+                    \W{1}
+                    \-(?P<branch_behind>\d+)
+                )
+            )?
+            """,
+            re.VERBOSE | re.MULTILINE,
+        )
+        matches = pattern.search(value)
+        return cls(**matches.groupdict())
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
@@ -618,7 +618,7 @@ branch_ahead='0', \
 branch_behind='0'\
 )
         """
-        return extract_status(self.run(["status", "-sb", "--porcelain=2"]))
+        return GitStatus.from_stdout(self.run(["status", "-sb", "--porcelain=2"]))
 
     def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.
