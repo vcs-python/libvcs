@@ -628,7 +628,7 @@ def test_extract_status():
     assert {
         "branch_oid": "d4ccd4d6af04b53949f89fbf0cdae13719dc5a08",
         "branch_head": "fix-current-remote-name",
-    }.items() <= extract_status(FIXTURE_A)._asdict().items()
+    }.items() <= extract_status(FIXTURE_A).to_dict().items()
 
 
 @pytest.mark.parametrize(
@@ -676,7 +676,7 @@ def test_extract_status():
 )
 def test_extract_status_b(fixture: str, expected_result: dict):
     assert (
-        extract_status(textwrap.dedent(fixture))._asdict().items()
+        extract_status(textwrap.dedent(fixture)).to_dict().items()
         >= expected_result.items()
     )
 
@@ -727,7 +727,7 @@ def test_extract_status_b(fixture: str, expected_result: dict):
 def test_extract_status_c(fixture: str, expected_result: dict):
     assert (
         expected_result.items()
-        <= extract_status(textwrap.dedent(fixture))._asdict().items()
+        <= extract_status(textwrap.dedent(fixture)).to_dict().items()
     )
 
 

@@ -18,7 +18,7 @@ import dataclasses
 import logging
 import pathlib
 import re
-from typing import Dict, NamedTuple, Optional, TypedDict, Union
+from typing import Dict, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from .. import exc
@@ -54,13 +54,20 @@ GitFullRemoteDict = Dict[str, GitRemoteDict]
 GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
 
 
-class GitStatus(NamedTuple):
+@dataclasses.dataclass
+class GitStatus:
     branch_oid: Optional[str]
     branch_head: Optional[str]
     branch_upstream: Optional[str]
     branch_ab: Optional[str]
     branch_ahead: Optional[str]
     branch_behind: Optional[str]
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
+
+    def to_tuple(self):
+        return dataclasses.astuple(self)
 
 
 def extract_status(value) -> GitStatus:
