@@ -126,6 +126,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 
 
 class GitRemoteDict(TypedDict):
+    """For use when hydrating GitProject via dict..."""
+
     fetch_url: str
     push_url: str
 
