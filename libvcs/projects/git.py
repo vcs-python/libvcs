@@ -14,6 +14,7 @@
     - [`GitProject.get_revision`](libvcs.git.GitProject.get_revision)
     - [`GitProject.get_git_version`](libvcs.git.GitProject.get_git_version)
 """  # NOQA: E501
+import dataclasses
 import logging
 import pathlib
 import re
@@ -26,22 +27,26 @@ from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_
 logger = logging.getLogger(__name__)
 
 
-class GitRemote(NamedTuple):
-    """Structure containing git repo information.
-
-    Supports `collections.namedtuple._asdict()`
-    """
-
-    name: str
-    fetch_url: str
-    push_url: str
-
-
 class GitRemoteDict(TypedDict):
     """For use when hydrating GitProject via dict."""
 
     fetch_url: str
     push_url: str
+
+
+@dataclasses.dataclass
+class GitRemote:
+    """Structure containing git working copy information."""
+
+    name: str
+    fetch_url: str
+    push_url: str
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
+
+    def to_tuple(self):
+        return dataclasses.astuple(self)
 
 
 GitProjectRemoteDict = Dict[str, GitRemote]
@@ -487,7 +492,7 @@ class GitProject(BaseProject):
 
         for remote_name in ret:
             remotes[remote_name] = (
-                self.remote(remote_name) if flat else self.remote(remote_name)._asdict()
+                self.remote(remote_name) if flat else self.remote(remote_name).to_dict()
             )
         return remotes
 

@@ -315,7 +315,7 @@ def test_remotes(
             expected_remote_name,
             expected_remote_url,
             expected_remote_url,
-        ) == git_repo.remote(expected_remote_name)
+        ) == git_repo.remote(expected_remote_name).to_tuple()
 
 
 @pytest.mark.parametrize(
@@ -493,7 +493,7 @@ def test_remotes_preserves_git_ssh(
     git_repo.set_remote(name=remote_name, url=remote_url)
 
     assert (
-        GitRemote(remote_name, remote_url, remote_url)._asdict()
+        GitRemote(remote_name, remote_url, remote_url).to_dict()
         in git_repo.remotes().values()
     )
 
@@ -553,9 +553,12 @@ def test_get_remotes(git_repo: GitProject):
 def test_set_remote(git_repo: GitProject, repo_name: str, new_repo_url: str):
     mynewremote = git_repo.set_remote(name=repo_name, url="file:///")
 
-    assert "file:///" in mynewremote, "set_remote returns remote"
+    assert "file:///" in mynewremote.fetch_url, "set_remote returns remote"
 
-    assert "file:///" in git_repo.remote(name=repo_name), "remote returns remote"
+    assert isinstance(
+        git_repo.remote(name=repo_name), GitRemote
+    ), "remote() returns GitRemote"
+    assert "file:///" in git_repo.remote(name=repo_name).fetch_url, "new value set"
 
     assert "myrepo" in git_repo.remotes(), ".remotes() returns new remote"
 
@@ -567,8 +570,8 @@ def test_set_remote(git_repo: GitProject, repo_name: str, new_repo_url: str):
 
     mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url, overwrite=True)
 
-    assert new_repo_url in git_repo.remote(
-        name="myrepo"
+    assert (
+        new_repo_url in git_repo.remote(name="myrepo").fetch_url
     ), "Running remove_set should overwrite previous remote"
 
 
