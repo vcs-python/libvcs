@@ -1,6 +1,7 @@
+import dataclasses
 import re
 import traceback
-from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar, Union
+from typing import Any, Callable, Generic, Optional, Protocol, Sequence, TypeVar, Union
 
 T = TypeVar("T", Any, Any)
 
@@ -120,8 +121,12 @@ LOOKUP_NAME_MAP: dict[str, LookupProtocol] = {
 }
 
 
-class QueryList(list[T]):
+@dataclasses.dataclass(eq=False)
+class QueryList(Generic[T]):
     """Filter list of object/dicts. For small, local datasets. *Experimental, unstable*.
+
+    :py:func:`dataclasses.dataclass` is only used for ``__repr__`` and pytest comparison
+    details.
 
     >>> query = QueryList(
     ...     [
@@ -139,35 +144,44 @@ class QueryList(list[T]):
     ...         },
     ...     ]
     ... )
-    >>> query.filter(place="Chicago suburbs")[0]['city']
+    >>> query.filter(place="Chicago suburbs").data[0]['city']
     'Elmhurst'
-    >>> query.filter(place__icontains="chicago")[0]['city']
+    >>> query.filter(place__icontains="chicago").data[0]['city']
     'Elmhurst'
-    >>> query.filter(foods__breakfast="waffles")[0]['city']
+    >>> query.filter(foods__breakfast="waffles").data[0]['city']
     'Elmhurst'
-    >>> query.filter(foods__fruit__in="cantelope")[0]['city']
+    >>> query.filter(foods__fruit__in="cantelope").data[0]['city']
     'Elmhurst'
-    >>> query.filter(foods__fruit__in="orange")[0]['city']
+    >>> query.filter(foods__fruit__in="orange").data[0]['city']
     'Tampa'
     """
 
+    __slots__ = ("data", "pk_key")
     data: Sequence[T]
+
+    # def __init__(self, data, pk_key: Optional[str] = None):
+    #     self.data: Sequence[T] = data
+    #     #: Primary key for objects, optional.
+    #     #: Use for .get(), .items()
+    #     self.pk_key: Optional[Any] = pk_key
 
     def items(self):
         data: Sequence[T]
 
         if self.pk_key is None:
             raise Exception("items() require a pk_key exists")
-        return [(getattr(item, self.pk_key), item) for item in self]
+        return [(getattr(item, self.pk_key), item) for item in self.data]
 
     def __eq__(self, other):
         data = other
+        if hasattr(data, "data"):
+            data = getattr(data, "data")
 
-        if not isinstance(self, list) or not isinstance(data, list):
+        if not isinstance(self.data, list) or not isinstance(data, list):
             return False
 
-        if len(self) == len(data):
-            for (a, b) in zip(self, data):
+        if len(self.data) == len(data):
+            for (a, b) in zip(self.data, data):
                 if isinstance(a, dict):
                     a_keys = a.keys()
                     if a.keys == b.keys():
@@ -216,4 +230,4 @@ class QueryList(list[T]):
         else:
             _filter = filter_lookup
 
-        return self.__class__(k for k in self if _filter(k))
+        return self.__class__(data=[k for k in self.data if _filter(k)])

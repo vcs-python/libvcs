@@ -230,7 +230,7 @@ from libvcs.utils.query_list import QueryList
     ],
 )
 def test_filter(items: list, filter_expr: Optional[dict], expected_result: list):
-    qs = QueryList(items)
+    qs = QueryList(data=items)
     if filter_expr is not None:
         if isinstance(filter_expr, dict):
             assert qs.filter(**filter_expr) == expected_result
