@@ -58,7 +58,7 @@ class SubversionProject(BaseProject):
             self.svn_trust_cert = False
 
         self.rev = kwargs.get("rev")
-        BaseProject.__init__(self, url, dir, *args, **kwargs)
+        super().__init__(url, dir, *args, **kwargs)
 
     def _user_pw_args(self):
         args = []

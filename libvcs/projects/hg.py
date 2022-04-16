@@ -20,9 +20,6 @@ class MercurialProject(BaseProject):
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
 
-    def __init__(self, url, dir, *args, **kwargs):
-        BaseProject.__init__(self, url, dir, *args, **kwargs)
-
     def obtain(self, *args, **kwargs):
         self.ensure_dir()
 

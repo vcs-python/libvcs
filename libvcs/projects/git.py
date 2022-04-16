@@ -223,7 +223,7 @@ class GitProject(BaseProject):
                 fetch_url=url,
                 push_url=url,
             )
-        BaseProject.__init__(self, url, dir, *args, **kwargs)
+        super().__init__(url, dir, *args, **kwargs)
         self.url = self.chomp_protocol(
             (
                 self._remotes.get("origin")
