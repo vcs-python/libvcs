@@ -37,6 +37,18 @@ class GitRemote(NamedTuple):
     push_url: str
 
 
+class GitRemoteDict(TypedDict):
+    """For use when hydrating GitProject via dict."""
+
+    fetch_url: str
+    push_url: str
+
+
+GitProjectRemoteDict = Dict[str, GitRemote]
+GitFullRemoteDict = Dict[str, GitRemoteDict]
+GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
+
+
 class GitStatus(NamedTuple):
     branch_oid: Optional[str]
     branch_head: Optional[str]
@@ -123,18 +135,6 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         url, rev = base_convert_pip_url(pip_url)
 
     return VCSLocation(url=url, rev=rev)
-
-
-class GitRemoteDict(TypedDict):
-    """For use when hydrating GitProject via dict."""
-
-    fetch_url: str
-    push_url: str
-
-
-GitProjectRemoteDict = Dict[str, GitRemote]
-GitFullRemoteDict = Dict[str, GitRemoteDict]
-GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
 
 
 class GitProject(BaseProject):
