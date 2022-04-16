@@ -18,3 +18,8 @@ stability policy.
 .. autoapimodule:: libvcs.types
    :members:
 ```
+
+```{eval-rst}
+.. autoapimodule:: libvcs.utils.query_list
+   :members:
+```
