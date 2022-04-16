@@ -593,7 +593,7 @@ class GitProject(BaseProject):
             version = ""
         return ".".join(version.split(".")[:3])
 
-    def status(self) -> dict:
+    def status(self):
         """Retrieve status of project in dict format.
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
