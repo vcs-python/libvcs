@@ -5,7 +5,7 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Callable, Optional, Union
+from typing import Optional, Protocol, Union
 
 from .. import exc
 from ..types import StrOrBytesPath
@@ -127,13 +127,21 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
         return msg, kwargs
 
 
+class ProgressCallbackProtocol(Protocol):
+    """Callback to report subprocess communication."""
+
+    def __call__(self, output: Union[str, bytes], timestamp: datetime.datetime):
+        """Callback signature for subprocess communication."""
+        ...
+
+
 def run(
     cmd: Union[str, list[str]],
     shell: bool = False,
     cwd: Optional[StrOrBytesPath] = None,
     log_in_real_time: bool = True,
     check_returncode: bool = True,
-    callback: Union[Callable[[str, datetime.datetime], None], None] = None,
+    callback: Optional[ProgressCallbackProtocol] = None,
 ):
     """Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
@@ -161,7 +169,7 @@ def run(
         Indicate whether a `libvcs.exc.CommandError` should be raised if return code is
         different from 0.
 
-    callback : callable
+    callback : ProgressCallbackProtocol
         callback to return output as a command executes, accepts a function signature
         of `(output, timestamp)`. Example usage::
 
