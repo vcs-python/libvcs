@@ -1,4 +1,10 @@
-# Development
+(contributing)=
+
+(developing)=
+
+# Contributing
+
+## Development environment
 
 [poetry] is a required package to develop.
 

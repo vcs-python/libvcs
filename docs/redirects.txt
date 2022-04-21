@@ -3,3 +3,4 @@
 "api/git.md" "projects/git.md"
 "api/hg.md" "projects/hg.md"
 "api/svn.md" "projects/svn.md"
+"developing.md" "contributing/index.md"

@@ -17,7 +17,7 @@ projects/index
 :caption: Project
 :hidden:
 
-developing
+contributing/index
 history
 GitHub <https://github.com/vcs-python/libvcs>
 
