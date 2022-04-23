@@ -756,6 +756,8 @@ class Git:
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull()
         'Already up to date.'
+
+        Fetch via ref:
         >>> git = Git(dir=git_local_clone.dir)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull(reftag=f'file://{git_remote_repo}')
