@@ -758,10 +758,12 @@ class Git:
         'Already up to date.'
 
         Fetch via ref:
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(dir=tmp_path)
+        >>> git.run(['init'])
+        'Initialized ...'
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull(reftag=f'file://{git_remote_repo}')
-        'Already up to date.'
+        ''
         >>> git.dir.exists()
         True
         """
