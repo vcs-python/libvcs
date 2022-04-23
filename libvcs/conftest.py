@@ -120,6 +120,23 @@ def remote_repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
     return dir
 
 
+def unique_repo_name(
+    faker: Faker, remote_repos_path: pathlib.Path, max_retries: int = 15
+) -> str:
+    attempts = 1
+    while True:
+        if attempts > max_retries:
+            raise Exception(
+                f"Could not find unused repo destination (attempts: {attempts})"
+            )
+        remote_repo_name = faker.slug()
+        suggestion = remote_repos_path / remote_repo_name
+        if suggestion.exists():
+            attempts += 1
+            continue
+        return remote_repo_name
+
+
 class CreateProjectCallbackProtocol(Protocol):
     def __call__(self, remote_repo_path: pathlib.Path):
         ...
@@ -163,7 +180,7 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else faker.slug(),
+            else unique_repo_name(faker=faker, remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
         )
 
@@ -219,7 +236,7 @@ def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else faker.word(),
+            else unique_repo_name(faker=faker, remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
         )
 
@@ -277,7 +294,7 @@ def create_hg_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else faker.word(),
+            else unique_repo_name(faker=faker, remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
         )
 

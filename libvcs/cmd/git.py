@@ -756,10 +756,14 @@ class Git:
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull()
         'Already up to date.'
-        >>> git = Git(dir=git_local_clone.dir)
+
+        Fetch via ref:
+        >>> git = Git(dir=tmp_path)
+        >>> git.run(['init'])
+        'Initialized ...'
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull(reftag=f'file://{git_remote_repo}')
-        'Already up to date.'
+        ''
         >>> git.dir.exists()
         True
         """
