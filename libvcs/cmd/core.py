@@ -176,7 +176,7 @@ def run(
             def progress_cb(output, timestamp):
                 sys.stdout.write(output)
                 sys.stdout.flush()
-            run(['git', 'pull'], callback=progrses_cb)
+            run(['git', 'pull'], callback=progress_cb)
     """
     proc = subprocess.Popen(
         cmd,
