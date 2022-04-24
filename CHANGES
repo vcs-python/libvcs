@@ -43,6 +43,9 @@ $ pip install --user --upgrade --pre libvcs
 
     - {meth}`libvcs.cmd.git.Git.run`
     - {meth}`libvcs.cmd.git.Git.clone`
+    - {meth}`libvcs.cmd.git.Git.init`
+    - {meth}`libvcs.cmd.git.Git.pull`
+    - {meth}`libvcs.cmd.git.Git.rebase`
 
   - {class}`libvcs.cmd.svn.Svn`
 
@@ -50,6 +53,9 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.svn.Svn.checkout`
     - {meth}`libvcs.cmd.svn.Svn.update`
     - {meth}`libvcs.cmd.svn.Svn.status`
+    - {meth}`libvcs.cmd.svn.Svn.auth`
+    - {meth}`libvcs.cmd.svn.Svn.blame`
+    - {meth}`libvcs.cmd.svn.Svn.commit`
 
   - {class}`libvcs.cmd.hg.Hg`
 
