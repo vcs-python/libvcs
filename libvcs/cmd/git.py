@@ -932,3 +932,82 @@ class Git:
         return self.run(
             ["pull", *local_flags, "--", *required_flags], check_returncode=False
         )
+
+    def init(
+        self,
+        template: Optional[str] = None,
+        separate_git_dir: Optional[StrOrBytesPath] = None,
+        object_format: Optional[Literal["sha1", "sha256"]] = None,
+        branch: Optional[str] = None,
+        initial_branch: Optional[str] = None,
+        shared: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        bare: Optional[bool] = None,
+        **kwargs,
+    ):
+        """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
+
+        Parameters
+        ----------
+        quiet : bool
+            ``--quiet``
+        bare : bool
+            ``--bare``
+        object_format :
+            Hash algorithm used for objects. SHA-256 is still experimental as of git
+            2.36.0.
+
+        Examples
+        --------
+        >>> new_repo = tmp_path / 'example'
+        >>> new_repo.mkdir()
+        >>> git = Git(dir=new_repo)
+        >>> git.init()
+        'Initialized empty Git repository in ...'
+        >>> pathlib.Path(new_repo / 'test').write_text('foo', 'utf-8')
+        3
+        >>> git.run(['add', '.'])
+        ''
+
+        Bare:
+
+        >>> new_repo = tmp_path / 'example1'
+        >>> new_repo.mkdir()
+        >>> git = Git(dir=new_repo)
+        >>> git.init(bare=True)
+        'Initialized empty Git repository in ...'
+        >>> pathlib.Path(new_repo / 'HEAD').exists()
+        True
+
+        Existing repo:
+
+        >>> git = Git(dir=new_repo)
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> git.init()
+        'Reinitialized existing Git repository in ...'
+
+        """
+        required_flags: list[str] = [str(self.dir)]
+        local_flags: list[str] = []
+
+        if template is not None:
+            local_flags.append(f"--template={template}")
+        if separate_git_dir is not None:
+            local_flags.append(f"--separate-git-dir={separate_git_dir}")
+        if object_format is not None:
+            local_flags.append(f"--object-format={object_format}")
+        if branch is not None:
+            local_flags.append(f"--branch {branch}")
+        if initial_branch is not None:
+            local_flags.append(f"--initial-branch {initial_branch}")
+        if shared is True:
+            local_flags.append("--shared")
+        if quiet is True:
+            local_flags.append("--quiet")
+        if bare is True:
+            local_flags.append("--bare")
+
+        return self.run(
+            ["init", *local_flags, "--", *required_flags], check_returncode=False
+        )
