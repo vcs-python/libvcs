@@ -113,6 +113,7 @@ $ pip install --user --upgrade --pre libvcs
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
 - Add [doctest](https://docs.python.org/3/library/doctest.html) w/
   [pytest + doctest](https://docs.pytest.org/en/7.1.x/how-to/doctest.html), ({issue}`#321`).
+- Publish to PyPI via CI when git tags are set.
 
 ### Documentation
 
