@@ -758,6 +758,7 @@ class Git:
         'Already up to date.'
 
         Fetch via ref:
+
         >>> git = Git(dir=tmp_path)
         >>> git.run(['init'])
         'Initialized ...'
