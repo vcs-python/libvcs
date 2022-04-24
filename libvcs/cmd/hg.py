@@ -30,7 +30,7 @@ class Hg:
         Parameters
         ----------
         dir :
-            Operates as PATH in the corresonding hg subcommand.
+            Operates as PATH in the corresponding hg subcommand.
 
         Examples
         --------

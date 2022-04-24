@@ -15,7 +15,7 @@ class Git:
         Parameters
         ----------
         dir :
-            Operates as PATH in the corresonding git subcommand.
+            Operates as PATH in the corresponding git subcommand.
 
         Examples
         --------

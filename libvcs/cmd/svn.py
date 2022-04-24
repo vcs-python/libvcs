@@ -17,7 +17,7 @@ class Svn:
         Parameters
         ----------
         dir :
-            Operates as PATH in the corresonding svn subcommand.
+            Operates as PATH in the corresponding svn subcommand.
 
         Examples
         --------
