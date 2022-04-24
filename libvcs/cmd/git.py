@@ -530,6 +530,9 @@ class Git:
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase()
         'Current branch master is up to date.'
+
+        Declare upstream:
+
         >>> git = Git(dir=git_local_clone.dir)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase(upstream='origin')
