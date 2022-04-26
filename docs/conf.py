@@ -43,11 +43,6 @@ source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 master_doc = "index"
 
-# app setup hook
-def setup(app):
-    pass
-
-
 project = about["__title__"]
 copyright = about["__copyright__"]
 
