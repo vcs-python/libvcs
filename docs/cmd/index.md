@@ -19,4 +19,5 @@ versions.
 git
 hg
 svn
+core
 ```
