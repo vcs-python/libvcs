@@ -18,7 +18,7 @@ $ pip install --user --upgrade --pre libvcs
 ### Breaking
 
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to `GitProject`, `SVNProject`,
-  `MercurialProject`, `BaseProject` ({issue}`#327`)
+  `MercurialProject`, `BaseProject` ({issue}`327`)
 - `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` have been moved to
   `libvcs.projects.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
@@ -27,19 +27,19 @@ $ pip install --user --upgrade --pre libvcs
 
   After: `GitProject(url='...', dir='...')`
 
-  {issue}`#324`
+  {issue}`324`
 
 - `dir` to `pathlib`, `BaseProject.path` -> `BaseProject.dir`
-- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` ({issue}`#322`)
+- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` ({issue}`322`)
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 - `create_repo` -> `create_project`
-- `GitRemote` and `GitStatus`: Move to {func}`dataclasses.dataclass` ({issue}`#329`)
-- `extract_status()`: Move to `GitStatus.from_stdout` ({issue}`#329`)
+- `GitRemote` and `GitStatus`: Move to {func}`dataclasses.dataclass` ({issue}`329`)
+- `extract_status()`: Move to `GitStatus.from_stdout` ({issue}`329`)
 
 ### What's new
 
-- **Commands**: Experimental command wrappers added ({issue}`#319`):
+- **Commands**: Experimental command wrappers added ({issue}`319`):
 
   - {class}`libvcs.cmd.git.Git`
 
@@ -100,11 +100,10 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
-- Add codeql analysis ({issue}`#303`)
-- git test suite: Lots of parametrization ({issue}`#309`)
+- Add codeql analysis ({issue}`303`)
+- git test suite: Lots of parametrization ({issue}`309`)
 - CI: Use poetry caching from
-  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0),
-  ({issue}`#316`)
+  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), ({issue}`316`)
 - New constants for `str` -> class mappings
 
   - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_MAP`
@@ -114,14 +113,14 @@ $ pip install --user --upgrade --pre libvcs
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
 - Add [doctest](https://docs.python.org/3/library/doctest.html) w/
-  [pytest + doctest](https://docs.pytest.org/en/7.1.x/how-to/doctest.html), ({issue}`#321`).
+  [pytest + doctest](https://docs.pytest.org/en/7.1.x/how-to/doctest.html), ({issue}`321`).
 - Publish to PyPI via CI when git tags are set.
 
 ### Documentation
 
 - API: Split documentation of modules to separate pages
-- Fix sphinx-issues ({issue}`#321`)
-- Experiment with sphinx-autoapi ({issue}`#328`) for table of contents support
+- Fix sphinx-issues ({issue}`321`)
+- Experiment with sphinx-autoapi ({issue}`328`) for table of contents support
 
 ## libvcs 0.11.1 (2022-03-12)
 
