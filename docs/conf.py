@@ -101,6 +101,10 @@ autoapi_dirs = [project_root / "libvcs"]
 autoapi_generate_api_docs = False  # when fales, use directives
 suppress_warnings = ["autoapi.python_import_resolution", "autoapi.not_readable"]
 
+# sphinx.ext.napoleon
+napoleon_google_docstring = True
+napoleon_include_init_with_doc = True
+
 # sphinxext.opengraph
 ogp_site_url = about["__docs__"]
 ogp_image = "_static/img/icons/icon-192x192.png"
