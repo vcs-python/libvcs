@@ -9,17 +9,8 @@ stability policy.
 
 :::
 
-```{eval-rst}
-.. autoapimodule:: libvcs.exc
-   :members:
-```
-
-```{eval-rst}
-.. autoapimodule:: libvcs.types
-   :members:
-```
-
-```{eval-rst}
-.. autoapimodule:: libvcs.utils.query_list
-   :members:
+```{toctree}
+exc
+types
+query_list
 ```
