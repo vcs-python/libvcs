@@ -41,10 +41,3 @@ See examples below of git, mercurial, and subversion.
 .. autoapimodule:: libvcs.projects.constants
    :members:
 ```
-
-## Utility stuff
-
-```{eval-rst}
-.. autoapimodule:: libvcs.cmd.core
-   :members:
-```
