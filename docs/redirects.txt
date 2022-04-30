@@ -4,3 +4,4 @@
 "api/hg.md" "projects/hg.md"
 "api/svn.md" "projects/svn.md"
 "developing.md" "contributing/index.md"
+"contributing/internals.md" "contributing/internals/index.md"
