@@ -5,3 +5,8 @@
 "api/svn.md" "projects/svn.md"
 "developing.md" "contributing/index.md"
 "contributing/internals.md" "contributing/internals/index.md"
+"contributing/internals/exc.md" "internals/exc.md"
+"contributing/internals/index.md" "internals/index.md"
+"contributing/internals/query_list.md" "internals/query_list.md"
+"contributing/internals/subprocess.md" "internals/subprocess.md"
+"contributing/internals/types.md" "internals/types.md"

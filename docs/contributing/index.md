@@ -9,5 +9,4 @@ resources on the internals of the project.
 
 ```{toctree}
 workflow
-internals/index
 ```
