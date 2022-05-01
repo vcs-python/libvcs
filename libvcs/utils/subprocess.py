@@ -223,7 +223,7 @@ class SubprocessCommand:
         >>> cmd = SubprocessCommand(args=['echo', 'hello'])
         >>> proc = cmd.check_output(shell=True)
 
-        From :mod:`subprocess`:
+        Examples from :mod:`subprocess`:
 
         >>> import subprocess
         >>> cmd = SubprocessCommand(
@@ -247,7 +247,7 @@ class SubprocessCommand:
         capture_output: bool = False,
         **kwargs,
     ) -> subprocess.CompletedProcess:
-        """Run command in :func:`subprocess.run`, optionally overrides via kwargs.
+        r"""Run command in :func:`subprocess.run`, optionally overrides via kwargs.
 
         Parameters
         ----------
@@ -268,6 +268,39 @@ class SubprocessCommand:
 
         **kwargs : dict, optional
             Overrides existing attributes for :func:`subprocess.run`
+
+        Examples
+        --------
+        >>> import subprocess
+        >>> cmd = SubprocessCommand(
+        ...     ["/bin/sh", "-c", "ls -l non_existent_file ; exit 0"])
+        >>> cmd.run()
+        CompletedProcess(args=['/bin/sh', '-c', 'ls -l non_existent_file ; exit 0'],
+                         returncode=0)
+
+        >>> import subprocess
+        >>> cmd = SubprocessCommand(
+        ...     ["/bin/sh", "-c", "ls -l non_existent_file ; exit 0"])
+        >>> cmd.run(check=True)
+        CompletedProcess(args=['/bin/sh', '-c', 'ls -l non_existent_file ; exit 0'],
+                         returncode=0)
+
+        >>> cmd = SubprocessCommand(["sed", "-e", "s/foo/bar/"])
+        >>> completed = cmd.run(input=b"when in the course of fooman events\n")
+        >>> completed
+        CompletedProcess(args=['sed', '-e', 's/foo/bar/'], returncode=0)
+        >>> completed.stderr
+
+        >>> cmd = SubprocessCommand(["sed", "-e", "s/foo/bar/"])
+        >>> completed = cmd.run(input=b"when in the course of fooman events\n",
+        ...                     capture_output=True)
+        >>> completed
+        CompletedProcess(args=['sed', '-e', 's/foo/bar/'], returncode=0,
+                        stdout=b'when in the course of barman events\n', stderr=b'')
+        >>> completed.stdout
+        b'when in the course of barman events\n'
+        >>> completed.stderr
+        b''
         """
         return subprocess.run(
             **dataclasses.replace(self, **kwargs).__dict__,
