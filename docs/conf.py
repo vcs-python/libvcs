@@ -91,6 +91,10 @@ autoclass_content = "both"
 autodoc_member_order = "bysource"
 autosummary_generate = True
 
+# sphinx-autodoc-typehints
+autodoc_typehints = "description"  # show type hints in doc body instead of signature
+simplify_optional_unions = True
+
 # sphinx-autoapi
 autoapi_type = "python"
 autoapi_dirs = [project_root / "libvcs"]
