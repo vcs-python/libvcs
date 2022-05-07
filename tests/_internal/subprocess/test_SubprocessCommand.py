@@ -1,6 +1,9 @@
 import pathlib
 import subprocess
+import sys
+import textwrap
 from typing import Any
+from unittest import mock
 
 import pytest
 
@@ -137,3 +140,157 @@ def test_run(tmp_path: pathlib.Path, args: list, kwargs: dict, run_kwargs: dict)
     response = cmd.run(**run_kwargs)
 
     assert response.returncode == 0
+
+
+@pytest.mark.parametrize(
+    "args,kwargs,run_kwargs",
+    [
+        [
+            ["ls"],
+            {},
+            {},
+        ],
+        [[["ls", "-l"]], {}, {}],
+        [[["ls", "-al"]], {}, {"stdout": subprocess.DEVNULL}],
+    ],
+    ids=idfn,
+)
+@mock.patch("subprocess.Popen")
+def test_Popen_mock(
+    mock_subprocess_popen,
+    tmp_path: pathlib.Path,
+    args: list,
+    kwargs: dict,
+    run_kwargs: dict,
+    capsys: pytest.LogCaptureFixture,
+):
+    process_mock = mock.Mock()
+    attrs = {"communicate.return_value": ("output", "error"), "returncode": 1}
+    process_mock.configure_mock(**attrs)
+    mock_subprocess_popen.return_value = process_mock
+    cmd = SubprocessCommand(*args, cwd=tmp_path, **kwargs)
+    response = cmd.Popen(**run_kwargs)
+
+    assert response.returncode == 1
+
+
+@pytest.mark.parametrize(
+    "args,kwargs,run_kwargs",
+    [
+        [[["git", "pull", "--progress"]], {}, {}],
+    ],
+    ids=idfn,
+)
+@mock.patch("subprocess.Popen")
+def test_Popen_git_mock(
+    mock_subprocess_popen,
+    tmp_path: pathlib.Path,
+    args: list,
+    kwargs: dict,
+    run_kwargs: dict,
+    capsys: pytest.LogCaptureFixture,
+):
+    process_mock = mock.Mock()
+    attrs = {"communicate.return_value": ("output", "error"), "returncode": 1}
+    process_mock.configure_mock(**attrs)
+    mock_subprocess_popen.return_value = process_mock
+    cmd = SubprocessCommand(*args, cwd=tmp_path, **kwargs)
+    response = cmd.Popen(**run_kwargs)
+
+    stdout, stderr = response.communicate()
+
+    assert response.returncode == 1
+    assert stdout == "output"
+    assert stderr == "error"
+
+
+CODE = (
+    textwrap.dedent(
+        r"""
+        import sys
+        import time
+        size = 10
+        for i in range(10):
+            time.sleep(.01)
+            sys.stderr.write(
+                '[' + "#" * i + "." * (size-i) +  ']' + f' {i}/{size}' + '\n'
+            )
+            sys.stderr.flush()
+"""
+    )
+    .strip("\n")
+    .lstrip()
+)
+
+
+def test_Popen_stderr(
+    tmp_path: pathlib.Path,
+    capsys: pytest.LogCaptureFixture,
+):
+    cmd = SubprocessCommand(
+        [
+            sys.executable,
+            "-c",
+            CODE,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=tmp_path,
+    )
+    response = cmd.Popen()
+    while response.poll() is None:
+        stdout, stderr = response.communicate()
+
+        assert stdout != "output"
+        assert stderr != "1"
+    assert response.returncode == 0
+
+
+def test_CaptureStderrMixin(
+    tmp_path: pathlib.Path,
+    capsys: pytest.LogCaptureFixture,
+):
+    cmd = SubprocessCommand(
+        [
+            sys.executable,
+            "-c",
+            CODE,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=tmp_path,
+    )
+    response = cmd.Popen()
+    while response.poll() is None:
+        line = response.stderr.readline().decode("utf-8").strip()
+        if line:
+            assert line.startswith("[")
+    assert response.returncode == 0
+
+
+def test_CaptureStderrMixin_error(
+    tmp_path: pathlib.Path,
+    capsys: pytest.LogCaptureFixture,
+):
+    cmd = SubprocessCommand(
+        [
+            sys.executable,
+            "-c",
+            CODE
+            + textwrap.dedent(
+                """
+       sys.exit("FATAL")
+            """
+            ),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=tmp_path,
+    )
+    response = cmd.Popen()
+    while response.poll() is None:
+        line = response.stderr.readline().decode("utf-8").strip()
+        if line:
+            assert line.startswith("[") or line == "FATAL"
+
+    assert response.returncode == 1
