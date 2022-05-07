@@ -1,3 +1,36 @@
+"""Invokable subprocess wrapper.
+
+Defer running a subprocess, such as by handing to an executor.
+
+- :class:`~SubprocessCommand`: Wraps :class:`subprocess.Popen` and
+  :func:`subprocess.run` in a :func:`~dataclasses.dataclass`.
+
+  Before:
+
+  >>> import subprocess
+  >>> subprocess.run(
+  ...    ['echo', 'hi'],
+  ...    capture_output=True, universal_newlines=True
+  ... ).stdout
+  'hi\\n'
+
+  With this:
+
+  >>> cmd = SubprocessCommand(['echo', 'hi'])
+  >>> cmd.args
+  ['echo', 'hi']
+  >>> cmd.run(capture_output=True, universal_newlines=True).stdout
+  'hi\\n'
+
+  Tweak params before invocation:
+
+  >>> cmd = SubprocessCommand(['echo', 'hi'])
+  >>> cmd.args[1] = 'hello'
+  >>> cmd.args
+  ['echo', 'hello']
+  >>> cmd.run(capture_output=True, universal_newlines=True).stdout
+  'hello\\n'
+"""
 import dataclasses
 import subprocess
 import sys
