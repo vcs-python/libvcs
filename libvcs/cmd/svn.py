@@ -80,7 +80,7 @@ class Svn:
         Examples
         --------
         >>> svn = Svn(dir=tmp_path)
-        >>> svn.run(['help'])  # doctest: +NORMALIZE_WHITESPACE
+        >>> svn.run(['help'])
         "usage: svn <subcommand> [options] [args]..."
         """
 

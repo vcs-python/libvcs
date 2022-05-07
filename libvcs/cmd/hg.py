@@ -117,7 +117,7 @@ class Hg:
         Examples
         --------
         >>> hg = Hg(dir=tmp_path)
-        >>> hg.run(['help'])  # doctest: +NORMALIZE_WHITESPACE
+        >>> hg.run(['help'])
         "Mercurial Distributed SCM..."
         """
 
