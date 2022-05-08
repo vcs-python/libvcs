@@ -7,11 +7,6 @@ import pytest
 from libvcs.utils.subprocess import SubprocessCommand
 
 
-@pytest.fixture(autouse=True)
-def cwd_default(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path):
-    monkeypatch.chdir(tmp_path)
-
-
 @pytest.mark.parametrize(
     "args,kwargs,expected_result",
     [
