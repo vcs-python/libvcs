@@ -3,13 +3,65 @@ from operator import attrgetter
 
 
 class SkipDefaultFieldsReprMixin:
+    r"""Skip default fields in :func:`~dataclasses.dataclass`
+    :func:`object representation <repr()>`.
+
+    Notes
+    -----
+
+    Credit: Pietro Oldrati, 2022-05-08, Unilicense
+
+    https://stackoverflow.com/a/72161437/1396928
+
+    Examples
+    --------
+
+    >>> @dataclasses.dataclass()
+    ... class Item:
+    ...     name: str
+    ...     unit_price: float = 1.00
+    ...     quantity_on_hand: int = 0
+    ...
+
+    >>> @dataclasses.dataclass(repr=False)
+    ... class ItemWithMixin(SkipDefaultFieldsReprMixin):
+    ...     name: str
+    ...     unit_price: float = 1.00
+    ...     quantity_on_hand: int = 0
+    ...
+
+    >>> Item('Test')
+    Item(name='Test', unit_price=1.0, quantity_on_hand=0)
+
+    >>> ItemWithMixin('Test')
+    ItemWithMixin(name=Test)
+
+    If you want to copy/paste the :meth:`~.__repr__()`
+    directly, you can omit the ``repr=False``:
+
+    >>> @dataclasses.dataclass
+    ... class ItemWithMixin(SkipDefaultFieldsReprMixin):
+    ...     name: str
+    ...     unit_price: float = 1.00
+    ...     quantity_on_hand: int = 0
+    ...     __repr__ = SkipDefaultFieldsReprMixin.__repr__
+    ...
+
+    >>> ItemWithMixin('Test')
+    ItemWithMixin(name=Test)
+
+    >>> ItemWithMixin('Test', unit_price=2.00)
+    ItemWithMixin(name=Test,unit_price=2.0)
+
+    >>> item = ItemWithMixin('Test')
+    >>> item.unit_price = 2.05
+
+    >>> item
+    ItemWithMixin(name=Test,unit_price=2.05)
+    """
+
     def __repr__(self):
-        """Skip default fields.
-
-        Credit: Pietro Oldrati, 2022-05-08, Unilicense
-
-        See also: https://stackoverflow.com/a/72161437/1396928
-        """
+        """Omit default fields in object representation."""
         nodef_f_vals = (
             (f.name, attrgetter(f.name)(self))
             for f in dataclasses.fields(self)
