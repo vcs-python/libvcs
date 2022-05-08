@@ -7,6 +7,15 @@ import pytest
 from libvcs.utils.subprocess import SubprocessCommand
 
 
+def idfn(val: Any) -> str:
+    if isinstance(val, list):
+        if len(val):
+            return str(val[0])
+        return "[]]"
+
+    return str(val)
+
+
 @pytest.mark.parametrize(
     "args,kwargs,expected_result",
     [
@@ -21,6 +30,7 @@ from libvcs.utils.subprocess import SubprocessCommand
             SubprocessCommand(["ls", "-l"], shell=True),
         ],
     ],
+    ids=idfn,
 )
 def test_init(args: list, kwargs: dict, expected_result: Any):
     """Test SubprocessCommand via list + kwargs, assert attributes"""
@@ -45,6 +55,7 @@ FIXTURES = [
 @pytest.mark.parametrize(
     "args,kwargs,expected_result",
     FIXTURES,
+    ids=idfn,
 )
 def test_init_and_Popen(args: list, kwargs: dict, expected_result: Any):
     """Test SubprocessCommand with Popen"""
@@ -63,6 +74,7 @@ def test_init_and_Popen(args: list, kwargs: dict, expected_result: Any):
 @pytest.mark.parametrize(
     "args,kwargs,expected_result",
     FIXTURES,
+    ids=idfn,
 )
 def test_init_and_Popen_run(args: list, kwargs: dict, expected_result: Any):
     """Test SubprocessCommand with run"""
@@ -80,6 +92,7 @@ def test_init_and_Popen_run(args: list, kwargs: dict, expected_result: Any):
 @pytest.mark.parametrize(
     "args,kwargs,expected_result",
     FIXTURES,
+    ids=idfn,
 )
 def test_init_and_check_call(args: list, kwargs: dict, expected_result: Any):
     """Test SubprocessCommand with Popen.check_call"""
@@ -116,6 +129,7 @@ def test_init_and_check_output(args: list, kwargs: dict, expected_result: Any):
         [[["ls", "-l"]], {}, {}],
         [[["ls", "-al"]], {}, {"stdout": subprocess.DEVNULL}],
     ],
+    ids=idfn,
 )
 def test_run(tmp_path: pathlib.Path, args: list, kwargs: dict, run_kwargs: dict):
     cmd = SubprocessCommand(*args, cwd=tmp_path, **kwargs)
