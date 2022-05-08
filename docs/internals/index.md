@@ -12,6 +12,7 @@ stability policy.
 ```{toctree}
 exc
 types
+dataclasses
 query_list
 subprocess
 ```
