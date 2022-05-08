@@ -36,6 +36,12 @@ class SkipDefaultFieldsReprMixin:
     >>> ItemWithMixin('Test')
     ItemWithMixin(name=Test)
 
+    >>> Item('Test', quantity_on_hand=2)
+    Item(name='Test', unit_price=1.0, quantity_on_hand=2)
+
+    >>> ItemWithMixin('Test', quantity_on_hand=2)
+    ItemWithMixin(name=Test, quantity_on_hand=2)
+
     If you want to copy/paste the :meth:`~.__repr__()`
     directly, you can omit the ``repr=False``:
 
