@@ -13,11 +13,17 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
-### Development
+### Internals
 
 - {issue}`#336`: {class}`~libvcs.utils.subprocess.SubprocessCommand`: Encapsulated {mod}`subprocess`
   call in a {func}`dataclasses.dataclass` for introspecting, modifying, mocking and controlling
   execution.
+- Dataclass helper: {class}`~libvcs.utils.dataclasses.SkipDefaultFieldsReprMixin`
+
+  Skip default fields in object representations.
+
+  Credit: Pietro Oldrati, 2022-05-08,
+  [StackOverflow Post](https://stackoverflow.com/a/72161437/1396928)
 
 ## libvcs 0.12.0, "Nimbus" (2022-04-24)
 
