@@ -51,13 +51,13 @@ class SkipDefaultFieldsReprMixin:
     ItemWithMixin(name=Test)
 
     >>> ItemWithMixin('Test', unit_price=2.00)
-    ItemWithMixin(name=Test,unit_price=2.0)
+    ItemWithMixin(name=Test, unit_price=2.0)
 
     >>> item = ItemWithMixin('Test')
     >>> item.unit_price = 2.05
 
     >>> item
-    ItemWithMixin(name=Test,unit_price=2.05)
+    ItemWithMixin(name=Test, unit_price=2.05)
     """
 
     def __repr__(self):
@@ -68,5 +68,5 @@ class SkipDefaultFieldsReprMixin:
             if attrgetter(f.name)(self) != f.default
         )
 
-        nodef_f_repr = ",".join(f"{name}={value}" for name, value in nodef_f_vals)
+        nodef_f_repr = ", ".join(f"{name}={value}" for name, value in nodef_f_vals)
         return f"{self.__class__.__name__}({nodef_f_repr})"
