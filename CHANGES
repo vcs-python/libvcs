@@ -13,6 +13,12 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.12.2 (2022-05-10)
+
+### Packaging
+
+- Update [trove classifiers](https://pypi.org/classifiers/)
+
 ## libvcs 0.12.1 (2022-05-10)
 
 ### Packaging
