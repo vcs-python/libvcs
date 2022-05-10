@@ -8,7 +8,7 @@ keywords = ["libvcs", "git", "mercurial", "hg", "svn", "subversion", "library", 
 classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",
-  "Environment :: Web Environment",
+  "Environment :: Console",
   "Intended Audience :: Developers",
   "Operating System :: POSIX",
   "Operating System :: MacOS :: MacOS X",
@@ -18,7 +18,12 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Utilities",
-  "Topic :: System :: Shells"
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Software Development :: Version Control",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Topic :: Software Development :: Version Control :: Mercurial",
+  "Topic :: System :: Shells",
+  "Typing :: Typed"
 ]
 homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.md"
