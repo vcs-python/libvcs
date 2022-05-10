@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "libvcs"
 version = "0.12.0"
-description = "vcs abstraction layer"
+description = "Lite, typed, python library wrapper for git, svn, mercurial, etc."
 license = "MIT"
 authors = ["Tony Narlock <tony@git-pull.com>"]
-keywords = ["libvcs", "git", "mercurial", "hg", "svn"]
+keywords = ["libvcs", "git", "mercurial", "hg", "svn", "subversion", "library", "lib", "wrapper", "vcs", "version control", "scm", "clone", "checkout", "abstraction", "version-control"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",
