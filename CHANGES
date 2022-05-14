@@ -26,6 +26,10 @@ $ pip install --user --upgrade --pre libvcs
   Credit: Pietro Oldrati, 2022-05-08,
   [StackOverflow Post](https://stackoverflow.com/a/72161437/1396928)
 
+### Documentation
+
+- Document `libvcs.types`
+
 ### Packaging
 
 - Update description and keywords
