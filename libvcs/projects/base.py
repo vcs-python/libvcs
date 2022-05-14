@@ -5,7 +5,7 @@ from typing import NamedTuple
 from urllib import parse as urlparse
 
 from libvcs.cmd.core import CmdLoggingAdapter, mkdir_p, run
-from libvcs.types import StrOrPath
+from libvcs.types import StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class BaseProject:
     #: vcs app name, e.g. 'git'
     bin_name = ""
 
-    def __init__(self, url, dir: StrOrPath, progress_callback=None, *args, **kwargs):
+    def __init__(self, url, dir: StrPath, progress_callback=None, *args, **kwargs):
         r"""
         Parameters
         ----------

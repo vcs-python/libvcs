@@ -1,7 +1,7 @@
 import pathlib
 from typing import Literal, Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrOrPath
+from ..types import StrOrBytesPath, StrPath
 from .core import run
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
@@ -11,7 +11,7 @@ RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
 class Svn:
-    def __init__(self, dir: StrOrPath):
+    def __init__(self, dir: StrPath):
         """Lite, typed, pythonic wrapper for svn(1).
 
         Parameters

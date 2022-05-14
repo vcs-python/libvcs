@@ -7,5 +7,5 @@ For mercurial, aka `hg(1)`.
    :members:
    :show-inheritance:
    :undoc-members:
-   :exclude-members: BaseProject, StrOrBytesPath, StrOrPath
+   :exclude-members: BaseProject, StrOrBytesPath, StrPath
 ```

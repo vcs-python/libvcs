@@ -2,7 +2,7 @@ import enum
 import pathlib
 from typing import Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrOrPath
+from ..types import StrOrBytesPath, StrPath
 from .core import run
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
@@ -24,7 +24,7 @@ class HgPagerType(enum.Enum):
 
 
 class Hg:
-    def __init__(self, dir: StrOrPath):
+    def __init__(self, dir: StrPath):
         """Lite, typed, pythonic wrapper for hg(1).
 
         Parameters

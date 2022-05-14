@@ -9,4 +9,4 @@ from typing import Union
 
 
 StrOrBytesPath = Union[str, bytes, PathLike[str], PathLike[bytes]]  # stable
-StrOrPath = Union[str, PathLike[str]]  # stable
+StrPath = Union[str, PathLike[str]]  # stable

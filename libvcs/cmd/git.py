@@ -2,14 +2,14 @@ import pathlib
 import shlex
 from typing import Any, Literal, Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrOrPath
+from ..types import StrOrBytesPath, StrPath
 from .core import run
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class Git:
-    def __init__(self, dir: StrOrPath):
+    def __init__(self, dir: StrPath):
         """Lite, typed, pythonic wrapper for git(1).
 
         Parameters
