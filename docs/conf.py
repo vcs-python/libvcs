@@ -20,12 +20,12 @@ with open(project_root / "libvcs" / "__about__.py") as fp:
     exec(fp.read(), about)
 
 extensions = [
-    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",  # Should go first
     "autoapi.extension",
+    "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
-    "sphinx.ext.napoleon",
     "sphinx.ext.linkcode",
     "sphinx_inline_tabs",
     "sphinx_issues",
