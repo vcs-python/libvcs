@@ -22,7 +22,6 @@ with open(project_root / "libvcs" / "__about__.py") as fp:
 extensions = [
     "sphinx.ext.autodoc",
     "autoapi.extension",
-    "sphinx.ext.autosummary",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
@@ -89,7 +88,6 @@ html_sidebars = {
 # sphinx.ext.autodoc
 autoclass_content = "both"
 autodoc_member_order = "bysource"
-autosummary_generate = True
 
 # sphinx-autodoc-typehints
 autodoc_typehints = "description"  # show type hints in doc body instead of signature
