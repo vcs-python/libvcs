@@ -8,7 +8,9 @@ Notes
 .. _typeshed's: https://github.com/python/typeshed/blob/5df8de7/stdlib/_typeshed/__init__.pyi#L115-L118
 """  # NOQA E501
 from os import PathLike
-from typing import TypeAlias, Union
+from typing import Union
+
+from typing_extensions import TypeAlias
 
 StrPath: TypeAlias = Union[str, PathLike[str]]  # stable
 """:class:`os.PathLike` or :class:`str`"""
