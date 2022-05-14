@@ -174,7 +174,7 @@ class Svn:
 
         Parameters
         ----------
-        targets : pathlib.path
+        targets : pathlib.Path
             `--targets ARG`: contents of file ARG as additional args
         depth :
             `--depth ARG`, Sparse checkout support, Optional
