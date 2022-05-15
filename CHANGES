@@ -15,16 +15,16 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
-- {issue}`343`: `libvcs.cmd.core` (including {func}`~libvcs.utils.run.run`) have been moved to
-  `libvcs.utils.run`. It will be supported as an unstable, internal API.
+- {issue}`343`: `libvcs.cmd.core` (including {func}`~libvcs._internal.run.run`) have been moved to
+  `libvcs._internal.run`. It will be supported as an unstable, internal API.
 
 ### Internals
 
 - `StrOrPath` -> `StrPath`
-- {issue}`#336`: {class}`~libvcs.utils.subprocess.SubprocessCommand`: Encapsulated {mod}`subprocess`
+- {issue}`#336`: {class}`~libvcs._internal.subprocess.SubprocessCommand`: Encapsulated {mod}`subprocess`
   call in a {func}`dataclasses.dataclass` for introspecting, modifying, mocking and controlling
   execution.
-- Dataclass helper: {class}`~libvcs.utils.dataclasses.SkipDefaultFieldsReprMixin`
+- Dataclass helper: {class}`~libvcs._internal.dataclasses.SkipDefaultFieldsReprMixin`
 
   Skip default fields in object representations.
 

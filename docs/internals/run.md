@@ -1,7 +1,7 @@
-# `libvcs.utils.run`
+# `libvcs._internal.run`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.utils.run
+.. autoapimodule:: libvcs._internal.run
    :members:
    :show-inheritance:
    :undoc-members:

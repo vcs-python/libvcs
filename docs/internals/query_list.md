@@ -1,6 +1,6 @@
-# `libvcs.utils.query_list`
+# `libvcs._internal.query_list`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.utils.query_list
+.. autoapimodule:: libvcs._internal.query_list
    :members:
 ```

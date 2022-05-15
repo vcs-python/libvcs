@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from libvcs.utils.subprocess import SubprocessCommand
+from libvcs._internal.subprocess import SubprocessCommand
 
 
 def idfn(val: Any) -> str:

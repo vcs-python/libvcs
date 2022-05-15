@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from libvcs.utils.run import run, which
+from libvcs._internal.run import run, which
 from libvcs.shortcuts import create_project, create_project_from_pip_url
 
 if not which("hg"):

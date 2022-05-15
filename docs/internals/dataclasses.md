@@ -1,7 +1,7 @@
-# `libvcs.utils.dataclasses`
+# `libvcs._internal.dataclasses`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.utils.dataclasses
+.. autoapimodule:: libvcs._internal.dataclasses
    :members:
    :special-members:
 

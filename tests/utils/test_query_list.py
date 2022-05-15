@@ -2,7 +2,7 @@ from typing import Optional
 
 import pytest
 
-from libvcs.utils.query_list import QueryList
+from libvcs._internal.query_list import QueryList
 
 
 @pytest.mark.parametrize(

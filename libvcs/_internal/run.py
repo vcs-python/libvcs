@@ -1,6 +1,7 @@
 """Misc. legacy helpers :mod:`subprocess` and finding VCS binaries.
 
-:class:`libvcs.utils.run.run` will be deprecated by :mod:`libvcs.utils.subprocess`.
+:class:`libvcs._internal.run.run` will be deprecated by
+:mod:`libvcs._internal.subprocess`.
 
 Note
 ----

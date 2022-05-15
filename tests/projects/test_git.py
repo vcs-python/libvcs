@@ -10,7 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from libvcs import exc
-from libvcs.utils.run import run, which
+from libvcs._internal.run import run, which
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.git import (
     GitFullRemoteDict,
