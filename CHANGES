@@ -13,6 +13,11 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### Breaking changes
+
+- {issue}`343`: `libvcs.cmd.core` (including {func}`~libvcs.utils.run.run`) have been moved to
+  `libvcs.utils.run`. It will be supported as an unstable, internal API.
+
 ### Internals
 
 - `StrOrPath` -> `StrPath`
