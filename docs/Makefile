@@ -179,8 +179,10 @@ dev:
 	$(MAKE) -j watch serve
 
 start:
-	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} --watch ".." --ignore "../.venv" $(O)
+	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} $(O)
 
 design:
 	# This adds additional watch directories (for _static file changes) and disable incremental builds
-	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} --watch ".." --ignore "../.venv" -a $(O)
+	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} \
+		--watch ".." --ignore "../.*" --ignore "_build" -a \
+		$(O)
