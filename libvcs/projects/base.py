@@ -1,11 +1,11 @@
-"""Base class for Projectsitory objects."""
+"""Base class for VCS Project plugins."""
 import logging
 import pathlib
 from typing import NamedTuple
 from urllib import parse as urlparse
 
-from libvcs.utils.run import CmdLoggingAdapter, mkdir_p, run
 from libvcs.types import StrPath
+from libvcs.utils.run import CmdLoggingAdapter, mkdir_p, run
 
 logger = logging.getLogger(__name__)
 
