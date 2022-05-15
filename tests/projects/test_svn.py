@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-from libvcs.utils.run import which
+from libvcs._internal.run import which
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.svn import SubversionProject
 from libvcs.shortcuts import create_project_from_pip_url

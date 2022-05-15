@@ -3,7 +3,7 @@ import shlex
 from typing import Any, Literal, Optional, Sequence, Union
 
 from ..types import StrOrBytesPath, StrPath
-from libvcs.utils.run import run
+from libvcs._internal.run import run
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 

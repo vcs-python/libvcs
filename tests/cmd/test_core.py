@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from libvcs.utils.run import mkdir_p, which
+from libvcs._internal.run import mkdir_p, which
 
 
 def test_mkdir_p(tmp_path: pathlib.Path):

@@ -1,7 +1,7 @@
-# `libvcs.utils.subprocess`
+# `libvcs._internal.subprocess`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.utils.subprocess
+.. autoapimodule:: libvcs._internal.subprocess
    :members:
    :exclude-members:
      StrOrBytesPath, F, args, bufsize,

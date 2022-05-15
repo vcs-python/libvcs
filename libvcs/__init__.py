@@ -1,7 +1,7 @@
 """Project package for libvcs."""
 import logging
 
-from .utils.run import CmdLoggingAdapter
+from ._internal.run import CmdLoggingAdapter
 from .projects.base import BaseProject
 from .projects.git import GitProject
 from .projects.hg import MercurialProject
