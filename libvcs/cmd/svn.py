@@ -2,7 +2,7 @@ import pathlib
 from typing import Literal, Optional, Sequence, Union
 
 from ..types import StrOrBytesPath, StrPath
-from .core import run
+from libvcs.utils.run import run
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
