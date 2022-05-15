@@ -1,3 +1,9 @@
+""":mod:`dataclasses` utilities.
+
+Note
+----
+This is an internal API not covered by versioning policy.
+"""
 import dataclasses
 from operator import attrgetter
 

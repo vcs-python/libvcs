@@ -1,4 +1,11 @@
-"""Utility functions for libvcs."""
+"""Misc. legacy helpers :mod:`subprocess` and finding VCS binaries.
+
+:class:`libvcs.utils.run.run` will be deprecated by :mod:`libvcs.utils.subprocess`.
+
+Note
+----
+This is an internal API not covered by versioning policy.
+"""
 import datetime
 import errno
 import logging

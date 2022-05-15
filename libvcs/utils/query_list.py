@@ -1,3 +1,9 @@
+"""Utilities for filtering or searching :class:`list` of objects / list data.
+
+Note
+----
+This is an internal API not covered by versioning policy.
+"""
 import re
 import traceback
 from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar, Union

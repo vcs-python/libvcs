@@ -1,6 +1,13 @@
-"""Invokable subprocess wrapper.
+"""Invokable :mod:`subprocess` wrapper.
 
 Defer running a subprocess, such as by handing to an executor.
+
+Note
+----
+This is an internal API not covered by versioning policy.
+
+Examples
+--------
 
 - :class:`~SubprocessCommand`: Wraps :class:`subprocess.Popen` and
   :func:`subprocess.run` in a :func:`~dataclasses.dataclass`.
