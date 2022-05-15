@@ -117,7 +117,7 @@ class Git:
         Examples
         --------
         >>> git = Git(dir=tmp_path)
-        >>> git.run(['help'])  # doctest: +NORMALIZE_WHITESPACE
+        >>> git.run(['help'])
         "usage: git [--version] [--help] [-C <path>]..."
         """
 
