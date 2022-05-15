@@ -10,7 +10,7 @@ import pytest
 
 from faker import Faker
 
-from libvcs.cmd.core import run, which
+from libvcs.utils.run import run, which
 from libvcs.projects.git import GitProject, GitRemoteDict
 
 skip_if_git_missing = pytest.mark.skipif(

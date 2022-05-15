@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from libvcs.cmd.core import which
+from libvcs.utils.run import which
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 
 
