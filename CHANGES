@@ -23,7 +23,7 @@ $ pip install --user --upgrade --pre libvcs
 - {issue}`345` `libvcs.utils` -> `libvcs._internal` to make it more obvious the APIs are strictly
   closed.
 - `StrOrPath` -> `StrPath`
-- {issue}`#336`: {class}`~libvcs._internal.subprocess.SubprocessCommand`: Encapsulated
+- {issue}`336`: {class}`~libvcs._internal.subprocess.SubprocessCommand`: Encapsulated
   {mod}`subprocess` call in a {func}`dataclasses.dataclass` for introspecting, modifying, mocking
   and controlling execution.
 - Dataclass helper: {class}`~libvcs._internal.dataclasses.SkipDefaultFieldsReprMixin`
