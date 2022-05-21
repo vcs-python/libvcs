@@ -2,8 +2,9 @@ import pathlib
 import shlex
 from typing import Any, Literal, Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrPath
 from libvcs._internal.run import run
+
+from ..types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
