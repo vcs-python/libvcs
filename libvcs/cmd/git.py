@@ -36,6 +36,7 @@ class Git:
     def run(
         self,
         args: _CMD,
+        /,
         # Print-and-exit flags
         version: Optional[bool] = None,
         help: Optional[bool] = None,
