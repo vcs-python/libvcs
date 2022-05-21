@@ -1013,3 +1013,86 @@ class Git:
         return self.run(
             ["init", *local_flags, "--", *required_flags], check_returncode=False
         )
+
+    def help(
+        self,
+        all: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        no_external_commands: Optional[bool] = None,
+        no_aliases: Optional[bool] = None,
+        config: Optional[str] = None,
+        guides: Optional[str] = None,
+        info: Optional[str] = None,
+        man: Optional[str] = None,
+        web: Optional[str] = None,
+        **kwargs,
+    ):
+        """Help info. Wraps `git help <https://git-scm.com/docs/git-help>`_.
+
+        Parameters
+        ----------
+        all : bool
+            Prints everything.
+
+        no_external_commands : bool
+            For use with ``all``, excludes external commands.
+
+        no_aliases : bool
+            For use with ``all``, excludes aliases.
+
+        verbose : bool
+            For us with ``all``, on by default.
+
+        config : bool
+            List all config vars.
+
+        guides : bool
+            List concept guides.
+
+        info : bool
+            Display man page in info format.
+
+        man : bool
+            Man page.
+
+        web : bool
+            Man page in HTML.
+
+        Examples
+        --------
+        >>> git = Git(dir=tmp_path)
+
+        >>> git.help()
+        "usage: git [--version] [--help] [-C <path>]..."
+
+        >>> git.help(all=True)
+        "See 'git help <command>' to read about a specific subcommand..."
+
+        >>> git.help(info=True)
+        "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]..."
+
+        >>> git.help(man=True)
+        "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]..."
+        """
+        local_flags: list[str] = []
+
+        if verbose is True:
+            local_flags.append("--verbose")
+        if all is True:
+            local_flags.append("--all")
+        if no_external_commands is True:
+            local_flags.append("--no-external-commands")
+        if no_aliases is True:
+            local_flags.append("--no-aliases")
+        if config is True:
+            local_flags.append("--config")
+        if guides is True:
+            local_flags.append("--guides")
+        if info is True:
+            local_flags.append("--info")
+        if man is True:
+            local_flags.append("--man")
+        if web is True:
+            local_flags.append("--web")
+
+        return self.run(["help", *local_flags], check_returncode=False)
