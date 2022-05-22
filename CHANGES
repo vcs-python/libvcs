@@ -27,6 +27,7 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.git.Git.help`
     - {meth}`libvcs.cmd.git.Git.reset`
     - {meth}`libvcs.cmd.git.Git.checkout`
+    - {meth}`libvcs.cmd.git.Git.status`
 
 ### Internals
 
