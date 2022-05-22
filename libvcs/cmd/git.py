@@ -2,8 +2,9 @@ import pathlib
 import shlex
 from typing import Any, Literal, Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrPath
 from libvcs._internal.run import run
+
+from ..types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -35,6 +36,7 @@ class Git:
     def run(
         self,
         args: _CMD,
+        /,
         # Print-and-exit flags
         version: Optional[bool] = None,
         help: Optional[bool] = None,
@@ -1010,4 +1012,432 @@ class Git:
 
         return self.run(
             ["init", *local_flags, "--", *required_flags], check_returncode=False
+        )
+
+    def help(
+        self,
+        all: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        no_external_commands: Optional[bool] = None,
+        no_aliases: Optional[bool] = None,
+        config: Optional[str] = None,
+        guides: Optional[str] = None,
+        info: Optional[str] = None,
+        man: Optional[str] = None,
+        web: Optional[str] = None,
+        **kwargs,
+    ):
+        """Help info. Wraps `git help <https://git-scm.com/docs/git-help>`_.
+
+        Parameters
+        ----------
+        all : bool
+            Prints everything.
+
+        no_external_commands : bool
+            For use with ``all``, excludes external commands.
+
+        no_aliases : bool
+            For use with ``all``, excludes aliases.
+
+        verbose : bool
+            For us with ``all``, on by default.
+
+        config : bool
+            List all config vars.
+
+        guides : bool
+            List concept guides.
+
+        info : bool
+            Display man page in info format.
+
+        man : bool
+            Man page.
+
+        web : bool
+            Man page in HTML.
+
+        Examples
+        --------
+        >>> git = Git(dir=tmp_path)
+
+        >>> git.help()
+        "usage: git [--version] [--help] [-C <path>]..."
+
+        >>> git.help(all=True)
+        "See 'git help <command>' to read about a specific subcommand..."
+
+        >>> git.help(info=True)
+        "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]..."
+
+        >>> git.help(man=True)
+        "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]..."
+        """
+        local_flags: list[str] = []
+
+        if verbose is True:
+            local_flags.append("--verbose")
+        if all is True:
+            local_flags.append("--all")
+        if no_external_commands is True:
+            local_flags.append("--no-external-commands")
+        if no_aliases is True:
+            local_flags.append("--no-aliases")
+        if config is True:
+            local_flags.append("--config")
+        if guides is True:
+            local_flags.append("--guides")
+        if info is True:
+            local_flags.append("--info")
+        if man is True:
+            local_flags.append("--man")
+        if web is True:
+            local_flags.append("--web")
+
+        return self.run(["help", *local_flags], check_returncode=False)
+
+    def reset(
+        self,
+        quiet: Optional[bool] = None,
+        refresh: Optional[bool] = None,
+        no_refresh: Optional[bool] = None,
+        pathspec_from_file: Optional[StrOrBytesPath] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        soft: Optional[bool] = None,
+        mixed: Optional[bool] = None,
+        hard: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        keep: Optional[bool] = None,
+        commit: Optional[str] = None,
+        recurse_submodules: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        **kwargs,
+    ):
+        """Reset HEAD. Wraps `git help <https://git-scm.com/docs/git-help>`_.
+
+        Parameters
+        ----------
+        quiet : bool
+        no_refresh : bool
+        refresh : bool
+        pathspec_from_file : :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec_file_nul : bool
+        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
+            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        soft : bool
+        mixed : bool
+        hard : bool
+        merge : bool
+        keep : bool
+        commit : str
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.reset()
+        ''
+
+        >>> git.reset(soft=True, commit='HEAD~1')
+        ''
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if no_refresh is True:
+            local_flags.append("--no-refresh")
+        if refresh is True:
+            local_flags.append("--refresh")
+        if pathspec_from_file is True:
+            local_flags.append(f"--pathspec_from_file {pathspec_from_file}")
+
+        # HEAD to commit form
+        if soft is True:
+            local_flags.append("--soft")
+
+        if mixed is True:
+            local_flags.append("--mixed")
+
+        if hard is True:
+            local_flags.append("--hard")
+
+        if merge is True:
+            local_flags.append("--merge")
+
+        if keep is True:
+            local_flags.append("--keep")
+
+        if commit is True:
+            local_flags.append(f"{commit}")
+
+        if recurse_submodules:
+            local_flags.append("--recurse-submodules")
+        elif no_recurse_submodules:
+            local_flags.append("--no-recurse-submodules")
+
+        if pathspec is not None:
+            if not isinstance(pathspec, list):
+                pathspec = [pathspec]
+        else:
+            pathspec = []
+
+        return self.run(
+            ["reset", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            check_returncode=False,
+        )
+
+    def checkout(
+        self,
+        quiet: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        no_progress: Optional[bool] = None,
+        pathspec_from_file: Optional[StrOrBytesPath] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        force: Optional[bool] = None,
+        ours: Optional[bool] = None,
+        theirs: Optional[bool] = None,
+        no_track: Optional[bool] = None,
+        guess: Optional[bool] = None,
+        no_guess: Optional[bool] = None,
+        _list: Optional[bool] = None,
+        detach: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        ignore_skip_worktree_bits: Optional[bool] = None,
+        patch: Optional[bool] = None,
+        orphan: Optional[str] = None,
+        conflict: Optional[str] = None,
+        overwrite_ignore: Optional[bool] = None,
+        no_overwrite_ignore: Optional[bool] = None,
+        recurse_submodules: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        overlay: Optional[bool] = None,
+        no_overlay: Optional[bool] = None,
+        commit: Optional[str] = None,
+        branch: Optional[str] = None,
+        new_branch: Optional[str] = None,
+        start_point: Optional[str] = None,
+        treeish: Optional[str] = None,
+        **kwargs,
+    ):
+        """Switches branches or checks out files. Wraps
+        `git checkout <https://git-scm.com/docs/git-checkout>`_ (`git co`).
+
+        Parameters
+        ----------
+        quiet : bool
+        progress : bool
+        no_progress : bool
+        pathspec_from_file : :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
+            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        force : bool
+        ours : bool
+        theirs : bool
+        no_track : bool
+        guess : bool
+        no_guess : bool
+        ignore_skip_worktree_bits : bool
+        merge : bool
+        _list : bool
+        detach : bool
+        patch : bool
+        orphan : bool
+        conflict : str
+        overwrite_ignore : bool
+        no_overwrite_ignore : bool
+        commit : str
+        branch : str
+        new_branch : str
+        start_point : str
+        treeish : str
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.checkout()
+        "Your branch is up to date with 'origin/master'."
+
+        >>> git.checkout(branch='origin/master', pathspec='.')
+        ''
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if progress is True:
+            local_flags.append("--progress")
+        elif no_progress is True:
+            local_flags.append("--no-progress")
+
+        if force is True:
+            local_flags.append("--force")
+
+        if ours is True:
+            local_flags.append("--ours")
+
+        if theirs is True:
+            local_flags.append("--theirs")
+
+        if detach is True:
+            local_flags.append("--detach")
+
+        if orphan is True:
+            local_flags.append("--orphan")
+
+        if conflict is True:
+            local_flags.append(f"--conflict={conflict}")
+
+        if commit is True:
+            local_flags.append(f"{commit}")
+
+        if branch is True:
+            local_flags.append(f"{branch}")
+
+        if new_branch is True:
+            local_flags.append(f"{new_branch}")
+
+        if start_point is True:
+            local_flags.append(f"{start_point}")
+
+        if treeish is True:
+            local_flags.append(f"{treeish}")
+
+        if recurse_submodules:
+            local_flags.append("--recurse-submodules")
+        elif no_recurse_submodules:
+            local_flags.append("--no-recurse-submodules")
+
+        if pathspec is not None:
+            if not isinstance(pathspec, list):
+                pathspec = [pathspec]
+        else:
+            pathspec = []
+
+        return self.run(
+            ["checkout", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            check_returncode=False,
+        )
+
+    def status(
+        self,
+        verbose: Optional[bool] = None,
+        long: Optional[bool] = None,
+        short: Optional[bool] = None,
+        branch: Optional[bool] = None,
+        z: Optional[bool] = None,
+        column: Optional[Union[bool, str]] = None,
+        no_column: Optional[bool] = None,
+        ahead_behind: Optional[bool] = None,
+        no_ahead_behind: Optional[bool] = None,
+        renames: Optional[bool] = None,
+        no_renames: Optional[bool] = None,
+        find_renames: Optional[Union[bool, str]] = None,
+        porcelain: Optional[Union[bool, str]] = None,
+        untracked_files: Optional[Literal["no", "normal", "all"]] = None,
+        ignored: Optional[Literal["traditional", "no", "matching"]] = None,
+        ignored_submodules: Optional[Literal["untracked", "dirty", "all"]] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        **kwargs,
+    ):
+        """Status of working tree. Wraps
+        `git status <https://git-scm.com/docs/git-status>`_.
+
+        `git ls-files` has similar params (e.g. `z`)
+
+        Parameters
+        ----------
+        verbose : bool
+        long : bool
+        short : bool
+        branch : bool
+        z : bool
+        column : bool
+        no_column : bool
+        ahead_behind : bool
+        no_ahead_behind : bool
+        find_renames : bool
+        no_find_renames : bool
+        porcelain : str, bool
+        untracked_files : "no", "normal", "all"
+        ignored : "traditional", "no", "matching"
+        ignored_submodules : "untracked", "dirty", "all"
+        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
+            :attr:`libvcs.cmd.types.StrOrBytesPath`
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.status()
+        "On branch master..."
+
+        >>> pathlib.Path(git_local_clone.dir / 'new_file.txt').touch()
+
+        >>> git.status(porcelain=True)
+        '?? new_file.txt'
+
+        >>> git.status(porcelain='1')
+        '?? new_file.txt'
+
+        >>> git.status(porcelain='2')
+        '? new_file.txt'
+        """
+        local_flags: list[str] = []
+
+        if verbose is True:
+            local_flags.append("--verbose")
+
+        if long is True:
+            local_flags.append("--long")
+
+        if short is True:
+            local_flags.append("--short")
+
+        if branch is True:
+            local_flags.append("--branch")
+
+        if z is True:
+            local_flags.append("--z")
+
+        if untracked_files is not None and isinstance(untracked_files, str):
+            local_flags.append(f"--untracked-files={untracked_files}")
+
+        if ignored is not None and isinstance(column, str):
+            local_flags.append(f"--ignored={ignored}")
+
+        if ignored_submodules is not None:
+            if isinstance(column, str):
+                local_flags.append(f"--ignored-submodules={ignored_submodules}")
+            else:
+                local_flags.append("--ignored-submodules")
+
+        if column is not None:
+            if isinstance(column, str):
+                local_flags.append(f"--column={column}")
+            else:
+                local_flags.append("--column")
+        elif no_column is not None:
+            local_flags.append("--no-column")
+
+        if porcelain is not None:
+            if isinstance(porcelain, str):
+                local_flags.append(f"--porcelain={porcelain}")
+            else:
+                local_flags.append("--porcelain")
+
+        if find_renames is True:
+            local_flags.append(f"--find-renames={find_renames}")
+
+        if pathspec is not None:
+            if not isinstance(pathspec, list):
+                pathspec = [pathspec]
+        else:
+            pathspec = []
+
+        return self.run(
+            ["status", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            check_returncode=False,
         )

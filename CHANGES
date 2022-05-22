@@ -18,6 +18,17 @@ $ pip install --user --upgrade --pre libvcs
 - {issue}`343`: `libvcs.cmd.core` (including {func}`~libvcs._internal.run.run`) have been moved to
   `libvcs._internal.run`. It will be supported as an unstable, internal API.
 
+### What's new
+
+- **Commands**: Experimental command wrappers added ({issue}`346`):
+
+  - {class}`libvcs.cmd.git.Git`
+
+    - {meth}`libvcs.cmd.git.Git.help`
+    - {meth}`libvcs.cmd.git.Git.reset`
+    - {meth}`libvcs.cmd.git.Git.checkout`
+    - {meth}`libvcs.cmd.git.Git.status`
+
 ### Internals
 
 - {issue}`345` `libvcs.utils` -> `libvcs._internal` to make it more obvious the APIs are strictly
