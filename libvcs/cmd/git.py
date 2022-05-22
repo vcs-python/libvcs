@@ -1320,3 +1320,124 @@ class Git:
             ["checkout", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
             check_returncode=False,
         )
+
+    def status(
+        self,
+        verbose: Optional[bool] = None,
+        long: Optional[bool] = None,
+        short: Optional[bool] = None,
+        branch: Optional[bool] = None,
+        z: Optional[bool] = None,
+        column: Optional[Union[bool, str]] = None,
+        no_column: Optional[bool] = None,
+        ahead_behind: Optional[bool] = None,
+        no_ahead_behind: Optional[bool] = None,
+        renames: Optional[bool] = None,
+        no_renames: Optional[bool] = None,
+        find_renames: Optional[Union[bool, str]] = None,
+        porcelain: Optional[Union[bool, str]] = None,
+        untracked_files: Optional[Literal["no", "normal", "all"]] = None,
+        ignored: Optional[Literal["traditional", "no", "matching"]] = None,
+        ignored_submodules: Optional[Literal["untracked", "dirty", "all"]] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        **kwargs,
+    ):
+        """Status of working tree. Wraps
+        `git status <https://git-scm.com/docs/git-status>`_.
+
+        `git ls-files` has similar params (e.g. `z`)
+
+        Parameters
+        ----------
+        verbose : bool
+        long : bool
+        short : bool
+        branch : bool
+        z : bool
+        column : bool
+        no_column : bool
+        ahead_behind : bool
+        no_ahead_behind : bool
+        find_renames : bool
+        no_find_renames : bool
+        porcelain : str, bool
+        untracked_files : "no", "normal", "all"
+        ignored : "traditional", "no", "matching"
+        ignored_submodules : "untracked", "dirty", "all"
+        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
+            :attr:`libvcs.cmd.types.StrOrBytesPath`
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.status()
+        "On branch master..."
+
+        >>> pathlib.Path(git_local_clone.dir / 'new_file.txt').touch()
+
+        >>> git.status(porcelain=True)
+        '?? new_file.txt'
+
+        >>> git.status(porcelain='1')
+        '?? new_file.txt'
+
+        >>> git.status(porcelain='2')
+        '? new_file.txt'
+        """
+        local_flags: list[str] = []
+
+        if verbose is True:
+            local_flags.append("--verbose")
+
+        if long is True:
+            local_flags.append("--long")
+
+        if short is True:
+            local_flags.append("--short")
+
+        if branch is True:
+            local_flags.append("--branch")
+
+        if z is True:
+            local_flags.append("--z")
+
+        if untracked_files is not None and isinstance(untracked_files, str):
+            local_flags.append(f"--untracked-files={untracked_files}")
+
+        if ignored is not None and isinstance(column, str):
+            local_flags.append(f"--ignored={ignored}")
+
+        if ignored_submodules is not None:
+            if isinstance(column, str):
+                local_flags.append(f"--ignored-submodules={ignored_submodules}")
+            else:
+                local_flags.append("--ignored-submodules")
+
+        if column is not None:
+            if isinstance(column, str):
+                local_flags.append(f"--column={column}")
+            else:
+                local_flags.append("--column")
+        elif no_column is not None:
+            local_flags.append("--no-column")
+
+        if porcelain is not None:
+            if isinstance(porcelain, str):
+                local_flags.append(f"--porcelain={porcelain}")
+            else:
+                local_flags.append("--porcelain")
+
+        if find_renames is True:
+            local_flags.append(f"--find-renames={find_renames}")
+
+        if pathspec is not None:
+            if not isinstance(pathspec, list):
+                pathspec = [pathspec]
+        else:
+            pathspec = []
+
+        return self.run(
+            ["status", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            check_returncode=False,
+        )
