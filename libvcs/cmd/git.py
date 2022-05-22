@@ -1187,3 +1187,136 @@ class Git:
             ["reset", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
             check_returncode=False,
         )
+
+    def checkout(
+        self,
+        quiet: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        no_progress: Optional[bool] = None,
+        pathspec_from_file: Optional[StrOrBytesPath] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        force: Optional[bool] = None,
+        ours: Optional[bool] = None,
+        theirs: Optional[bool] = None,
+        no_track: Optional[bool] = None,
+        guess: Optional[bool] = None,
+        no_guess: Optional[bool] = None,
+        _list: Optional[bool] = None,
+        detach: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        ignore_skip_worktree_bits: Optional[bool] = None,
+        patch: Optional[bool] = None,
+        orphan: Optional[str] = None,
+        conflict: Optional[str] = None,
+        overwrite_ignore: Optional[bool] = None,
+        no_overwrite_ignore: Optional[bool] = None,
+        recurse_submodules: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        overlay: Optional[bool] = None,
+        no_overlay: Optional[bool] = None,
+        commit: Optional[str] = None,
+        branch: Optional[str] = None,
+        new_branch: Optional[str] = None,
+        start_point: Optional[str] = None,
+        treeish: Optional[str] = None,
+        **kwargs,
+    ):
+        """Switches branches or checks out files. Wraps
+        `git checkout <https://git-scm.com/docs/git-checkout>`_ (`git co`).
+
+        Parameters
+        ----------
+        quiet : bool
+        progress : bool
+        no_progress : bool
+        pathspec_from_file : :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
+            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        force : bool
+        ours : bool
+        theirs : bool
+        no_track : bool
+        guess : bool
+        no_guess : bool
+        ignore_skip_worktree_bits : bool
+        merge : bool
+        _list : bool
+        detach : bool
+        patch : bool
+        orphan : bool
+        conflict : str
+        overwrite_ignore : bool
+        no_overwrite_ignore : bool
+        commit : str
+        branch : str
+        new_branch : str
+        start_point : str
+        treeish : str
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.checkout()
+        "Your branch is up to date with 'origin/master'."
+
+        >>> git.checkout(branch='origin/master', pathspec='.')
+        ''
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if progress is True:
+            local_flags.append("--progress")
+        elif no_progress is True:
+            local_flags.append("--no-progress")
+
+        if force is True:
+            local_flags.append("--force")
+
+        if ours is True:
+            local_flags.append("--ours")
+
+        if theirs is True:
+            local_flags.append("--theirs")
+
+        if detach is True:
+            local_flags.append("--detach")
+
+        if orphan is True:
+            local_flags.append("--orphan")
+
+        if conflict is True:
+            local_flags.append(f"--conflict={conflict}")
+
+        if commit is True:
+            local_flags.append(f"{commit}")
+
+        if branch is True:
+            local_flags.append(f"{branch}")
+
+        if new_branch is True:
+            local_flags.append(f"{new_branch}")
+
+        if start_point is True:
+            local_flags.append(f"{start_point}")
+
+        if treeish is True:
+            local_flags.append(f"{treeish}")
+
+        if recurse_submodules:
+            local_flags.append("--recurse-submodules")
+        elif no_recurse_submodules:
+            local_flags.append("--no-recurse-submodules")
+
+        if pathspec is not None:
+            if not isinstance(pathspec, list):
+                pathspec = [pathspec]
+        else:
+            pathspec = []
+
+        return self.run(
+            ["checkout", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            check_returncode=False,
+        )
