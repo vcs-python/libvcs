@@ -1096,3 +1096,94 @@ class Git:
             local_flags.append("--web")
 
         return self.run(["help", *local_flags], check_returncode=False)
+
+    def reset(
+        self,
+        quiet: Optional[bool] = None,
+        refresh: Optional[bool] = None,
+        no_refresh: Optional[bool] = None,
+        pathspec_from_file: Optional[StrOrBytesPath] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        soft: Optional[bool] = None,
+        mixed: Optional[bool] = None,
+        hard: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        keep: Optional[bool] = None,
+        commit: Optional[str] = None,
+        recurse_submodules: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        **kwargs,
+    ):
+        """Reset HEAD. Wraps `git help <https://git-scm.com/docs/git-help>`_.
+
+        Parameters
+        ----------
+        quiet : bool
+        no_refresh : bool
+        refresh : bool
+        pathspec_from_file : :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec_file_nul : bool
+        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
+            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        soft : bool
+        mixed : bool
+        hard : bool
+        merge : bool
+        keep : bool
+        commit : str
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.reset()
+        ''
+
+        >>> git.reset(soft=True, commit='HEAD~1')
+        ''
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if no_refresh is True:
+            local_flags.append("--no-refresh")
+        if refresh is True:
+            local_flags.append("--refresh")
+        if pathspec_from_file is True:
+            local_flags.append(f"--pathspec_from_file {pathspec_from_file}")
+
+        # HEAD to commit form
+        if soft is True:
+            local_flags.append("--soft")
+
+        if mixed is True:
+            local_flags.append("--mixed")
+
+        if hard is True:
+            local_flags.append("--hard")
+
+        if merge is True:
+            local_flags.append("--merge")
+
+        if keep is True:
+            local_flags.append("--keep")
+
+        if commit is True:
+            local_flags.append(f"{commit}")
+
+        if recurse_submodules:
+            local_flags.append("--recurse-submodules")
+        elif no_recurse_submodules:
+            local_flags.append("--no-recurse-submodules")
+
+        if pathspec is not None:
+            if not isinstance(pathspec, list):
+                pathspec = [pathspec]
+        else:
+            pathspec = []
+
+        return self.run(
+            ["reset", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            check_returncode=False,
+        )
