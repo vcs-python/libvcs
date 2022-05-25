@@ -62,6 +62,8 @@ def gitconfig(user_path: pathlib.Path):
   [user]
     email = {user_email}
     name = {getpass.getuser()}
+  [color]
+    diff = auto
     """
         ),
         encoding="utf-8",
