@@ -1441,3 +1441,188 @@ class Git:
             ["status", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
             check_returncode=False,
         )
+
+    def config(
+        self,
+        replace_all: Optional[bool] = None,
+        get: Optional[str] = None,
+        get_all: Optional[bool] = None,
+        get_regexp: Optional[str] = None,
+        get_urlmatch: Optional[tuple[str, str]] = None,
+        system: Optional[bool] = None,
+        local: Optional[bool] = None,
+        worktree: Optional[bool] = None,
+        file: Optional[StrOrBytesPath] = None,
+        blob: Optional[str] = None,
+        remove_section: Optional[bool] = None,
+        rename_section: Optional[bool] = None,
+        unset: Optional[bool] = None,
+        unset_all: Optional[bool] = None,
+        _list: Optional[bool] = None,
+        fixed_value: Optional[bool] = None,
+        no_type: Optional[bool] = None,
+        null: Optional[bool] = None,
+        name_only: Optional[bool] = None,
+        show_origin: Optional[bool] = None,
+        show_scope: Optional[bool] = None,
+        get_color: Optional[Union[str, bool]] = None,
+        get_colorbool: Optional[Union[str, bool]] = None,
+        default: Optional[str] = None,
+        _type: Optional[
+            Literal["bool", "int", "bool-or-int", "path", "expiry-date", "color"]
+        ] = None,
+        edit: Optional[bool] = None,
+        no_includes: Optional[bool] = None,
+        includes: Optional[bool] = None,
+        add: Optional[bool] = None,
+        **kwargs,
+    ):
+        """Status of working tree. Wraps
+        `git status <https://git-scm.com/docs/git-status>`_.
+
+        `git ls-files` has similar params (e.g. `z`)
+
+        Parameters
+        ----------
+        replace_all : Optional[bool]
+        get : Optional[bool]
+        get_all : Optional[bool]
+        get_regexp : Optional[bool]
+        get_urlmatch : Optional[tuple[str, str]]
+        system : Optional[bool]
+        local : Optional[bool]
+        worktree : Optional[bool]
+        file : Optional[StrOrBytesPath]
+        blob : Optional[str]
+        remove_section : Optional[bool]
+        rename_section : Optional[bool]
+        unset : Optional[bool]
+        unset_all : Optional[bool]
+        _list : Optional[bool]
+        fixed_value : Optional[bool]
+        no_type : Optional[bool]
+        null : Optional[bool]
+        name_only : Optional[bool]
+        show_origin : Optional[bool]
+        show_scope : Optional[bool]
+        get_color : Optional[Union[str, bool]]
+        get_colorbool : Optional[Union[str, bool]]
+        default : Optional[str]
+        _type : "bool", "int", "bool-or-int", "path", "expiry-date", "color"
+        edit : Optional[bool]
+        no_includes : Optional[bool]
+        includes : Optional[bool]
+        add : Optional[bool]
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.config()
+        'usage: git config ...'
+
+        >>> git.config(_list=True)
+        '...user.email=...'
+
+        >>> git.config(get='color.diff')
+        'auto'
+        """
+        local_flags: list[str] = []
+
+        if replace_all is True:
+            local_flags.append("--replace-all")
+
+        if get is not None and isinstance(get, str):
+            local_flags.extend(["--get", get])
+
+        if get_regexp is not None and isinstance(get_regexp, str):
+            local_flags.extend(["--get-regexp", get_regexp])
+
+        if get_all is not None and isinstance(get_all, str):
+            local_flags.extend(["--get-all", get_all])
+
+        if get_urlmatch is not None and isinstance(get_urlmatch, tuple):
+            local_flags.extend(["--get-urlmatch=", *get_urlmatch])
+
+        if unset is not None and isinstance(unset, str):
+            local_flags.extend(["--unset", unset])
+
+        if unset_all is not None and isinstance(unset_all, str):
+            local_flags.extend(["--unset-all", unset_all])
+
+        if _list is True:
+            local_flags.append("--list")
+
+        if fixed_value is True:
+            local_flags.append("--fixed-value")
+
+        if no_type is True:
+            local_flags.append("--no-type")
+
+        if null is True:
+            local_flags.append("--null")
+
+        if name_only is True:
+            local_flags.append("--name-only")
+
+        if show_origin is True:
+            local_flags.append("--show-origin")
+
+        if show_scope is True:
+            local_flags.append("--show-scope")
+
+        if edit is True:
+            local_flags.append("--edit")
+
+        if system is True:
+            local_flags.append("--system")
+
+        if local is True:
+            local_flags.append("--local")
+
+        if worktree is True:
+            local_flags.append("--worktree")
+
+        if remove_section is True:
+            local_flags.append("--remove-section")
+
+        if rename_section is True:
+            local_flags.append("--rename-section")
+
+        if _type is not None and isinstance(_type, str):
+            local_flags.extend(["--type", _type])
+
+        if blob is not None and isinstance(blob, str):
+            local_flags.extend(["--blob", blob])
+
+        if file is not None:
+            local_flags.extend(["--file", str(file)])
+
+        if default is True:
+            local_flags.append("--default")
+
+        if includes is True:
+            local_flags.append("--includes")
+
+        if no_includes is True:
+            local_flags.append("--no-includes")
+
+        if add is True:
+            local_flags.append("--add")
+
+        if get_colorbool is not None:
+            if isinstance(get_colorbool, str):
+                local_flags.extend(["--get-colorbool", get_colorbool])
+            else:
+                local_flags.append("--get-colorbool")
+
+        if get_color is not None:
+            if isinstance(get_color, str):
+                local_flags.extend(["--get-color", get_color])
+            else:
+                local_flags.append("--get-color")
+
+        return self.run(
+            ["config", *local_flags],
+            check_returncode=False,
+        )
