@@ -44,6 +44,7 @@ class Git:
         man_path: Optional[bool] = None,
         info_path: Optional[bool] = None,
         # Normal flags
+        C: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
         cwd: Optional[StrOrBytesPath] = None,
         git_dir: Optional[StrOrBytesPath] = None,
         work_tree: Optional[StrOrBytesPath] = None,
@@ -71,8 +72,10 @@ class Git:
 
         Parameters
         ----------
-        cwd : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
-            ``-C <path>``, Defaults to :attr:`~.cwd`
+        cwd : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional, passed to subprocess's
+            ``cwd`` the command runs from. Defaults to :attr:`~.cwd`.
+        C : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+            ``-C <path>``
         git_dir : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
             ``--git-dir <path>``
         work_tree : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
@@ -148,8 +151,11 @@ class Git:
         #
         # Flags
         #
-        if cwd is not None:
-            cli_args.append(f"-C {cwd}")
+        if C is not None:
+            if not isinstance(C, list):
+                C = [C]
+            C = [str(c) for c in C]
+            cli_args.extend(["-C", C])
         if git_dir is not None:
             cli_args.append(f"--git-dir {git_dir}")
         if work_tree is not None:
@@ -1383,6 +1389,9 @@ class Git:
         '?? new_file.txt'
 
         >>> git.status(porcelain='2')
+        '? new_file.txt'
+
+        >>> git.status(C=git_local_clone.dir / '.git', porcelain='2')
         '? new_file.txt'
         """
         local_flags: list[str] = []
