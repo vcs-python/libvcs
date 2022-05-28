@@ -61,6 +61,13 @@ $ pip install --user --upgrade --pre libvcs
 
 - Update description and keywords
 
+## libvcs 0.12.3 (2022-05-28)
+
+### Bug fixes
+
+- _Backport from 0.13.x_. Fix argument input for git commands, e.g. `git config --get color.diff`
+  would not properly pass-through to subprocess. {issue}`360`
+
 ## libvcs 0.12.2 (2022-05-10)
 
 ### Packaging
