@@ -150,6 +150,8 @@ def run(
     log_in_real_time: bool = True,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
+    *args,
+    **kwargs
 ):
     """Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
@@ -192,6 +194,8 @@ def run(
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         cwd=cwd,
+        *args,
+        **kwargs
     )
 
     all_output = []
