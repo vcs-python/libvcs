@@ -22,6 +22,7 @@ import typing
 from typing import Dict, Literal, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
+from libvcs.cmd.git import Git
 from libvcs.types import StrPath
 
 from .. import exc
@@ -313,24 +314,26 @@ class GitProject(BaseProject):
 
     def obtain(self, *args, **kwargs):
         """Retrieve the repository, clone if doesn't exist."""
-        self.ensure_dir()
+        clone_kwargs = {}
 
-        url = self.url
-
-        cmd = ["clone", "--progress"]
         if self.git_shallow:
-            cmd.extend(["--depth", "1"])
+            clone_kwargs["depth"] = 1
         if self.tls_verify:
-            cmd.extend(["-c", "http.sslVerify=false"])
-        cmd.extend([url, self.dir])
+            clone_kwargs["c"] = "http.sslVerify=false"
 
         self.log.info("Cloning.")
-        self.run(cmd, log_in_real_time=True)
+
+        git = Git(dir=self.dir)
+
+        # Needs to log to std out, e.g. log_in_real_time
+        git.clone(url=self.url, progress=True, make_parents=True, **clone_kwargs)
 
         self.log.info("Initializing submodules.")
+
         self.run(["submodule", "init"], log_in_real_time=True)
-        cmd = ["submodule", "update", "--recursive", "--init"]
-        self.run(cmd, log_in_real_time=True)
+        self.run(
+            ["submodule", "update", "--recursive", "--init"], log_in_real_time=True
+        )
 
         self.set_remotes(overwrite=True)
 
