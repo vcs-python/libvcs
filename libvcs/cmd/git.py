@@ -157,15 +157,15 @@ class Git:
             C = [str(c) for c in C]
             cli_args.extend(["-C", C])
         if git_dir is not None:
-            cli_args.append(f"--git-dir {git_dir}")
+            cli_args.extend(["--git-dir", str(git_dir)])
         if work_tree is not None:
-            cli_args.append(f"--work-tree {work_tree}")
+            cli_args.extend(["--work-tree", str(work_tree)])
         if namespace is not None:
-            cli_args.append(f"--namespace {namespace}")
+            cli_args.extend(["--namespace", namespace])
         if super_prefix is not None:
-            cli_args.append(f"--super-prefix {super_prefix}")
+            cli_args.extend(["--super-prefix", super_prefix])
         if exec_path is not None:
-            cli_args.append(f"--exec-path {exec_path}")
+            cli_args.extend(["--exec-path", exec_path])
         if bare is True:
             cli_args.append("--bare")
         if no_replace_objects is True:
@@ -253,25 +253,25 @@ class Git:
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
-            local_flags.append(f"--depth {depth}")
+            local_flags.extend(["--depth", depth])
         if branch is not None:
-            local_flags.append(f"--branch {branch}")
+            local_flags.extend(["--branch", branch])
         if origin is not None:
-            local_flags.append(f"--origin {origin}")
+            local_flags.extend(["--origin", origin])
         if upload_pack is not None:
-            local_flags.append(f"--upload-pack {upload_pack}")
+            local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
             local_flags.append(f"--shallow-since={shallow_since}")
         if shallow_exclude is not None:
             local_flags.append(f"--shallow-exclude={shallow_exclude}")
         if reference is not None:
-            local_flags.append(f"--reference {reference}")
+            local_flags.extend(["--reference", reference])
         if reference_if_able is not None:
-            local_flags.append(f"--reference {reference_if_able}")
+            local_flags.extend(["--reference", reference_if_able])
         if server_option is not None:
             local_flags.append(f"--server-option={server_option}")
         if jobs is not None:
-            local_flags.append(f"--jobs {jobs}")
+            local_flags.extend(["--jobs", jobs])
         if local is True:
             local_flags.append("--local")
         if hardlinks is True:
@@ -390,13 +390,13 @@ class Git:
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
-            local_flags.append(f"--depth {depth}")
+            local_flags.extend(["--depth", depth])
         if branch is not None:
-            local_flags.append(f"--branch {branch}")
+            local_flags.extend(["--branch", branch])
         if origin is not None:
-            local_flags.append(f"--origin {origin}")
+            local_flags.extend(["--origin", origin])
         if upload_pack is not None:
-            local_flags.append(f"--upload-pack {upload_pack}")
+            local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
             local_flags.append(f"--shallow-since={shallow_since}")
         if shallow_exclude is not None:
@@ -404,7 +404,7 @@ class Git:
         if server_option is not None:
             local_flags.append(f"--server-option={server_option}")
         if jobs is not None:
-            local_flags.append(f"--jobs {jobs}")
+            local_flags.extend(["--jobs", jobs])
         if keep:
             local_flags.append("--keep")
         if force:
@@ -556,12 +556,12 @@ class Git:
         if branch:
             required_flags.insert(0, branch)
         if onto:
-            local_flags.append(f"--onto {onto}")
+            local_flags.extend(["--onto", onto])
         if context:
-            local_flags.append(f"--C{context}")
+            local_flags.extend(["--C", context])
 
         if exec:
-            local_flags.append(f"--exec {shlex.quote(exec)}")
+            local_flags.extend(["--exec", shlex.quote(exec)])
         if reschedule_failed_exec:
             local_flags.append("--reschedule-failed-exec")
         if no_reschedule_failed_exec:
@@ -864,13 +864,13 @@ class Git:
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
-            local_flags.append(f"--depth {depth}")
+            local_flags.extend(["--depth", depth])
         if branch is not None:
-            local_flags.append(f"--branch {branch}")
+            local_flags.extend(["--branch", branch])
         if origin is not None:
-            local_flags.append(f"--origin {origin}")
+            local_flags.extend(["--origin", origin])
         if upload_pack is not None:
-            local_flags.append(f"--upload-pack {upload_pack}")
+            local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
             local_flags.append(f"--shallow-since={shallow_since}")
         if shallow_exclude is not None:
@@ -878,7 +878,7 @@ class Git:
         if server_option is not None:
             local_flags.append(f"--server-option={server_option}")
         if jobs is not None:
-            local_flags.append(f"--jobs {jobs}")
+            local_flags.extend(["--jobs", jobs])
         if keep:
             local_flags.append("--keep")
         if force:
@@ -1006,9 +1006,9 @@ class Git:
         if object_format is not None:
             local_flags.append(f"--object-format={object_format}")
         if branch is not None:
-            local_flags.append(f"--branch {branch}")
+            local_flags.extend(["--branch", branch])
         if initial_branch is not None:
-            local_flags.append(f"--initial-branch {initial_branch}")
+            local_flags.extend(["--initial-branch", initial_branch])
         if shared is True:
             local_flags.append("--shared")
         if quiet is True:
@@ -1156,7 +1156,7 @@ class Git:
             local_flags.append("--no-refresh")
         if refresh is True:
             local_flags.append("--refresh")
-        if pathspec_from_file is True:
+        if pathspec_from_file is not None:
             local_flags.append(f"--pathspec_from_file {pathspec_from_file}")
 
         # HEAD to commit form
@@ -1176,7 +1176,7 @@ class Git:
             local_flags.append("--keep")
 
         if commit is True:
-            local_flags.append(f"{commit}")
+            local_flags.append(commit)
 
         if recurse_submodules:
             local_flags.append("--recurse-submodules")
@@ -1297,19 +1297,19 @@ class Git:
             local_flags.append(f"--conflict={conflict}")
 
         if commit is True:
-            local_flags.append(f"{commit}")
+            local_flags.append(commit)
 
         if branch is True:
-            local_flags.append(f"{branch}")
+            local_flags.append(branch)
 
         if new_branch is True:
-            local_flags.append(f"{new_branch}")
+            local_flags.append(new_branch)
 
         if start_point is True:
-            local_flags.append(f"{start_point}")
+            local_flags.append(start_point)
 
         if treeish is True:
-            local_flags.append(f"{treeish}")
+            local_flags.append(treeish)
 
         if recurse_submodules:
             local_flags.append("--recurse-submodules")
@@ -1438,7 +1438,10 @@ class Git:
                 local_flags.append("--porcelain")
 
         if find_renames is True:
-            local_flags.append(f"--find-renames={find_renames}")
+            if isinstance(find_renames, str):
+                local_flags.append(f"--find-renames={find_renames}")
+            else:
+                local_flags.append("--find-renames")
 
         if pathspec is not None:
             if not isinstance(pathspec, list):
