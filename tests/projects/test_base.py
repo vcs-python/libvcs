@@ -43,7 +43,7 @@ def test_convert_pip_url():
 
 
 def test_progress_callback(
-    capsys: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
 ):

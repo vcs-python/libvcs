@@ -15,7 +15,7 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(doc_path / "_ext"))
 
 # package data
-about = {}
+about: dict = {}
 with open(project_root / "libvcs" / "__about__.py") as fp:
     exec(fp.read(), about)
 
@@ -58,8 +58,8 @@ html_static_path = ["_static"]
 html_extra_path = ["manifest.json"]
 html_favicon = "_static/favicon.ico"
 html_theme = "furo"
-html_theme_path = []
-html_theme_options = {
+html_theme_path: list = []
+html_theme_options: dict = {
     "light_logo": "img/libvcs.svg",
     "dark_logo": "img/libvcs.svg",
     "footer_icons": [
