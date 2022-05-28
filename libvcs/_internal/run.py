@@ -13,7 +13,20 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Optional, Protocol, Union
+from typing import (
+    IO,
+    Any,
+    Callable,
+    Iterable,
+    Mapping,
+    Optional,
+    Protocol,
+    Sequence,
+    Union,
+    overload,
+)
+
+from typing_extensions import TypeAlias
 
 from .. import exc
 from ..types import StrOrBytesPath
@@ -143,15 +156,97 @@ class ProgressCallbackProtocol(Protocol):
         ...
 
 
+if sys.platform == "win32":
+    _ENV: TypeAlias = Mapping[str, str]
+else:
+    _ENV: TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
+
+_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_FILE: TypeAlias = None | int | IO[Any]
+
+# def run(
+#     args: _CMD,
+#     bufsize: int = -1,
+#     executable: StrOrBytesPath | None = None,
+#     stdin: _FILE | None = None,
+#     stdout: _FILE | None = None,
+#     stderr: _FILE | None = None,
+#     preexec_fn: Callable[[], Any] | None = None,
+#     close_fds: bool = True,
+#     shell: bool = False,
+#     cwd: StrOrBytesPath | None = None,
+#     env: _ENV | None = None,
+#     universal_newlines: bool = False,
+#     startupinfo: Any | None = None,
+#     creationflags: int = 0,
+#     restore_signals: bool = True,
+#     start_new_session: bool = False,
+#     pass_fds: Any = None,
+#     *,
+#     text: bool | None = None,
+#     encoding: str = "utf-8",
+#     errors: str | None = None,
+#     user: str | int | None = None,
+#     group: str | int | None = None,
+#     extra_groups: Iterable[str | int] | None = None,
+#     umask: int = -1,
+#     pipesize: int = -1,
+#
+#
+#     # custom
+#     log_in_real_time: bool = True,
+#     check_returncode: bool = True,
+#     callback: Optional[ProgressCallbackProtocol] = None,
+# ):
+
+
+@overload
 def run(
-    cmd: Union[str, list[str]],
-    shell: bool = False,
-    cwd: Optional[StrOrBytesPath] = None,
+    args: _CMD,
+    bufsize: int = ...,
+    executable: StrOrBytesPath | None = ...,
+    stdin: _FILE | None = ...,
+    stdout: _FILE | None = ...,
+    stderr: _FILE | None = ...,
+    preexec_fn: Callable[[], Any] | None = ...,
+    close_fds: bool = ...,
+    shell: bool = ...,
+    cwd: Optional[StrOrBytesPath] = ...,
+    env: _ENV | None = ...,
+    universal_newlines: bool = ...,
+    startupinfo: Any | None = ...,
+    creationflags: int = ...,
+    restore_signals: bool = ...,
+    start_new_session: bool = ...,
+    pass_fds: Any = ...,
+    *,
+    text: bool | None = ...,
+    encoding: str = "utf-8",
+    errors: str | None = ...,
+    user: str | int | None = ...,
+    group: str | int | None = ...,
+    extra_groups: Iterable[str | int] | None = ...,
+    umask: int = ...,
+    pipesize: int = ...,
+    # custom
     log_in_real_time: bool = True,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
-    *args,
-    **kwargs
+):
+    ...
+
+
+def run(
+    # args: Union[str, list[str]],
+    args: _CMD,
+    shell: bool = False,
+    cwd: Optional[StrOrBytesPath] = None,
+    *,
+    # custom
+    log_in_real_time: bool = True,
+    check_returncode: bool = True,
+    callback: Optional[ProgressCallbackProtocol] = None,
+    **kwargs,
 ):
     """Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
@@ -189,13 +284,12 @@ def run(
             run(['git', 'pull'], callback=progress_cb)
     """
     proc = subprocess.Popen(
-        cmd,
+        args,
         shell=shell,
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         cwd=cwd,
-        *args,
-        **kwargs
+        **kwargs,
     )
 
     all_output = []
@@ -220,5 +314,5 @@ def run(
         all_output = console_to_str(b"".join(stderr_lines))
     output = "".join(all_output)
     if code != 0 and check_returncode:
-        raise exc.CommandError(output=output, returncode=code, cmd=cmd)
+        raise exc.CommandError(output=output, returncode=code, cmd=args)
     return output

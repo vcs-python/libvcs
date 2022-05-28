@@ -1,8 +1,9 @@
 import pathlib
 from typing import Literal, Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrPath
 from libvcs._internal.run import run
+
+from ..types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -107,7 +108,7 @@ class Svn:
         if config_option is not None:
             cli_args.append("--config-option {config_option}")
 
-        return run(cmd=cli_args, **kwargs)
+        return run(args=cli_args, **kwargs)
 
     def checkout(
         self,

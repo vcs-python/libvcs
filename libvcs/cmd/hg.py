@@ -2,8 +2,9 @@ import enum
 import pathlib
 from typing import Optional, Sequence, Union
 
-from ..types import StrOrBytesPath, StrPath
 from libvcs._internal.run import run
+
+from ..types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -156,7 +157,7 @@ class Hg:
         if help is True:
             cli_args.append("--help")
 
-        return run(cmd=cli_args, **kwargs)
+        return run(args=cli_args, **kwargs)
 
     def clone(
         self,

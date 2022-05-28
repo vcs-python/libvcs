@@ -181,7 +181,7 @@ class Git:
         if no_optional_locks is True:
             cli_args.append("--no-optional-locks")
 
-        return run(cmd=cli_args, **kwargs)
+        return run(args=cli_args, **kwargs)
 
     def clone(
         self,
