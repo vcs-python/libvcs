@@ -23,7 +23,6 @@ from typing import (
     Protocol,
     Sequence,
     Union,
-    overload,
 )
 
 from typing_extensions import TypeAlias
@@ -164,89 +163,38 @@ else:
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 _FILE: TypeAlias = None | int | IO[Any]
 
-# def run(
-#     args: _CMD,
-#     bufsize: int = -1,
-#     executable: StrOrBytesPath | None = None,
-#     stdin: _FILE | None = None,
-#     stdout: _FILE | None = None,
-#     stderr: _FILE | None = None,
-#     preexec_fn: Callable[[], Any] | None = None,
-#     close_fds: bool = True,
-#     shell: bool = False,
-#     cwd: StrOrBytesPath | None = None,
-#     env: _ENV | None = None,
-#     universal_newlines: bool = False,
-#     startupinfo: Any | None = None,
-#     creationflags: int = 0,
-#     restore_signals: bool = True,
-#     start_new_session: bool = False,
-#     pass_fds: Any = None,
-#     *,
-#     text: bool | None = None,
-#     encoding: str = "utf-8",
-#     errors: str | None = None,
-#     user: str | int | None = None,
-#     group: str | int | None = None,
-#     extra_groups: Iterable[str | int] | None = None,
-#     umask: int = -1,
-#     pipesize: int = -1,
-#
-#
-#     # custom
-#     log_in_real_time: bool = True,
-#     check_returncode: bool = True,
-#     callback: Optional[ProgressCallbackProtocol] = None,
-# ):
-
-
-@overload
-def run(
-    args: _CMD,
-    bufsize: int = ...,
-    executable: StrOrBytesPath | None = ...,
-    stdin: _FILE | None = ...,
-    stdout: _FILE | None = ...,
-    stderr: _FILE | None = ...,
-    preexec_fn: Callable[[], Any] | None = ...,
-    close_fds: bool = ...,
-    shell: bool = ...,
-    cwd: Optional[StrOrBytesPath] = ...,
-    env: _ENV | None = ...,
-    universal_newlines: bool = ...,
-    startupinfo: Any | None = ...,
-    creationflags: int = ...,
-    restore_signals: bool = ...,
-    start_new_session: bool = ...,
-    pass_fds: Any = ...,
-    *,
-    text: bool | None = ...,
-    encoding: str = "utf-8",
-    errors: str | None = ...,
-    user: str | int | None = ...,
-    group: str | int | None = ...,
-    extra_groups: Iterable[str | int] | None = ...,
-    umask: int = ...,
-    pipesize: int = ...,
-    # custom
-    log_in_real_time: bool = True,
-    check_returncode: bool = True,
-    callback: Optional[ProgressCallbackProtocol] = None,
-):
-    ...
-
 
 def run(
-    # args: Union[str, list[str]],
     args: _CMD,
+    bufsize: int = -1,
+    executable: StrOrBytesPath | None = None,
+    stdin: _FILE | None = None,
+    stdout: _FILE | None = None,
+    stderr: _FILE | None = None,
+    preexec_fn: Callable[[], Any] | None = None,
+    close_fds: bool = True,
     shell: bool = False,
-    cwd: Optional[StrOrBytesPath] = None,
+    cwd: StrOrBytesPath | None = None,
+    env: _ENV | None = None,
+    universal_newlines: bool | None = None,
+    startupinfo: Any | None = None,
+    creationflags: int = 0,
+    restore_signals: bool = True,
+    start_new_session: bool = False,
+    pass_fds: Any = (),
     *,
+    text: bool | None = None,
+    encoding: str | None = None,
+    errors: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
+    extra_groups: Iterable[str | int] | None = None,
+    umask: int = -1,
+    pipesize: int = -1,
     # custom
     log_in_real_time: bool = True,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
-    **kwargs,
 ):
     """Run 'cmd' in a shell and return the combined contents of stdout and
     stderr (Blocking).  Throws an exception if the command exits non-zero.
@@ -285,11 +233,30 @@ def run(
     """
     proc = subprocess.Popen(
         args,
+        bufsize=bufsize,
+        executable=executable,
+        stdin=stdin,
+        stdout=stdout or subprocess.PIPE,
+        stderr=stderr or subprocess.PIPE,
+        preexec_fn=preexec_fn,
+        close_fds=close_fds,
         shell=shell,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
         cwd=cwd,
-        **kwargs,
+        env=env,
+        universal_newlines=universal_newlines,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        restore_signals=restore_signals,
+        start_new_session=start_new_session,
+        pass_fds=pass_fds,
+        text=text,
+        encoding=encoding,
+        errors=errors,
+        user=user,
+        group=group,
+        extra_groups=extra_groups,
+        umask=umask,
+        pipesize=pipesize,
     )
 
     all_output = []
