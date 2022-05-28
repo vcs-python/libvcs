@@ -28,6 +28,15 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.git.Git.reset`
     - {meth}`libvcs.cmd.git.Git.checkout`
     - {meth}`libvcs.cmd.git.Git.status`
+    - {meth}`libvcs.cmd.git.Git.config` via {issue}`360`
+
+- **Command**: Now support `-C` (which accepts `.git` dirs, see git's manual) in addition to `cwd`
+  (subprocess-passthrough), {issue}`360`
+
+### Bug fixes
+
+- Fix argument input for git commands, e.g. `git config --get color.diff` would not properly
+  pass-through to subprocess. {issue}`360`
 
 ### Internals
 
