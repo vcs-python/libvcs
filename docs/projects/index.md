@@ -31,6 +31,7 @@ entry-point.
 ```{eval-rst}
 .. autoapimodule:: libvcs.shortcuts
    :members:
+   :exclude-members: GitProject, MercurialProject, SubversionProject
 ```
 
 See examples below of git, mercurial, and subversion.
@@ -40,4 +41,5 @@ See examples below of git, mercurial, and subversion.
 ```{eval-rst}
 .. autoapimodule:: libvcs.projects.constants
    :members:
+   :exclude-members: GitProject, MercurialProject, SubversionProject
 ```
