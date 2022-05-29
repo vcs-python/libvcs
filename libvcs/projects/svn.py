@@ -20,6 +20,8 @@ import pathlib
 import re
 from urllib import parse as urlparse
 
+from libvcs.types import StrPath
+
 from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
@@ -37,7 +39,7 @@ class SubversionProject(BaseProject):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
 
-    def __init__(self, url, dir, *args, **kwargs):
+    def __init__(self, *, url: str, dir: StrPath, **kwargs):
         """A svn repository.
 
         Parameters
@@ -58,7 +60,7 @@ class SubversionProject(BaseProject):
             self.svn_trust_cert = False
 
         self.rev = kwargs.get("rev")
-        super().__init__(url, dir, *args, **kwargs)
+        super().__init__(url=url, dir=dir, **kwargs)
 
     def _user_pw_args(self):
         args = []

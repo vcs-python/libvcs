@@ -4,8 +4,8 @@ import pathlib
 from typing import NamedTuple
 from urllib import parse as urlparse
 
-from libvcs.types import StrPath
 from libvcs._internal.run import CmdLoggingAdapter, mkdir_p, run
+from libvcs.types import StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class BaseProject:
     #: vcs app name, e.g. 'git'
     bin_name = ""
 
-    def __init__(self, url, dir: StrPath, progress_callback=None, *args, **kwargs):
+    def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
         r"""
         Parameters
         ----------
@@ -111,9 +111,9 @@ class BaseProject:
         )
 
     @classmethod
-    def from_pip_url(cls, pip_url, *args, **kwargs):
+    def from_pip_url(cls, pip_url, **kwargs):
         url, rev = convert_pip_url(pip_url)
-        self = cls(url=url, rev=rev, *args, **kwargs)
+        self = cls(url=url, rev=rev, **kwargs)
 
         return self
 

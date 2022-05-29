@@ -23,14 +23,14 @@ def create_project(
     True
     """
     if vcs == "git":
-        return GitProject(url, progress_callback=progress_callback, *args, **kwargs)
+        return GitProject(url=url, progress_callback=progress_callback, *args, **kwargs)
     elif vcs == "hg":
         return MercurialProject(
-            url, progress_callback=progress_callback, *args, **kwargs
+            url=url, progress_callback=progress_callback, *args, **kwargs
         )
     elif vcs == "svn":
         return SubversionProject(
-            url, progress_callback=progress_callback, *args, **kwargs
+            url=url, progress_callback=progress_callback, *args, **kwargs
         )
     else:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
