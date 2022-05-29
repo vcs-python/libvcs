@@ -158,39 +158,42 @@ class ProgressCallbackProtocol(Protocol):
 if sys.platform == "win32":
     _ENV: TypeAlias = Mapping[str, str]
 else:
-    _ENV: TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
+    _ENV: TypeAlias = Union[
+        Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath]
+    ]
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
-_FILE: TypeAlias = None | int | IO[Any]
+_FILE: TypeAlias = Optional[Union[int, IO[Any]]]
 
 
 def run(
     args: _CMD,
     bufsize: int = -1,
-    executable: StrOrBytesPath | None = None,
-    stdin: _FILE | None = None,
-    stdout: _FILE | None = None,
-    stderr: _FILE | None = None,
-    preexec_fn: Callable[[], Any] | None = None,
+    executable: Optional[StrOrBytesPath] = None,
+    stdin: Optional[_FILE] = None,
+    stdout: Optional[_FILE] = None,
+    stderr: Optional[_FILE] = None,
+    preexec_fn: Optional[Callable[[], Any]] = None,
     close_fds: bool = True,
     shell: bool = False,
-    cwd: StrOrBytesPath | None = None,
-    env: _ENV | None = None,
-    universal_newlines: bool | None = None,
-    startupinfo: Any | None = None,
+    cwd: Optional[StrOrBytesPath] = None,
+    env: Optional[_ENV] = None,
+    universal_newlines: Optional[bool] = None,
+    startupinfo: Optional[Any] = None,
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
     pass_fds: Any = (),
     *,
-    text: bool | None = None,
-    encoding: str | None = None,
-    errors: str | None = None,
-    user: str | int | None = None,
-    group: str | int | None = None,
-    extra_groups: Iterable[str | int] | None = None,
+    text: Optional[bool] = None,
+    encoding: Optional[str] = None,
+    errors: Optional[str] = None,
+    user: Optional[Union[str, int]] = None,
+    group: Optional[Union[str, int]] = None,
+    extra_groups: Optional[Iterable[Union[str, int]]] = None,
     umask: int = -1,
-    pipesize: int = -1,
+    # Not until sys.version_info >= (3, 10)
+    # pipesize: int = -1,
     # custom
     log_in_real_time: bool = True,
     check_returncode: bool = True,
@@ -256,7 +259,6 @@ def run(
         group=group,
         extra_groups=extra_groups,
         umask=umask,
-        pipesize=pipesize,
     )
 
     all_output = []
