@@ -13,7 +13,19 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Optional, Protocol, Union
+from typing import (
+    IO,
+    Any,
+    Callable,
+    Iterable,
+    Mapping,
+    Optional,
+    Protocol,
+    Sequence,
+    Union,
+)
+
+from typing_extensions import TypeAlias
 
 from .. import exc
 from ..types import StrOrBytesPath
@@ -143,28 +155,65 @@ class ProgressCallbackProtocol(Protocol):
         ...
 
 
+if sys.platform == "win32":
+    _ENV: TypeAlias = Mapping[str, str]
+else:
+    _ENV: TypeAlias = Union[
+        Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath]
+    ]
+
+_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_FILE: TypeAlias = Optional[Union[int, IO[Any]]]
+
+
 def run(
-    cmd: Union[str, list[str]],
+    args: _CMD,
+    bufsize: int = -1,
+    executable: Optional[StrOrBytesPath] = None,
+    stdin: Optional[_FILE] = None,
+    stdout: Optional[_FILE] = None,
+    stderr: Optional[_FILE] = None,
+    preexec_fn: Optional[Callable[[], Any]] = None,
+    close_fds: bool = True,
     shell: bool = False,
     cwd: Optional[StrOrBytesPath] = None,
+    env: Optional[_ENV] = None,
+    universal_newlines: Optional[bool] = None,
+    startupinfo: Optional[Any] = None,
+    creationflags: int = 0,
+    restore_signals: bool = True,
+    start_new_session: bool = False,
+    pass_fds: Any = (),
+    *,
+    text: Optional[bool] = None,
+    encoding: Optional[str] = None,
+    errors: Optional[str] = None,
+    user: Optional[Union[str, int]] = None,
+    group: Optional[Union[str, int]] = None,
+    extra_groups: Optional[Iterable[Union[str, int]]] = None,
+    umask: int = -1,
+    # Not until sys.version_info >= (3, 10)
+    # pipesize: int = -1,
+    # custom
     log_in_real_time: bool = True,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
 ):
-    """Run 'cmd' in a shell and return the combined contents of stdout and
-    stderr (Blocking).  Throws an exception if the command exits non-zero.
+    """Run 'args' in a shell and return the combined contents of stdout and
+    stderr (Blocking). Throws an exception if the command exits non-zero.
+
+    Keyword arguments are passthrough to {class}`subprocess.Popen`.
 
     Parameters
     ----------
-    cmd : list or str, or single str, if shell=True
+    args : list or str, or single str, if shell=True
        the command to run
 
     shell : boolean
         boolean indicating whether we are using advanced shell
         features. Use only when absolutely necessary, since this allows a lot
         more freedom which could be exploited by malicious code. See the
-        warning here:
-        http://docs.python.org/library/subprocess.html#popen-constructor
+        warning here: http://docs.python.org/library/subprocess.html#popen-constructor
 
     cwd : str
         dir command is run from. Defaults to ``path``.
@@ -187,11 +236,30 @@ def run(
             run(['git', 'pull'], callback=progress_cb)
     """
     proc = subprocess.Popen(
-        cmd,
+        args,
+        bufsize=bufsize,
+        executable=executable,
+        stdin=stdin,
+        stdout=stdout or subprocess.PIPE,
+        stderr=stderr or subprocess.PIPE,
+        preexec_fn=preexec_fn,
+        close_fds=close_fds,
         shell=shell,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
         cwd=cwd,
+        env=env,
+        universal_newlines=universal_newlines,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        restore_signals=restore_signals,
+        start_new_session=start_new_session,
+        pass_fds=pass_fds,
+        text=text,
+        encoding=encoding,
+        errors=errors,
+        user=user,
+        group=group,
+        extra_groups=extra_groups,
+        umask=umask,
     )
 
     all_output = []
@@ -216,5 +284,5 @@ def run(
         all_output = console_to_str(b"".join(stderr_lines))
     output = "".join(all_output)
     if code != 0 and check_returncode:
-        raise exc.CommandError(output=output, returncode=code, cmd=cmd)
+        raise exc.CommandError(output=output, returncode=code, cmd=args)
     return output
