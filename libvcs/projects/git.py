@@ -21,6 +21,8 @@ import re
 from typing import Dict, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
+from libvcs.types import StrPath
+
 from .. import exc
 from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url
 
@@ -154,7 +156,7 @@ class GitProject(BaseProject):
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
 
     def __init__(
-        self, url: str, dir: str, remotes: GitRemotesArgs = None, *args, **kwargs
+        self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs
     ):
         """A git repository.
 
@@ -235,7 +237,7 @@ class GitProject(BaseProject):
                 fetch_url=url,
                 push_url=url,
             )
-        super().__init__(url, dir, *args, **kwargs)
+        super().__init__(url=url, dir=dir, **kwargs)
         self.url = self.chomp_protocol(
             (
                 self._remotes.get("origin")
@@ -245,9 +247,9 @@ class GitProject(BaseProject):
         )
 
     @classmethod
-    def from_pip_url(cls, pip_url, *args, **kwargs):
+    def from_pip_url(cls, pip_url, **kwargs):
         url, rev = convert_pip_url(pip_url)
-        self = cls(url=url, rev=rev, *args, **kwargs)
+        self = cls(url=url, rev=rev, **kwargs)
 
         return self
 
