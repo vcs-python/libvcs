@@ -199,20 +199,21 @@ def run(
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
 ):
-    """Run 'cmd' in a shell and return the combined contents of stdout and
-    stderr (Blocking).  Throws an exception if the command exits non-zero.
+    """Run 'args' in a shell and return the combined contents of stdout and
+    stderr (Blocking). Throws an exception if the command exits non-zero.
+
+    Keyword arguments are passthrough to {class}`subprocess.Popen`.
 
     Parameters
     ----------
-    cmd : list or str, or single str, if shell=True
+    args : list or str, or single str, if shell=True
        the command to run
 
     shell : boolean
         boolean indicating whether we are using advanced shell
         features. Use only when absolutely necessary, since this allows a lot
         more freedom which could be exploited by malicious code. See the
-        warning here:
-        http://docs.python.org/library/subprocess.html#popen-constructor
+        warning here: http://docs.python.org/library/subprocess.html#popen-constructor
 
     cwd : str
         dir command is run from. Defaults to ``path``.
