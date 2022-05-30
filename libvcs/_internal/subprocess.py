@@ -204,7 +204,78 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     encoding: Optional[str] = None
     errors: Optional[str] = None
 
-    def Popen(self, **kwargs) -> subprocess.Popen:
+    # user, group, extra_groups, umask were added in 3.9
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: bool = ...,
+        *,
+        text: Optional[bool] = ...,
+        encoding: str,
+        errors: Optional[str] = ...,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: bool = ...,
+        *,
+        text: Optional[bool] = ...,
+        encoding: Optional[str] = ...,
+        errors: str,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        *,
+        universal_newlines: Literal[True],
+        # where the *real* keyword only args start
+        text: Optional[bool] = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: bool = ...,
+        *,
+        text: Literal[True],
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: Literal[False] = ...,
+        *,
+        text: Literal[None, False] = ...,
+        encoding: None = ...,
+        errors: None = ...,
+    ) -> subprocess.Popen[bytes]:
+        ...
+
+    def Popen(
+        self,
+        args: Optional[_CMD] = None,
+        universal_newlines: Optional[bool] = None,
+        *,
+        text: Optional[bool] = None,
+        encoding: Optional[str] = None,
+        errors: Optional[str] = None,
+        **kwargs,
+    ) -> subprocess.Popen[Any]:
         """Run commands :class:`subprocess.Popen`, optionally overrides via kwargs.
 
         Parameters
@@ -218,7 +289,17 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         >>> proc = cmd.Popen(stdout=subprocess.PIPE)
         >>> proc.communicate() # doctest: +SKIP
         """
-        return subprocess.Popen(**dataclasses.replace(self, **kwargs).__dict__)
+        return subprocess.Popen(
+            **dataclasses.replace(
+                self,
+                args=args or self.args,
+                encoding=encoding,
+                errors=errors,
+                text=text,
+                universal_newlines=universal_newlines,
+                **kwargs,
+            ).__dict__,
+        )
 
     def check_call(self, **kwargs) -> int:
         """Run command :func:`subprocess.check_call`, optionally overrides via kwargs.
