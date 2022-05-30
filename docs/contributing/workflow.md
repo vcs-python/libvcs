@@ -45,11 +45,12 @@ Rebuild docs and run server via one terminal: `make dev_docs` (requires above, a
 
 ## Formatting / Linting
 
-The project uses [black] and [isort] (one after the other) and runs [flake8] via CI. See the
-configuration in `pyproject.toml` and `setup.cfg`:
+The project uses [black] and [isort] (one after the other) and runs [flake8] and [mypy] via CI. See
+the configuration in `pyproject.toml` and `setup.cfg`:
 
-`make black isort`: Run `black` first, then `isort` to handle import nuances `make flake8`, to watch
-(requires `entr(1)`): `make watch_flake8`
+- `make black isort`: Run `black` first, then `isort` to handle import nuances
+- `make flake8`, to watch (requires `entr(1)`): `make watch_flake8`
+- `make mypy`, to watch (requires `entr(1)`): `make watch_mypy`
 
 ## Releasing
 
@@ -70,3 +71,4 @@ Update `__version__` in `__about__.py` and `pyproject.toml`::
 [black]: https://github.com/psf/black
 [isort]: https://pypi.org/project/isort/
 [flake8]: https://flake8.pycqa.org/
+[mypy]: http://mypy-lang.org/
