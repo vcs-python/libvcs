@@ -22,6 +22,16 @@ $ pip install --user --upgrade --pre libvcs
 
   - `run(cmd, ...)` is now `run(args, ...)` to match `Popen`'s convention.
 
+- {class}`libvcs.projects.base.BaseProject`:
+
+  - Removed `parent_dir`:
+
+    Before: `project.parent_dir`
+
+    After: `project.parent.dir`.
+
+  - `repo_name` switched from attribute to property
+
 - {issue}`364`: Project classes no longer accept positional arguments. Per [PEP 570].
 
   Deprecated in >=0.13:
