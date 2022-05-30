@@ -131,13 +131,13 @@ class Hg:
             kwargs["cwd"] = self.dir
 
         if repository is not None:
-            cli_args.append(f"--repository {repository}")
+            cli_args.extend(["--repository", repository])
         if config is not None:
-            cli_args.append("--config {config}")
+            cli_args.extend(["--config", config])
         if pager is not None:
-            cli_args.append(f"--pager {pager}")
+            cli_args.append(["--pager", pager])
         if color is not None:
-            cli_args.append(f"--color {color}")
+            cli_args.append(["--color", color])
         if verbose is True:
             cli_args.append("verbose")
         if quiet is True:
@@ -189,13 +189,13 @@ class Hg:
         local_flags: list[str] = []
 
         if ssh is not None:
-            local_flags.append(f"--ssh {ssh}")
+            local_flags.extend(["--ssh", ssh])
         if remote_cmd is not None:
-            local_flags.append(f"--remotecmd {remote_cmd}")
+            local_flags.extend(["--remotecmd", remote_cmd])
         if rev is not None:
-            local_flags.append(f"--rev {rev}")
+            local_flags.extend(["--rev", rev])
         if branch is not None:
-            local_flags.append(f"--branch {branch}")
+            local_flags.extend(["--branch", branch])
         if no_update is True:
             local_flags.append("--noupdate")
         if pull is True:

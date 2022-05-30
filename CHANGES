@@ -65,8 +65,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Bug fixes
 
-- Fix argument input for git commands, e.g. `git config --get color.diff` would not properly
-  pass-through to subprocess. {issue}`360`
+- Fix argument input for commands, e.g. `git config --get color.diff` would not properly
+  pass-through to subprocess. git: {issue}`360`, svn and hg: {issue}`365`
 
 ### Internals
 
