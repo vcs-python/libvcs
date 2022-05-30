@@ -25,7 +25,7 @@ class HgPagerType(enum.Enum):
 
 
 class Hg:
-    def __init__(self, dir: StrPath):
+    def __init__(self, *, dir: StrPath):
         """Lite, typed, pythonic wrapper for hg(1).
 
         Parameters
@@ -51,6 +51,7 @@ class Hg:
     def run(
         self,
         args: _CMD,
+        *,
         config: Optional[str] = None,
         repository: Optional[str] = None,
         quiet: Optional[bool] = None,
@@ -161,6 +162,7 @@ class Hg:
 
     def clone(
         self,
+        *,
         url: str,
         no_update: Optional[str] = None,
         update_rev: Optional[str] = None,

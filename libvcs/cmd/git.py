@@ -10,7 +10,7 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class Git:
-    def __init__(self, dir: StrPath):
+    def __init__(self, *, dir: StrPath):
         """Lite, typed, pythonic wrapper for git(1).
 
         Parameters
@@ -36,7 +36,7 @@ class Git:
     def run(
         self,
         args: _CMD,
-        /,
+        *,
         # Print-and-exit flags
         version: Optional[bool] = None,
         help: Optional[bool] = None,
@@ -185,6 +185,7 @@ class Git:
 
     def clone(
         self,
+        *,
         url: str,
         separate_git_dir: Optional[StrOrBytesPath] = None,
         template: Optional[str] = None,
@@ -312,6 +313,7 @@ class Git:
 
     def fetch(
         self,
+        *,
         reftag: Optional[Any] = None,
         deepen: Optional[str] = None,
         depth: Optional[str] = None,
@@ -469,6 +471,7 @@ class Git:
 
     def rebase(
         self,
+        *,
         upstream: Optional[str] = None,
         onto: Optional[str] = None,
         branch: Optional[str] = None,
@@ -665,6 +668,7 @@ class Git:
 
     def pull(
         self,
+        *,
         reftag: Optional[Any] = None,
         repository: Optional[str] = None,
         deepen: Optional[str] = None,
@@ -943,6 +947,7 @@ class Git:
 
     def init(
         self,
+        *,
         template: Optional[str] = None,
         separate_git_dir: Optional[StrOrBytesPath] = None,
         object_format: Optional[Literal["sha1", "sha256"]] = None,
@@ -1022,6 +1027,7 @@ class Git:
 
     def help(
         self,
+        *,
         all: Optional[bool] = None,
         verbose: Optional[bool] = None,
         no_external_commands: Optional[bool] = None,
@@ -1105,6 +1111,7 @@ class Git:
 
     def reset(
         self,
+        *,
         quiet: Optional[bool] = None,
         refresh: Optional[bool] = None,
         no_refresh: Optional[bool] = None,
@@ -1196,6 +1203,7 @@ class Git:
 
     def checkout(
         self,
+        *,
         quiet: Optional[bool] = None,
         progress: Optional[bool] = None,
         no_progress: Optional[bool] = None,
@@ -1329,6 +1337,7 @@ class Git:
 
     def status(
         self,
+        *,
         verbose: Optional[bool] = None,
         long: Optional[bool] = None,
         short: Optional[bool] = None,
@@ -1456,6 +1465,7 @@ class Git:
 
     def config(
         self,
+        *,
         replace_all: Optional[bool] = None,
         get: Optional[str] = None,
         get_all: Optional[bool] = None,

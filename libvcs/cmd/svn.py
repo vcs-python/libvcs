@@ -12,7 +12,7 @@ RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
 class Svn:
-    def __init__(self, dir: StrPath):
+    def __init__(self, *, dir: StrPath):
         """Lite, typed, pythonic wrapper for svn(1).
 
         Parameters
@@ -38,6 +38,7 @@ class Svn:
     def run(
         self,
         args: _CMD,
+        *,
         quiet: Optional[bool] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
@@ -112,6 +113,7 @@ class Svn:
 
     def checkout(
         self,
+        *,
         url: str,
         revision: Union[RevisionLiteral, str] = None,
         force: Optional[bool] = None,
@@ -159,6 +161,7 @@ class Svn:
 
     def add(
         self,
+        *,
         path: Union[list[pathlib.Path], pathlib.Path],
         targets: Optional[pathlib.Path] = None,
         depth: DepthLiteral = None,
@@ -225,7 +228,6 @@ class Svn:
         self,
         remove: Optional[str] = None,
         show_passwords: Optional[bool] = None,
-        *args,
         **kwargs,
     ):
         """
@@ -244,7 +246,7 @@ class Svn:
         >>> Svn(dir=tmp_path).auth()
         "Credentials cache in '...' is empty"
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
 
         if remove is not None:
             local_flags.extend(["--remove", remove])
@@ -256,6 +258,7 @@ class Svn:
     def blame(
         self,
         target: pathlib.Path,
+        *,
         revision: Union[RevisionLiteral, str] = None,
         verbose: Optional[bool] = None,
         force: Optional[bool] = None,
@@ -263,7 +266,6 @@ class Svn:
         incremental: Optional[bool] = None,
         xml: Optional[bool] = None,
         extensions: Optional[str] = None,
-        *args,
         **kwargs,
     ):
         """
@@ -304,7 +306,7 @@ class Svn:
         >>> svn.blame('new.txt')
         '1        ... example text'
         """
-        local_flags: list[str] = [target, *args]
+        local_flags: list[str] = [str(target)]
 
         if revision is not None:
             local_flags.append(f"--revision={revision}")
@@ -361,6 +363,7 @@ class Svn:
 
     def commit(
         self,
+        *,
         path: Union[list[pathlib.Path], pathlib.Path],
         targets: Optional[pathlib.Path] = None,
         message: Optional[str] = None,
@@ -371,7 +374,6 @@ class Svn:
         force_log: Optional[bool] = None,
         keep_changelists: Optional[bool] = None,
         include_externals: Optional[bool] = None,
-        *args,
         **kwargs,
     ):
         """
