@@ -237,15 +237,79 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         return subprocess.check_call(**dataclasses.replace(self, **kwargs).__dict__)
 
     @overload
-    def check_output(self, input: Optional[str] = None, **kwargs) -> str:
+    def check_output(
+        self,
+        universal_newlines: bool = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+        text: Literal[True],
+        **kwargs,
+    ) -> str:
         ...
 
     @overload
-    def check_output(self, input: Optional[bytes] = None, **kwargs) -> bytes:
+    def check_output(
+        self,
+        universal_newlines: Optional[bool] = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: str,
+        errors: Optional[str] = ...,
+        text: Optional[bool] = ...,
+        **kwargs,
+    ) -> str:
+        ...
+
+    @overload
+    def check_output(
+        self,
+        universal_newlines: bool = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: Optional[str] = ...,
+        errors: str,
+        text: Optional[bool] = ...,
+        **kwargs,
+    ) -> str:
+        ...
+
+    @overload
+    def check_output(
+        self,
+        universal_newlines: Literal[True] = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+        text: Optional[bool] = ...,
+        **kwargs,
+    ) -> str:
+        ...
+
+    @overload
+    def check_output(
+        self,
+        universal_newlines: Literal[False],
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: None = ...,
+        errors: None = ...,
+        text: Literal[None, False] = ...,
+        **kwargs,
+    ) -> bytes:
         ...
 
     def check_output(
-        self, input: Optional[Union[str, bytes]] = None, **kwargs
+        self,
+        universal_newlines: Optional[bool] = None,
+        *,
+        input: Optional[Union[str, bytes]] = None,
+        encoding: Optional[str] = None,
+        errors: Optional[str] = None,
+        text: Optional[bool] = None,
+        **kwargs,
     ) -> Union[bytes, str]:
         r"""Run command :func:`subprocess.check_output`, optionally overrides via kwargs.
 
