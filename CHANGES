@@ -13,6 +13,11 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.12.4 (2022-05-30)
+
+- _Backport from 0.13.x_ Fix argument input for hg and svn commands, would not properly pass-through
+  to subprocess. {issue}`365`
+
 ## libvcs 0.12.3 (2022-05-28)
 
 ### Bug fixes
