@@ -1,7 +1,7 @@
 """Base class for VCS Project plugins."""
 import logging
 import pathlib
-from typing import NamedTuple
+from typing import NamedTuple, Optional, Tuple
 from urllib import parse as urlparse
 
 from libvcs._internal.run import CmdLoggingAdapter, run
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class VCSLocation(NamedTuple):
     url: str
-    rev: str
+    rev: Optional[str]
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
@@ -35,11 +35,14 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 class BaseProject:
     """Base class for repositories."""
 
-    #: log command output to buffer
     log_in_real_time = None
+    """Log command output to buffer"""
 
-    #: vcs app name, e.g. 'git'
     bin_name = ""
+    """VCS app name, e.g. 'git'"""
+
+    schemes: Tuple[str, ...] = ()
+    """List of supported schemes to register in ``urlparse.uses_netloc``"""
 
     def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
         r"""

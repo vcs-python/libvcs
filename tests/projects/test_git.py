@@ -311,11 +311,15 @@ def test_remotes(
     expected = lazy_remote_expected(**locals())
     assert len(expected.keys()) > 0
     for expected_remote_name, expected_remote_url in expected.items():
-        assert (
-            expected_remote_name,
-            expected_remote_url,
-            expected_remote_url,
-        ) == git_repo.remote(expected_remote_name).to_tuple()
+        remote = git_repo.remote(expected_remote_name)
+        assert remote is not None
+
+        if remote is not None:
+            assert (
+                expected_remote_name,
+                expected_remote_url,
+                expected_remote_url,
+            ) == remote.to_tuple()
 
 
 @pytest.mark.parametrize(
@@ -424,7 +428,10 @@ def test_remotes_update_repo(
     git_repo: GitProject = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
 
-    git_repo._remotes |= lazy_remote_dict(**locals())
+    git_repo._remotes |= {
+        k: GitRemote(*v) if isinstance(v, dict) else v
+        for k, v in lazy_remote_dict(**locals()).items()
+    }
     git_repo.update_repo(set_remotes=True)
 
     expected = lazy_remote_expected(**locals())
@@ -558,7 +565,10 @@ def test_set_remote(git_repo: GitProject, repo_name: str, new_repo_url: str):
     assert isinstance(
         git_repo.remote(name=repo_name), GitRemote
     ), "remote() returns GitRemote"
-    assert "file:///" in git_repo.remote(name=repo_name).fetch_url, "new value set"
+    remote = git_repo.remote(name=repo_name)
+    assert remote is not None, "Remote should exist"
+    if remote is not None:
+        assert "file:///" in remote.fetch_url, "new value set"
 
     assert "myrepo" in git_repo.remotes(), ".remotes() returns new remote"
 
@@ -570,9 +580,12 @@ def test_set_remote(git_repo: GitProject, repo_name: str, new_repo_url: str):
 
     mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url, overwrite=True)
 
-    assert (
-        new_repo_url in git_repo.remote(name="myrepo").fetch_url
-    ), "Running remove_set should overwrite previous remote"
+    remote = git_repo.remote(name="myrepo")
+    assert remote is not None
+    if remote is not None:
+        assert (
+            new_repo_url in remote.fetch_url
+        ), "Running remove_set should overwrite previous remote"
 
 
 def test_get_git_version(git_repo: GitProject):

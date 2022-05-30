@@ -257,7 +257,7 @@ class Svn:
 
     def blame(
         self,
-        target: pathlib.Path,
+        target: StrOrBytesPath,
         *,
         revision: Union[RevisionLiteral, str] = None,
         verbose: Optional[bool] = None,

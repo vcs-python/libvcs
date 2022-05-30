@@ -11,7 +11,7 @@ import pytest
 from faker import Faker
 
 from libvcs._internal.run import run, which
-from libvcs.projects.git import GitProject, GitRemoteDict
+from libvcs.projects.git import GitProject, GitRemote
 
 skip_if_git_missing = pytest.mark.skipif(
     not which("git"), reason="git is not available"
@@ -322,11 +322,10 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
         url=f"file://{git_remote_repo}",
         dir=str(projects_path / "git_repo"),
         remotes={
-            "origin": GitRemoteDict(
-                **{
-                    "push_url": f"file://{git_remote_repo}",
-                    "fetch_url": f"file://{git_remote_repo}",
-                }
+            "origin": GitRemote(
+                name="origin",
+                push_url=f"file://{git_remote_repo}",
+                fetch_url=f"file://{git_remote_repo}",
             )
         },
     )

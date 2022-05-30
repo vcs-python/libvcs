@@ -204,7 +204,78 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     encoding: Optional[str] = None
     errors: Optional[str] = None
 
-    def Popen(self, **kwargs) -> subprocess.Popen:
+    # user, group, extra_groups, umask were added in 3.9
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: bool = ...,
+        *,
+        text: Optional[bool] = ...,
+        encoding: str,
+        errors: Optional[str] = ...,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: bool = ...,
+        *,
+        text: Optional[bool] = ...,
+        encoding: Optional[str] = ...,
+        errors: str,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        *,
+        universal_newlines: Literal[True],
+        # where the *real* keyword only args start
+        text: Optional[bool] = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: bool = ...,
+        *,
+        text: Literal[True],
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+    ) -> subprocess.Popen[str]:
+        ...
+
+    @overload
+    def Popen(
+        self,
+        args: Optional[_CMD] = ...,
+        universal_newlines: Literal[False] = ...,
+        *,
+        text: Literal[None, False] = ...,
+        encoding: None = ...,
+        errors: None = ...,
+    ) -> subprocess.Popen[bytes]:
+        ...
+
+    def Popen(
+        self,
+        args: Optional[_CMD] = None,
+        universal_newlines: Optional[bool] = None,
+        *,
+        text: Optional[bool] = None,
+        encoding: Optional[str] = None,
+        errors: Optional[str] = None,
+        **kwargs,
+    ) -> subprocess.Popen[Any]:
         """Run commands :class:`subprocess.Popen`, optionally overrides via kwargs.
 
         Parameters
@@ -218,7 +289,17 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         >>> proc = cmd.Popen(stdout=subprocess.PIPE)
         >>> proc.communicate() # doctest: +SKIP
         """
-        return subprocess.Popen(**dataclasses.replace(self, **kwargs).__dict__)
+        return subprocess.Popen(
+            **dataclasses.replace(
+                self,
+                args=args or self.args,
+                encoding=encoding,
+                errors=errors,
+                text=text,
+                universal_newlines=universal_newlines,
+                **kwargs,
+            ).__dict__,
+        )
 
     def check_call(self, **kwargs) -> int:
         """Run command :func:`subprocess.check_call`, optionally overrides via kwargs.
@@ -237,15 +318,79 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         return subprocess.check_call(**dataclasses.replace(self, **kwargs).__dict__)
 
     @overload
-    def check_output(self, input: Optional[str] = None, **kwargs) -> str:
+    def check_output(
+        self,
+        universal_newlines: bool = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+        text: Literal[True],
+        **kwargs,
+    ) -> str:
         ...
 
     @overload
-    def check_output(self, input: Optional[bytes] = None, **kwargs) -> bytes:
+    def check_output(
+        self,
+        universal_newlines: Optional[bool] = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: str,
+        errors: Optional[str] = ...,
+        text: Optional[bool] = ...,
+        **kwargs,
+    ) -> str:
+        ...
+
+    @overload
+    def check_output(
+        self,
+        universal_newlines: bool = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: Optional[str] = ...,
+        errors: str,
+        text: Optional[bool] = ...,
+        **kwargs,
+    ) -> str:
+        ...
+
+    @overload
+    def check_output(
+        self,
+        universal_newlines: Literal[True] = ...,
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+        text: Optional[bool] = ...,
+        **kwargs,
+    ) -> str:
+        ...
+
+    @overload
+    def check_output(
+        self,
+        universal_newlines: Literal[False],
+        *,
+        input: Optional[Union[str, bytes]] = ...,
+        encoding: None = ...,
+        errors: None = ...,
+        text: Literal[None, False] = ...,
+        **kwargs,
+    ) -> bytes:
         ...
 
     def check_output(
-        self, input: Optional[Union[str, bytes]] = None, **kwargs
+        self,
+        universal_newlines: Optional[bool] = None,
+        *,
+        input: Optional[Union[str, bytes]] = None,
+        encoding: Optional[str] = None,
+        errors: Optional[str] = None,
+        text: Optional[bool] = None,
+        **kwargs,
     ) -> Union[bytes, str]:
         r"""Run command :func:`subprocess.check_output`, optionally overrides via kwargs.
 
@@ -280,14 +425,90 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         params.pop("stdout")
         return subprocess.check_output(input=input, **params)
 
+    @overload
     def run(
         self,
-        input: Optional[Union[str, bytes]] = None,
-        timeout: Optional[int] = None,
-        check: bool = False,
+        universal_newlines: bool = ...,
+        *,
+        capture_output: bool = ...,
+        check: bool = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+        input: Optional[str] = ...,
+        text: Literal[True],
+    ) -> subprocess.CompletedProcess[str]:
+        ...
+
+    @overload
+    def run(
+        self,
+        universal_newlines: bool = ...,
+        *,
+        capture_output: bool = ...,
+        check: bool = ...,
+        encoding: str,
+        errors: Optional[str] = ...,
+        input: Optional[str] = ...,
+        text: Optional[bool] = ...,
+    ) -> subprocess.CompletedProcess[str]:
+        ...
+
+    @overload
+    def run(
+        self,
+        universal_newlines: bool = ...,
+        *,
+        capture_output: bool = ...,
+        check: bool = ...,
+        encoding: Optional[str] = ...,
+        errors: str,
+        input: Optional[str] = ...,
+        text: Optional[bool] = ...,
+    ) -> subprocess.CompletedProcess[str]:
+        ...
+
+    @overload
+    def run(
+        self,
+        *,
+        universal_newlines: Literal[True],
+        # where the *real* keyword only args start
+        capture_output: bool = ...,
+        check: bool = ...,
+        encoding: Optional[str] = ...,
+        errors: Optional[str] = ...,
+        input: Optional[str] = ...,
+        text: Optional[bool] = ...,
+    ) -> subprocess.CompletedProcess[str]:
+        ...
+
+    @overload
+    def run(
+        self,
+        universal_newlines: Literal[False] = ...,
+        *,
+        capture_output: bool = ...,
+        check: bool = ...,
+        encoding: None = ...,
+        errors: None = ...,
+        input: Optional[bytes] = ...,
+        text: Literal[None, False] = ...,
+    ) -> subprocess.CompletedProcess[bytes]:
+        ...
+
+    def run(
+        self,
+        universal_newlines: Optional[bool] = None,
+        *,
         capture_output: bool = False,
+        check: bool = False,
+        encoding: Optional[str] = None,
+        errors: Optional[str] = None,
+        input: Optional[Union[str, bytes]] = None,
+        text: Optional[bool] = None,
+        timeout: Optional[float] = None,
         **kwargs,
-    ) -> subprocess.CompletedProcess:
+    ) -> subprocess.CompletedProcess[Any]:
         r"""Run command in :func:`subprocess.run`, optionally overrides via kwargs.
 
         Parameters
@@ -344,9 +565,15 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         b''
         """
         return subprocess.run(
-            **dataclasses.replace(self, **kwargs).__dict__,
-            input=input,
-            capture_output=capture_output,
-            timeout=timeout,
+            **dataclasses.replace(
+                self,
+                universal_newlines=universal_newlines,
+                errors=errors,
+                text=text,
+                **kwargs,
+            ).__dict__,
             check=check,
+            capture_output=capture_output,
+            input=input,
+            timeout=timeout,
         )

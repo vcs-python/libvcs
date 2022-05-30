@@ -53,7 +53,7 @@ class GitRemote:
 
 GitProjectRemoteDict = Dict[str, GitRemote]
 GitFullRemoteDict = Dict[str, GitRemoteDict]
-GitRemotesArgs = Union[None, GitFullRemoteDict, Dict[str, str]]
+GitRemotesArgs = Union[None, GitFullRemoteDict, GitProjectRemoteDict, Dict[str, str]]
 
 
 @dataclasses.dataclass
@@ -123,6 +123,9 @@ class GitStatus:
             re.VERBOSE | re.MULTILINE,
         )
         matches = pattern.search(value)
+
+        if matches is None:
+            raise Exception("Could not find match")
         return cls(**matches.groupdict())
 
 
@@ -154,6 +157,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 class GitProject(BaseProject):
     bin_name = "git"
     schemes = ("git", "git+http", "git+https", "git+ssh", "git+git", "git+file")
+    _remotes: GitProjectRemoteDict
 
     def __init__(
         self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs
@@ -226,7 +230,11 @@ class GitProject(BaseProject):
                     )
                 elif isinstance(remote_url, dict):
                     self._remotes[remote_name] = GitRemote(
-                        **{**remote_url, "name": remote_name}
+                        **{
+                            "fetch_url": remote_url["fetch_url"],
+                            "push_url": remote_url["push_url"],
+                            "name": remote_name,
+                        }
                     )
                 elif isinstance(remote_url, GitRemote):
                     self._remotes[remote_name] = remote_url
@@ -238,13 +246,15 @@ class GitProject(BaseProject):
                 push_url=url,
             )
         super().__init__(url=url, dir=dir, **kwargs)
-        self.url = self.chomp_protocol(
-            (
-                self._remotes.get("origin")
-                if "origin" in self._remotes
-                else next(iter(self._remotes.items()))[1]
-            ).fetch_url
+
+        origin = (
+            self._remotes.get("origin")
+            if "origin" in self._remotes
+            else next(iter(self._remotes.items()))[1]
         )
+        if origin is None:
+            raise Exception("Missing origin")
+        self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
     def from_pip_url(cls, pip_url, **kwargs):
@@ -376,6 +386,8 @@ class GitProject(BaseProject):
                 show_ref_output,
                 re.MULTILINE,
             )
+            if m is None:
+                raise exc.CommandError("Could not fetch remote names")
             git_remote_name = m.group("git_remote_name")
             git_tag = m.group("git_tag")
         self.log.debug("git_remote_name: %s" % git_remote_name)
@@ -497,15 +509,15 @@ class GitProject(BaseProject):
         remotes = {}
 
         cmd = self.run(["remote"])
-        ret = filter(None, cmd.split("\n"))
+        ret: filter[str] = filter(None, cmd.split("\n"))
 
         for remote_name in ret:
-            remotes[remote_name] = (
-                self.remote(remote_name) if flat else self.remote(remote_name).to_dict()
-            )
+            remote = self.remote(remote_name)
+            if remote is not None:
+                remotes[remote_name] = remote if flat else remote.to_dict()
         return remotes
 
-    def remote(self, name, **kwargs) -> GitRemote:
+    def remote(self, name, **kwargs) -> Optional[GitRemote]:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters

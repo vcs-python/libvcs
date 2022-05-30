@@ -132,7 +132,8 @@ def test_init_and_check_output(args: list, kwargs: dict, expected_result: Any):
     ids=idfn,
 )
 def test_run(tmp_path: pathlib.Path, args: list, kwargs: dict, run_kwargs: dict):
-    cmd = SubprocessCommand(*args, cwd=tmp_path, **kwargs)
+    kwargs["cwd"] = tmp_path
+    cmd = SubprocessCommand(*args, **kwargs)
     response = cmd.run(**run_kwargs)
 
     assert response.returncode == 0

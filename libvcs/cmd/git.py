@@ -250,7 +250,7 @@ class Git:
         if template is not None:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
-            local_flags.append(f"--separate-git-dir={separate_git_dir}")
+            local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
@@ -388,7 +388,7 @@ class Git:
         local_flags: list[str] = []
 
         if submodule_prefix is not None:
-            local_flags.append(f"--submodule-prefix={submodule_prefix}")
+            local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
@@ -561,7 +561,7 @@ class Git:
         if onto:
             local_flags.extend(["--onto", onto])
         if context:
-            local_flags.extend(["--C", context])
+            local_flags.extend(["--C", str(context)])
 
         if exec:
             local_flags.extend(["--exec", shlex.quote(exec)])
@@ -864,7 +864,7 @@ class Git:
         # Fetch-related arguments
         #
         if submodule_prefix is not None:
-            local_flags.append(f"--submodule-prefix={submodule_prefix}")
+            local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
@@ -1007,7 +1007,7 @@ class Git:
         if template is not None:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
-            local_flags.append(f"--separate-git-dir={separate_git_dir}")
+            local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
         if object_format is not None:
             local_flags.append(f"--object-format={object_format}")
         if branch is not None:
@@ -1164,7 +1164,7 @@ class Git:
         if refresh is True:
             local_flags.append("--refresh")
         if pathspec_from_file is not None:
-            local_flags.append(f"--pathspec_from_file={pathspec_from_file}")
+            local_flags.append(f"--pathspec_from_file={pathspec_from_file!r}")
 
         # HEAD to commit form
         if soft is True:

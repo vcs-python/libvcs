@@ -41,6 +41,9 @@ jobs:
       - name: Lint with flake8
         run: poetry run flake8
 
+      - name: Lint with mypy
+        run: poetry run mypy .
+
       - name: Print python versions
         run: |
           python -V
