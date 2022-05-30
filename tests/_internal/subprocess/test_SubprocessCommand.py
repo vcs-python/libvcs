@@ -168,7 +168,8 @@ def test_Popen_mock(
     attrs = {"communicate.return_value": ("output", "error"), "returncode": 1}
     process_mock.configure_mock(**attrs)
     mock_subprocess_popen.return_value = process_mock
-    cmd = SubprocessCommand(*args, cwd=tmp_path, **kwargs)
+    kwargs["cwd"] = tmp_path
+    cmd = SubprocessCommand(*args, **kwargs)
     response = cmd.Popen(**run_kwargs)
 
     assert response.returncode == 1
@@ -194,7 +195,8 @@ def test_Popen_git_mock(
     attrs = {"communicate.return_value": ("output", "error"), "returncode": 1}
     process_mock.configure_mock(**attrs)
     mock_subprocess_popen.return_value = process_mock
-    cmd = SubprocessCommand(*args, cwd=tmp_path, **kwargs)
+    kwargs["cwd"] = tmp_path
+    cmd = SubprocessCommand(*args, **kwargs)
     response = cmd.Popen(**run_kwargs)
 
     stdout, stderr = response.communicate()
@@ -262,9 +264,10 @@ def test_CaptureStderrMixin(
     )
     response = cmd.Popen()
     while response.poll() is None:
-        line = response.stderr.readline().decode("utf-8").strip()
-        if line:
-            assert line.startswith("[")
+        if response.stderr is not None:
+            line = response.stderr.readline().decode("utf-8").strip()
+            if line:
+                assert line.startswith("[")
     assert response.returncode == 0
 
 
@@ -289,8 +292,9 @@ def test_CaptureStderrMixin_error(
     )
     response = cmd.Popen()
     while response.poll() is None:
-        line = response.stderr.readline().decode("utf-8").strip()
-        if line:
-            assert line.startswith("[") or line == "FATAL"
+        if response.stderr is not None:
+            line = response.stderr.readline().decode("utf-8").strip()
+            if line:
+                assert line.startswith("[") or line == "FATAL"
 
     assert response.returncode == 1
