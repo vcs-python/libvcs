@@ -1,7 +1,7 @@
 """Base class for VCS Project plugins."""
 import logging
 import pathlib
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 from urllib import parse as urlparse
 
 from libvcs._internal.run import CmdLoggingAdapter, run
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class VCSLocation(NamedTuple):
     url: str
-    rev: str
+    rev: Optional[str]
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
