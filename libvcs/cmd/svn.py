@@ -97,15 +97,15 @@ class Svn:
         if non_interactive is True:
             cli_args.append("--non-interactive")
         if username is not None:
-            cli_args.append(f"--username {username}")
+            cli_args.extend(["--username", username])
         if password is not None:
-            cli_args.append(f"--password {password}")
+            cli_args.extend(["--password", password])
         if trust_server_cert is True:
             cli_args.append("--trust-server_cert")
         if config_dir is not None:
-            cli_args.append("--config-dir {config_dir}")
+            cli_args.extend(["--config-dir", str(config_dir)])
         if config_option is not None:
-            cli_args.append("--config-option {config_option}")
+            cli_args.extend(["--config-option", str(config_option)])
 
         return run(cmd=cli_args, **kwargs)
 
@@ -246,7 +246,7 @@ class Svn:
         local_flags: list[str] = [*args]
 
         if remove is not None:
-            local_flags.append(f"--remove {remove}")
+            local_flags.extend(["--remove", remove])
         if show_passwords is True:
             local_flags.append("--show-passwords")
 
@@ -316,7 +316,7 @@ class Svn:
         if xml is True:
             local_flags.append("--xml")
         if extensions is not None:
-            local_flags.append(f"--extensions {extensions}")
+            local_flags.extend(["--extensions", extensions])
         if force is True:
             local_flags.append("--force")
 
@@ -417,7 +417,7 @@ class Svn:
         if no_unlock is True:
             local_flags.append("--no-unlock")
         if file is not None:
-            local_flags.append(f"--file {file}")
+            local_flags.extend(["--file", str(file)])
         if force_log is True:
             local_flags.append("--force")
         if include_externals is True:
