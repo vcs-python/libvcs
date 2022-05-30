@@ -1157,7 +1157,7 @@ class Git:
         if refresh is True:
             local_flags.append("--refresh")
         if pathspec_from_file is not None:
-            local_flags.append(f"--pathspec_from_file {pathspec_from_file}")
+            local_flags.append(f"--pathspec_from_file={pathspec_from_file}")
 
         # HEAD to commit form
         if soft is True:
