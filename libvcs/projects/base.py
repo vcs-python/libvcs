@@ -88,9 +88,6 @@ class BaseProject:
         else:
             self.dir = pathlib.Path(dir)
 
-        #: Parent directory
-        self.parent_dir = self.dir.parent
-
         if "rev" in kwargs:
             self.rev = kwargs["rev"]
 
@@ -167,8 +164,8 @@ class BaseProject:
         if self.dir.exists():
             return True
 
-        if not self.parent_dir.exists():
-            mkdir_p(self.parent_dir)
+        if not self.dir.parent.exists():
+            self.dir.parent.mkdir(exist_ok=True)
 
         if not self.dir.exists():
             self.log.debug(
