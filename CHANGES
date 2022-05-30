@@ -17,6 +17,11 @@ $ pip install --user --upgrade --pre libvcs
 
 - {issue}`343`: `libvcs.cmd.core` (including {func}`~libvcs._internal.run.run`) have been moved to
   `libvcs._internal.run`. It will be supported as an unstable, internal API.
+- {issue}`366`: `libvcs.cmd` for hg, git, and svn updated to use Keyword-only arguments via [PEP
+  3102]
+
+  [pep 3102]: https://peps.python.org/pep-3102/#specification
+
 - {issue}`361`: {class}`~libvcs._internal.run.run`'s params are now a pass-through to
   {class}`subprocess.Popen`.
 
