@@ -1,6 +1,15 @@
 name: tests
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+      - 'v*.x'
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   build:
