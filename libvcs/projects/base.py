@@ -1,7 +1,7 @@
 """Base class for VCS Project plugins."""
 import logging
 import pathlib
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 from urllib import parse as urlparse
 
 from libvcs._internal.run import CmdLoggingAdapter, run
@@ -41,7 +41,7 @@ class BaseProject:
     bin_name = ""
     """VCS app name, e.g. 'git'"""
 
-    schemes = ()
+    schemes: Tuple[str, ...] = ()
     """List of supported schemes to register in ``urlparse.uses_netloc``"""
 
     def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
