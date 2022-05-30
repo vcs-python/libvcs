@@ -70,6 +70,19 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Internals
 
+- {issue}`362` [mypy] support added:
+
+  - Basic mypy tests now pass
+  - Type annotations added, including improved typings for:
+
+    - {meth}`libvcs._internal.subprocess.SubprocessCommand.run`
+    - {meth}`libvcs._internal.subprocess.SubprocessCommand.Popen`
+    - {meth}`libvcs._internal.subprocess.SubprocessCommand.check_output`
+    - {meth}`libvcs._internal.subprocess.run.run`
+
+  - `make mypy` and `make watch_mypy`
+  - Automatic checking on CI
+
 - {issue}`345` `libvcs.utils` -> `libvcs._internal` to make it more obvious the APIs are strictly
   closed.
 - `StrOrPath` -> `StrPath`
@@ -86,6 +99,9 @@ $ pip install --user --upgrade --pre libvcs
 ### Documentation
 
 - Document `libvcs.types`
+- {issue}`362`: Improve developer documentation to note [mypy] and have tabbed examples for flake8.
+
+[mypy]: http://mypy-lang.org/
 
 ### Packaging
 
