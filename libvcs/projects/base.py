@@ -91,9 +91,6 @@ class BaseProject:
         #: Parent directory
         self.parent_dir = self.dir.parent
 
-        #: Base name of checkout
-        self.repo_name = self.dir.stem
-
         if "rev" in kwargs:
             self.rev = kwargs["rev"]
 
@@ -109,6 +106,10 @@ class BaseProject:
         self.log: CmdLoggingAdapter = CmdLoggingAdapter(
             bin_name=self.bin_name, keyword=self.repo_name, logger=logger, extra={}
         )
+
+    @property
+    def repo_name(self) -> str:
+        return self.dir.stem
 
     @classmethod
     def from_pip_url(cls, pip_url, **kwargs):
