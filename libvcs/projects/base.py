@@ -4,7 +4,7 @@ import pathlib
 from typing import NamedTuple
 from urllib import parse as urlparse
 
-from libvcs._internal.run import CmdLoggingAdapter, mkdir_p, run
+from libvcs._internal.run import CmdLoggingAdapter, run
 from libvcs.types import StrPath
 
 logger = logging.getLogger(__name__)
@@ -159,20 +159,20 @@ class BaseProject:
             cwd=cwd,
         )
 
-    def ensure_dir(self, *args, **kwargs):
+    def ensure_dir(self, *args, **kwargs) -> bool:
         """Assure destination path exists. If not, create directories."""
         if self.dir.exists():
             return True
 
         if not self.dir.parent.exists():
-            self.dir.parent.mkdir(exist_ok=True)
+            self.dir.parent.mkdir(parents=True)
 
         if not self.dir.exists():
             self.log.debug(
                 "Project directory for %s does not exist @ %s"
                 % (self.repo_name, self.dir)
             )
-            mkdir_p(self.dir)
+            self.dir.mkdir(parents=True)
 
         return True
 
