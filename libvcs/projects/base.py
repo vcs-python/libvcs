@@ -41,6 +41,9 @@ class BaseProject:
     #: vcs app name, e.g. 'git'
     bin_name = ""
 
+    #: Stub out scheme list
+    schemes = ()
+
     def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
         r"""
         Parameters
