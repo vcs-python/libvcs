@@ -230,7 +230,7 @@ class Svn:
     ):
         """
         Wraps `svn auth
-        <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.auth.html>`_.
+        <https://subversion.apache.org/faq.html#plaintext-passwords>`_.
 
         Parameters
         ----------
