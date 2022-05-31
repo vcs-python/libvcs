@@ -9,18 +9,30 @@ To install the unreleased libvcs version, see
 $ pip install --user --upgrade --pre libvcs
 ```
 
-## libvcs 0.13.0 (unreleased)
+## libvcs 0.14.0 (unreleased)
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.13.0, "Jane" (2022-05-30)
+
 ### Breaking changes
 
-- {issue}`343`: `libvcs.cmd.core` (including {func}`~libvcs._internal.run.run`) have been moved to
-  `libvcs._internal.run`. It will be supported as an unstable, internal API.
-- {issue}`366`: `libvcs.cmd` for hg, git, and svn updated to use Keyword-only arguments via [PEP
-  3102]
+- {issue}`343`: `libvcs.cmd.core` moved to `libvcs._internal.run` to make it more clear the API is
+  closed.
 
-  [pep 3102]: https://peps.python.org/pep-3102/#specification
+  This includes {func}`~libvcs._internal.run.run`
+
+  Before in 0.13:
+
+  ```python
+  from libvcs.cmd.core import run
+  ```
+
+  New module in >=0.13:
+
+  ```python
+  from libvcs._internal.run import run
+  ```
 
 - {issue}`361`: {class}`~libvcs._internal.run.run`'s params are now a pass-through to
   {class}`subprocess.Popen`.
@@ -37,21 +49,26 @@ $ pip install --user --upgrade --pre libvcs
 
   - `repo_name` switched from attribute to property
 
-- {issue}`364`: Project classes no longer accept positional arguments. Per [PEP 570].
+- Keyword-only arguments via [PEP 3102], [PEP 570]
 
-  Deprecated in >=0.13:
+  - {issue}`366`: `libvcs.cmd` for hg, git, and svn updated to use
 
-  ```python
-  GitProject('https://github.com/vcs-python/libvcs.git')
-  ```
+  - {issue}`364`: Project classes no longer accept positional arguments.
 
-  New style in >=0.13:
+    Deprecated in >=0.13:
 
-  ```python
-  GitProject(url='https://github.com/vcs-python/libvcs.git')
-  ```
+    ```python
+    GitProject('https://github.com/vcs-python/libvcs.git')
+    ```
 
-  [pep 570]: https://peps.python.org/pep-0570/
+    New style in >=0.13:
+
+    ```python
+    GitProject(url='https://github.com/vcs-python/libvcs.git')
+    ```
+
+[pep 570]: https://peps.python.org/pep-0570/
+[pep 3102]: https://peps.python.org/pep-3102/#specification
 
 ### What's new
 
