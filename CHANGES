@@ -97,10 +97,10 @@ $ pip install --user --upgrade --pre libvcs
   - Basic mypy tests now pass
   - Type annotations added, including improved typings for:
 
-    - {meth}`libvcs._internal.subprocess.SubprocessCommand.run`
+    - {func}`libvcs._internal.run.run`
     - {meth}`libvcs._internal.subprocess.SubprocessCommand.Popen`
     - {meth}`libvcs._internal.subprocess.SubprocessCommand.check_output`
-    - {meth}`libvcs._internal.subprocess.run.run`
+    - {meth}`libvcs._internal.subprocess.SubprocessCommand.run`
 
   - `make mypy` and `make watch_mypy`
   - Automatic checking on CI
