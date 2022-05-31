@@ -37,7 +37,7 @@ def test_init(args: list, kwargs: dict, expected_result: Any):
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
 
-    # Attributes in cmd should match whats passed in
+    # Attributes in cmd should match what's passed in
     for k, v in kwargs.items():
         assert getattr(cmd, k) == v
 

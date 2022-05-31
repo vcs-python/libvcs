@@ -515,7 +515,7 @@ Internal functionality relating to remotes have been reorganized to avoid implic
 
 ## libvcs 0.1.2 (2016-06-20)
 
-- change signature on `create_repo_from_pip_url` to accept `pip_url` insetad of `url`.
+- change signature on `create_repo_from_pip_url` to accept `pip_url` instead of `url`.
 - `Base` to accept `repo_dir` instead of `name` and `parent_dir`.
 
 ## libvcs 0.1.1 (2016-06-20)
