@@ -44,7 +44,7 @@ class BaseProject(Protocol):
     schemes: Tuple[str, ...] = ()
     """List of supported schemes to register in ``urlparse.uses_netloc``"""
 
-    dir: StrPath
+    dir: Optional[StrPath]
     """CWD of project"""
 
     def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
