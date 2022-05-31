@@ -178,7 +178,7 @@ def run(
     shell: bool = False,
     cwd: Optional[StrOrBytesPath] = None,
     env: Optional[_ENV] = None,
-    universal_newlines: bool = False,
+    universal_newlines: Optional[bool] = None,
     startupinfo: Optional[Any] = None,
     creationflags: int = 0,
     restore_signals: bool = True,
@@ -262,7 +262,7 @@ def run(
         umask=umask,
     )
 
-    all_output: list[str] = []
+    all_output = []
     code = None
     line = None
     while code is None:
@@ -270,7 +270,7 @@ def run(
 
         # output = console_to_str(proc.stdout.readline())
         # all_output.append(output)
-        if callback and callable(callback) and proc.stderr is not None:
+        if callback and callable(callback):
             line = console_to_str(proc.stderr.read(128))
             if line:
                 callback(output=line, timestamp=datetime.datetime.now())
