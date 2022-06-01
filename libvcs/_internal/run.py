@@ -202,14 +202,14 @@ def run(
     """Run 'args' in a shell and return the combined contents of stdout and
     stderr (Blocking). Throws an exception if the command exits non-zero.
 
-    Keyword arguments are passthrough to {class}`subprocess.Popen`.
+    Keyword arguments are passthrough to :class:`subprocess.Popen`.
 
     Parameters
     ----------
     args : list or str, or single str, if shell=True
        the command to run
 
-    shell : boolean
+    shell : bool
         boolean indicating whether we are using advanced shell
         features. Use only when absolutely necessary, since this allows a lot
         more freedom which could be exploited by malicious code. See the
@@ -218,7 +218,7 @@ def run(
     cwd : str
         dir command is run from. Defaults to ``path``.
 
-    log_in_real_time : boolean
+    log_in_real_time : bool
         boolean indicating whether to read stdout from the
         subprocess in real time instead of when the process finishes.
 
