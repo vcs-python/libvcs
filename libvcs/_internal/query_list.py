@@ -4,6 +4,7 @@ Note
 ----
 This is an internal API not covered by versioning policy.
 """
+import operator
 import re
 import traceback
 from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar, Union
@@ -57,8 +58,15 @@ class LookupProtocol(Protocol):
         """Callback for :class:`QueryList` filtering operators."""
 
 
-def lookup_exact(data, rhs):
-    return rhs == data
+lookup_exact = operator.eq
+"""Exact match. Alias of :func:`operator.eq`.
+
+>>> lookup_exact("cat", "cat")
+True
+
+>>> lookup_exact("cat", "dog")
+False
+"""
 
 
 def lookup_iexact(data, rhs):
