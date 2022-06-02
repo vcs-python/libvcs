@@ -25,7 +25,7 @@ class MercurialProject(BaseProject):
 
         # Double hyphens between [OPTION]... -- SOURCE [DEST] prevent command injections
         # via aliases
-        self.run(["clone", "--noupdate", "-q", "--", self.url, self.dir])
+        self.run(["clone", "--noupdate", "-q", "--", self.url, str(self.dir)])
         self.run(["update", "-q"])
 
     def get_revision(self):
