@@ -54,7 +54,7 @@ def parse_lookup(obj, path, lookup):
 class LookupProtocol(Protocol):
     """Protocol for :class:`QueryList` filtering operators."""
 
-    def __call__(self, data: Union[list[str], str], rhs: Union[list[str], str]):
+    def __call__(self, data: Any, rhs: Any):
         """Callback for :class:`QueryList` filtering operators."""
 
 
