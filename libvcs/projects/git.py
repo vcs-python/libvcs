@@ -18,7 +18,8 @@ import dataclasses
 import logging
 import pathlib
 import re
-from typing import Dict, Optional, TypedDict, Union
+import typing
+from typing import Dict, Literal, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
 from libvcs.types import StrPath
@@ -494,7 +495,17 @@ class GitProject(BaseProject):
         cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
 
-    def remotes(self, flat=False) -> Dict:
+    @typing.overload
+    def remotes(self, flat: Literal[False] = ...):
+        ...
+
+    @typing.overload
+    def remotes(self, flat: Literal[True] = ...) -> GitFullRemoteDict:
+        ...
+
+    def remotes(
+        self, flat: bool = False
+    ) -> Union[GitProjectRemoteDict, GitFullRemoteDict]:
         """Return remotes like git remote -v.
 
         Parameters
