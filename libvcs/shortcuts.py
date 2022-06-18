@@ -6,7 +6,7 @@ from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs.exc import InvalidPipURL, InvalidVCS
 
-VcsLiteral = t.Literal["git", "svn", "hg"]
+VCSLiteral = t.Literal["git", "svn", "hg"]
 
 
 @t.overload
@@ -44,7 +44,7 @@ def create_project(
 
 def create_project(
     url: str,
-    vcs: VcsLiteral,
+    vcs: VCSLiteral,
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     *args,
     **kwargs
