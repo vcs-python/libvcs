@@ -6,8 +6,7 @@ from typing import Union
 from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs.exc import InvalidPipURL, InvalidVCS
-
-VCSLiteral = t.Literal["git", "svn", "hg"]
+from libvcs.types import VCSLiteral
 
 
 @t.overload
