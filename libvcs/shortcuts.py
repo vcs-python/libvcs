@@ -1,5 +1,6 @@
 """Shortcuts"""
 import typing as t
+import warnings
 from typing import Union
 
 from libvcs import GitProject, MercurialProject, SubversionProject
@@ -93,6 +94,7 @@ def create_project_from_pip_url(
     >>> isinstance(r, GitProject)
     True
     """
+    warnings.warn("This function will be removed in v0.14", PendingDeprecationWarning)
     if pip_url.startswith("git+"):
         return GitProject.from_pip_url(pip_url, **kwargs)
     elif pip_url.startswith("hg+"):
