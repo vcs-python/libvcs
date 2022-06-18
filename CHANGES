@@ -21,8 +21,9 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
-- Note upcoming deprecation of `create_project_from_pip_url`
-- Note `create_project` becoming internal API in upcoming release
+- Note upcoming deprecation of `create_project_from_pip_url` in v0.14
+- Note `create_project` becoming internal API in upcoming release v0.14
+- Fix import in `libvcs.shortcuts` (in v0.14 this module will not exist)
 
 ## libvcs 0.13.4 (2022-06-18)
 
