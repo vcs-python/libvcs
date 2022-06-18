@@ -4,6 +4,7 @@ Note
 ----
 This is an internal API not covered by versioning policy.
 """
+import operator
 import re
 import traceback
 from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar, Union
@@ -53,12 +54,19 @@ def parse_lookup(obj, path, lookup):
 class LookupProtocol(Protocol):
     """Protocol for :class:`QueryList` filtering operators."""
 
-    def __call__(self, data: Union[list[str], str], rhs: Union[list[str], str]):
+    def __call__(self, data: Any, rhs: Any):
         """Callback for :class:`QueryList` filtering operators."""
 
 
-def lookup_exact(data, rhs):
-    return rhs == data
+lookup_exact = operator.eq
+"""Exact match. Alias of :func:`operator.eq`.
+
+>>> lookup_exact("cat", "cat")
+True
+
+>>> lookup_exact("cat", "dog")
+False
+"""
 
 
 def lookup_iexact(data, rhs):
