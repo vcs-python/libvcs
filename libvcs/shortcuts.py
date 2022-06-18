@@ -1,12 +1,53 @@
 """Shortcuts"""
+import typing as t
 from typing import Union
 
 from libvcs import GitProject, MercurialProject, SubversionProject
+from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs.exc import InvalidPipURL, InvalidVCS
+
+VcsLiteral = t.Literal["git", "svn", "hg"]
+
+
+@t.overload
+def create_project(
+    url: str,
+    vcs: t.Literal["git"],
+    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    *args,
+    **kwargs
+) -> GitProject:
+    ...
+
+
+@t.overload
+def create_project(
+    url: str,
+    vcs: t.Literal["svn"],
+    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    *args,
+    **kwargs
+) -> SubversionProject:
+    ...
+
+
+@t.overload
+def create_project(
+    url: str,
+    vcs: t.Literal["hg"],
+    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    *args,
+    **kwargs
+) -> MercurialProject:
+    ...
 
 
 def create_project(
-    url, vcs, progress_callback=None, *args, **kwargs
+    url: str,
+    vcs: VcsLiteral,
+    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    *args,
+    **kwargs
 ) -> Union[GitProject, MercurialProject, SubversionProject]:
     r"""Return an object representation of a VCS repository.
 
