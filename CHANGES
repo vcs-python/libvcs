@@ -21,10 +21,20 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Typings
 
+- Rename `VcsLiteral` -> `VCSLiteral`
+
+  _Backport from 0.13.4_
+
 - {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.
   {class}`~libvcs.projects.git.GitProject`)
 
   _Backport from 0.13.3_
+
+## libvcs 0.13.4 (2022-06-18)
+
+### Typing
+
+- Rename `VcsLiteral` -> `VCSLiteral`
 
 ## libvcs 0.13.3 (2022-06-18)
 
