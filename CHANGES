@@ -17,6 +17,13 @@ $ pip install --user --upgrade --pre libvcs
 
 - Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
 
+## libvcs 0.13.5 (Unreleased)
+
+### Development
+
+- Note upcoming deprecation of `create_project_from_pip_url`
+- Note `create_project` becoming internal API in upcoming release
+
 ## libvcs 0.13.4 (2022-06-18)
 
 ### Typing
