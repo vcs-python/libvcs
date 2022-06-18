@@ -64,6 +64,10 @@ def create_project(
     >>> isinstance(r, GitProject)
     True
     """
+    warnings.warn(
+        "This function will be moved to an internal API in v0.14",
+        PendingDeprecationWarning,
+    )
     if vcs == "git":
         return GitProject(url=url, progress_callback=progress_callback, *args, **kwargs)
     elif vcs == "hg":
