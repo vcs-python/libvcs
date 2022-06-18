@@ -17,6 +17,13 @@ $ pip install --user --upgrade --pre libvcs
 
 - Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
 
+## libvcs 0.13.3 (2022-06-18)
+
+### Typings
+
+- {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.
+  {class}`~libvcs.projects.git.GitProject`)
+
 ## libvcs 0.13.2 (2022-06-12)
 
 ### Typings
