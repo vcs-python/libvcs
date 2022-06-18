@@ -1,12 +1,12 @@
 """Shortcuts"""
 import typing as t
+import warnings
 from typing import Union
 
 from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs.exc import InvalidPipURL, InvalidVCS
-
-VCSLiteral = t.Literal["git", "svn", "hg"]
+from libvcs.types import VCSLiteral
 
 
 @t.overload
@@ -63,6 +63,10 @@ def create_project(
     >>> isinstance(r, GitProject)
     True
     """
+    warnings.warn(
+        "This function will be moved to an internal API in v0.14",
+        PendingDeprecationWarning,
+    )
     if vcs == "git":
         return GitProject(url=url, progress_callback=progress_callback, *args, **kwargs)
     elif vcs == "hg":
@@ -93,6 +97,7 @@ def create_project_from_pip_url(
     >>> isinstance(r, GitProject)
     True
     """
+    warnings.warn("This function will be removed in v0.14", PendingDeprecationWarning)
     if pip_url.startswith("git+"):
         return GitProject.from_pip_url(pip_url, **kwargs)
     elif pip_url.startswith("hg+"):

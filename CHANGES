@@ -30,6 +30,14 @@ $ pip install --user --upgrade --pre libvcs
 
   _Backport from 0.13.3_
 
+## libvcs 0.13.5 (Unreleased)
+
+### Development
+
+- Note upcoming deprecation of `create_project_from_pip_url` in v0.14
+- Note `create_project` becoming internal API in upcoming release v0.14
+- Fix import in `libvcs.shortcuts` (in v0.14 this module will not exist)
+
 ## libvcs 0.13.4 (2022-06-18)
 
 ### Typing
