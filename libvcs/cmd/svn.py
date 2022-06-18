@@ -2,8 +2,7 @@ import pathlib
 from typing import Literal, Optional, Sequence, Union
 
 from libvcs._internal.run import run
-
-from ..types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -76,7 +75,7 @@ class Svn:
             --config-dir
         config_option :
             --config-option, ``FILE:SECTION:OPTION=[VALUE]``
-        cwd : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        cwd : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             Defaults to :attr:`~.cwd`
 
         Examples

@@ -3,8 +3,7 @@ import shlex
 from typing import Any, Literal, Optional, Sequence, Union
 
 from libvcs._internal.run import run
-
-from ..types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -72,19 +71,19 @@ class Git:
 
         Parameters
         ----------
-        cwd : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional, passed to subprocess's
-            ``cwd`` the command runs from. Defaults to :attr:`~.cwd`.
-        C : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        cwd : :attr:`libvcs._internal.types.StrOrBytesPath`, optional, passed to
+            subprocess's ``cwd`` the command runs from. Defaults to :attr:`~.cwd`.
+        C : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``-C <path>``
-        git_dir : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        git_dir : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``--git-dir <path>``
-        work_tree : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        work_tree : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``--work-tree <path>``
-        namespace : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        namespace : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``--namespace <path>``
-        super_prefix : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        super_prefix : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``--super-prefix <path>``
-        exec_path : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        exec_path : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``--exec-path=<path>``
         bare : bool
             ``--bare``
@@ -1134,10 +1133,10 @@ class Git:
         quiet : bool
         no_refresh : bool
         refresh : bool
-        pathspec_from_file : :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec_from_file : :attr:`libvcs._internal.types.StrOrBytesPath`
         pathspec_file_nul : bool
-        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
-            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec : :attr:`libvcs._internal.types.StrOrBytesPath` or list
+            :attr:`libvcs._internal.types.StrOrBytesPath`
         soft : bool
         mixed : bool
         hard : bool
@@ -1243,9 +1242,9 @@ class Git:
         quiet : bool
         progress : bool
         no_progress : bool
-        pathspec_from_file : :attr:`libvcs.cmd.types.StrOrBytesPath`
-        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
-            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec_from_file : :attr:`libvcs._internal.types.StrOrBytesPath`
+        pathspec : :attr:`libvcs._internal.types.StrOrBytesPath` or list
+            :attr:`libvcs._internal.types.StrOrBytesPath`
         force : bool
         ours : bool
         theirs : bool
@@ -1379,8 +1378,8 @@ class Git:
         untracked_files : "no", "normal", "all"
         ignored : "traditional", "no", "matching"
         ignored_submodules : "untracked", "dirty", "all"
-        pathspec : :attr:`libvcs.cmd.types.StrOrBytesPath` or list
-            :attr:`libvcs.cmd.types.StrOrBytesPath`
+        pathspec : :attr:`libvcs._internal.types.StrOrBytesPath` or list
+            :attr:`libvcs._internal.types.StrOrBytesPath`
 
         Examples
         --------

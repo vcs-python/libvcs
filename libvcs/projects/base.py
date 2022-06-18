@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional, Tuple
 from urllib import parse as urlparse
 
 from libvcs._internal.run import CmdLoggingAdapter, run
-from libvcs.types import StrPath
+from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 

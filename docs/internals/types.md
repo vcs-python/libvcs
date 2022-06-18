@@ -1,7 +1,7 @@
-# `libvcs.types`
+# `libvcs._internal.types`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.types
+.. autoapimodule:: libvcs._internal.types
    :members:
    :show-inheritance:
    :undoc-members:

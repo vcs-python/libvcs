@@ -22,7 +22,7 @@ import typing
 from typing import Dict, Literal, Optional, TypedDict, Union
 from urllib import parse as urlparse
 
-from libvcs.types import StrPath
+from libvcs._internal.types import StrPath
 
 from .. import exc
 from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url

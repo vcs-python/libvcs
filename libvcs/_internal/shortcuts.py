@@ -9,8 +9,8 @@ from typing import Union
 
 from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs._internal.run import ProgressCallbackProtocol
+from libvcs._internal.types import VCSLiteral
 from libvcs.exc import InvalidVCS
-from libvcs.types import VCSLiteral
 
 
 @t.overload
