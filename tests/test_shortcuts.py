@@ -3,8 +3,9 @@ import pathlib
 import pytest
 
 from libvcs import GitProject, MercurialProject, SubversionProject
+from libvcs._internal.shortcuts import create_project
 from libvcs.exc import InvalidPipURL, InvalidVCS
-from libvcs.shortcuts import create_project, create_project_from_pip_url
+from libvcs.shortcuts import create_project_from_pip_url
 
 
 @pytest.mark.parametrize(

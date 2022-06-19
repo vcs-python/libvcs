@@ -23,19 +23,6 @@ svn
 base
 ```
 
-## Create from VCS url
-
-Helper methods are available in `libvcs.shortcuts` which can return a repo object from a single
-entry-point.
-
-```{eval-rst}
-.. autoapimodule:: libvcs.shortcuts
-   :members:
-   :exclude-members: GitProject, MercurialProject, SubversionProject
-```
-
-See examples below of git, mercurial, and subversion.
-
 ## Constants
 
 ```{eval-rst}

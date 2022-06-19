@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
+from libvcs._internal.shortcuts import create_project
 from libvcs.projects.base import BaseProject, convert_pip_url
-from libvcs.shortcuts import create_project
 
 
 def test_repr():

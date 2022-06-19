@@ -17,6 +17,12 @@ $ pip install --user --upgrade --pre libvcs
 
 - Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
 
+## libvcs 0.13.6 (2022-06-18)
+
+### Development
+
+- Move `libvcs.shortcuts` to {mod}`libvcs._internal.shortcuts`
+
 ## libvcs 0.13.5 (2022-06-18)
 
 ### Development
