@@ -16,4 +16,5 @@ dataclasses
 query_list
 run
 subprocess
+shortcuts
 ```

@@ -4,7 +4,8 @@ import pathlib
 import pytest
 
 from libvcs._internal.run import run, which
-from libvcs.shortcuts import create_project, create_project_from_pip_url
+from libvcs._internal.shortcuts import create_project
+from libvcs.shortcuts import create_project_from_pip_url
 
 if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")

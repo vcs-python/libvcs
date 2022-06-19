@@ -30,7 +30,13 @@ $ pip install --user --upgrade --pre libvcs
 
   _Backport from 0.13.3_
 
-## libvcs 0.13.5 (Unreleased)
+## libvcs 0.13.6 (2022-06-18)
+
+### Development
+
+- Move `libvcs.shortcuts` to {mod}`libvcs._internal.shortcuts`
+
+## libvcs 0.13.5 (2022-06-18)
 
 ### Development
 
