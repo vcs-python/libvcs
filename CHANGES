@@ -15,6 +15,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Fixes
 
+- Minor spelling fix in Git's `convert_pip_url()` exception
 - Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
 
   _Backport from 0.13.1_
