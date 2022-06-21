@@ -145,7 +145,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         url = url.replace("ssh://", "")
     elif "github.com:" in pip_url:
         raise exc.LibVCSException(
-            "Repo %s is malformatted, please use the convention %s for"
+            "Repo %s is malformatted, please use the convention %s for "
             "ssh / private GitHub repositories."
             % (pip_url, "git+https://github.com/username/repo.git")
         )
