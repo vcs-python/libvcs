@@ -5,7 +5,6 @@ import pytest
 
 from libvcs._internal.run import run, which
 from libvcs._internal.shortcuts import create_project
-from libvcs.shortcuts import create_project_from_pip_url
 
 if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
@@ -14,11 +13,10 @@ if not which("hg"):
 def test_repo_mercurial(tmp_path: pathlib.Path, projects_path, hg_remote_repo):
     repo_name = "my_mercurial_project"
 
-    mercurial_repo = create_project_from_pip_url(
-        **{
-            "pip_url": f"hg+file://{hg_remote_repo}",
-            "dir": projects_path / repo_name,
-        }
+    mercurial_repo = create_project(
+        url=f"file://{hg_remote_repo}",
+        dir=projects_path / repo_name,
+        vcs="hg",
     )
 
     run(["hg", "init", mercurial_repo.repo_name], cwd=tmp_path)
