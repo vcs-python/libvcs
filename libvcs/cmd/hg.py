@@ -3,8 +3,7 @@ import pathlib
 from typing import Optional, Sequence, Union
 
 from libvcs._internal.run import run
-
-from ..types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -83,7 +82,7 @@ class Hg:
             -q / --quiet
         repository : str
             ``--repository REPO``
-        cwd : :attr:`libvcs.cmd.types.StrOrBytesPath`, optional
+        cwd : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             ``--cwd DIR``, Defaults to :attr:`~.cwd`
         verbose : bool
             ``-v / --verbose``

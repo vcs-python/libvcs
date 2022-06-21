@@ -27,8 +27,9 @@ from typing import (
 
 from typing_extensions import TypeAlias
 
+from libvcs._internal.types import StrOrBytesPath
+
 from .. import exc
-from ..types import StrOrBytesPath
 
 logger = logging.getLogger(__name__)
 

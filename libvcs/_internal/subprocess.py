@@ -56,7 +56,8 @@ from typing import (
 
 from typing_extensions import TypeAlias
 
-from ..types import StrOrBytesPath
+from libvcs._internal.types import StrOrBytesPath
+
 from .dataclasses import SkipDefaultFieldsReprMixin
 
 F = TypeVar("F", bound=Callable[..., Any])

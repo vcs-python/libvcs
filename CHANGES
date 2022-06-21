@@ -13,6 +13,10 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### Breaking changes
+
+- {issue}`372` Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
+
 ### Fixes
 
 - Minor spelling fix in Git's `convert_pip_url()` exception
