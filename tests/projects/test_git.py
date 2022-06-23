@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 
 from libvcs import exc
 from libvcs._internal.run import run, which
+from libvcs._internal.shortcuts import create_project
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.git import (
     GitFullRemoteDict,
@@ -19,7 +20,6 @@ from libvcs.projects.git import (
     GitStatus,
     convert_pip_url as git_convert_pip_url,
 )
-from libvcs.shortcuts import create_project_from_pip_url
 
 if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
@@ -39,13 +39,15 @@ ProjectTestFactoryRemotesLazyExpected = Callable[..., GitFullRemoteDict]
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": f"file://{bare_dir}",
                 "dir": tmp_path / "obtaining a bare repo",
+                "vcs": "git",
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda bare_dir, tmp_path, **kwargs: {
-                "pip_url": f"git+file://{bare_dir}",
+                "url": f"git+file://{bare_dir}",
                 "dir": tmp_path / "obtaining a bare repo",
+                "vcs": "git",
             },
         ],
     ],
@@ -80,13 +82,15 @@ def test_repo_git_obtain_initial_commit_repo(
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
+                "vcs": "git",
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
-                "pip_url": f"git+file://{git_remote_repo}",
+                "url": f"git+file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
+                "vcs": "git",
             },
         ],
     ],
@@ -115,13 +119,15 @@ def test_repo_git_obtain_full(
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
+                "vcs": "git",
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
-                "pip_url": f"git+file://{git_remote_repo}",
+                "url": f"git+file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
+                "vcs": "git",
             },
         ],
     ],
@@ -158,14 +164,16 @@ def test_repo_update_handle_cases(
                 "url": f"file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
+                "vcs": "git",
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
-                "pip_url": f"git+file://{git_remote_repo}",
+                "url": f"git+file://{git_remote_repo}",
                 "dir": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
+                "vcs": "git",
             },
         ],
     ],
@@ -272,6 +280,7 @@ def test_progress_callback(
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"file://{git_remote_repo}",
                 "dir": projects_path / repo_name,
+                "vcs": "git",
                 "remotes": {
                     "second_remote": GitRemote(
                         name="second_remote",
@@ -285,10 +294,11 @@ def test_progress_callback(
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "pip_url": f"git+file://{git_remote_repo}",
+                "url": f"git+file://{git_remote_repo}",
                 "dir": projects_path / repo_name,
+                "vcs": "git",
             },
             lambda git_remote_repo, **kwargs: {"origin": f"file://{git_remote_repo}"},
         ],
@@ -472,13 +482,15 @@ def test_git_get_url_and_rev_from_pip_url():
             lambda git_remote_repo, dir, **kwargs: {
                 "url": f"file://{git_remote_repo}",
                 "dir": str(dir),
+                "vcs": "git",
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda git_remote_repo, dir, **kwargs: {
-                "pip_url": f"git+file://{git_remote_repo}",
+                "url": f"git+file://{git_remote_repo}",
                 "dir": dir,
+                "vcs": "git",
             },
         ],
     ],
@@ -514,13 +526,15 @@ def test_remotes_preserves_git_ssh(
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": f"file://{bare_dir}",
                 "dir": tmp_path / "obtaining a bare repo",
+                "vcs": "git",
             },
         ],
         [
-            create_project_from_pip_url,
+            create_project,
             lambda bare_dir, tmp_path, **kwargs: {
-                "pip_url": f"git+file://{bare_dir}",
+                "url": f"git+file://{bare_dir}",
                 "dir": tmp_path / "obtaining a bare repo",
+                "vcs": "git",
             },
         ],
     ],
@@ -530,14 +544,15 @@ def test_private_ssh_format(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ):
-    pip_url_kwargs = {
-        "pip_url": "git+ssh://github.com:/tmp/omg/private_ssh_repo",
-        "dir": tmpdir,
-    }
-
     with pytest.raises(exc.LibVCSException) as excinfo:
-        create_project_from_pip_url(**pip_url_kwargs)
-    excinfo.match(r"is malformatted")
+        create_project(
+            url=git_convert_pip_url(
+                "git+ssh://github.com:/tmp/omg/private_ssh_repo"
+            ).url,
+            dir=tmpdir,
+            vcs="git",
+        )
+        excinfo.match(r".*is a malformed.*")
 
 
 def test_ls_remotes(git_repo: GitProject):

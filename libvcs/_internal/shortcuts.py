@@ -57,7 +57,7 @@ def create_project(
 
     Examples
     --------
-    >>> from libvcs.shortcuts import create_project
+    >>> from libvcs._internal.shortcuts import create_project
     >>> r = create_project(
     ...     url=f'file://{create_git_remote_repo()}',
     ...     vcs='git',
