@@ -31,9 +31,3 @@ def test_command_error():
         command = "command arg"
         raise exc.CommandError("this is output", 0, command)
     assert e.value.cmd == command
-
-
-def test_invalid_pip_url():
-    with pytest.raises(exc.InvalidPipURL) as e:
-        raise exc.InvalidPipURL("http://github.com/wrong/format")
-    assert str(e.value) == e.value.message

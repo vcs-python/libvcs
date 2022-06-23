@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 
 from libvcs import exc
 from libvcs._internal.run import run, which
+from libvcs._internal.shortcuts import create_project
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.git import (
     GitFullRemoteDict,
@@ -19,7 +20,6 @@ from libvcs.projects.git import (
     GitStatus,
     convert_pip_url as git_convert_pip_url,
 )
-from libvcs.shortcuts import create_project
 
 if not which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
