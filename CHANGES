@@ -16,6 +16,13 @@ $ pip install --user --upgrade --pre libvcs
 ### Breaking changes
 
 - {issue}`372` Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
+- {issue}`377` Remove deprecated functions and exceptions
+
+  - Removed `libvcs.shortcuts`
+    - Removed `libvcs.shortcuts.create_project_from_pip_url()`: This will be replaced in future
+      versions by {issue}`376` / parsing utilities
+    - Moved `libvcs.shortcuts.create_project()` to {func}`libvcs._internal.shortcuts.create_project`
+  - Removed {exc}`libvcs.exc.InvalidPipURL`
 
 ### Fixes
 
@@ -59,7 +66,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Typings
 
-- {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.
+- `create_project()`: Add overloads that return the typed project (e.g.
   {class}`~libvcs.projects.git.GitProject`)
 
 ## libvcs 0.13.2 (2022-06-12)
