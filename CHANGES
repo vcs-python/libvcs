@@ -15,6 +15,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
+- {issue}`379` Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being
+  insecure [^pip-git+git]
 - {issue}`372` Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
 - {issue}`377` Remove deprecated functions and exceptions
 
@@ -23,6 +25,8 @@ $ pip install --user --upgrade --pre libvcs
       versions by {issue}`376` / parsing utilities
     - Moved `libvcs.shortcuts.create_project()` to {func}`libvcs._internal.shortcuts.create_project`
   - Removed {exc}`libvcs.exc.InvalidPipURL`
+
+[^pip-git+git]: pip removes `git+git@` <https://github.com/pypa/pip/pull/7543>
 
 ### Fixes
 
