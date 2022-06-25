@@ -157,7 +157,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 
 class GitProject(BaseProject):
     bin_name = "git"
-    schemes = ("git", "git+http", "git+https", "git+file")
+    schemes = ("git+http", "git+https", "git+file")
     _remotes: GitProjectRemoteDict
 
     def __init__(
