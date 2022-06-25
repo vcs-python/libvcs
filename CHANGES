@@ -42,6 +42,18 @@ $ pip install --user --upgrade --pre libvcs
 
   _Backport from 0.13.3_
 
+### Cleanup
+
+- :{issue}`378` Remove duplicate `uses_netloc` scheme for `git+ssh` (this was in cpython since 2.7 /
+  3.1 [^git+ssh][^python:bugs:8657])
+
+[^git+ssh]: [python/cpython@ead169d]
+
+[python/cpython@ead169d]:
+  https://github.com/python/cpython/commit/ead169d3114ed0f1041b5b59ca20293449608c50
+
+[^python:bugs:8657]: <https://bugs.python.org/issue8657>
+
 ## libvcs 0.13.6 (2022-06-18)
 
 ### Development
