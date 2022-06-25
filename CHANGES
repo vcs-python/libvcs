@@ -48,10 +48,12 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Cleanup
 
-- :{issue}`378` Remove duplicate `uses_netloc` scheme for `git+ssh` (this was in cpython since 2.7 /
-  3.1 [^git+ssh][^python:bugs:8657])
+- {issue}`378` {issue}`380` Remove duplicate `uses_netloc` scheme for `git+ssh` (this was in cpython
+  since 2.7 / 3.1 [^git+ssh][^python:bugs:8657])
 
-[^git+ssh]: [python/cpython@ead169d]
+[^git+ssh]: `uses_netloc` added `'git'` and `'git+ssh'` in {mod}`urllib.parse`
+
+    [python/cpython@ead169d]
 
 [python/cpython@ead169d]:
   https://github.com/python/cpython/commit/ead169d3114ed0f1041b5b59ca20293449608c50
