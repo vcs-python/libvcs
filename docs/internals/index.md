@@ -3,10 +3,9 @@
 # Internals
 
 :::{warning}
+Be careful with these! Internal APIs are **not** covered by version policies. They can break or be removed between minor versions!
 
-Internal APIs can break at any time and are not covered by semantic versioning or any other
-stability policy.
-
+If you need an internal API stabilized please [file an issue](https://github.com/vcs-python/libvcs/issues).
 :::
 
 ```{toctree}
