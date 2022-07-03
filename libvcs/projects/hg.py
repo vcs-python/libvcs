@@ -16,6 +16,9 @@ from .base import BaseProject
 logger = logging.getLogger(__name__)
 
 
+__all__ = ["MercurialProject"]
+
+
 class MercurialProject(BaseProject):
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
