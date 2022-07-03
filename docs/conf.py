@@ -97,7 +97,7 @@ simplify_optional_unions = True
 # sphinx-autoapi
 autoapi_type = "python"
 autoapi_dirs = [project_root / "libvcs"]
-autoapi_generate_api_docs = False  # when fales, use directives
+autoapi_generate_api_docs = False  # when False, use directives
 
 # sphinx.ext.napoleon
 napoleon_google_docstring = True
