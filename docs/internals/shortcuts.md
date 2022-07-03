@@ -5,6 +5,4 @@
    :members:
    :show-inheritance:
    :undoc-members:
-   :exclude-members: GitProject, MercurialProject, SubversionProject,
-     InvalidVCS, VCSLiteral, ProgressCallbackProtocol
 ```
