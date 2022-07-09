@@ -28,9 +28,10 @@ from .base import Matcher, MatcherRegistry, URLProtocol
 RE_PATH = r"""
     ((?P<user>.*)@)?
     (?P<hostname>([^/:]+))
-    (?P<separator>[:,/])?
+    (:(?P<port>\d{1,4}))?
+    (?P<separator>/)?
     (?P<path>
-      (\w[^:.]*)  # cut the path at . to negate .hg
+      /?(\w[^:.]*)
     )?
 """
 
@@ -151,9 +152,9 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
     >>> HgURL(url='ssh://username@machinename/path/to/repo')
     HgURL(url=ssh://username@machinename/path/to/repo,
             scheme=ssh,
+            user=username,
             hostname=machinename,
             path=path/to/repo,
-            user=username,
             matcher=core-hg)
 
     - Compatibility checking: :meth:`HgURL.is_valid()`
@@ -162,9 +163,11 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     url: str
     scheme: Optional[str] = None
-    hostname: Optional[str] = None
-    path: Optional[str] = None
     user: Optional[str] = None
+    hostname: str = dataclasses.field(default="")
+    port: Optional[int] = None
+    separator: str = dataclasses.field(default="/")
+    path: str = dataclasses.field(default="")
 
     #
     # commit-ish: tag, branch, ref, revision
@@ -233,7 +236,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> hg_location.to_url()
         'https://hg.mozilla.org/mobile-browser'
 
-        Switch them to hglab:
+        Switch them to localhost:
 
         >>> hg_location.hostname = 'localhost'
         >>> hg_location.scheme = 'http'
@@ -241,15 +244,55 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> hg_location.to_url()
         'http://localhost/mobile-browser'
 
-        todo
-        ----
+        Another example, `hugin <http://hugin.hg.sourceforge.net>`_:
 
-        - Formats: Show an example converting a hghub url from ssh -> https format,
-          and the other way around.
+        >>> hugin = HgURL(url="http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin")
+
+        >>> hugin
+        HgURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
+                scheme=http,
+                hostname=hugin.hg.sourceforge.net,
+                port=8000,
+                path=hgroot/hugin/hugin,
+                matcher=core-hg)
+
+        >>> hugin.to_url()
+        'http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin'
+
+        SSH URL with a username, `graphicsmagic <http://graphicsmagick.org/Hg.html>`_:
+
+        >>> graphicsmagick = HgURL(
+        ...     url="ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick"
+        ... )
+
+        >>> graphicsmagick
+        HgURL(url=ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick,
+                scheme=ssh,
+                user=yourid,
+                hostname=hg.GraphicsMagick.org,
+                path=/hg/GraphicsMagick,
+                matcher=core-hg)
+
+        >>> graphicsmagick.to_url()
+        'ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick'
+
+        Switch the username:
+
+        >>> graphicsmagick.user = 'lucas'
+
+        >>> graphicsmagick.to_url()
+        'ssh://lucas@hg.GraphicsMagick.org//hg/GraphicsMagick'
+
         """
-        if self.scheme is not None:
-            parts = [self.scheme, "://", self.hostname, "/", self.path]
-        else:
-            parts = [self.user or "hg", "@", self.hostname, ":", self.path]
+        parts = [self.scheme or "ssh", "://"]
+        if self.user:
+            parts.extend([self.user, "@"])
+
+        parts.append(self.hostname)
+
+        if self.port is not None:
+            parts.extend([":", f"{self.port}"])
+
+        parts.extend([self.separator, self.path])
 
         return "".join(part for part in parts if isinstance(part, str))
