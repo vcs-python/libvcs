@@ -12,7 +12,7 @@
 .. Note::
 
    Do you use Mercurial at your job or project? This module welcomes a champion /
-   maintainer assure support is top-tier. Stop by the `project tracker
+   maintainer to assure support is top-tier. Stop by the `project tracker
    <https://github.com/vcs-python/libvcs>`_ to make yourself known. We won't stabilize
    any APIs until we're satisfied support is "by the book" and is bullet proofed.
 """
