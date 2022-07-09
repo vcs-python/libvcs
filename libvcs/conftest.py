@@ -12,6 +12,7 @@ from faker import Faker
 
 from libvcs._internal.run import run, which
 from libvcs.projects.git import GitProject, GitRemote
+from libvcs.projects.hg import MercurialProject
 
 skip_if_git_missing = pytest.mark.skipif(
     not which("git"), reason="git is not available"
@@ -331,6 +332,19 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
     )
     git_repo.obtain()
     return git_repo
+
+
+@pytest.fixture
+def hg_repo(
+    projects_path: pathlib.Path, hg_remote_repo: pathlib.Path
+) -> MercurialProject:
+    """Pre-made hg clone of remote repo checked out to user's projects dir."""
+    hg_repo = MercurialProject(
+        url=f"file://{hg_remote_repo}",
+        dir=str(projects_path / "hg_repo"),
+    )
+    hg_repo.obtain()
+    return hg_repo
 
 
 @pytest.fixture(autouse=True)
