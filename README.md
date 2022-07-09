@@ -25,6 +25,54 @@ $ pip install --user ptpython
 $ ptpython
 ```
 
+## URL Parsing (experimental)
+
+You can validate and parse git, Mercurial, and Subversion URLs through
+[`libvcs.parse`](https://libvcs.git-pull.com/parse/index.html):
+
+Validate:
+
+```python
+>>> from libvcs.parse.git import GitUrl
+
+>>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+True
+```
+
+Parse and adjust a git url:
+
+```
+from libvcs.parse.git import GitUrl
+
+>>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+
+>>> git_location
+GitURL(url=git@github.com:vcs-python/libvcs.git,
+        hostname=github.com,
+        path=vcs-python/libvcs,
+        user=git,
+        suffix=.git,
+        matcher=core-git-scp)
+```
+
+Switch repo libvcs -> vcspull:
+
+```python
+>>> git_location.path = 'vcs-python/vcspull'
+
+>>> git_location.to_url()
+'git@github.com:vcs-python/vcspull.git'
+
+# Switch them to gitlab:
+>>> git_location.hostname = 'gitlab.com'
+
+# Export to a `git clone` compatible URL.
+>>> git_location.to_url()
+'git@gitlab.com:vcs-python/vcspull.git'
+```
+
+See more in the [parser document](https://libvcs.git-pull.com/parse/index.html).
+
 ## Commands (experimental)
 
 Simple [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrappers around `git(1)`,

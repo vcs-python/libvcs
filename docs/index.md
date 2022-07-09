@@ -9,6 +9,7 @@
 :hidden:
 
 quickstart
+parse/index
 cmd/index
 projects/index
 ```
