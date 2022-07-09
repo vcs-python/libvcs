@@ -13,6 +13,43 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### What's new
+
+- **Parser**: Experimental VCS URL parsing added ({issue}`376`):
+
+  VCS Parsers return {func}`dataclasses.dataclass` instances. The new tools support validation,
+  parsing, mutating and exporting into URLs consumable by the VCS.
+
+  ::: {warning}
+
+  APIs are unstable and subject to break until we get it right.
+
+  :::
+
+  - {mod}`libvcs.parse.git` - Parse git URLs
+
+    - {class}`~libvcs.parse.git.GitURL` - Parse git URLs
+      - {meth}`~libvcs.parse.git.GitURL.is_valid`
+      - {meth}`~libvcs.parse.git.GitURL.to_url` - export `git clone`-compatible URL
+
+  - {mod}`libvcs.parse.hg`
+
+    - {class}`~libvcs.parse.hg.HgURL` - Parse Mercurial URLs
+      - {meth}`~libvcs.parse.hg.HgURL.is_valid`
+      - {meth}`~libvcs.parse.hg.HgURL.to_url` - export `hg clone`-compatible URL
+
+  - {mod}`libvcs.parse.svn`
+
+    - {class}`~libvcs.parse.svn.SvnURL` - Parse Subversion URLs
+      - {meth}`~libvcs.parse.svn.SvnURL.is_valid`
+      - {meth}`~libvcs.parse.svn.SvnURL.to_url` - export `svn checkout`-compatible URL
+
+  Detection can be extended through writing {class}`~libvcs.parse.base.Matcher`s and adding them to
+  the classes' {class}`~libvcs.parse.base.MatcherRegistry`
+
+  You can write your own VCS parser by implementing {class}`~libvcs.parse.base.URLProtocol`, but it
+  would be most efficient if you studied the source of the `git(1)` parser to see how it's done.
+
 ### Breaking changes
 
 - {issue}`379` Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being
