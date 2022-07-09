@@ -1,7 +1,8 @@
 # `libvcs` &middot; [![Python Package](https://img.shields.io/pypi/v/libvcs.svg)](https://pypi.org/project/libvcs/) [![License](https://img.shields.io/github/license/vcs-python/libvcs.svg)](https://github.com/vcs-python/libvcs/blob/master/LICENSE) [![Code Coverage](https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg)](https://codecov.io/gh/vcs-python/libvcs)
 
-libvcs is a lite, [typed](https://docs.python.org/3/library/typing.html), pythonic wrapper for
-`git`, `hg`, and `svn`. Powers [vcspull](https://www.github.com/vcs-python/vcspull/).
+libvcs is a lite, [typed](https://docs.python.org/3/library/typing.html), pythonic tool box for
+detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `svn`. Powers
+[vcspull](https://www.github.com/vcs-python/vcspull/).
 
 ## Setup
 
