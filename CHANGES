@@ -15,7 +15,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### What's new
 
-- **Parser**: Experimental VCS URL parsing added ({issue}`376`):
+- **Parser**: Experimental VCS URL parsing added ({issue}`376`, {issue}`381`):
 
   VCS Parsers return {func}`dataclasses.dataclass` instances. The new tools support validation,
   parsing, mutating and exporting into URLs consumable by the VCS.
