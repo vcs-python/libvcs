@@ -4,26 +4,18 @@ libvcs is a lite, [typed](https://docs.python.org/3/library/typing.html), python
 detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `svn`. Powers
 [vcspull](https://www.github.com/vcs-python/vcspull/).
 
-## Setup
+## Overview
+
+Features for git, Subversion, and Mercurial:
+
+- **Detect and parse** VCS URLs
+- **Command** VCS via python API
+- **Sync** repos locally
+
+To **get started**, see the [quickstart](https://libvcs.git-pull.com/quickstart.html) for more.
 
 ```console
 $ pip install --user libvcs
-```
-
-Open up python:
-
-```console
-$ python
-```
-
-Or for nice autocompletion and highlighting:
-
-```console
-$ pip install --user ptpython
-```
-
-```console
-$ ptpython
 ```
 
 ## URL Parsing (experimental)
