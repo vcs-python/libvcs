@@ -13,6 +13,7 @@ from faker import Faker
 from libvcs._internal.run import run, which
 from libvcs.projects.git import GitProject, GitRemote
 from libvcs.projects.hg import MercurialProject
+from libvcs.projects.svn import SubversionProject
 
 skip_if_git_missing = pytest.mark.skipif(
     not which("git"), reason="git is not available"
@@ -345,6 +346,19 @@ def hg_repo(
     )
     hg_repo.obtain()
     return hg_repo
+
+
+@pytest.fixture
+def svn_repo(
+    projects_path: pathlib.Path, svn_remote_repo: pathlib.Path
+) -> SubversionProject:
+    """Pre-made svn clone of remote repo checked out to user's projects dir."""
+    svn_repo = SubversionProject(
+        url=f"file://{svn_remote_repo}",
+        dir=str(projects_path / "svn_repo"),
+    )
+    svn_repo.obtain()
+    return svn_repo
 
 
 @pytest.fixture(autouse=True)
