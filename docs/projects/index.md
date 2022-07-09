@@ -1,6 +1,6 @@
 (projects)=
 
-# `libvcs.projects`
+# Projects - `libvcs.projects`
 
 Compare to:
 [`fabtools.require.git`](https://fabtools.readthedocs.io/en/0.19.0/api/require/git.html),
