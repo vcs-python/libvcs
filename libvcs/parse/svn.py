@@ -29,17 +29,20 @@ from .base import Matcher, MatcherRegistry, URLProtocol
 RE_PATH = r"""
     ((?P<user>.*)@)?
     (?P<hostname>([^/:]+))
-    (?P<separator>[:,/])?
+    (:(?P<port>\d{1,4}))?
+    (?P<separator>/)?
     (?P<path>
       (\w[^:.]*)
     )?
 """
 
+# Valid schemes for svn(1).
+# See Table 1.1 Repository access URLs in SVN Book
+# https://svnbook.red-bean.com/nightly/en/svn.basic.in-action.html#svn.basic.in-action.wc.tbl-1
 RE_SCHEME = r"""
     (?P<scheme>
       (
-        http|https|
-        svn\+ssh
+        file|http|https|svn|svn\+ssh
       )
     )
 """
@@ -154,10 +157,12 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
     """
 
     url: str
-    scheme: str = dataclasses.field(init=False)
-    hostname: str = dataclasses.field(init=False)
-    path: str = dataclasses.field(init=False)
+    scheme: Optional[str] = None
     user: Optional[str] = None
+    hostname: str = dataclasses.field(default="")
+    port: Optional[int] = None
+    separator: str = dataclasses.field(default="/")
+    path: str = dataclasses.field(default="")
 
     #
     # commit-ish: ref
@@ -213,9 +218,9 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> svn_location
         SvnURL(url=svn+ssh://my-username@my-server/vcs-python/libvcs,
                 scheme=svn+ssh,
+                user=my-username,
                 hostname=my-server,
                 path=vcs-python/libvcs,
-                user=my-username,
                 matcher=core-svn)
 
         Switch repo libvcs -> vcspull:
@@ -232,12 +237,15 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> svn_location.to_url()
         'svn+ssh://tom@my-server/vcs-python/vcspull'
         """
-        if self.scheme is not None:
-            parts = [self.scheme, "://"]
-            if self.user:
-                parts.extend([self.user, "@"])
-            parts += [self.hostname, "/", self.path]
-        else:
-            parts = [self.user or "svn", "@", self.hostname, ":", self.path]
+        parts = [self.scheme or "ssh", "://"]
+        if self.user:
+            parts.extend([self.user, "@"])
+
+        parts.append(self.hostname)
+
+        if self.port is not None:
+            parts.extend([":", f"{self.port}"])
+
+        parts.extend([self.separator, self.path])
 
         return "".join(part for part in parts if isinstance(part, str))
