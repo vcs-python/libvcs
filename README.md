@@ -127,7 +127,8 @@ See donation options at <https://www.git-pull.com/support.html>.
 - Source: <https://github.com/vcs-python/libvcs>
 - Docs: <https://libvcs.git-pull.com>
 - Changelog: <https://libvcs.git-pull.com/history.html>
-- API:
+- APIs for git, hg, and svn:
+  - [`libvcs.parse`](https://libvcs.git-pull.com/parse/): Detect and Parse
   - [`libvcs.cmd`](https://libvcs.git-pull.com/cmd/): Commands
   - [`libvcs.projects`](https://libvcs.git-pull.com/projects/): High-level synchronization commands
 - Issues: <https://github.com/vcs-python/libvcs/issues>
