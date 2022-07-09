@@ -1,4 +1,4 @@
-# `libvcs.exc`
+# Exceptions - `libvcs.exc`
 
 ```{eval-rst}
 .. autoapimodule:: libvcs.exc

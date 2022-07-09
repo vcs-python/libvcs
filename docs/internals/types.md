@@ -1,4 +1,4 @@
-# `libvcs._internal.types`
+# Typing utilities - `libvcs._internal.types`
 
 ```{eval-rst}
 .. autoapimodule:: libvcs._internal.types

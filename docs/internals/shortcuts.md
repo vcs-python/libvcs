@@ -1,4 +1,4 @@
-# `libvcs._internal.shortcuts`
+# Shortcuts - `libvcs._internal.shortcuts`
 
 ```{eval-rst}
 .. autoapimodule:: libvcs._internal.shortcuts

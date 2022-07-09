@@ -1,4 +1,4 @@
-# `libvcs._internal.run`
+# Command helpers - `libvcs._internal.run`
 
 ```{eval-rst}
 .. autoapimodule:: libvcs._internal.run

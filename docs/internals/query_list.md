@@ -1,4 +1,4 @@
-# `libvcs._internal.query_list`
+# List querying - `libvcs._internal.query_list`
 
 ```{eval-rst}
 .. autoapimodule:: libvcs._internal.query_list
