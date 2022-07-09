@@ -26,7 +26,7 @@ $ pip install --user --upgrade --pre libvcs
 
   :::
 
-  - {mod}`libvcs.parse.git` - Parse git URLs
+  - {mod}`libvcs.parse.git`
 
     - {class}`~libvcs.parse.git.GitURL` - Parse git URLs
       - {meth}`~libvcs.parse.git.GitURL.is_valid`
