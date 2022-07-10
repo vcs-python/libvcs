@@ -29,7 +29,7 @@ from .base import Matcher, MatcherRegistry, URLProtocol
 # We modified it to have groupings
 SCP_REGEX = r"""
     # Optional user, e.g. 'git@'
-    (?P<user>(\w+))?@
+    ((?P<user>\w+)@)?
     # Server, e.g. 'github.com'.
     (?P<hostname>([^/:]+)):
     # The server-side path. e.g. 'user/project.git'. Must start with an
@@ -39,6 +39,7 @@ SCP_REGEX = r"""
     """
 
 RE_PATH = r"""
+    ((?P<user>\w+)@)?
     (?P<hostname>([^/:]+))
     (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?

@@ -131,8 +131,9 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> GitURLWithPip(url="git+ssh://git@github.com/tony/AlgoXY.git")
         GitURLWithPip(url=git+ssh://git@github.com/tony/AlgoXY.git,
             scheme=git+ssh,
-            hostname=git@github.com,
+            hostname=github.com,
             path=tony/AlgoXY,
+            user=git,
             suffix=.git,
             matcher=pip-url)
         """  # NOQA: E501
