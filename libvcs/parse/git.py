@@ -215,15 +215,15 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     Examples
     --------
-    >>> GitURL(url='https://github.com/vcs-python/libvcs.git')
-    GitURL(url=https://github.com/vcs-python/libvcs.git,
+    >>> GitBaseURL(url='https://github.com/vcs-python/libvcs.git')
+    GitBaseURL(url=https://github.com/vcs-python/libvcs.git,
             scheme=https,
             hostname=github.com,
             path=vcs-python/libvcs,
             suffix=.git,
             matcher=core-git-https)
 
-    >>> myrepo = GitURL(url='https://github.com/myproject/myrepo.git')
+    >>> myrepo = GitBaseURL(url='https://github.com/myproject/myrepo.git')
 
     >>> myrepo.hostname
     'github.com'
@@ -231,16 +231,16 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     >>> myrepo.path
     'myproject/myrepo'
 
-    >>> GitURL(url='git@github.com:vcs-python/libvcs.git')
-    GitURL(url=git@github.com:vcs-python/libvcs.git,
+    >>> GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
+    GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
             user=git,
             hostname=github.com,
             path=vcs-python/libvcs,
             suffix=.git,
             matcher=core-git-scp)
 
-    - Compatibility checking: :meth:`GitURL.is_valid()`
-    - URLs compatible with ``git(1)``: :meth:`GitURL.to_url()`
+    - Compatibility checking: :meth:`GitBaseURL.is_valid()`
+    - URLs compatible with ``git(1)``: :meth:`GitBaseURL.to_url()`
 
     Attributes
     ----------
@@ -284,13 +284,13 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        >>> GitBaseURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
         True
 
-        >>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        >>> GitBaseURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
         True
 
-        >>> GitURL.is_valid(url='notaurl')
+        >>> GitBaseURL.is_valid(url='notaurl')
         False
 
         **Unambiguous VCS detection**
@@ -298,12 +298,12 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Sometimes you may want to match a VCS exclusively, without any change for, e.g.
         in order to outright detect the VCS system being used.
 
-        >>> GitURL.is_valid(
+        >>> GitBaseURL.is_valid(
         ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
         ... )
         False
 
-        In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitURL.is_valid`'s
+        In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitBaseURL.is_valid`'s
         examples.
         """
         if is_explicit is not None:
@@ -320,10 +320,10 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs.git')
+        >>> git_url = GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
 
         >>> git_url
-        GitURL(url=git@github.com:vcs-python/libvcs.git,
+        GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
                 user=git,
                 hostname=github.com,
                 path=vcs-python/libvcs,
