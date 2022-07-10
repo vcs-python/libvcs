@@ -112,7 +112,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
         True
 
-        git URLs + pip-style git URLs:
+        **Example: git URLs + pip-style git URLs:**
 
         This is already in :class:`GitURL` via :data:`PIP_DEFAULT_MATCHERS`. For the
         sake of showing how extensibility works, here is a recreation based on
