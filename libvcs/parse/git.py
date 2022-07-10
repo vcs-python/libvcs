@@ -101,16 +101,15 @@ RE_PIP_SCHEME = r"""
     )
 """
 
-RE_PIP_SCHEME_WITH_HTTP = r"""
+RE_PIP_SCP_SCHEME = r"""
     (?P<scheme>
       (
         git\+ssh|
-        git\+https|
-        git\+http|
         git\+file
       )
     )
 """
+
 
 PIP_DEFAULT_MATCHERS: list[Matcher] = [
     Matcher(
@@ -118,7 +117,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         description="pip-style git URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME_WITH_HTTP}
+        {RE_PIP_SCHEME}
         ://
         {RE_PATH}
         {RE_SUFFIX}?
@@ -131,7 +130,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         description="pip-style git ssh/scp URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME}
+        {RE_PIP_SCP_SCHEME}
         {SCP_REGEX}?
         {RE_SUFFIX}
         """,
