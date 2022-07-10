@@ -340,11 +340,72 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class GitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
-    """Batteries included URL Parser. Supports git(1) and pip URLs."""
+class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Supports pip git URLs."""
 
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
+
+    matchers = MatcherRegistry = MatcherRegistry(
+        _matchers={m.label: m for m in PIP_DEFAULT_MATCHERS}
+    )
+
+    def to_url(self) -> str:
+        """Exports a pip-compliant URL.
+
+        Examples
+        --------
+
+        >>> git_location = GitPipURL(
+        ...     url='git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
+        ... )
+
+        >>> git_location
+        GitPipURL(url=git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git,
+                scheme=git+ssh,
+                user=git,
+                hostname=bitbucket.example.com,
+                port=7999,
+                path=PROJ/repo,
+                suffix=.git,
+                matcher=pip-url)
+
+        >>> git_location.path = 'libvcs/vcspull'
+
+        >>> git_location.to_url()
+        'git+ssh://bitbucket.example.com/libvcs/vcspull.git'
+
+        It also accepts revisions, e.g. branch, tag, ref:
+
+        >>> git_location = GitPipURL(
+        ...     url='git+https://github.com/vcs-python/libvcs.git@v0.10.0'
+        ... )
+
+        >>> git_location
+        GitPipURL(url=git+https://github.com/vcs-python/libvcs.git@v0.10.0,
+                scheme=git+https,
+                hostname=github.com,
+                path=vcs-python/libvcs,
+                suffix=.git,
+                matcher=pip-url,
+                rev=v0.10.0)
+
+        >>> git_location.path = 'libvcs/vcspull'
+
+        >>> git_location.to_url()
+        'git+https://github.com/libvcs/vcspull.git@v0.10.0'
+        """
+        url = super().to_url()
+
+        if self.rev:
+            url = f"{url}@{self.rev}"
+
+        return url
+
+
+@dataclasses.dataclass(repr=False)
+class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Batteries included URL Parser. Supports git(1) and pip URLs."""
 
     matchers = MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
