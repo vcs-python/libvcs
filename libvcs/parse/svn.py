@@ -211,11 +211,11 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> svn_location = SvnURL(
+        >>> svn_url = SvnURL(
         ...     url='svn+ssh://my-username@my-server/vcs-python/libvcs'
         ... )
 
-        >>> svn_location
+        >>> svn_url
         SvnURL(url=svn+ssh://my-username@my-server/vcs-python/libvcs,
                 scheme=svn+ssh,
                 user=my-username,
@@ -225,16 +225,16 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Switch repo libvcs -> vcspull:
 
-        >>> svn_location.path = 'vcs-python/vcspull'
+        >>> svn_url.path = 'vcs-python/vcspull'
 
-        >>> svn_location.to_url()
+        >>> svn_url.to_url()
         'svn+ssh://my-username@my-server/vcs-python/vcspull'
 
         Switch user to "tom":
 
-        >>> svn_location.user = 'tom'
+        >>> svn_url.user = 'tom'
 
-        >>> svn_location.to_url()
+        >>> svn_url.to_url()
         'svn+ssh://tom@my-server/vcs-python/vcspull'
         """
         parts = [self.scheme or "ssh", "://"]

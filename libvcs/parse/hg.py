@@ -220,9 +220,9 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> hg_location = HgURL(url='https://hg.mozilla.org/mozilla-central')
+        >>> hg_url = HgURL(url='https://hg.mozilla.org/mozilla-central')
 
-        >>> hg_location
+        >>> hg_url
         HgURL(url=https://hg.mozilla.org/mozilla-central,
                 scheme=https,
                 hostname=hg.mozilla.org,
@@ -231,17 +231,17 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Switch repo libvcs -> vcspull:
 
-        >>> hg_location.path = 'mobile-browser'
+        >>> hg_url.path = 'mobile-browser'
 
-        >>> hg_location.to_url()
+        >>> hg_url.to_url()
         'https://hg.mozilla.org/mobile-browser'
 
         Switch them to localhost:
 
-        >>> hg_location.hostname = 'localhost'
-        >>> hg_location.scheme = 'http'
+        >>> hg_url.hostname = 'localhost'
+        >>> hg_url.scheme = 'http'
 
-        >>> hg_location.to_url()
+        >>> hg_url.to_url()
         'http://localhost/mobile-browser'
 
         Another example, `hugin <http://hugin.hg.sourceforge.net>`_:
