@@ -34,6 +34,7 @@ SCP_REGEX = r"""
 
 RE_PATH = r"""
     (?P<hostname>([^/:]+))
+    (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
     (?P<path>
       (\w[^:.]*)  # cut the path at . to negate .git
@@ -238,6 +239,7 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
     url: str
     scheme: Optional[str] = None
     hostname: Optional[str] = None
+    port: Optional[int] = None
     path: Optional[str] = None
     user: Optional[str] = None
 
