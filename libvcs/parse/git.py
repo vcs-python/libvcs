@@ -292,6 +292,19 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         >>> GitURL.is_valid(url='notaurl')
         False
+
+        **Unambiguous VCS detection**
+
+        Sometimes you may want to match a VCS exclusively, without any change for, e.g.
+        in order to outright detect the VCS system being used.
+
+        >>> GitURL.is_valid(
+        ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        False
+
+        In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitURL.is_valid`'s
+        examples.
         """
         if is_explicit is not None:
             return any(
@@ -410,6 +423,44 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
             url = f"{url}@{self.rev}"
 
         return url
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Whether URL is compatible with Pip Git's VCS URL pattern or not.
+
+        Examples
+        --------
+
+        Will not match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
+
+        >>> GitPipURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        False
+
+        >>> GitPipURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        False
+
+        Pip-style URLs:
+
+        >>> GitPipURL.is_valid(url='git+https://github.com/vcs-python/libvcs.git')
+        True
+
+        >>> GitPipURL.is_valid(url='git+ssh://git@github.com:vcs-python/libvcs.git')
+        True
+
+        >>> GitPipURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        Pip-style URLs are prefixed with the VCS name in front, so its matchers can
+        unambigously narrow the type of VCS:
+
+        >>> GitPipURL.is_valid(
+        ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        True
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
 
 
 @dataclasses.dataclass(repr=False)
