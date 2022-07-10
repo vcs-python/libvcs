@@ -39,7 +39,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
     _matchers: dict[str, Matcher] = dataclasses.field(default_factory=dict)
 
     def register(self, cls: Matcher) -> None:
-        """
+        r"""
 
         .. currentmodule:: libvcs.parse.git
 
@@ -76,11 +76,13 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> class GitHubPrefix(Matcher):
         ...     label = 'gh-prefix'
         ...     description ='Matches prefixes like github:org/repo'
-        ...     pattern = r'^github:(?P<path>)'
+        ...     pattern = r'^github:(?P<path>.*)$'
         ...     pattern_defaults = {
         ...         'hostname': 'github.com',
         ...         'scheme': 'https'
         ...     }
+        ...     # We know it's git, not any other VCS
+        ...     is_explicit = True
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitHubLocation(GitURL):
@@ -90,6 +92,21 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         >>> GitHubLocation.is_valid(url='github:vcs-python/libvcs')
         True
+
+        >>> GitHubLocation.is_valid(url='github:vcs-python/libvcs', is_explicit=True)
+        True
+
+        Notice how ``pattern_defaults`` neatly fills the values for us.
+
+        >>> GitHubLocation(url='github:vcs-python/libvcs')
+        GitHubLocation(url=github:vcs-python/libvcs,
+            scheme=https,
+            hostname=github.com,
+            path=vcs-python/libvcs,
+            matcher=gh-prefix)
+
+        >>> GitHubLocation(url='github:vcs-python/libvcs').to_url()
+        'https://github.com/vcs-python/libvcs'
 
         >>> GitHubLocation.is_valid(url='gitlab:vcs-python/libvcs')
         False
