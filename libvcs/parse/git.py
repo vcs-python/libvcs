@@ -431,7 +431,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        Will not match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
+        Will **not** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
 
         >>> GitPipURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
         False
@@ -481,6 +481,55 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     matchers = MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
     )
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Whether URL is compatible included Git URL matchers or not.
+
+        Examples
+        --------
+
+        **Will** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
+
+        >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        True
+
+        >>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        True
+
+        Pip-style URLs:
+
+        >>> GitURL.is_valid(url='git+https://github.com/vcs-python/libvcs.git')
+        True
+
+        >>> GitURL.is_valid(url='git+ssh://git@github.com:vcs-python/libvcs.git')
+        True
+
+        >>> GitURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        Pip-style URLs are prefixed with the VCS name in front, so its matchers can
+        unambigously narrow the type of VCS:
+
+        >>> GitURL.is_valid(
+        ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        True
+
+        Below, while it's github, that doesn't necessarily mean that the URL itself
+        is conclusively a git URL:
+
+        >>> GitURL.is_valid(
+        ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        False
+
+        You could create a GitHub matcher that consider github.com hostnames to be
+        exclusively.
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
 
     def to_url(self) -> str:
         """Return a ``git(1)``-compatible URL. Can be used with ``git clone``.
