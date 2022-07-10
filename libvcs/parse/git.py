@@ -405,7 +405,18 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
 @dataclasses.dataclass(repr=False)
 class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
-    """Batteries included URL Parser. Supports git(1) and pip URLs."""
+    """Batteries included URL Parser. Supports git(1) and pip URLs.
+
+    **Ancestors (MRO)**
+    This URL parser inherits methods and attributes from the following parsers:
+
+    - :class:`GitPipURL`
+
+      - :meth:`GitPipURL.to_url`
+    - :class:`GitBaseURL`
+
+      - :meth:`GitBaseURL.to_url`
+    """
 
     matchers = MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
