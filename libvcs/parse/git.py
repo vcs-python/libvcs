@@ -259,7 +259,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     suffix: Optional[str] = None
 
     matcher: Optional[str] = None
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
     )
 
@@ -368,7 +368,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in PIP_DEFAULT_MATCHERS}
     )
 
@@ -478,7 +478,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
       - :meth:`GitBaseURL.to_url`
     """
 
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
     )
 

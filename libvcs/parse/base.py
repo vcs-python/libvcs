@@ -123,7 +123,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS
 
         >>> class GitURLWithPip(GitBaseURL):
-        ...    matchers = MatcherRegistry = MatcherRegistry(
+        ...    matchers: MatcherRegistry = MatcherRegistry(
         ...        _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         ...    )
 
