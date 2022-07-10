@@ -1,11 +1,17 @@
 """This module is an all-in-one parser and validator for Git URLs.
 
 - Detection: :meth:`GitURL.is_valid()`
-- Parse: :class:`GitURL`
+- Parse:
 
   compare to :class:`urllib.parse.ParseResult`
 
-  - Output ``git(1)`` URL: :meth:`GitURL.to_url()`
+  - Compatibility focused: :class:`GitURL`: Will work with ``git(1)`` as well as
+    ``pip(1)`` style URLs
+
+    - Output ``git(1)`` URL: :meth:`GitURL.to_url()`
+  - Strict ``git(1)`` compatibility: :class:`GitBaseURL`.
+
+    - Output ``git(1)`` URL: :meth:`GitBaseURL.to_url()`
 - Extendable via :class:`~libvcs.parse.base.MatcherRegistry`,
   :class:`~libvcs.parse.base.Matcher`
 """
@@ -23,7 +29,7 @@ from .base import Matcher, MatcherRegistry, URLProtocol
 # We modified it to have groupings
 SCP_REGEX = r"""
     # Optional user, e.g. 'git@'
-    (?P<user>(\w+))?@
+    ((?P<user>\w+)@)?
     # Server, e.g. 'github.com'.
     (?P<hostname>([^/:]+)):
     # The server-side path. e.g. 'user/project.git'. Must start with an
@@ -33,10 +39,12 @@ SCP_REGEX = r"""
     """
 
 RE_PATH = r"""
+    ((?P<user>\w+)@)?
     (?P<hostname>([^/:]+))
+    (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
     (?P<path>
-      (\w[^:.]*)  # cut the path at . to negate .git
+      (\w[^:.@]*)  # cut the path at . to negate .git, @ from pip
     )?
 """
 
@@ -100,16 +108,19 @@ RE_PIP_SCHEME = r"""
     )
 """
 
-RE_PIP_SCHEME_WITH_HTTP = r"""
+RE_PIP_SCP_SCHEME = r"""
     (?P<scheme>
       (
         git\+ssh|
-        git\+https|
-        git\+http|
         git\+file
       )
     )
 """
+
+RE_PIP_REV = r"""
+    (@(?P<rev>.*))
+"""
+
 
 PIP_DEFAULT_MATCHERS: list[Matcher] = [
     Matcher(
@@ -117,10 +128,11 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         description="pip-style git URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME_WITH_HTTP}
+        {RE_PIP_SCHEME}
         ://
         {RE_PATH}
         {RE_SUFFIX}?
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
@@ -130,9 +142,10 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         description="pip-style git ssh/scp URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME}
+        {RE_PIP_SCP_SCHEME}
         {SCP_REGEX}?
-        {RE_SUFFIX}
+        {RE_SUFFIX}?
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
@@ -142,9 +155,10 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         label="pip-file-url",
         description="pip-style git+file:// URL",
         pattern=re.compile(
-            r"""
+            rf"""
         (?P<scheme>git\+file)://
-        (?P<path>.*)
+        (?P<path>[^@]*)
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
@@ -193,7 +207,7 @@ Notes
 
 
 @dataclasses.dataclass(repr=False)
-class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     """Git gepository location. Parses URLs on initialization.
 
     Examples
@@ -216,9 +230,9 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     >>> GitURL(url='git@github.com:vcs-python/libvcs.git')
     GitURL(url=git@github.com:vcs-python/libvcs.git,
+            user=git,
             hostname=github.com,
             path=vcs-python/libvcs,
-            user=git,
             suffix=.git,
             matcher=core-git-scp)
 
@@ -229,27 +243,17 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
     ----------
     matcher : str
         name of the :class:`~libvcs.parse.base.Matcher`
-
-    branch : str, optional
-        Default URL parsers don't output these,
-        can be added by extending or passing manually
     """
 
     url: str
     scheme: Optional[str] = None
-    hostname: Optional[str] = None
-    path: Optional[str] = None
     user: Optional[str] = None
+    hostname: Optional[str] = None
+    port: Optional[int] = None
+    path: Optional[str] = None
 
     # Decoration
     suffix: Optional[str] = None
-
-    #
-    # commit-ish: tag, branch, ref, revision
-    #
-    ref: Optional[str] = None
-    branch: Optional[str] = None
-    tag: Optional[str] = None
 
     matcher: Optional[str] = None
     matchers = MatcherRegistry = MatcherRegistry(
@@ -298,9 +302,9 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         >>> git_location
         GitURL(url=git@github.com:vcs-python/libvcs.git,
+                user=git,
                 hostname=github.com,
                 path=vcs-python/libvcs,
-                user=git,
                 suffix=.git,
                 matcher=core-git-scp)
 
@@ -333,3 +337,87 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
             parts.append(self.suffix)
 
         return "".join(part for part in parts if isinstance(part, str))
+
+
+@dataclasses.dataclass(repr=False)
+class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Supports pip git URLs."""
+
+    # commit-ish (rev): tag, branch, ref
+    rev: Optional[str] = None
+
+    matchers = MatcherRegistry = MatcherRegistry(
+        _matchers={m.label: m for m in PIP_DEFAULT_MATCHERS}
+    )
+
+    def to_url(self) -> str:
+        """Exports a pip-compliant URL.
+
+        Examples
+        --------
+
+        >>> git_location = GitPipURL(
+        ...     url='git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
+        ... )
+
+        >>> git_location
+        GitPipURL(url=git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git,
+                scheme=git+ssh,
+                user=git,
+                hostname=bitbucket.example.com,
+                port=7999,
+                path=PROJ/repo,
+                suffix=.git,
+                matcher=pip-url)
+
+        >>> git_location.path = 'libvcs/vcspull'
+
+        >>> git_location.to_url()
+        'git+ssh://bitbucket.example.com/libvcs/vcspull.git'
+
+        It also accepts revisions, e.g. branch, tag, ref:
+
+        >>> git_location = GitPipURL(
+        ...     url='git+https://github.com/vcs-python/libvcs.git@v0.10.0'
+        ... )
+
+        >>> git_location
+        GitPipURL(url=git+https://github.com/vcs-python/libvcs.git@v0.10.0,
+                scheme=git+https,
+                hostname=github.com,
+                path=vcs-python/libvcs,
+                suffix=.git,
+                matcher=pip-url,
+                rev=v0.10.0)
+
+        >>> git_location.path = 'libvcs/vcspull'
+
+        >>> git_location.to_url()
+        'git+https://github.com/libvcs/vcspull.git@v0.10.0'
+        """
+        url = super().to_url()
+
+        if self.rev:
+            url = f"{url}@{self.rev}"
+
+        return url
+
+
+@dataclasses.dataclass(repr=False)
+class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Batteries included URL Parser. Supports git(1) and pip URLs.
+
+    **Ancestors (MRO)**
+    This URL parser inherits methods and attributes from the following parsers:
+
+    - :class:`GitPipURL`
+
+      - :meth:`GitPipURL.to_url`
+    - :class:`GitBaseURL`
+
+      - :meth:`GitBaseURL.to_url`
+    """
+
+    matchers = MatcherRegistry = MatcherRegistry(
+        _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+    )

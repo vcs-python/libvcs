@@ -3,21 +3,21 @@ import typing
 import pytest
 
 from libvcs.parse.base import MatcherRegistry
-from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitURL
+from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 from libvcs.projects.git import GitProject
 
 
 class GitURLFixture(typing.NamedTuple):
     url: str
     is_valid: bool
-    git_location: GitURL
+    git_url: GitURL
 
 
 TEST_FIXTURES: list[GitURLFixture] = [
     GitURLFixture(
         url="https://github.com/vcs-python/libvcs.git",
         is_valid=True,
-        git_location=GitURL(
+        git_url=GitURL(
             url="https://github.com/vcs-python/libvcs.git",
             scheme="https",
             hostname="github.com",
@@ -27,10 +27,21 @@ TEST_FIXTURES: list[GitURLFixture] = [
     GitURLFixture(
         url="https://github.com/vcs-python/libvcs",
         is_valid=True,
-        git_location=GitURL(
+        git_url=GitURL(
             url="https://github.com/vcs-python/libvcs",
             scheme="https",
             hostname="github.com",
+            path="vcs-python/libvcs",
+        ),
+    ),
+    GitURLFixture(
+        url="https://github.com:7999/vcs-python/libvcs",
+        is_valid=True,
+        git_url=GitURL(
+            url="https://github.com:7999/vcs-python/libvcs",
+            scheme="https",
+            hostname="github.com",
+            port=7999,
             path="vcs-python/libvcs",
         ),
     ),
@@ -41,7 +52,7 @@ TEST_FIXTURES: list[GitURLFixture] = [
     GitURLFixture(
         url="git@github.com:liuxinyu95/AlgoXY.git",
         is_valid=True,
-        git_location=GitURL(
+        git_url=GitURL(
             url="git@github.com:liuxinyu95/AlgoXY.git",
             scheme=None,
             hostname="github.com",
@@ -51,7 +62,7 @@ TEST_FIXTURES: list[GitURLFixture] = [
     GitURLFixture(
         url="git@github.com:vcs-python/libvcs.git",
         is_valid=True,
-        git_location=GitURL(
+        git_url=GitURL(
             url="git@github.com:vcs-python/libvcs.git",
             scheme="https",
             hostname="github.com",
@@ -62,20 +73,20 @@ TEST_FIXTURES: list[GitURLFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,git_location",
+    "url,is_valid,git_url",
     TEST_FIXTURES,
 )
-def test_git_location(
+def test_git_url(
     url: str,
     is_valid: bool,
-    git_location: GitURL,
+    git_url: GitURL,
     git_repo: GitProject,
 ):
     url = url.format(local_repo=git_repo.dir)
-    git_location.url = git_location.url.format(local_repo=git_repo.dir)
+    git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
     assert GitURL.is_valid(url) == is_valid, f"{url} compatibility should be {is_valid}"
-    assert GitURL(url) == git_location
+    assert GitURL(url) == git_url
 
 
 class GitURLKwargs(typing.TypedDict):
@@ -85,7 +96,7 @@ class GitURLKwargs(typing.TypedDict):
 class GitURLKwargsFixture(typing.NamedTuple):
     url: str
     is_valid: bool
-    git_location_kwargs: GitURLKwargs
+    git_url_kwargs: GitURLKwargs
 
 
 #
@@ -99,75 +110,67 @@ PIP_TEST_FIXTURES: list[GitURLKwargsFixture] = [
     GitURLKwargsFixture(
         url="git+https://github.com/liuxinyu95/AlgoXY.git",
         is_valid=True,
-        git_location_kwargs=GitURLKwargs(
-            url="git+https://github.com/liuxinyu95/AlgoXY.git"
-        ),
+        git_url_kwargs=GitURLKwargs(url="git+https://github.com/liuxinyu95/AlgoXY.git"),
     ),
     GitURLKwargsFixture(
         url="git+ssh://git@github.com:tony/AlgoXY.git",
         is_valid=True,
-        git_location_kwargs=GitURLKwargs(
-            url="git+ssh://git@github.com:tony/AlgoXY.git"
-        ),
+        git_url_kwargs=GitURLKwargs(url="git+ssh://git@github.com:tony/AlgoXY.git"),
     ),
     GitURLKwargsFixture(
         url="git+file://{local_repo}",
         is_valid=True,
-        git_location_kwargs=GitURLKwargs(url="git+file://{local_repo}"),
+        git_url_kwargs=GitURLKwargs(url="git+file://{local_repo}"),
     ),
     # Incompatible
     GitURLKwargsFixture(
         url="git+ssh://git@github.com/tony/AlgoXY.git",
         is_valid=True,
-        git_location_kwargs=GitURLKwargs(
-            url="git+ssh://git@github.com/tony/AlgoXY.git"
-        ),
+        git_url_kwargs=GitURLKwargs(url="git+ssh://git@github.com/tony/AlgoXY.git"),
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,git_location_kwargs",
+    "url,is_valid,git_url_kwargs",
     PIP_TEST_FIXTURES,
 )
-def test_git_location_extension_pip(
+def test_git_url_extension_pip(
     url: str,
     is_valid: bool,
-    git_location_kwargs: GitURLKwargs,
+    git_url_kwargs: GitURLKwargs,
     git_repo: GitProject,
 ):
-    class GitURLWithPip(GitURL):
+    class GitURLWithPip(GitBaseURL):
         matchers = MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 
-    git_location_kwargs["url"] = git_location_kwargs["url"].format(
-        local_repo=git_repo.dir
-    )
+    git_url_kwargs["url"] = git_url_kwargs["url"].format(local_repo=git_repo.dir)
     url = url.format(local_repo=git_repo.dir)
-    git_location = GitURLWithPip(**git_location_kwargs)
-    git_location.url = git_location.url.format(local_repo=git_repo.dir)
+    git_url = GitURLWithPip(**git_url_kwargs)
+    git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
     assert (
-        GitURL.is_valid(url) != is_valid
+        GitBaseURL.is_valid(url) != is_valid
     ), f"{url} compatibility should work with core, expects {not is_valid}"
     assert (
         GitURLWithPip.is_valid(url) == is_valid
     ), f"{url} compatibility should be {is_valid}"
-    assert GitURLWithPip(url) == git_location
+    assert GitURLWithPip(url) == git_url
 
 
 class ToURLFixture(typing.NamedTuple):
-    git_location: GitURL
+    git_url: GitURL
     expected: str
 
 
 @pytest.mark.parametrize(
-    "git_location,expected",
+    "git_url,expected",
     [
         ToURLFixture(
             expected="https://github.com/vcs-python/libvcs.git",
-            git_location=GitURL(
+            git_url=GitURL(
                 url="https://github.com/vcs-python/libvcs.git",
                 scheme="https",
                 hostname="github.com",
@@ -176,7 +179,7 @@ class ToURLFixture(typing.NamedTuple):
         ),
         ToURLFixture(
             expected="https://github.com/vcs-python/libvcs",
-            git_location=GitURL(
+            git_url=GitURL(
                 url="https://github.com/vcs-python/libvcs",
                 scheme="https",
                 hostname="github.com",
@@ -189,7 +192,7 @@ class ToURLFixture(typing.NamedTuple):
         #
         ToURLFixture(
             expected="git@github.com:liuxinyu95/AlgoXY.git",
-            git_location=GitURL(
+            git_url=GitURL(
                 url="git@github.com:liuxinyu95/AlgoXY.git",
                 scheme=None,
                 hostname="github.com",
@@ -198,7 +201,7 @@ class ToURLFixture(typing.NamedTuple):
         ),
         ToURLFixture(
             expected="git@github.com:vcs-python/libvcs.git",
-            git_location=GitURL(
+            git_url=GitURL(
                 url="git@github.com:vcs-python/libvcs.git",
                 scheme="https",
                 hostname="github.com",
@@ -209,10 +212,52 @@ class ToURLFixture(typing.NamedTuple):
 )
 def test_git_to_url(
     expected: str,
-    git_location: GitURL,
+    git_url: GitURL,
     git_repo: GitProject,
 ):
     """Test GitURL.to_url()"""
-    git_location.url = git_location.url.format(local_repo=git_repo.dir)
+    git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
-    assert git_location.to_url() == expected
+    assert git_url.to_url() == expected
+
+
+class RevFixture(typing.NamedTuple):
+    git_url_kwargs: GitURLKwargs
+    expected: typing.Optional[str]
+    # Expected revision / branch / tag
+
+
+@pytest.mark.parametrize(
+    "git_url_kwargs,expected",
+    [
+        RevFixture(
+            expected=None,
+            git_url_kwargs=GitURLKwargs(
+                url="git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git",
+            ),
+        ),
+        RevFixture(
+            expected="eucalyptus",
+            git_url_kwargs=GitURLKwargs(
+                url="git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git@eucalyptus",
+            ),
+        ),
+        RevFixture(
+            expected="build.2600-whistler",
+            git_url_kwargs=GitURLKwargs(
+                url="git+https://github.com/PROJ/repo.git@build.2600-whistler",
+            ),
+        ),
+    ],
+)
+def test_git_revs(
+    expected: str,
+    git_url_kwargs: GitURLKwargs,
+):
+    class GitURLWithPip(GitURL):
+        matchers = MatcherRegistry = MatcherRegistry(
+            _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        )
+
+    git_url = GitURLWithPip(**git_url_kwargs)
+    assert git_url.rev == expected

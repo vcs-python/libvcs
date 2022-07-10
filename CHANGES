@@ -15,7 +15,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### What's new
 
-- **Parser**: Experimental VCS URL parsing added ({issue}`376`, {issue}`381`):
+- **Parser**: Experimental VCS URL parsing added ({issue}`376`, {issue}`381`, {i}): {issue}`384`):
 
   VCS Parsers return {func}`dataclasses.dataclass` instances. The new tools support validation,
   parsing, mutating and exporting into URLs consumable by the VCS.
@@ -28,9 +28,16 @@ $ pip install --user --upgrade --pre libvcs
 
   - {mod}`libvcs.parse.git`
 
-    - {class}`~libvcs.parse.git.GitURL` - Parse git URLs
-      - {meth}`~libvcs.parse.git.GitURL.is_valid`
-      - {meth}`~libvcs.parse.git.GitURL.to_url` - export `git clone`-compatible URL
+    - {class}`~libvcs.parse.git.GitBaseURL` - Parse git URLs, `git(1)` compatible
+
+      - {meth}`~libvcs.parse.git.GitBaseURL.is_valid`
+      - {meth}`~libvcs.parse.git.GitBaseURL.to_url` - export `git clone`-compatible URL
+
+    - {class}`~libvcs.parse.git.GitPipURL` - Pip URLs, {meth}`~libvcs.parse.git.GitPipURL.is_valid`,
+      {meth}`~libvcs.parse.git.GitPipURL.to_url`
+
+    - {class}`~libvcs.parse.git.GitURL` - Compatibility focused,
+      {meth}`~libvcs.parse.git.GitURL.is_valid` {meth}`~libvcs.parse.git.GitURL.to_url`
 
   - {mod}`libvcs.parse.hg`
 

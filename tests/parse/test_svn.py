@@ -10,7 +10,7 @@ from libvcs.projects.svn import SubversionProject
 class SvnURLFixture(typing.NamedTuple):
     url: str
     is_valid: bool
-    svn_location: SvnURL
+    svn_url: SvnURL
 
 
 # Valid schemes for svn(1).
@@ -20,7 +20,7 @@ TEST_FIXTURES: list[SvnURLFixture] = [
     SvnURLFixture(
         url="https://bitbucket.com/vcs-python/libvcs",
         is_valid=True,
-        svn_location=SvnURL(
+        svn_url=SvnURL(
             url="https://bitbucket.com/vcs-python/libvcs",
             scheme="https",
             hostname="bitbucket.com",
@@ -30,7 +30,7 @@ TEST_FIXTURES: list[SvnURLFixture] = [
     SvnURLFixture(
         url="https://bitbucket.com/vcs-python/libvcs",
         is_valid=True,
-        svn_location=SvnURL(
+        svn_url=SvnURL(
             url="https://bitbucket.com/vcs-python/libvcs",
             scheme="https",
             hostname="bitbucket.com",
@@ -40,7 +40,7 @@ TEST_FIXTURES: list[SvnURLFixture] = [
     SvnURLFixture(
         url="svn://svn@bitbucket.com/tony/AlgoXY",
         is_valid=True,
-        svn_location=SvnURL(
+        svn_url=SvnURL(
             url="svn://svn@bitbucket.com/tony/AlgoXY",
             scheme="https",
             hostname="bitbucket.com",
@@ -50,7 +50,7 @@ TEST_FIXTURES: list[SvnURLFixture] = [
     SvnURLFixture(
         url="svn+ssh://svn@bitbucket.com/tony/AlgoXY",
         is_valid=True,
-        svn_location=SvnURL(
+        svn_url=SvnURL(
             url="svn+ssh://svn@bitbucket.com/tony/AlgoXY",
             scheme="https",
             hostname="bitbucket.com",
@@ -61,20 +61,20 @@ TEST_FIXTURES: list[SvnURLFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,svn_location",
+    "url,is_valid,svn_url",
     TEST_FIXTURES,
 )
-def test_svn_location(
+def test_svn_url(
     url: str,
     is_valid: bool,
-    svn_location: SvnURL,
+    svn_url: SvnURL,
     svn_repo: SubversionProject,
 ):
     url = url.format(local_repo=svn_repo.dir)
-    svn_location.url = svn_location.url.format(local_repo=svn_repo.dir)
+    svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
     assert SvnURL.is_valid(url) == is_valid, f"{url} compatibility should be {is_valid}"
-    assert SvnURL(url) == svn_location
+    assert SvnURL(url) == svn_url
 
 
 class SvnURLKwargs(typing.TypedDict):
@@ -84,7 +84,7 @@ class SvnURLKwargs(typing.TypedDict):
 class SvnURLKwargsFixture(typing.NamedTuple):
     url: str
     is_valid: bool
-    svn_location_kwargs: SvnURLKwargs
+    svn_url_kwargs: SvnURLKwargs
 
 
 #
@@ -98,33 +98,29 @@ PIP_TEST_FIXTURES: list[SvnURLKwargsFixture] = [
     SvnURLKwargsFixture(
         url="svn+http://svn@bitbucket.com/tony/AlgoXY",
         is_valid=True,
-        svn_location_kwargs=SvnURLKwargs(
-            url="svn+http://svn@bitbucket.com/tony/AlgoXY"
-        ),
+        svn_url_kwargs=SvnURLKwargs(url="svn+http://svn@bitbucket.com/tony/AlgoXY"),
     ),
     SvnURLKwargsFixture(
         url="svn+https://svn@bitbucket.com/tony/AlgoXY",
         is_valid=True,
-        svn_location_kwargs=SvnURLKwargs(
-            url="svn+https://svn@bitbucket.com/tony/AlgoXY"
-        ),
+        svn_url_kwargs=SvnURLKwargs(url="svn+https://svn@bitbucket.com/tony/AlgoXY"),
     ),
     SvnURLKwargsFixture(
         url="svn+file://{local_repo}",
         is_valid=True,
-        svn_location_kwargs=SvnURLKwargs(url="svn+file://{local_repo}"),
+        svn_url_kwargs=SvnURLKwargs(url="svn+file://{local_repo}"),
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,svn_location_kwargs",
+    "url,is_valid,svn_url_kwargs",
     PIP_TEST_FIXTURES,
 )
-def test_svn_location_extension_pip(
+def test_svn_url_extension_pip(
     url: str,
     is_valid: bool,
-    svn_location_kwargs: SvnURLKwargs,
+    svn_url_kwargs: SvnURLKwargs,
     svn_repo: SubversionProject,
 ):
     class SvnURLWithPip(SvnURL):
@@ -132,12 +128,10 @@ def test_svn_location_extension_pip(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 
-    svn_location_kwargs["url"] = svn_location_kwargs["url"].format(
-        local_repo=svn_repo.dir
-    )
+    svn_url_kwargs["url"] = svn_url_kwargs["url"].format(local_repo=svn_repo.dir)
     url = url.format(local_repo=svn_repo.dir)
-    svn_location = SvnURLWithPip(**svn_location_kwargs)
-    svn_location.url = svn_location.url.format(local_repo=svn_repo.dir)
+    svn_url = SvnURLWithPip(**svn_url_kwargs)
+    svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
     assert (
         SvnURL.is_valid(url) != is_valid
@@ -145,20 +139,20 @@ def test_svn_location_extension_pip(
     assert (
         SvnURLWithPip.is_valid(url) == is_valid
     ), f"{url} compatibility should be {is_valid}"
-    assert SvnURLWithPip(url) == svn_location
+    assert SvnURLWithPip(url) == svn_url
 
 
 class ToURLFixture(typing.NamedTuple):
-    svn_location: SvnURL
+    svn_url: SvnURL
     expected: str
 
 
 @pytest.mark.parametrize(
-    "svn_location,expected",
+    "svn_url,expected",
     [
         ToURLFixture(
             expected="https://bitbucket.com/vcs-python/libvcs",
-            svn_location=SvnURL(
+            svn_url=SvnURL(
                 url="https://bitbucket.com/vcs-python/libvcs",
                 scheme="https",
                 hostname="bitbucket.com",
@@ -167,7 +161,7 @@ class ToURLFixture(typing.NamedTuple):
         ),
         ToURLFixture(
             expected="https://bitbucket.com/vcs-python/libvcs",
-            svn_location=SvnURL(
+            svn_url=SvnURL(
                 url="https://bitbucket.com/vcs-python/libvcs",
                 scheme="https",
                 hostname="bitbucket.com",
@@ -180,7 +174,7 @@ class ToURLFixture(typing.NamedTuple):
         #
         ToURLFixture(
             expected="ssh://svn@bitbucket.com/liuxinyu95/AlgoXY",
-            svn_location=SvnURL(
+            svn_url=SvnURL(
                 url="ssh://svn@bitbucket.com/liuxinyu95/AlgoXY",
                 user="svn",
                 scheme="ssh",
@@ -190,7 +184,7 @@ class ToURLFixture(typing.NamedTuple):
         ),
         ToURLFixture(
             expected="ssh://username@bitbucket.com/vcs-python/libvcs",
-            svn_location=SvnURL(
+            svn_url=SvnURL(
                 url="username@bitbucket.com/vcs-python/libvcs",
                 user="username",
                 scheme="ssh",
@@ -202,10 +196,10 @@ class ToURLFixture(typing.NamedTuple):
 )
 def test_svn_to_url(
     expected: str,
-    svn_location: SvnURL,
+    svn_url: SvnURL,
     svn_repo: SubversionProject,
 ):
     """Test SvnURL.to_url()"""
-    svn_location.url = svn_location.url.format(local_repo=svn_repo.dir)
+    svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
-    assert svn_location.to_url() == expected
+    assert svn_url.to_url() == expected
