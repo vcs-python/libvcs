@@ -3,7 +3,7 @@ import typing
 import pytest
 
 from libvcs.parse.base import MatcherRegistry
-from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitURL
+from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 from libvcs.projects.git import GitProject
 
 
@@ -141,7 +141,7 @@ def test_git_url_extension_pip(
     git_url_kwargs: GitURLKwargs,
     git_repo: GitProject,
 ):
-    class GitURLWithPip(GitURL):
+    class GitURLWithPip(GitBaseURL):
         matchers = MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
@@ -152,7 +152,7 @@ def test_git_url_extension_pip(
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
     assert (
-        GitURL.is_valid(url) != is_valid
+        GitBaseURL.is_valid(url) != is_valid
     ), f"{url} compatibility should work with core, expects {not is_valid}"
     assert (
         GitURLWithPip.is_valid(url) == is_valid

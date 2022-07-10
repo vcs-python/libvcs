@@ -38,10 +38,27 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
     def register(self, cls: Matcher) -> None:
         """
-        >>> from libvcs.parse.git import GitURL
+
+        .. currentmodule:: libvcs.parse.git
+
+        >>> from libvcs.parse.git import GitURL, GitBaseURL
+
+        :class:`GitBaseURL` - the ``git(1)`` compliant parser - won't accept a pip-style URL:
+
+        >>> GitBaseURL.is_valid(url="git+ssh://git@github.com/tony/AlgoXY.git")
+        False
+
+        :class:`GitURL` - the "batteries-included" parser - can do it:
 
         >>> GitURL.is_valid(url="git+ssh://git@github.com/tony/AlgoXY.git")
+        True
+
+        But what if you wanted to do ``github:org/repo``?
+
+        >>> GitURL.is_valid(url="github:org/repo")
         False
+
+        **Extending matching capability:**
 
         >>> class GitHubPrefix(Matcher):
         ...     label = 'gh-prefix'
@@ -95,9 +112,15 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         git URLs + pip-style git URLs:
 
+        This is already in :class:`GitURL` via :data:`PIP_DEFAULT_MATCHERS`. For the
+        sake of showing how extensibility works, here is a recreation based on
+        :class:`GitBaseURL`:
+
+        >>> from libvcs.parse.git import GitBaseURL
+
         >>> from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS
 
-        >>> class GitURLWithPip(GitURL):
+        >>> class GitURLWithPip(GitBaseURL):
         ...    matchers = MatcherRegistry = MatcherRegistry(
         ...        _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         ...    )

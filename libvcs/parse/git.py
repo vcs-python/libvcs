@@ -1,11 +1,17 @@
 """This module is an all-in-one parser and validator for Git URLs.
 
 - Detection: :meth:`GitURL.is_valid()`
-- Parse: :class:`GitURL`
+- Parse:
 
   compare to :class:`urllib.parse.ParseResult`
 
-  - Output ``git(1)`` URL: :meth:`GitURL.to_url()`
+  - Compatibility focused: :class:`GitURL`: Will work with ``git(1)`` as well as
+    ``pip(1)`` style URLs
+
+    - Output ``git(1)`` URL: :meth:`GitURL.to_url()`
+  - Strict ``git(1)`` compatibility: :class:`GitBaseURL`.
+
+    - Output ``git(1)`` URL: :meth:`GitBaseURL.to_url()`
 - Extendable via :class:`~libvcs.parse.base.MatcherRegistry`,
   :class:`~libvcs.parse.base.Matcher`
 """
@@ -200,7 +206,7 @@ Notes
 
 
 @dataclasses.dataclass(repr=False)
-class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     """Git gepository location. Parses URLs on initialization.
 
     Examples
@@ -333,3 +339,12 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
             parts.append(self.suffix)
 
         return "".join(part for part in parts if isinstance(part, str))
+
+
+@dataclasses.dataclass(repr=False)
+class GitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Batteries included URL Parser. Supports git(1) and pip URLs."""
+
+    matchers = MatcherRegistry = MatcherRegistry(
+        _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+    )
