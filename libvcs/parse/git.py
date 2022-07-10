@@ -278,7 +278,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
                     setattr(self, k, v)
 
     @classmethod
-    def is_valid(cls, url: str) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -293,6 +293,12 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> GitURL.is_valid(url='notaurl')
         False
         """
+        if is_explicit is not None:
+            return any(
+                re.search(matcher.pattern, url)
+                for matcher in cls.matchers.values()
+                if matcher.is_explicit == is_explicit
+            )
         return any(re.search(matcher.pattern, url) for matcher in cls.matchers.values())
 
     def to_url(self) -> str:

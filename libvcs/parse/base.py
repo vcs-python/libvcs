@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Iterator, Pattern, Protocol
+from typing import Iterator, Optional, Pattern, Protocol
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
@@ -13,7 +13,7 @@ class URLProtocol(Protocol):
     def to_url(self) -> str:
         ...
 
-    def is_valid(self, url: str) -> bool:
+    def is_valid(self, url: str, is_explicit: Optional[bool] = None) -> bool:
         ...
 
 

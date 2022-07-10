@@ -195,7 +195,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
                     setattr(self, k, v)
 
     @classmethod
-    def is_valid(cls, url: str) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
