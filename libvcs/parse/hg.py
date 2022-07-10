@@ -26,8 +26,8 @@ from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 from .base import Matcher, MatcherRegistry, URLProtocol
 
 RE_PATH = r"""
-    ((?P<user>.*)@)?
-    (?P<hostname>([^/:]+))
+    ((?P<user>\w+)@)?
+    (?P<hostname>([^/:@]+))
     (:(?P<port>\d{1,5}))?
     (?P<separator>/)?
     (?P<path>
