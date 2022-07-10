@@ -34,6 +34,17 @@ TEST_FIXTURES: list[GitURLFixture] = [
             path="vcs-python/libvcs",
         ),
     ),
+    GitURLFixture(
+        url="https://github.com:7999/vcs-python/libvcs",
+        is_valid=True,
+        git_location=GitURL(
+            url="https://github.com:7999/vcs-python/libvcs",
+            scheme="https",
+            hostname="github.com",
+            port=7999,
+            path="vcs-python/libvcs",
+        ),
+    ),
     #
     # SCP-style URLs:
     # e.g. 'git@example.com:foo/bar.git'
