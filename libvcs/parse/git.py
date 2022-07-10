@@ -230,9 +230,9 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     >>> GitURL(url='git@github.com:vcs-python/libvcs.git')
     GitURL(url=git@github.com:vcs-python/libvcs.git,
+            user=git,
             hostname=github.com,
             path=vcs-python/libvcs,
-            user=git,
             suffix=.git,
             matcher=core-git-scp)
 
@@ -247,10 +247,10 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     url: str
     scheme: Optional[str] = None
+    user: Optional[str] = None
     hostname: Optional[str] = None
     port: Optional[int] = None
     path: Optional[str] = None
-    user: Optional[str] = None
 
     # Decoration
     suffix: Optional[str] = None
@@ -302,9 +302,9 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         >>> git_location
         GitURL(url=git@github.com:vcs-python/libvcs.git,
+                user=git,
                 hostname=github.com,
                 path=vcs-python/libvcs,
-                user=git,
                 suffix=.git,
                 matcher=core-git-scp)
 
