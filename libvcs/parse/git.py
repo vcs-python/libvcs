@@ -560,9 +560,15 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         ... )
         True
 
+        >>> GitURL(url='git@github.com:vcs-python/libvcs.git').matcher
+        'gh-matcher'
+
         This is just us cleaning up:
 
         >>> GitURL.matchers.unregister('gh-matcher')
+
+        >>> GitURL(url='git@github.com:vcs-python/libvcs.git').matcher
+        'core-git-scp'
         """
         return super().is_valid(url=url, is_explicit=is_explicit)
 
