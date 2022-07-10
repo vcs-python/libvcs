@@ -307,9 +307,9 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+        >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
-        >>> git_location
+        >>> git_url
         GitURL(url=git@github.com:vcs-python/libvcs.git,
                 user=git,
                 hostname=github.com,
@@ -319,16 +319,16 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Switch repo libvcs -> vcspull:
 
-        >>> git_location.path = 'vcs-python/vcspull'
+        >>> git_url.path = 'vcs-python/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git@github.com:vcs-python/vcspull.git'
 
         Switch them to gitlab:
 
-        >>> git_location.hostname = 'gitlab.com'
+        >>> git_url.hostname = 'gitlab.com'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git@gitlab.com:vcs-python/vcspull.git'
 
         todo
@@ -365,11 +365,11 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> git_location = GitPipURL(
+        >>> git_url = GitPipURL(
         ...     url='git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
         ... )
 
-        >>> git_location
+        >>> git_url
         GitPipURL(url=git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git,
                 scheme=git+ssh,
                 user=git,
@@ -379,18 +379,18 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
                 suffix=.git,
                 matcher=pip-url)
 
-        >>> git_location.path = 'libvcs/vcspull'
+        >>> git_url.path = 'libvcs/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git+ssh://bitbucket.example.com/libvcs/vcspull.git'
 
         It also accepts revisions, e.g. branch, tag, ref:
 
-        >>> git_location = GitPipURL(
+        >>> git_url = GitPipURL(
         ...     url='git+https://github.com/vcs-python/libvcs.git@v0.10.0'
         ... )
 
-        >>> git_location
+        >>> git_url
         GitPipURL(url=git+https://github.com/vcs-python/libvcs.git@v0.10.0,
                 scheme=git+https,
                 hostname=github.com,
@@ -399,9 +399,9 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
                 matcher=pip-url,
                 rev=v0.10.0)
 
-        >>> git_location.path = 'libvcs/vcspull'
+        >>> git_url.path = 'libvcs/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git+https://github.com/libvcs/vcspull.git@v0.10.0'
         """
         url = super().to_url()
@@ -438,36 +438,36 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         --------
 
         SSH style URL:
-        >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+        >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
-        >>> git_location.path = 'vcs-python/vcspull'
+        >>> git_url.path = 'vcs-python/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git@github.com:vcs-python/vcspull.git'
 
         HTTPs URL:
 
-        >>> git_location = GitURL(url='https://github.com/vcs-python/libvcs.git')
+        >>> git_url = GitURL(url='https://github.com/vcs-python/libvcs.git')
 
-        >>> git_location.path = 'vcs-python/vcspull'
+        >>> git_url.path = 'vcs-python/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'https://github.com/vcs-python/vcspull.git'
 
         Switch them to gitlab:
 
-        >>> git_location.hostname = 'gitlab.com'
+        >>> git_url.hostname = 'gitlab.com'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'https://gitlab.com/vcs-python/vcspull.git'
 
         Pip style URL, thanks to this class implementing :class:`GitPipURL`:
 
-        >>> git_location = GitURL(url='git+ssh://git@github.com/vcs-python/libvcs')
+        >>> git_url = GitURL(url='git+ssh://git@github.com/vcs-python/libvcs')
 
-        >>> git_location.hostname = 'gitlab.com'
+        >>> git_url.hostname = 'gitlab.com'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git+ssh://gitlab.com/vcs-python/libvcs'
 
         See also
