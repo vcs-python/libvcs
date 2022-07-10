@@ -254,9 +254,6 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     # Decoration
     suffix: Optional[str] = None
 
-    # commit-ish (rev): tag, branch, ref
-    rev: Optional[str] = None
-
     matcher: Optional[str] = None
     matchers = MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
@@ -344,6 +341,9 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 @dataclasses.dataclass(repr=False)
 class GitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     """Batteries included URL Parser. Supports git(1) and pip URLs."""
+
+    # commit-ish (rev): tag, branch, ref
+    rev: Optional[str] = None
 
     matchers = MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
