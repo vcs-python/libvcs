@@ -136,6 +136,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     Matcher(
         label="pip-scp-url",
@@ -149,6 +150,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
     Matcher(
@@ -162,6 +164,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
 ]
 """pip-style git URLs.
