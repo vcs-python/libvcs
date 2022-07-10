@@ -28,6 +28,8 @@ class Matcher(SkipDefaultFieldsReprMixin):
     pattern: Pattern
     """Regex pattern"""
     pattern_defaults: dict = dataclasses.field(default_factory=dict)
+    """Is the match unambiguous with other VCS systems? e.g. git+ prefix"""
+    is_explicit: bool = False
 
 
 @dataclasses.dataclass(repr=False)
