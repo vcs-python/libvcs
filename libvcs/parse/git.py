@@ -430,3 +430,57 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     matchers = MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
     )
+
+    def to_url(self) -> str:
+        """Return a ``git(1)``-compatible URL. Can be used with ``git clone``.
+
+        Examples
+        --------
+
+        SSH style URL:
+        >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+
+        >>> git_location.path = 'vcs-python/vcspull'
+
+        >>> git_location.to_url()
+        'git@github.com:vcs-python/vcspull.git'
+
+        HTTPs URL:
+
+        >>> git_location = GitURL(url='https://github.com/vcs-python/libvcs.git')
+
+        >>> git_location.path = 'vcs-python/vcspull'
+
+        >>> git_location.to_url()
+        'https://github.com/vcs-python/vcspull.git'
+
+        Switch them to gitlab:
+
+        >>> git_location.hostname = 'gitlab.com'
+
+        >>> git_location.to_url()
+        'https://gitlab.com/vcs-python/vcspull.git'
+
+        Pip style URL, thanks to this class implementing :class:`GitPipURL`:
+
+        >>> git_location = GitURL(url='git+ssh://git@github.com/vcs-python/libvcs')
+
+        >>> git_location.hostname = 'gitlab.com'
+
+        >>> git_location.to_url()
+        'git+ssh://gitlab.com/vcs-python/libvcs'
+
+        See also
+        --------
+
+        :meth:`GitBaseURL.to_url`, :meth:`GitPipURL.to_url`
+        """
+        if self.scheme is not None:
+            parts = [self.scheme, "://", self.hostname, "/", self.path]
+        else:
+            parts = [self.user or "git", "@", self.hostname, ":", self.path]
+
+        if self.suffix:
+            parts.append(self.suffix)
+
+        return "".join(part for part in parts if isinstance(part, str))
