@@ -35,7 +35,7 @@ SCP_REGEX = r"""
     # The server-side path. e.g. 'user/project.git'. Must start with an
     # alphanumeric character so as not to be confusable with a Windows paths
     # like 'C:/foo/bar' or 'C:\foo\bar'.
-    (?P<path>(\w[^:]+))
+    (?P<path>(\w[^:.]+))
     """
 
 RE_PATH = r"""
@@ -83,7 +83,7 @@ DEFAULT_MATCHERS: list[Matcher] = [
             rf"""
         ^(?P<scheme>ssh)?
         {SCP_REGEX}
-        {RE_SUFFIX}
+        {RE_SUFFIX}?
         """,
             re.VERBOSE,
         ),
