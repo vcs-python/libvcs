@@ -59,7 +59,17 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         But what if you wanted to do ``github:org/repo``?
 
         >>> GitURL.is_valid(url="github:org/repo")
-        False
+        True
+
+        That actually works, but look, it's caught in git's standard SCP regex:
+
+        >>> GitURL(url="github:org/repo")
+        GitURL(url=github:org/repo,
+           hostname=github,
+           path=org/repo,
+           matcher=core-git-scp)
+
+        We need something more specific. What do we do?
 
         **Extending matching capability:**
 
@@ -83,6 +93,17 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         >>> GitHubLocation.is_valid(url='gitlab:vcs-python/libvcs')
         False
+
+        `GitHubLocation` sees this as invalid since it only has one matcher,
+        `GitHubPrefix`.
+
+        >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
+        True
+
+        Same story, getting caught in ``git(1)``'s own liberal scp-style URL:
+
+        >>> GitURL(url='gitlab:vcs-python/libvcs').matcher
+        'core-git-scp'
 
         >>> class GitLabPrefix(Matcher):
         ...     label = 'gl-prefix'
@@ -108,7 +129,14 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         Option 2 (global, everywhere): Add to the global :class:`GitURL`:
 
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
-        False
+        True
+
+        Are we home free, though? Remember our issue with vague matches.
+
+        >>> GitURL(url='gitlab:vcs-python/libvcs').matcher
+        'core-git-scp'
+
+        Register:
 
         >>> GitURL.matchers.register(GitLabPrefix)
 
