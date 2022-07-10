@@ -142,7 +142,7 @@ def test_git_url_extension_pip(
     git_repo: GitProject,
 ):
     class GitURLWithPip(GitBaseURL):
-        matchers = MatcherRegistry = MatcherRegistry(
+        matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 
@@ -255,7 +255,7 @@ def test_git_revs(
     git_url_kwargs: GitURLKwargs,
 ):
     class GitURLWithPip(GitURL):
-        matchers = MatcherRegistry = MatcherRegistry(
+        matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 

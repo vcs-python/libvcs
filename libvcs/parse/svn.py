@@ -183,13 +183,14 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
             groups = match.groupdict()
             setattr(self, "matcher", matcher.label)
             for k, v in groups.items():
-                if v is None and k in matcher.pattern_defaults:
-                    setattr(self, k, matcher.pattern_defaults[v])
-                else:
-                    setattr(self, k, v)
+                setattr(self, k, v)
+
+            for k, v in matcher.pattern_defaults.items():
+                if getattr(self, k, None) is None:
+                    setattr(self, k, matcher.pattern_defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -211,11 +212,11 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> svn_location = SvnURL(
+        >>> svn_url = SvnURL(
         ...     url='svn+ssh://my-username@my-server/vcs-python/libvcs'
         ... )
 
-        >>> svn_location
+        >>> svn_url
         SvnURL(url=svn+ssh://my-username@my-server/vcs-python/libvcs,
                 scheme=svn+ssh,
                 user=my-username,
@@ -225,16 +226,16 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Switch repo libvcs -> vcspull:
 
-        >>> svn_location.path = 'vcs-python/vcspull'
+        >>> svn_url.path = 'vcs-python/vcspull'
 
-        >>> svn_location.to_url()
+        >>> svn_url.to_url()
         'svn+ssh://my-username@my-server/vcs-python/vcspull'
 
         Switch user to "tom":
 
-        >>> svn_location.user = 'tom'
+        >>> svn_url.user = 'tom'
 
-        >>> svn_location.to_url()
+        >>> svn_url.to_url()
         'svn+ssh://tom@my-server/vcs-python/vcspull'
         """
         parts = [self.scheme or "ssh", "://"]

@@ -176,7 +176,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     matcher: Optional[str] = None
     # name of the :class:`Matcher`
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
     )
 
@@ -189,13 +189,14 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
             groups = match.groupdict()
             setattr(self, "matcher", matcher.label)
             for k, v in groups.items():
-                if v is None and k in matcher.pattern_defaults:
-                    setattr(self, k, matcher.pattern_defaults[v])
-                else:
-                    setattr(self, k, v)
+                setattr(self, k, v)
+
+            for k, v in matcher.pattern_defaults.items():
+                if getattr(self, k, None) is None:
+                    setattr(self, k, matcher.pattern_defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -220,9 +221,9 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> hg_location = HgURL(url='https://hg.mozilla.org/mozilla-central')
+        >>> hg_url = HgURL(url='https://hg.mozilla.org/mozilla-central')
 
-        >>> hg_location
+        >>> hg_url
         HgURL(url=https://hg.mozilla.org/mozilla-central,
                 scheme=https,
                 hostname=hg.mozilla.org,
@@ -231,17 +232,17 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Switch repo libvcs -> vcspull:
 
-        >>> hg_location.path = 'mobile-browser'
+        >>> hg_url.path = 'mobile-browser'
 
-        >>> hg_location.to_url()
+        >>> hg_url.to_url()
         'https://hg.mozilla.org/mobile-browser'
 
         Switch them to localhost:
 
-        >>> hg_location.hostname = 'localhost'
-        >>> hg_location.scheme = 'http'
+        >>> hg_url.hostname = 'localhost'
+        >>> hg_url.scheme = 'http'
 
-        >>> hg_location.to_url()
+        >>> hg_url.to_url()
         'http://localhost/mobile-browser'
 
         Another example, `hugin <http://hugin.hg.sourceforge.net>`_:

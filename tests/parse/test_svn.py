@@ -124,7 +124,7 @@ def test_svn_url_extension_pip(
     svn_repo: SubversionProject,
 ):
     class SvnURLWithPip(SvnURL):
-        matchers = MatcherRegistry = MatcherRegistry(
+        matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 

@@ -35,7 +35,7 @@ SCP_REGEX = r"""
     # The server-side path. e.g. 'user/project.git'. Must start with an
     # alphanumeric character so as not to be confusable with a Windows paths
     # like 'C:/foo/bar' or 'C:\foo\bar'.
-    (?P<path>(\w[^:]+))
+    (?P<path>(\w[^:.]+))
     """
 
 RE_PATH = r"""
@@ -83,7 +83,7 @@ DEFAULT_MATCHERS: list[Matcher] = [
             rf"""
         ^(?P<scheme>ssh)?
         {SCP_REGEX}
-        {RE_SUFFIX}
+        {RE_SUFFIX}?
         """,
             re.VERBOSE,
         ),
@@ -91,7 +91,10 @@ DEFAULT_MATCHERS: list[Matcher] = [
     ),
     # SCP-style URLs, e.g. git@
 ]
-"""Core regular expressions. These are patterns understood by ``git(1)``"""
+"""Core regular expressions. These are patterns understood by ``git(1)``
+
+See also: https://git-scm.com/docs/git-clone#URLS
+"""
 
 
 #
@@ -136,6 +139,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     Matcher(
         label="pip-scp-url",
@@ -149,6 +153,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
     Matcher(
@@ -162,6 +167,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
 ]
 """pip-style git URLs.
@@ -212,15 +218,15 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     Examples
     --------
-    >>> GitURL(url='https://github.com/vcs-python/libvcs.git')
-    GitURL(url=https://github.com/vcs-python/libvcs.git,
+    >>> GitBaseURL(url='https://github.com/vcs-python/libvcs.git')
+    GitBaseURL(url=https://github.com/vcs-python/libvcs.git,
             scheme=https,
             hostname=github.com,
             path=vcs-python/libvcs,
             suffix=.git,
             matcher=core-git-https)
 
-    >>> myrepo = GitURL(url='https://github.com/myproject/myrepo.git')
+    >>> myrepo = GitBaseURL(url='https://github.com/myproject/myrepo.git')
 
     >>> myrepo.hostname
     'github.com'
@@ -228,16 +234,16 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     >>> myrepo.path
     'myproject/myrepo'
 
-    >>> GitURL(url='git@github.com:vcs-python/libvcs.git')
-    GitURL(url=git@github.com:vcs-python/libvcs.git,
+    >>> GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
+    GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
             user=git,
             hostname=github.com,
             path=vcs-python/libvcs,
             suffix=.git,
             matcher=core-git-scp)
 
-    - Compatibility checking: :meth:`GitURL.is_valid()`
-    - URLs compatible with ``git(1)``: :meth:`GitURL.to_url()`
+    - Compatibility checking: :meth:`GitBaseURL.is_valid()`
+    - URLs compatible with ``git(1)``: :meth:`GitBaseURL.to_url()`
 
     Attributes
     ----------
@@ -256,7 +262,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     suffix: Optional[str] = None
 
     matcher: Optional[str] = None
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
     )
 
@@ -269,27 +275,47 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
             groups = match.groupdict()
             setattr(self, "matcher", matcher.label)
             for k, v in groups.items():
-                if v is None and k in matcher.pattern_defaults:
-                    setattr(self, k, matcher.pattern_defaults[v])
-                else:
-                    setattr(self, k, v)
+                setattr(self, k, v)
+
+            for k, v in matcher.pattern_defaults.items():
+                if getattr(self, k, None) is None:
+                    setattr(self, k, matcher.pattern_defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
         --------
 
-        >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        >>> GitBaseURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
         True
 
-        >>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        >>> GitBaseURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
         True
 
-        >>> GitURL.is_valid(url='notaurl')
+        >>> GitBaseURL.is_valid(url='notaurl')
         False
+
+        **Unambiguous VCS detection**
+
+        Sometimes you may want to match a VCS exclusively, without any change for, e.g.
+        in order to outright detect the VCS system being used.
+
+        >>> GitBaseURL.is_valid(
+        ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        False
+
+        In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitBaseURL.is_valid`'s
+        examples.
         """
+        if is_explicit is not None:
+            return any(
+                re.search(matcher.pattern, url)
+                for matcher in cls.matchers.values()
+                if matcher.is_explicit == is_explicit
+            )
         return any(re.search(matcher.pattern, url) for matcher in cls.matchers.values())
 
     def to_url(self) -> str:
@@ -298,10 +324,10 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+        >>> git_url = GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
 
-        >>> git_location
-        GitURL(url=git@github.com:vcs-python/libvcs.git,
+        >>> git_url
+        GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
                 user=git,
                 hostname=github.com,
                 path=vcs-python/libvcs,
@@ -310,16 +336,16 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Switch repo libvcs -> vcspull:
 
-        >>> git_location.path = 'vcs-python/vcspull'
+        >>> git_url.path = 'vcs-python/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git@github.com:vcs-python/vcspull.git'
 
         Switch them to gitlab:
 
-        >>> git_location.hostname = 'gitlab.com'
+        >>> git_url.hostname = 'gitlab.com'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git@gitlab.com:vcs-python/vcspull.git'
 
         todo
@@ -346,7 +372,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in PIP_DEFAULT_MATCHERS}
     )
 
@@ -356,11 +382,11 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> git_location = GitPipURL(
+        >>> git_url = GitPipURL(
         ...     url='git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
         ... )
 
-        >>> git_location
+        >>> git_url
         GitPipURL(url=git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git,
                 scheme=git+ssh,
                 user=git,
@@ -370,18 +396,18 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
                 suffix=.git,
                 matcher=pip-url)
 
-        >>> git_location.path = 'libvcs/vcspull'
+        >>> git_url.path = 'libvcs/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git+ssh://bitbucket.example.com/libvcs/vcspull.git'
 
         It also accepts revisions, e.g. branch, tag, ref:
 
-        >>> git_location = GitPipURL(
+        >>> git_url = GitPipURL(
         ...     url='git+https://github.com/vcs-python/libvcs.git@v0.10.0'
         ... )
 
-        >>> git_location
+        >>> git_url
         GitPipURL(url=git+https://github.com/vcs-python/libvcs.git@v0.10.0,
                 scheme=git+https,
                 hostname=github.com,
@@ -390,9 +416,9 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
                 matcher=pip-url,
                 rev=v0.10.0)
 
-        >>> git_location.path = 'libvcs/vcspull'
+        >>> git_url.path = 'libvcs/vcspull'
 
-        >>> git_location.to_url()
+        >>> git_url.to_url()
         'git+https://github.com/libvcs/vcspull.git@v0.10.0'
         """
         url = super().to_url()
@@ -401,6 +427,44 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
             url = f"{url}@{self.rev}"
 
         return url
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Whether URL is compatible with Pip Git's VCS URL pattern or not.
+
+        Examples
+        --------
+
+        Will **not** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
+
+        >>> GitPipURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        False
+
+        >>> GitPipURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        False
+
+        Pip-style URLs:
+
+        >>> GitPipURL.is_valid(url='git+https://github.com/vcs-python/libvcs.git')
+        True
+
+        >>> GitPipURL.is_valid(url='git+ssh://git@github.com:vcs-python/libvcs.git')
+        True
+
+        >>> GitPipURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        Pip-style URLs are prefixed with the VCS name in front, so its matchers can
+        unambigously narrow the type of VCS:
+
+        >>> GitPipURL.is_valid(
+        ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        True
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
 
 
 @dataclasses.dataclass(repr=False)
@@ -418,6 +482,140 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
       - :meth:`GitBaseURL.to_url`
     """
 
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
     )
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        r"""Whether URL is compatible included Git URL matchers or not.
+
+        Examples
+        --------
+
+        **Will** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
+
+        >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        True
+
+        >>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        True
+
+        Pip-style URLs:
+
+        >>> GitURL.is_valid(url='git+https://github.com/vcs-python/libvcs.git')
+        True
+
+        >>> GitURL.is_valid(url='git+ssh://git@github.com:vcs-python/libvcs.git')
+        True
+
+        >>> GitURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        Pip-style URLs are prefixed with the VCS name in front, so its matchers can
+        unambigously narrow the type of VCS:
+
+        >>> GitURL.is_valid(
+        ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        True
+
+        Below, while it's github, that doesn't necessarily mean that the URL itself
+        is conclusively a git URL:
+
+        >>> GitURL.is_valid(
+        ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        False
+
+        You could create a GitHub matcher that consider github.com hostnames to be
+        exclusively git:
+
+        >>> GitHubMatcher = Matcher(
+        ...     # Since github.com exclusively serves git repos, make explicit
+        ...     label='gh-matcher',
+        ...     description='Matches github.com https URLs, exact VCS match',
+        ...     pattern=re.compile(
+        ...         rf'''
+        ...         ^(?P<scheme>ssh)?
+        ...         ((?P<user>\w+)@)?
+        ...         (?P<hostname>(github.com)+):
+        ...         (?P<path>(\w[^:]+))
+        ...         {RE_SUFFIX}?
+        ...         ''',
+        ...         re.VERBOSE,
+        ...     ),
+        ...     is_explicit=True,
+        ...     pattern_defaults={
+        ...         'hostname': 'github.com'
+        ...     }
+        ... )
+
+        >>> GitURL.matchers.register(GitHubMatcher)
+
+        >>> GitURL.is_valid(
+        ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        True
+
+        This is just us cleaning up:
+
+        >>> GitURL.matchers.unregister('gh-matcher')
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
+
+    def to_url(self) -> str:
+        """Return a ``git(1)``-compatible URL. Can be used with ``git clone``.
+
+        Examples
+        --------
+
+        SSH style URL:
+        >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs')
+
+        >>> git_url.path = 'vcs-python/vcspull'
+
+        >>> git_url.to_url()
+        'git@github.com:vcs-python/vcspull'
+
+        HTTPs URL:
+
+        >>> git_url = GitURL(url='https://github.com/vcs-python/libvcs.git')
+
+        >>> git_url.path = 'vcs-python/vcspull'
+
+        >>> git_url.to_url()
+        'https://github.com/vcs-python/vcspull.git'
+
+        Switch them to gitlab:
+
+        >>> git_url.hostname = 'gitlab.com'
+
+        >>> git_url.to_url()
+        'https://gitlab.com/vcs-python/vcspull.git'
+
+        Pip style URL, thanks to this class implementing :class:`GitPipURL`:
+
+        >>> git_url = GitURL(url='git+ssh://git@github.com/vcs-python/libvcs')
+
+        >>> git_url.hostname = 'gitlab.com'
+
+        >>> git_url.to_url()
+        'git+ssh://gitlab.com/vcs-python/libvcs'
+
+        See also
+        --------
+
+        :meth:`GitBaseURL.to_url`, :meth:`GitPipURL.to_url`
+        """
+        if self.scheme is not None:
+            parts = [self.scheme, "://", self.hostname, "/", self.path]
+        else:
+            parts = [self.user or "git", "@", self.hostname, ":", self.path]
+
+        if self.suffix:
+            parts.append(self.suffix)
+
+        return "".join(part for part in parts if isinstance(part, str))
