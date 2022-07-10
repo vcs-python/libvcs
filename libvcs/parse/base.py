@@ -85,33 +85,33 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         ...     is_explicit = True
 
         >>> @dataclasses.dataclass(repr=False)
-        ... class GitHubLocation(GitURL):
+        ... class GitHubURL(GitURL):
         ...    matchers: MatcherRegistry = MatcherRegistry(
         ...        _matchers={'github_prefix': GitHubPrefix}
         ...    )
 
-        >>> GitHubLocation.is_valid(url='github:vcs-python/libvcs')
+        >>> GitHubURL.is_valid(url='github:vcs-python/libvcs')
         True
 
-        >>> GitHubLocation.is_valid(url='github:vcs-python/libvcs', is_explicit=True)
+        >>> GitHubURL.is_valid(url='github:vcs-python/libvcs', is_explicit=True)
         True
 
         Notice how ``pattern_defaults`` neatly fills the values for us.
 
-        >>> GitHubLocation(url='github:vcs-python/libvcs')
-        GitHubLocation(url=github:vcs-python/libvcs,
+        >>> GitHubURL(url='github:vcs-python/libvcs')
+        GitHubURL(url=github:vcs-python/libvcs,
             scheme=https,
             hostname=github.com,
             path=vcs-python/libvcs,
             matcher=gh-prefix)
 
-        >>> GitHubLocation(url='github:vcs-python/libvcs').to_url()
+        >>> GitHubURL(url='github:vcs-python/libvcs').to_url()
         'https://github.com/vcs-python/libvcs'
 
-        >>> GitHubLocation.is_valid(url='gitlab:vcs-python/libvcs')
+        >>> GitHubURL.is_valid(url='gitlab:vcs-python/libvcs')
         False
 
-        `GitHubLocation` sees this as invalid since it only has one matcher,
+        `GitHubURL` sees this as invalid since it only has one matcher,
         `GitHubPrefix`.
 
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
@@ -135,12 +135,12 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         Option 1: Create a brand new matcher
 
         >>> @dataclasses.dataclass(repr=False)
-        ... class GitLabLocation(GitURL):
+        ... class GitLabURL(GitURL):
         ...     matchers: MatcherRegistry = MatcherRegistry(
         ...         _matchers={'gitlab_prefix': GitLabPrefix}
         ...     )
 
-        >>> GitLabLocation.is_valid(url='gitlab:vcs-python/libvcs')
+        >>> GitLabURL.is_valid(url='gitlab:vcs-python/libvcs')
         True
 
         Option 2 (global, everywhere): Add to the global :class:`GitURL`:
