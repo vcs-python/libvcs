@@ -189,10 +189,11 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
             groups = match.groupdict()
             setattr(self, "matcher", matcher.label)
             for k, v in groups.items():
-                if v is None and k in matcher.pattern_defaults:
-                    setattr(self, k, matcher.pattern_defaults[v])
-                else:
-                    setattr(self, k, v)
+                setattr(self, k, v)
+
+            for k, v in matcher.pattern_defaults.items():
+                if getattr(self, k, None) is None:
+                    setattr(self, k, matcher.pattern_defaults[k])
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
