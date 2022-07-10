@@ -61,7 +61,7 @@ html_theme = "furo"
 html_theme_path: list = []
 html_theme_options: dict = {
     "light_logo": "img/libvcs.svg",
-    "dark_logo": "img/libvcs.svg",
+    "dark_logo": "img/libvcs-dark.svg",
     "footer_icons": [
         {
             "name": "GitHub",
