@@ -219,3 +219,45 @@ def test_git_to_url(
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
     assert git_url.to_url() == expected
+
+
+class RevFixture(typing.NamedTuple):
+    git_url_kwargs: GitURLKwargs
+    expected: typing.Optional[str]
+    # Expected revision / branch / tag
+
+
+@pytest.mark.parametrize(
+    "git_url_kwargs,expected",
+    [
+        RevFixture(
+            expected=None,
+            git_url_kwargs=GitURLKwargs(
+                url="git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git",
+            ),
+        ),
+        RevFixture(
+            expected="eucalyptus",
+            git_url_kwargs=GitURLKwargs(
+                url="git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git@eucalyptus",
+            ),
+        ),
+        RevFixture(
+            expected="build.2600-whistler",
+            git_url_kwargs=GitURLKwargs(
+                url="git+https://github.com/PROJ/repo.git@build.2600-whistler",
+            ),
+        ),
+    ],
+)
+def test_git_revs(
+    expected: str,
+    git_url_kwargs: GitURLKwargs,
+):
+    class GitURLWithPip(GitURL):
+        matchers = MatcherRegistry = MatcherRegistry(
+            _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        )
+
+    git_url = GitURLWithPip(**git_url_kwargs)
+    assert git_url.rev == expected
