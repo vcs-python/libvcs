@@ -37,7 +37,7 @@ RE_PATH = r"""
     (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
     (?P<path>
-      (\w[^:.]*)  # cut the path at . to negate .git
+      (\w[^:.@]*)  # cut the path at . to negate .git, @ from pip
     )?
 """
 
@@ -110,6 +110,10 @@ RE_PIP_SCP_SCHEME = r"""
     )
 """
 
+RE_PIP_REV = r"""
+    (@(?P<rev>.*))
+"""
+
 
 PIP_DEFAULT_MATCHERS: list[Matcher] = [
     Matcher(
@@ -121,6 +125,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         ://
         {RE_PATH}
         {RE_SUFFIX}?
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
@@ -132,7 +137,8 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
             rf"""
         {RE_PIP_SCP_SCHEME}
         {SCP_REGEX}?
-        {RE_SUFFIX}
+        {RE_SUFFIX}?
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
@@ -142,9 +148,10 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         label="pip-file-url",
         description="pip-style git+file:// URL",
         pattern=re.compile(
-            r"""
+            rf"""
         (?P<scheme>git\+file)://
-        (?P<path>.*)
+        (?P<path>[^@]*)
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
@@ -229,10 +236,6 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
     ----------
     matcher : str
         name of the :class:`~libvcs.parse.base.Matcher`
-
-    branch : str, optional
-        Default URL parsers don't output these,
-        can be added by extending or passing manually
     """
 
     url: str
@@ -245,12 +248,8 @@ class GitURL(URLProtocol, SkipDefaultFieldsReprMixin):
     # Decoration
     suffix: Optional[str] = None
 
-    #
-    # commit-ish: tag, branch, ref, revision
-    #
-    ref: Optional[str] = None
-    branch: Optional[str] = None
-    tag: Optional[str] = None
+    # commit-ish (rev): tag, branch, ref
+    rev: Optional[str] = None
 
     matcher: Optional[str] = None
     matchers = MatcherRegistry = MatcherRegistry(
