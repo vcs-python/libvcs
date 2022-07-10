@@ -107,7 +107,7 @@ def test_hg_url_extension_pip(
     hg_repo: MercurialProject,
 ):
     class HgURLWithPip(HgURL):
-        matchers = MatcherRegistry = MatcherRegistry(
+        matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 

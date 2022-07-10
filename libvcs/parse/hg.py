@@ -176,7 +176,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     matcher: Optional[str] = None
     # name of the :class:`Matcher`
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
     )
 
