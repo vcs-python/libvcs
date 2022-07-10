@@ -43,6 +43,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         .. currentmodule:: libvcs.parse.git
 
+        >>> from dataclasses import dataclass
         >>> from libvcs.parse.git import GitURL, GitBaseURL
 
         :class:`GitBaseURL` - the ``git(1)`` compliant parser - won't accept a pip-style URL:
@@ -71,8 +72,9 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         ...         'scheme': 'https'
         ...     }
 
-        >>> class GitHubLocation(GitURL):
-        ...    matchers = MatcherRegistry = MatcherRegistry(
+        >>> @dataclasses.dataclass(repr=False)
+        ... class GitHubLocation(GitURL):
+        ...    matchers: MatcherRegistry = MatcherRegistry(
         ...        _matchers={'github_prefix': GitHubPrefix}
         ...    )
 
@@ -94,10 +96,11 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         Option 1: Create a brand new matcher
 
-        >>> class GitLabLocation(GitURL):
-        ...    matchers = MatcherRegistry = MatcherRegistry(
-        ...        _matchers={'gitlab_prefix': GitLabPrefix}
-        ...    )
+        >>> @dataclasses.dataclass(repr=False)
+        ... class GitLabLocation(GitURL):
+        ...     matchers: MatcherRegistry = MatcherRegistry(
+        ...         _matchers={'gitlab_prefix': GitLabPrefix}
+        ...     )
 
         >>> GitLabLocation.is_valid(url='gitlab:vcs-python/libvcs')
         True
@@ -122,7 +125,8 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         >>> from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS
 
-        >>> class GitURLWithPip(GitBaseURL):
+        >>> @dataclasses.dataclass(repr=False)
+        ... class GitURLWithPip(GitBaseURL):
         ...    matchers: MatcherRegistry = MatcherRegistry(
         ...        _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         ...    )
