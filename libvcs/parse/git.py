@@ -91,7 +91,10 @@ DEFAULT_MATCHERS: list[Matcher] = [
     ),
     # SCP-style URLs, e.g. git@
 ]
-"""Core regular expressions. These are patterns understood by ``git(1)``"""
+"""Core regular expressions. These are patterns understood by ``git(1)``
+
+See also: https://git-scm.com/docs/git-clone#URLS
+"""
 
 
 #
