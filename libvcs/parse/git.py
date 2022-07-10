@@ -484,7 +484,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
-        """Whether URL is compatible included Git URL matchers or not.
+        r"""Whether URL is compatible included Git URL matchers or not.
 
         Examples
         --------
@@ -527,7 +527,38 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         False
 
         You could create a GitHub matcher that consider github.com hostnames to be
-        exclusively.
+        exclusively git:
+
+        >>> GitHubMatcher = Matcher(
+        ...     # Since github.com exclusively serves git repos, make explicit
+        ...     label='gh-matcher',
+        ...     description='Matches github.com https URLs, exact VCS match',
+        ...     pattern=re.compile(
+        ...         rf'''
+        ...         ^(?P<scheme>ssh)?
+        ...         ((?P<user>\w+)@)?
+        ...         (?P<hostname>(github.com)+):
+        ...         (?P<path>(\w[^:]+))
+        ...         {RE_SUFFIX}?
+        ...         ''',
+        ...         re.VERBOSE,
+        ...     ),
+        ...     is_explicit=True,
+        ...     pattern_defaults={
+        ...         'hostname': 'github.com'
+        ...     }
+        ... )
+
+        >>> GitURL.matchers.register(GitHubMatcher)
+
+        >>> GitURL.is_valid(
+        ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
+        ... )
+        True
+
+        This is just us cleaning up:
+
+        >>> GitURL.matchers.unregister('gh-matcher')
         """
         return super().is_valid(url=url, is_explicit=is_explicit)
 
@@ -538,12 +569,12 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         --------
 
         SSH style URL:
-        >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs.git')
+        >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs')
 
         >>> git_url.path = 'vcs-python/vcspull'
 
         >>> git_url.to_url()
-        'git@github.com:vcs-python/vcspull.git'
+        'git@github.com:vcs-python/vcspull'
 
         HTTPs URL:
 
