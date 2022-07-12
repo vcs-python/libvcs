@@ -214,7 +214,7 @@ Notes
 
 @dataclasses.dataclass(repr=False)
 class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
-    """Git gepository location. Parses URLs on initialization.
+    """Git repository location. Parses URLs on initialization.
 
     Examples
     --------
