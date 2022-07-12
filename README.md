@@ -6,7 +6,7 @@ detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `sv
 
 ## Overview
 
-Features for git, Subversion, and Mercurial:
+Features for Git, Subversion, and Mercurial:
 
 - **Detect and parse** VCS URLs
 - **Command** VCS via python API
@@ -20,7 +20,7 @@ $ pip install --user libvcs
 
 ## URL Parsing (experimental)
 
-You can validate and parse git, Mercurial, and Subversion URLs through
+You can validate and parse Git, Mercurial, and Subversion URLs through
 [`libvcs.parse`](https://libvcs.git-pull.com/parse/index.html):
 
 Validate:
@@ -32,7 +32,7 @@ Validate:
 True
 ```
 
-Parse and adjust a git url:
+Parse and adjust a Git URL:
 
 ```
 from libvcs.parse.git import GitUrl
