@@ -1,3 +1,12 @@
+"""
+.. Note::
+
+   At a Mercurial shop? Can you help us jimmy this module into the next `Sunbeam toaster
+   <https://automaticbeyondbelief.org/>`_ of Mercurialian perfection? We need to patch
+   and shimmy this thing into shape and seek a skilled tradesperson to give it - in
+   Robert M. Pirsig's sense - *care*.  Connect with us `on the tracker
+   <https://github.com/vcs-python/libvcs>`_. It's not too late to change the API.
+"""
 import enum
 import pathlib
 from typing import Optional, Sequence, Union

@@ -1,3 +1,11 @@
+"""
+.. admonition:: Busman's holiday?
+
+   We need to fill these SVN commands and their tests to exquisite perfection, like the
+   artisans in those Michelin-star videos on YouTube. We welcome your contributions,
+   providing you "color between the lines" and stick to the interface. `Get in
+   <https://github.com/vcs-python/libvcs>`_, 'APIs unstable until we fit the spec.
+"""
 import pathlib
 from typing import Literal, Optional, Sequence, Union
 
