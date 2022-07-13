@@ -69,7 +69,12 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
            path=org/repo,
            matcher=core-git-scp)
 
-        We need something more specific. What do we do?
+        >>> GitURL(url="github:org/repo").to_url()
+        'git@github:org/repo'
+
+        Eek. That won't work, can't do much with that one.
+
+        We need something more specific so usable URLs can be generated. What do we do?
 
         **Extending matching capability:**
 
@@ -111,8 +116,8 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> GitHubURL.is_valid(url='gitlab:vcs-python/libvcs')
         False
 
-        `GitHubURL` sees this as invalid since it only has one matcher,
-        `GitHubPrefix`.
+        ``GitHubURL`` sees this as invalid since it only has one matcher,
+        ``GitHubPrefix``.
 
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
         True
