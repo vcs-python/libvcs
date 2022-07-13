@@ -1,7 +1,7 @@
 """Base class for VCS Project plugins."""
 import logging
 import pathlib
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional, Protocol, Tuple
 from urllib import parse as urlparse
 
 from libvcs._internal.run import CmdLoggingAdapter, run
@@ -32,17 +32,20 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class BaseProject:
+class BaseProject(Protocol):
     """Base class for repositories."""
 
-    log_in_real_time = None
+    log_in_real_time: bool
     """Log command output to buffer"""
 
-    bin_name = ""
+    bin_name: str
     """VCS app name, e.g. 'git'"""
 
     schemes: Tuple[str, ...] = ()
     """List of supported schemes to register in ``urlparse.uses_netloc``"""
+
+    dir: Optional[StrPath]
+    """CWD of project"""
 
     def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
         r"""
@@ -85,7 +88,6 @@ class BaseProject:
         self.progress_callback = progress_callback
 
         #: Directory to check out
-        self.dir: pathlib.Path
         if isinstance(dir, pathlib.Path):
             self.dir = dir
         else:
