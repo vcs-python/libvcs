@@ -579,6 +579,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         --------
 
         SSH style URL:
+
         >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs')
 
         >>> git_url.path = 'vcs-python/vcspull'
