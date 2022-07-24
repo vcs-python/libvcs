@@ -151,6 +151,42 @@ requires [`entr(1)`].
 
 ## Releasing
 
+Since this software used in production projects, we don't want to release breaking changes.
+
+Choose what the next version is. Assuming it's version 0.9.0, it could be:
+
+- 0.9.0post0: postrelease, if there was a packaging issue
+- 0.9.1: bugfix / security / tweak
+- 0.10.0: breaking changes, new features
+
+Let's assume we pick 0.9.1
+
+`CHANGES`: Assure any PRs merged since last release are mentioned. Give a thank you to the
+contributor. Set the header with the new version and the date. Leave the "current" header and
+_Insert changes/features/fixes for next release here_ at the top::
+
+    current
+    -------
+    - *Insert changes/features/fixes for next release here*
+
+    libvcs 0.9.1 (2020-10-12)
+    -------------------------
+    - :issue:`1`: Fix bug
+
+`libvcs/__init__.py` and `__about__.py` - Set version
+
+```console
+$ git commit -m 'Tag v0.9.1'
+```
+
+```console
+$ git tag v0.9.1
+```
+
+After `git push` and `git push --tags`, CI will automatically build and deploy to PyPI.
+
+### Releasing (manual)
+
 As of 0.10, [poetry] handles virtualenv creation, package requirements, versioning, building, and
 publishing. Therefore there is no setup.py or requirements files.
 
