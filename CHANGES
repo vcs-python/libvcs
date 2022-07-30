@@ -61,6 +61,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
+- {issue}`391` Removed `flat` keyword argument for {class}`libvcs.projects.git.GitProject`. This was
+  unused and the equivalent can be retrieved via `.to_dict()` on `GitRemote`
 - {issue}`379` Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being
   insecure [^pip-git+git]
 - {issue}`372` Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
