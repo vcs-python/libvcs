@@ -7,6 +7,7 @@ import textwrap
 from typing import Any, Optional, Protocol
 
 import pytest
+from py._path.local import LocalPath
 
 from faker import Faker
 
@@ -24,7 +25,7 @@ skip_if_svn_missing = pytest.mark.skipif(
 skip_if_hg_missing = pytest.mark.skipif(not which("hg"), reason="hg is not available")
 
 
-def pytest_ignore_collect(path, config: pytest.Config):
+def pytest_ignore_collect(path: LocalPath, config: pytest.Config) -> bool:
     if not which("svn") and any(needle in path for needle in ["svn", "subversion"]):
         return True
     if not which("git") and "git" in path:
@@ -36,17 +37,17 @@ def pytest_ignore_collect(path, config: pytest.Config):
 
 
 @pytest.fixture(autouse=True)
-def home_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path):
+def home_default(monkeypatch: pytest.MonkeyPatch, user_path: pathlib.Path) -> None:
     monkeypatch.setenv("HOME", str(user_path))
 
 
 @pytest.fixture(autouse=True, scope="session")
-def home_path(tmp_path_factory: pytest.TempPathFactory):
+def home_path(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     return tmp_path_factory.mktemp("home")
 
 
 @pytest.fixture(autouse=True, scope="session")
-def user_path(home_path: pathlib.Path):
+def user_path(home_path: pathlib.Path) -> pathlib.Path:
     p = home_path / getpass.getuser()
     p.mkdir()
     return p
@@ -55,7 +56,7 @@ def user_path(home_path: pathlib.Path):
 @pytest.fixture(autouse=True)
 @pytest.mark.usefixtures("home_default")
 @skip_if_git_missing
-def gitconfig(user_path: pathlib.Path):
+def gitconfig(user_path: pathlib.Path) -> pathlib.Path:
     gitconfig = user_path / ".gitconfig"
     user_email = "libvcs@git-pull.com"
     gitconfig.write_text(
@@ -80,7 +81,7 @@ def gitconfig(user_path: pathlib.Path):
 @pytest.fixture(autouse=True, scope="session")
 @pytest.mark.usefixtures("home_default")
 @skip_if_hg_missing
-def hgconfig(user_path: pathlib.Path):
+def hgconfig(user_path: pathlib.Path) -> pathlib.Path:
     hgrc = user_path / ".hgrc"
     hgrc.write_text(
         textwrap.dedent(
@@ -99,12 +100,14 @@ def hgconfig(user_path: pathlib.Path):
 
 
 @pytest.fixture(scope="function")
-def projects_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
+def projects_path(
+    user_path: pathlib.Path, request: pytest.FixtureRequest
+) -> pathlib.Path:
     """User's local checkouts and clones. Emphemeral directory."""
     dir = user_path / "projects"
     dir.mkdir(exist_ok=True)
 
-    def clean():
+    def clean() -> None:
         shutil.rmtree(dir)
 
     request.addfinalizer(clean)
@@ -112,12 +115,14 @@ def projects_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
 
 
 @pytest.fixture(scope="function")
-def remote_repos_path(user_path: pathlib.Path, request: pytest.FixtureRequest):
+def remote_repos_path(
+    user_path: pathlib.Path, request: pytest.FixtureRequest
+) -> pathlib.Path:
     """System's remote (file-based) repos to clone andpush to. Emphemeral directory."""
     dir = user_path / "remote_repos"
     dir.mkdir(exist_ok=True)
 
-    def clean():
+    def clean() -> None:
         shutil.rmtree(dir)
 
     request.addfinalizer(clean)
@@ -133,7 +138,7 @@ def unique_repo_name(
             raise Exception(
                 f"Could not find unused repo destination (attempts: {attempts})"
             )
-        remote_repo_name = faker.slug()
+        remote_repo_name: str = faker.slug()
         suggestion = remote_repos_path / remote_repo_name
         if suggestion.exists():
             attempts += 1
@@ -142,17 +147,17 @@ def unique_repo_name(
 
 
 class CreateProjectCallbackProtocol(Protocol):
-    def __call__(self, remote_repo_path: pathlib.Path):
+    def __call__(self, remote_repo_path: pathlib.Path) -> None:
         ...
 
 
 class CreateProjectCallbackFixtureProtocol(Protocol):
     def __call__(
         self,
-        remote_repos_path: Optional[pathlib.Path] = None,
-        remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    ):
+        remote_repos_path: pathlib.Path = ...,
+        remote_repo_name: Optional[str] = ...,
+        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = ...,
+    ) -> pathlib.Path:
         ...
 
 
@@ -172,14 +177,16 @@ def _create_git_remote_repo(
 
 @pytest.fixture
 @skip_if_git_missing
-def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+def create_git_remote_repo(
+    remote_repos_path: pathlib.Path, faker: Faker
+) -> CreateProjectCallbackFixtureProtocol:
     """Factory. Create git remote repo to for clone / push purposes"""
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    ):
+    ) -> pathlib.Path:
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
@@ -191,7 +198,7 @@ def create_git_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
     return fn
 
 
-def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
+def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> None:
     testfile_filename = "testfile.test"
     run(["touch", testfile_filename], cwd=remote_repo_path)
     run(["git", "add", testfile_filename], cwd=remote_repo_path)
@@ -201,7 +208,7 @@ def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
 @pytest.fixture
 @pytest.mark.usefixtures("gitconfig", "home_default")
 @skip_if_git_missing
-def git_remote_repo(remote_repos_path: pathlib.Path):
+def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made git repo w/ 1 commit, used as a file:// remote to clone and push to."""
     return _create_git_remote_repo(
         remote_repos_path=remote_repos_path,
@@ -228,14 +235,16 @@ def _create_svn_remote_repo(
 
 @pytest.fixture
 @skip_if_svn_missing
-def create_svn_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+def create_svn_remote_repo(
+    remote_repos_path: pathlib.Path, faker: Faker
+) -> CreateProjectCallbackFixtureProtocol:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    ):
+    ) -> pathlib.Path:
         return _create_svn_remote_repo(
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
@@ -276,7 +285,7 @@ def _create_hg_remote_repo(
     return remote_repo_path
 
 
-def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
+def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> None:
     testfile_filename = "testfile.test"
     run(["touch", testfile_filename], cwd=remote_repo_path)
     run(["hg", "add", testfile_filename], cwd=remote_repo_path)
@@ -286,14 +295,16 @@ def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path):
 @pytest.fixture
 @pytest.mark.usefixtures("hgconfig")
 @skip_if_hg_missing
-def create_hg_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
+def create_hg_remote_repo(
+    remote_repos_path: pathlib.Path, faker: Faker
+) -> CreateProjectCallbackFixtureProtocol:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    ):
+    ) -> pathlib.Path:
         return _create_hg_remote_repo(
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
@@ -308,7 +319,7 @@ def create_hg_remote_repo(remote_repos_path: pathlib.Path, faker: Faker):
 @pytest.fixture
 @pytest.mark.usefixtures("hgconfig")
 @skip_if_hg_missing
-def hg_remote_repo(remote_repos_path: pathlib.Path):
+def hg_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
     return _create_hg_remote_repo(
         remote_repos_path=remote_repos_path,
@@ -318,7 +329,7 @@ def hg_remote_repo(remote_repos_path: pathlib.Path):
 
 
 @pytest.fixture
-def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path):
+def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitProject:
     """Pre-made git clone of remote repo checked out to user's projects dir."""
     git_repo = GitProject(
         url=f"file://{git_remote_repo}",
@@ -371,7 +382,7 @@ def add_doctest_fixtures(
     create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
     create_hg_remote_repo: CreateProjectCallbackFixtureProtocol,
     git_repo: pathlib.Path,
-):
+) -> None:
     doctest_namespace["tmp_path"] = tmp_path
     if which("git"):
         doctest_namespace["gitconfig"] = gitconfig

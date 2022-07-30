@@ -81,7 +81,7 @@ def test_git_url(
     is_valid: bool,
     git_url: GitURL,
     git_repo: GitProject,
-):
+) -> None:
     url = url.format(local_repo=git_repo.dir)
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
@@ -140,7 +140,7 @@ def test_git_url_extension_pip(
     is_valid: bool,
     git_url_kwargs: GitURLKwargs,
     git_repo: GitProject,
-):
+) -> None:
     class GitURLWithPip(GitBaseURL):
         matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
@@ -214,7 +214,7 @@ def test_git_to_url(
     expected: str,
     git_url: GitURL,
     git_repo: GitProject,
-):
+) -> None:
     """Test GitURL.to_url()"""
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
@@ -253,7 +253,7 @@ class RevFixture(typing.NamedTuple):
 def test_git_revs(
     expected: str,
     git_url_kwargs: GitURLKwargs,
-):
+) -> None:
     class GitURLWithPip(GitURL):
         matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}

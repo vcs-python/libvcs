@@ -11,17 +11,23 @@ import datetime
 import errno
 import logging
 import os
+import pathlib
 import subprocess
 import sys
 from typing import (
     IO,
+    TYPE_CHECKING,
     Any,
+    AnyStr,
     Callable,
     Iterable,
+    List,
     Mapping,
+    MutableMapping,
     Optional,
     Protocol,
     Sequence,
+    Tuple,
     Union,
 )
 
@@ -36,19 +42,26 @@ logger = logging.getLogger(__name__)
 console_encoding = sys.__stdout__.encoding
 
 
-def console_to_str(s):
+def console_to_str(s: bytes) -> str:
     """From pypa/pip project, pip.backwardwardcompat. License MIT."""
     try:
         return s.decode(console_encoding)
     except UnicodeDecodeError:
         return s.decode("utf_8")
     except AttributeError:  # for tests, #13
-        return s
+        return str(s)
 
 
 def which(
-    exe=None, default_paths=["/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/bin"]
-):
+    exe: Optional[str] = None,
+    default_paths: Union[str, List[str]] = [
+        "/bin",
+        "/sbin",
+        "/usr/bin",
+        "/usr/sbin",
+        "/usr/local/bin",
+    ],
+) -> Optional[str]:
     """Return path of bin. Python clone of /usr/bin/which.
 
     from salt.util - https://www.github.com/saltstack/salt - license apache
@@ -66,9 +79,12 @@ def which(
         Path to binary
     """
 
-    def _is_executable_file_or_link(exe):
+    def _is_executable_file_or_link(exe: str) -> bool:
         # check for os.X_OK doesn't suffice because directory may executable
         return os.access(exe, os.X_OK) and (os.path.isfile(exe) or os.path.islink(exe))
+
+    if exe is None:
+        return None
 
     if _is_executable_file_or_link(exe):
         # executable in cwd or fullpath
@@ -85,9 +101,10 @@ def which(
             search_path.append(default_path)
     os.environ["PATH"] = os.pathsep.join(search_path)
     for path in search_path:
-        full_path = os.path.join(path, exe)
-        if _is_executable_file_or_link(full_path):
-            return full_path
+        if path:
+            full_path = os.path.join(path, exe)
+            if _is_executable_file_or_link(full_path):
+                return full_path
     logger.info(
         "'{}' could not be found in the following search path: "
         "'{}'".format(exe, search_path)
@@ -96,7 +113,7 @@ def which(
     return None
 
 
-def mkdir_p(path):
+def mkdir_p(path: pathlib.Path) -> None:
     """Make directories recursively.
 
     Parameters
@@ -113,7 +130,13 @@ def mkdir_p(path):
             raise Exception("Could not create directory %s" % path)
 
 
-class CmdLoggingAdapter(logging.LoggerAdapter):
+if TYPE_CHECKING:
+    _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
+else:
+    _LoggerAdapter = logging.LoggerAdapter
+
+
+class CmdLoggingAdapter(_LoggerAdapter):
     """Adapter for additional command-related data to :py:mod:`logging`.
 
     Extends :py:class:`logging.LoggerAdapter`'s functionality.
@@ -129,7 +152,7 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
         directory basename, name of repo, hint, etc. e.g. 'django'
     """
 
-    def __init__(self, bin_name: str, keyword: str, *args, **kwargs):
+    def __init__(self, bin_name: str, keyword: str, *args: Any, **kwargs: Any) -> None:
         #: bin_name
         self.bin_name = bin_name
         #: directory basename, name of repository, hint, etc.
@@ -137,7 +160,9 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
 
         logging.LoggerAdapter.__init__(self, *args, **kwargs)
 
-    def process(self, msg, kwargs):
+    def process(
+        self, msg: str, kwargs: MutableMapping[str, Any]
+    ) -> Tuple[Any, MutableMapping[str, Any]]:
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict["bin_name"] = self.bin_name
@@ -151,7 +176,7 @@ class CmdLoggingAdapter(logging.LoggerAdapter):
 class ProgressCallbackProtocol(Protocol):
     """Callback to report subprocess communication."""
 
-    def __call__(self, output: Union[str, bytes], timestamp: datetime.datetime):
+    def __call__(self, output: AnyStr, timestamp: datetime.datetime) -> None:
         """Callback signature for subprocess communication."""
         ...
 
@@ -199,7 +224,7 @@ def run(
     log_in_real_time: bool = True,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
-):
+) -> str:
     """Run 'args' in a shell and return the combined contents of stdout and
     stderr (Blocking). Throws an exception if the command exits non-zero.
 

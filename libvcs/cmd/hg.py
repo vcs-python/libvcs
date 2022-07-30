@@ -9,7 +9,7 @@
 """
 import enum
 import pathlib
-from typing import Optional, Sequence, Union
+from typing import Any, Optional, Sequence, Union
 
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath
@@ -33,7 +33,7 @@ class HgPagerType(enum.Enum):
 
 
 class Hg:
-    def __init__(self, *, dir: StrPath):
+    def __init__(self, *, dir: StrPath) -> None:
         """Lite, typed, pythonic wrapper for hg(1).
 
         Parameters
@@ -53,7 +53,7 @@ class Hg:
         else:
             self.dir = pathlib.Path(dir)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Hg dir={self.dir}>"
 
     def run(
@@ -63,6 +63,7 @@ class Hg:
         config: Optional[str] = None,
         repository: Optional[str] = None,
         quiet: Optional[bool] = None,
+        help: Optional[bool] = None,
         encoding: Optional[str] = None,
         encoding_mode: Optional[str] = None,
         verbose: Optional[bool] = None,
@@ -75,8 +76,8 @@ class Hg:
         time: Optional[bool] = None,
         pager: Optional[HgPagerType] = None,
         color: Optional[HgColorType] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Passing None to a subcommand option, the flag won't be passed unless otherwise
         stated.
@@ -172,7 +173,7 @@ class Hg:
         self,
         *,
         url: str,
-        no_update: Optional[str] = None,
+        no_update: Optional[bool] = None,
         update_rev: Optional[str] = None,
         rev: Optional[str] = None,
         branch: Optional[str] = None,
@@ -181,7 +182,7 @@ class Hg:
         pull: Optional[bool] = None,
         stream: Optional[bool] = None,
         insecure: Optional[bool] = None,
-    ):
+    ) -> str:
         """Clone a working copy from a mercurial repo.
 
         Wraps `hg clone <https://www.mercurial-scm.org/doc/hg.1.html#clone>`_.

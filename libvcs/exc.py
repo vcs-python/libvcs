@@ -3,6 +3,7 @@
 If you see this, we're publishing to S3 automatically
 
 """
+from typing import List, Optional, Union
 
 
 class LibVCSException(Exception):
@@ -12,7 +13,12 @@ class LibVCSException(Exception):
 class CommandError(LibVCSException):
     """This exception is raised on non-zero return codes."""
 
-    def __init__(self, output, returncode=None, cmd=None):
+    def __init__(
+        self,
+        output: str,
+        returncode: Optional[int] = None,
+        cmd: Optional[Union[str, List[str]]] = None,
+    ) -> None:
         self.returncode = returncode
         self.output = output
         if cmd:
@@ -20,7 +26,7 @@ class CommandError(LibVCSException):
                 cmd = " ".join(cmd)
             self.cmd = cmd
 
-    def __str__(self):
+    def __str__(self) -> str:
         message = self.message.format(returncode=self.returncode, cmd=self.cmd)
         if len(self.output.strip()):
             message += "\n%s" % self.output

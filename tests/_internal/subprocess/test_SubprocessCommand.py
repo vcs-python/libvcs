@@ -32,7 +32,7 @@ def idfn(val: Any) -> str:
     ],
     ids=idfn,
 )
-def test_init(args: list, kwargs: dict, expected_result: Any):
+def test_init(args: list[Any], kwargs: dict[str, Any], expected_result: Any) -> None:
     """Test SubprocessCommand via list + kwargs, assert attributes"""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
@@ -57,7 +57,9 @@ FIXTURES = [
     FIXTURES,
     ids=idfn,
 )
-def test_init_and_Popen(args: list, kwargs: dict, expected_result: Any):
+def test_init_and_Popen(
+    args: list[Any], kwargs: dict[str, Any], expected_result: Any
+) -> None:
     """Test SubprocessCommand with Popen"""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
@@ -76,7 +78,9 @@ def test_init_and_Popen(args: list, kwargs: dict, expected_result: Any):
     FIXTURES,
     ids=idfn,
 )
-def test_init_and_Popen_run(args: list, kwargs: dict, expected_result: Any):
+def test_init_and_Popen_run(
+    args: list[Any], kwargs: dict[str, Any], expected_result: Any
+) -> None:
     """Test SubprocessCommand with run"""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
@@ -94,7 +98,9 @@ def test_init_and_Popen_run(args: list, kwargs: dict, expected_result: Any):
     FIXTURES,
     ids=idfn,
 )
-def test_init_and_check_call(args: list, kwargs: dict, expected_result: Any):
+def test_init_and_check_call(
+    args: list[Any], kwargs: dict[str, Any], expected_result: Any
+) -> None:
     """Test SubprocessCommand with Popen.check_call"""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
@@ -110,7 +116,9 @@ def test_init_and_check_call(args: list, kwargs: dict, expected_result: Any):
     "args,kwargs,expected_result",
     FIXTURES,
 )
-def test_init_and_check_output(args: list, kwargs: dict, expected_result: Any):
+def test_init_and_check_output(
+    args: list[Any], kwargs: dict[str, Any], expected_result: Any
+) -> None:
     """Test SubprocessCommand with Popen.check_output"""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
@@ -131,7 +139,12 @@ def test_init_and_check_output(args: list, kwargs: dict, expected_result: Any):
     ],
     ids=idfn,
 )
-def test_run(tmp_path: pathlib.Path, args: list, kwargs: dict, run_kwargs: dict):
+def test_run(
+    tmp_path: pathlib.Path,
+    args: list[Any],
+    kwargs: dict[str, Any],
+    run_kwargs: dict[str, Any],
+) -> None:
     kwargs["cwd"] = tmp_path
     cmd = SubprocessCommand(*args, **kwargs)
     response = cmd.run(**run_kwargs)

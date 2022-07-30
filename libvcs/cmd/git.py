@@ -9,7 +9,7 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class Git:
-    def __init__(self, *, dir: StrPath):
+    def __init__(self, *, dir: StrPath) -> None:
         """Lite, typed, pythonic wrapper for git(1).
 
         Parameters
@@ -29,7 +29,7 @@ class Git:
         else:
             self.dir = pathlib.Path(dir)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Git dir={self.dir}>"
 
     def run(
@@ -59,8 +59,8 @@ class Git:
         no_optional_locks: Optional[bool] = None,
         config: Optional[str] = None,
         config_env: Optional[str] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Passing None to a subcommand option, the flag won't be passed unless otherwise
         stated.
@@ -217,8 +217,8 @@ class Git:
         quiet: Optional[bool] = None,
         # Special behavior
         make_parents: Optional[bool] = True,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Clone a working copy from an git repo.
 
         Wraps `git clone <https://git-scm.com/docs/git-clone>`_.
@@ -364,8 +364,8 @@ class Git:
         show_forced_updates: Optional[bool] = None,
         no_show_forced_updates: Optional[bool] = None,
         negotiate_only: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Download from repo. Wraps `git fetch <https://git-scm.com/docs/git-fetch>`_.
 
         Examples
@@ -523,8 +523,8 @@ class Git:
         show_current_patch: Optional[bool] = None,
         abort: Optional[bool] = None,
         quit: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Reapply commit on top of another tip.
 
         Wraps `git rebase <https://git-scm.com/docs/git-rebase>`_.
@@ -760,8 +760,8 @@ class Git:
         show_forced_updates: Optional[bool] = None,
         no_show_forced_updates: Optional[bool] = None,
         negotiate_only: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Download from repo. Wraps `git pull <https://git-scm.com/docs/git-pull>`_.
 
         Examples
@@ -955,8 +955,8 @@ class Git:
         shared: Optional[bool] = None,
         quiet: Optional[bool] = None,
         bare: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
 
         Parameters
@@ -1031,13 +1031,13 @@ class Git:
         verbose: Optional[bool] = None,
         no_external_commands: Optional[bool] = None,
         no_aliases: Optional[bool] = None,
-        config: Optional[str] = None,
-        guides: Optional[str] = None,
-        info: Optional[str] = None,
-        man: Optional[str] = None,
-        web: Optional[str] = None,
-        **kwargs,
-    ):
+        config: Optional[bool] = None,
+        guides: Optional[bool] = None,
+        info: Optional[bool] = None,
+        man: Optional[bool] = None,
+        web: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
         """Help info. Wraps `git help <https://git-scm.com/docs/git-help>`_.
 
         Parameters
@@ -1124,8 +1124,8 @@ class Git:
         commit: Optional[str] = None,
         recurse_submodules: Optional[bool] = None,
         no_recurse_submodules: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Reset HEAD. Wraps `git help <https://git-scm.com/docs/git-help>`_.
 
         Parameters
@@ -1151,7 +1151,7 @@ class Git:
         >>> git.reset()
         ''
 
-        >>> git.reset(soft=True, commit='HEAD~1')
+        >>> git.reset(soft=True, commit='HEAD~0')
         ''
         """
         local_flags: list[str] = []
@@ -1181,7 +1181,7 @@ class Git:
         if keep is True:
             local_flags.append("--keep")
 
-        if commit is True:
+        if commit is not None:
             local_flags.append(commit)
 
         if recurse_submodules:
@@ -1232,8 +1232,8 @@ class Git:
         new_branch: Optional[str] = None,
         start_point: Optional[str] = None,
         treeish: Optional[str] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Switches branches or checks out files. Wraps
         `git checkout <https://git-scm.com/docs/git-checkout>`_ (`git co`).
 
@@ -1297,25 +1297,25 @@ class Git:
         if detach is True:
             local_flags.append("--detach")
 
-        if orphan is True:
+        if orphan is not None:
             local_flags.append("--orphan")
 
-        if conflict is True:
+        if conflict is not None:
             local_flags.append(f"--conflict={conflict}")
 
-        if commit is True:
+        if commit is not None:
             local_flags.append(commit)
 
-        if branch is True:
+        if branch is not None:
             local_flags.append(branch)
 
-        if new_branch is True:
+        if new_branch is not None:
             local_flags.append(new_branch)
 
-        if start_point is True:
+        if start_point is not None:
             local_flags.append(start_point)
 
-        if treeish is True:
+        if treeish is not None:
             local_flags.append(treeish)
 
         if recurse_submodules:
@@ -1354,8 +1354,8 @@ class Git:
         ignored: Optional[Literal["traditional", "no", "matching"]] = None,
         ignored_submodules: Optional[Literal["untracked", "dirty", "all"]] = None,
         pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Status of working tree. Wraps
         `git status <https://git-scm.com/docs/git-status>`_.
 
@@ -1488,7 +1488,7 @@ class Git:
         show_scope: Optional[bool] = None,
         get_color: Optional[Union[str, bool]] = None,
         get_colorbool: Optional[Union[str, bool]] = None,
-        default: Optional[str] = None,
+        default: Optional[bool] = None,
         _type: Optional[
             Literal["bool", "int", "bool-or-int", "path", "expiry-date", "color"]
         ] = None,
@@ -1496,8 +1496,8 @@ class Git:
         no_includes: Optional[bool] = None,
         includes: Optional[bool] = None,
         add: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """Status of working tree. Wraps
         `git status <https://git-scm.com/docs/git-status>`_.
 

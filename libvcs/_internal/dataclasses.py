@@ -72,7 +72,7 @@ class SkipDefaultFieldsReprMixin:
     ItemWithMixin(name=Test, unit_price=2.05)
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Omit default fields in object representation."""
         nodef_f_vals = (
             (f.name, attrgetter(f.name)(self))

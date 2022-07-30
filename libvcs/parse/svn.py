@@ -174,7 +174,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         url = self.url
         for matcher in self.matchers.values():
             match = re.match(matcher.pattern, url)

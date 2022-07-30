@@ -10,6 +10,7 @@
 """  # NOQA E5
 import logging
 import pathlib
+from typing import Any
 
 from .base import BaseProject
 
@@ -20,7 +21,7 @@ class MercurialProject(BaseProject):
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
 
-    def obtain(self, *args, **kwargs):
+    def obtain(self, *args: Any, **kwargs: Any) -> None:
         self.ensure_dir()
 
         # Double hyphens between [OPTION]... -- SOURCE [DEST] prevent command injections
@@ -28,10 +29,10 @@ class MercurialProject(BaseProject):
         self.run(["clone", "--noupdate", "-q", "--", self.url, str(self.dir)])
         self.run(["update", "-q"])
 
-    def get_revision(self):
+    def get_revision(self) -> str:
         return self.run(["parents", "--template={rev}"])
 
-    def update_repo(self, *args, **kwargs):
+    def update_repo(self, *args: Any, **kwargs: Any) -> None:
         self.ensure_dir()
         if not pathlib.Path(self.dir / ".hg").exists():
             self.obtain()

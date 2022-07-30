@@ -6,12 +6,26 @@ This is an internal API not covered by versioning policy.
 """
 import re
 import traceback
-from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    List,
+    Mapping,
+    Optional,
+    Pattern,
+    Protocol,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
 T = TypeVar("T", Any, Any)
 
 
-def keygetter(obj, path):
+def keygetter(
+    obj: Mapping[str, Any],
+    path: str,
+) -> Union[None, Any, str, List[str], Mapping[str, str]]:
     """obj, "foods__breakfast", obj['foods']['breakfast']
 
     >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods__breakfast")
@@ -26,12 +40,12 @@ def keygetter(obj, path):
         for sub_field in sub_fields:
             dct = dct[sub_field]
         return dct
-    except Exception as e:
-        traceback.print_exception(e)
+    except Exception:
+        traceback.print_stack()
     return None
 
 
-def parse_lookup(obj, path, lookup):
+def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any]:
     """Check if field lookup key, e.g. "my__path__contains" has comparator, return val.
 
     If comparator not used or value not found, return None.
@@ -42,74 +56,170 @@ def parse_lookup(obj, path, lookup):
     'red apple'
     """
     try:
-        if path.endswith(lookup):
+        if isinstance(path, str) and isinstance(lookup, str) and path.endswith(lookup):
             if field_name := path.rsplit(lookup)[0]:
                 return keygetter(obj, field_name)
-    except Exception as e:
-        traceback.print_exception(e)
+    except Exception:
+        traceback.print_stack()
     return None
 
 
 class LookupProtocol(Protocol):
     """Protocol for :class:`QueryList` filtering operators."""
 
-    def __call__(self, data: Union[list[str], str], rhs: Union[list[str], str]):
+    def __call__(
+        self,
+        data: Union[str, list[str], Mapping[str, str]],
+        rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    ) -> bool:
         """Callback for :class:`QueryList` filtering operators."""
+        ...
 
 
-def lookup_exact(data, rhs):
+def lookup_exact(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
     return rhs == data
 
 
-def lookup_iexact(data, rhs):
+def lookup_iexact(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, str):
+        return False
+
     return rhs.lower() == data.lower()
 
 
-def lookup_contains(data, rhs):
+def lookup_contains(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, (str, Mapping, list)):
+        return False
+
     return rhs in data
 
 
-def lookup_icontains(data, rhs):
-    return rhs.lower() in data.lower()
+def lookup_icontains(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, (str, Mapping, list)):
+        return False
+
+    if isinstance(data, str):
+        return rhs.lower() in data.lower()
+    if isinstance(data, Mapping):
+        return rhs.lower() in [k.lower() for k in data.keys()]
+
+    return False
 
 
-def lookup_startswith(data, rhs):
+def lookup_startswith(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, str):
+        return False
+
     return data.startswith(rhs)
 
 
-def lookup_istartswith(data, rhs):
+def lookup_istartswith(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, str):
+        return False
+
     return data.lower().startswith(rhs.lower())
 
 
-def lookup_endswith(data, rhs):
+def lookup_endswith(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, str):
+        return False
+
     return data.endswith(rhs)
 
 
-def lookup_iendswith(data, rhs):
+def lookup_iendswith(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if not isinstance(rhs, str) or not isinstance(data, str):
+        return False
     return data.lower().endswith(rhs.lower())
 
 
-def lookup_in(data, rhs):
+def lookup_in(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
     if isinstance(rhs, list):
         return data in rhs
-    return rhs in data
+
+    try:
+        if isinstance(rhs, str) and isinstance(data, Mapping):
+            return rhs in data
+        if isinstance(rhs, str) and isinstance(data, (str, list)):
+            return rhs in data
+        if isinstance(rhs, str) and isinstance(data, Mapping):
+            return rhs in data
+        # TODO: Add a deep Mappingionary matcher
+        # if isinstance(rhs, Mapping) and isinstance(data, Mapping):
+        #     return rhs.items() not in data.items()
+    except Exception:
+        return False
+    return False
 
 
-def lookup_nin(data, rhs):
+def lookup_nin(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
     if isinstance(rhs, list):
         return data not in rhs
-    return rhs not in data
+
+    try:
+        if isinstance(rhs, str) and isinstance(data, Mapping):
+            return rhs not in data
+        if isinstance(rhs, str) and isinstance(data, (str, list)):
+            return rhs not in data
+        if isinstance(rhs, str) and isinstance(data, Mapping):
+            return rhs not in data
+        # TODO: Add a deep Mappingionary matcher
+        # if isinstance(rhs, Mapping) and isinstance(data, Mapping):
+        #     return rhs.items() not in data.items()
+    except Exception:
+        return False
+    return False
 
 
-def lookup_regex(data, rhs):
-    return re.search(rhs, data)
+def lookup_regex(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if isinstance(data, (str, bytes, re.Pattern)) and isinstance(rhs, (str, bytes)):
+        return bool(re.search(rhs, data))
+    return False
 
 
-def lookup_iregex(data, rhs):
-    return re.search(rhs, data, re.IGNORECASE)
+def lookup_iregex(
+    data: Union[str, list[str], Mapping[str, str]],
+    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+) -> bool:
+    if isinstance(data, (str, bytes, re.Pattern)) and isinstance(rhs, (str, bytes)):
+        return bool(re.search(rhs, data, re.IGNORECASE))
+    return False
 
 
-LOOKUP_NAME_MAP: dict[str, LookupProtocol] = {
+LOOKUP_NAME_MAP: Mapping[str, LookupProtocol] = {
     "eq": lookup_exact,
     "exact": lookup_exact,
     "iexact": lookup_iexact,
@@ -127,7 +237,9 @@ LOOKUP_NAME_MAP: dict[str, LookupProtocol] = {
 
 
 class QueryList(list[T]):
-    """Filter list of object/dicts. For small, local datasets. *Experimental, unstable*.
+    """Filter list of object/dictionaries. For small, local datasets.
+
+    *Experimental, unstable*.
 
     >>> query = QueryList(
     ...     [
@@ -158,15 +270,25 @@ class QueryList(list[T]):
     """
 
     data: Sequence[T]
+    pk_key: Optional[str]
 
-    def items(self):
+    def items(self) -> list[T]:
         data: Sequence[T]
 
         if self.pk_key is None:
             raise Exception("items() require a pk_key exists")
         return [(getattr(item, self.pk_key), item) for item in self]
 
-    def __eq__(self, other):
+    def __eq__(
+        self,
+        other: object,
+        # other: Union[
+        #     "QueryList[T]",
+        #     List[Mapping[str, str]],
+        #     List[Mapping[str, int]],
+        #     List[Mapping[str, Union[str, Mapping[str, Union[List[str], str]]]]],
+        # ],
+    ) -> bool:
         data = other
 
         if not isinstance(self, list) or not isinstance(data, list):
@@ -174,7 +296,7 @@ class QueryList(list[T]):
 
         if len(self) == len(data):
             for (a, b) in zip(self, data):
-                if isinstance(a, dict):
+                if isinstance(a, Mapping):
                     a_keys = a.keys()
                     if a.keys == b.keys():
                         for key in a_keys:
@@ -187,8 +309,10 @@ class QueryList(list[T]):
             return True
         return False
 
-    def filter(self, matcher: Optional[Union[Callable[[T], bool], T]] = None, **kwargs):
-        def filter_lookup(obj) -> bool:
+    def filter(
+        self, matcher: Optional[Union[Callable[[T], bool], T]] = None, **kwargs: Any
+    ) -> "QueryList[T]":
+        def filter_lookup(obj: Any) -> bool:
             for path, v in kwargs.items():
                 try:
                     lhs, op = path.rsplit("__", 1)
@@ -203,7 +327,7 @@ class QueryList(list[T]):
                 path = lhs
                 data = keygetter(obj, path)
 
-                if not LOOKUP_NAME_MAP[op](data, v):
+                if data is None or not LOOKUP_NAME_MAP[op](data, v):
                     return False
 
             return True
@@ -212,7 +336,7 @@ class QueryList(list[T]):
             _filter = matcher
         elif matcher is not None:
 
-            def val_match(obj):
+            def val_match(obj: Union[str, list[Any]]) -> bool:
                 if isinstance(matcher, list):
                     return obj in matcher
                 else:
