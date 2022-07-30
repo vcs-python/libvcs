@@ -511,10 +511,9 @@ def test_remotes_preserves_git_ssh(
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
 
-    assert (
-        GitRemote(remote_name, remote_url, remote_url).to_dict()
-        in git_repo.remotes().values()
-    )
+    assert GitRemote(remote_name, remote_url, remote_url).to_dict() in [
+        r.to_dict() for r in git_repo.remotes().values()
+    ]
 
 
 @pytest.mark.parametrize(
@@ -559,7 +558,7 @@ def test_ls_remotes(git_repo: GitProject):
     remotes = git_repo.remotes()
 
     assert "origin" in remotes
-    assert "origin" in git_repo.remotes(flat=True)
+    assert git_repo.remotes()["origin"].name == "origin"
 
 
 def test_get_remotes(git_repo: GitProject):
