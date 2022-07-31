@@ -75,7 +75,8 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> GitURL(url="github:org/repo").to_url()
         'git@github:org/repo'
 
-        Eek. That won't work, can't do much with that one.
+        Eek. That won't work, :abbr:`can't do much with that one ("git clone git@github:org/repo"
+        wouldn't work unless your user's had "insteadOf" set.)`.
 
         We need something more specific so usable URLs can be generated. What do we do?
 
