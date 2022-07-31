@@ -307,7 +307,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         ... )
         False
 
-        In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitBaseURL.is_valid`'s
+        In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitURL.is_valid`'s
         examples.
         """
         if is_explicit is not None:
@@ -522,8 +522,8 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         ... )
         True
 
-        Below, while it's github, that doesn't necessarily mean that the URL itself
-        is conclusively a git URL:
+        Below, while it's GitHub, that doesn't necessarily mean that the URL itself
+        is conclusively a `git` URL (e.g. the pattern is too lax):
 
         >>> GitURL.is_valid(
         ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
