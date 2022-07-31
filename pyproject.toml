@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "libvcs"
-version = "0.14.0a8"
+version = "0.14.0"
 description = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
 license = "MIT"
 authors = ["Tony Narlock <tony@git-pull.com>"]
