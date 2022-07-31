@@ -275,7 +275,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Optional[bool] = None,
         encoding: Optional[str] = None,
         errors: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> subprocess.Popen[Any]:
         """Run commands :class:`subprocess.Popen`, optionally overrides via kwargs.
 
@@ -302,7 +302,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
             ).__dict__,
         )
 
-    def check_call(self, **kwargs) -> int:
+    def check_call(self, **kwargs: Any) -> int:
         """Run command :func:`subprocess.check_call`, optionally overrides via kwargs.
 
         Parameters
@@ -327,7 +327,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
         text: Literal[True],
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         ...
 
@@ -340,7 +340,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: str,
         errors: Optional[str] = ...,
         text: Optional[bool] = ...,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         ...
 
@@ -353,7 +353,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: Optional[str] = ...,
         errors: str,
         text: Optional[bool] = ...,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         ...
 
@@ -366,7 +366,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
         text: Optional[bool] = ...,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         ...
 
@@ -379,7 +379,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: None = ...,
         errors: None = ...,
         text: Literal[None, False] = ...,
-        **kwargs,
+        **kwargs: Any,
     ) -> bytes:
         ...
 
@@ -391,7 +391,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: Optional[str] = None,
         errors: Optional[str] = None,
         text: Optional[bool] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Union[bytes, str]:
         r"""Run command :func:`subprocess.check_output`, optionally override via kwargs.
 
@@ -424,7 +424,10 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         """
         params = dataclasses.replace(self, **kwargs).__dict__
         params.pop("stdout")
-        return subprocess.check_output(input=input, **params)
+        output = subprocess.check_output(input=input, **params)
+        if isinstance(output, (bytes, str)):
+            return output
+        raise Exception(f"output is not str or bytes: {output}")
 
     @overload
     def run(
@@ -508,7 +511,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         input: Optional[Union[str, bytes]] = None,
         text: Optional[bool] = None,
         timeout: Optional[float] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> subprocess.CompletedProcess[Any]:
         r"""Run command in :func:`subprocess.run`, optionally overrides via kwargs.
 

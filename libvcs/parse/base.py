@@ -1,7 +1,10 @@
 import dataclasses
-from typing import Iterator, Optional, Pattern, Protocol
+from typing import TYPE_CHECKING, Iterator, Optional, Pattern, Protocol
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
+
+if TYPE_CHECKING:
+    from _collections_abc import dict_values
 
 
 class URLProtocol(Protocol):
@@ -25,9 +28,9 @@ class Matcher(SkipDefaultFieldsReprMixin):
     """Computer readable name / ID"""
     description: str
     """Human readable description"""
-    pattern: Pattern
+    pattern: Pattern[str]
     """Regex pattern"""
-    pattern_defaults: dict = dataclasses.field(default_factory=dict)
+    pattern_defaults: dict[str, str] = dataclasses.field(default_factory=dict)
     """Is the match unambiguous with other VCS systems? e.g. git+ prefix"""
     is_explicit: bool = False
 
@@ -203,5 +206,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
     def __iter__(self) -> Iterator[str]:
         return self._matchers.__iter__()
 
-    def values(self):  # https://github.com/python/typing/discussions/1033
+    def values(
+        self,  # https://github.com/python/typing/discussions/1033
+    ) -> "dict_values[str, Matcher]":
         return self._matchers.values()

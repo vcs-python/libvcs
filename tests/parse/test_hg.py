@@ -46,7 +46,7 @@ def test_hg_url(
     is_valid: bool,
     hg_url: HgURL,
     hg_repo: MercurialProject,
-):
+) -> None:
     url = url.format(local_repo=hg_repo.dir)
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
 
@@ -105,7 +105,7 @@ def test_hg_url_extension_pip(
     is_valid: bool,
     hg_url_kwargs: HgURLKwargs,
     hg_repo: MercurialProject,
-):
+) -> None:
     class HgURLWithPip(HgURL):
         matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
@@ -181,7 +181,7 @@ def test_hg_to_url(
     expected: str,
     hg_url: HgURL,
     hg_repo: MercurialProject,
-):
+) -> None:
     """Test HgURL.to_url()"""
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
 

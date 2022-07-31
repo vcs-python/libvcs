@@ -10,7 +10,11 @@ if not which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 
-def test_repo_mercurial(tmp_path: pathlib.Path, projects_path, hg_remote_repo):
+def test_repo_mercurial(
+    tmp_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    hg_remote_repo: pathlib.Path,
+) -> None:
     repo_name = "my_mercurial_project"
 
     mercurial_repo = create_project(
@@ -34,8 +38,8 @@ def test_vulnerability_2022_03_12_command_injection(
     monkeypatch: pytest.MonkeyPatch,
     user_path: pathlib.Path,
     tmp_path: pathlib.Path,
-    hg_remote_repo,
-):
+    hg_remote_repo: pathlib.Path,
+) -> None:
     """Prevent hg aliases from executed arbitrary commands via URLs.
 
     As of 0.11 this code path is/was only executed via .obtain(), so this only would

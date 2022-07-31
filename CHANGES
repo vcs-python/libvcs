@@ -16,6 +16,12 @@ $ pip install --user --upgrade --pre libvcs
 ### What's new
 
 - New and improved logo
+- **Improved typings**
+
+  Now [`mypy --strict`] compliant ({issue}`390`)
+
+  [`mypy --strict`]: https://mypy.readthedocs.io/en/stable/command_line.html#cmdoption-mypy-strict
+
 - **Parser**: Experimental VCS URL parsing added ({issue}`376`, {issue}`381`, {issue}`384`,
   {issue}`386`):
 

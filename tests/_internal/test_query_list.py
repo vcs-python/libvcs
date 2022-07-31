@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional, Union
 
 import pytest
 
@@ -229,7 +229,11 @@ from libvcs._internal.query_list import QueryList
         [[1, 2, 3, 4, 5], lambda val: 2 == val, QueryList([2])],
     ],
 )
-def test_filter(items: list, filter_expr: Optional[dict], expected_result: list):
+def test_filter(
+    items: list[dict[str, Any]],
+    filter_expr: Optional[dict[str, Union[str, list[str]]]],
+    expected_result: Union[QueryList[Any], list[dict[str, Any]]],
+) -> None:
     qs = QueryList(items)
     if filter_expr is not None:
         if isinstance(filter_expr, dict):

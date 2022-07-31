@@ -1,10 +1,10 @@
 """Base class for VCS Project plugins."""
 import logging
 import pathlib
-from typing import NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple, Optional, Sequence, Tuple
 from urllib import parse as urlparse
 
-from libvcs._internal.run import CmdLoggingAdapter, run
+from libvcs._internal.run import _CMD, CmdLoggingAdapter, ProgressCallbackProtocol, run
 from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
@@ -38,13 +38,20 @@ class BaseProject:
     log_in_real_time = None
     """Log command output to buffer"""
 
-    bin_name = ""
+    bin_name: str = ""
     """VCS app name, e.g. 'git'"""
 
     schemes: Tuple[str, ...] = ()
     """List of supported schemes to register in ``urlparse.uses_netloc``"""
 
-    def __init__(self, *, url: str, dir: StrPath, progress_callback=None, **kwargs):
+    def __init__(
+        self,
+        *,
+        url: str,
+        dir: StrPath,
+        progress_callback: Optional[ProgressCallbackProtocol] = None,
+        **kwargs: Any,
+    ) -> None:
         r"""
         Parameters
         ----------
@@ -112,7 +119,7 @@ class BaseProject:
         return self.dir.stem
 
     @classmethod
-    def from_pip_url(cls, pip_url, **kwargs):
+    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseProject":
         url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, **kwargs)
 
@@ -120,13 +127,13 @@ class BaseProject:
 
     def run(
         self,
-        cmd,
-        cwd=None,
-        check_returncode=True,
-        log_in_real_time=None,
-        *args,
-        **kwargs,
-    ):
+        cmd: _CMD,
+        cwd: None = None,
+        check_returncode: bool = True,
+        log_in_real_time: Optional[bool] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> str:
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
@@ -150,7 +157,10 @@ class BaseProject:
         if cwd is None:
             cwd = getattr(self, "dir", None)
 
-        cmd = [self.bin_name] + cmd
+        if isinstance(cmd, Sequence):
+            cmd = [self.bin_name, *cmd]
+        else:
+            cmd = [self.bin_name, cmd]
 
         return run(
             cmd,
@@ -158,11 +168,11 @@ class BaseProject:
                 self.progress_callback if callable(self.progress_callback) else None
             ),
             check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time or self.log_in_real_time,
+            log_in_real_time=log_in_real_time or self.log_in_real_time or False,
             cwd=cwd,
         )
 
-    def ensure_dir(self, *args, **kwargs) -> bool:
+    def ensure_dir(self, *args: Any, **kwargs: Any) -> bool:
         """Assure destination path exists. If not, create directories."""
         if self.dir.exists():
             return True
@@ -179,11 +189,11 @@ class BaseProject:
 
         return True
 
-    def update_repo(self, *args, **kwargs):
+    def update_repo(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError
 
-    def obtain(self, *args, **kwargs):
+    def obtain(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.repo_name}>"

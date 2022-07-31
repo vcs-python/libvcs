@@ -7,7 +7,7 @@
    <https://github.com/vcs-python/libvcs>`_, 'APIs unstable until we fit the spec.
 """
 import pathlib
-from typing import Literal, Optional, Sequence, Union
+from typing import Any, Literal, Optional, Sequence, Union
 
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath
@@ -19,7 +19,7 @@ RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
 class Svn:
-    def __init__(self, *, dir: StrPath):
+    def __init__(self, *, dir: StrPath) -> None:
         """Lite, typed, pythonic wrapper for svn(1).
 
         Parameters
@@ -39,7 +39,7 @@ class Svn:
         else:
             self.dir = pathlib.Path(dir)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Svn dir={self.dir}>"
 
     def run(
@@ -54,8 +54,8 @@ class Svn:
         trust_server_cert: Optional[bool] = None,
         config_dir: Optional[pathlib.Path] = None,
         config_option: Optional[pathlib.Path] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Passing None to a subcommand option, the flag won't be passed unless otherwise
         stated.
@@ -126,7 +126,7 @@ class Svn:
         force: Optional[bool] = None,
         ignore_externals: Optional[bool] = None,
         depth: DepthLiteral = None,
-    ):
+    ) -> str:
         """Check out a working copy from an SVN repo.
 
         Wraps `svn checkout
@@ -176,7 +176,7 @@ class Svn:
         auto_props: Optional[bool] = None,
         no_auto_props: Optional[bool] = None,
         parents: Optional[bool] = None,
-    ):
+    ) -> str:
         """
         Passing None means the flag won't be passed unless otherwise stated.
 
@@ -235,8 +235,8 @@ class Svn:
         self,
         remove: Optional[str] = None,
         show_passwords: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn auth
         <https://subversion.apache.org/faq.html#plaintext-passwords>`_.
@@ -273,8 +273,8 @@ class Svn:
         incremental: Optional[bool] = None,
         xml: Optional[bool] = None,
         extensions: Optional[str] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn blame
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.blame.html>`_.
@@ -332,7 +332,7 @@ class Svn:
 
         return self.run(["blame", *local_flags])
 
-    def cat(self, *args, **kwargs):
+    def cat(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn cat
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.cat.html>`_.
@@ -342,9 +342,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["cat", *local_flags])
+        return self.run(["cat", *local_flags])
 
-    def changelist(self, *args, **kwargs):
+    def changelist(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn changelist
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.changelist.html>`_ (cl).
@@ -354,9 +354,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["changelist", *local_flags])
+        return self.run(["changelist", *local_flags])
 
-    def cleanup(self, *args, **kwargs):
+    def cleanup(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn cleanup
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.cleanup.html>`_.
@@ -366,7 +366,7 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["cleanup", *local_flags])
+        return self.run(["cleanup", *local_flags])
 
     def commit(
         self,
@@ -381,8 +381,8 @@ class Svn:
         force_log: Optional[bool] = None,
         keep_changelists: Optional[bool] = None,
         include_externals: Optional[bool] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn commit
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.commit.html>`_ (ci).
@@ -435,7 +435,7 @@ class Svn:
 
         return self.run(["commit", *local_flags])
 
-    def copy(self, *args, **kwargs):
+    def copy(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn copy
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.copy.html>`_ (cp).
@@ -445,9 +445,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["copy", *local_flags])
+        return self.run(["copy", *local_flags])
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn delete
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.delete.html>`_ (del, remove,
@@ -458,9 +458,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["delete", *local_flags])
+        return self.run(["delete", *local_flags])
 
-    def diff(self, *args, **kwargs):
+    def diff(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn diff
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.delete.html>`_.
@@ -470,9 +470,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["diff", *local_flags])
+        return self.run(["diff", *local_flags])
 
-    def export(self, *args, **kwargs):
+    def export(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn export
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.export.html>`_.
@@ -482,9 +482,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["export", *local_flags])
+        return self.run(["export", *local_flags])
 
-    def help(self, *args, **kwargs):
+    def help(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn help
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.help.html>`_ (?, h).
@@ -494,9 +494,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["help", *local_flags])
+        return self.run(["help", *local_flags])
 
-    def import_(self, *args, **kwargs):
+    def import_(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn import
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.import.html>`_.
@@ -508,9 +508,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["import", *local_flags])
+        return self.run(["import", *local_flags])
 
-    def info(self, *args, **kwargs):
+    def info(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn info
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.info.html>`_.
@@ -520,9 +520,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["info", *local_flags])
+        return self.run(["info", *local_flags])
 
-    def list(self, *args, **kwargs):
+    def list(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn list
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.list.html>`_ (ls).
@@ -532,9 +532,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["list", *local_flags])
+        return self.run(["list", *local_flags])
 
-    def lock(self, *args, **kwargs):
+    def lock(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn lock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.lock.html>`_.
@@ -544,9 +544,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["lock", *local_flags])
+        return self.run(["lock", *local_flags])
 
-    def log(self, *args, **kwargs):
+    def log(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn log
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.log.html>`_.
@@ -556,9 +556,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["log", *local_flags])
+        return self.run(["log", *local_flags])
 
-    def merge(self, *args, **kwargs):
+    def merge(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn merge
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.merge.html>`_.
@@ -568,9 +568,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["merge", *local_flags])
+        return self.run(["merge", *local_flags])
 
-    def mergelist(self, *args, **kwargs):
+    def mergelist(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn mergelist
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.mergelist.html>`_.
@@ -580,9 +580,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["mergelist", *local_flags])
+        return self.run(["mergelist", *local_flags])
 
-    def mkdir(self, *args, **kwargs):
+    def mkdir(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn mkdir
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.mkdir.html>`_.
@@ -592,9 +592,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["mkdir", *local_flags])
+        return self.run(["mkdir", *local_flags])
 
-    def move(self, *args, **kwargs):
+    def move(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn move
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.mkdir.html>`_ (mv, rename,
@@ -605,9 +605,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["move", *local_flags])
+        return self.run(["move", *local_flags])
 
-    def patch(self, *args, **kwargs):
+    def patch(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn patch
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.patch.html>`_.
@@ -617,9 +617,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["patch", *local_flags])
+        return self.run(["patch", *local_flags])
 
-    def propdel(self, *args, **kwargs):
+    def propdel(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn propdel
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propdel.html>`_ (pdel, pd).
@@ -629,9 +629,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["propdel", *local_flags])
+        return self.run(["propdel", *local_flags])
 
-    def propedit(self, *args, **kwargs):
+    def propedit(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn propedit
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propedit.html>`_ (pedit, pe).
@@ -641,9 +641,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["propedit", *local_flags])
+        return self.run(["propedit", *local_flags])
 
-    def propget(self, *args, **kwargs):
+    def propget(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn propget
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propget.html>`_ (pget, pg).
@@ -653,9 +653,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["propget", *local_flags])
+        return self.run(["propget", *local_flags])
 
-    def proplist(self, *args, **kwargs):
+    def proplist(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn proplist
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.proplist.html>`_ (plist, pl).
@@ -665,9 +665,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["proplist", *local_flags])
+        return self.run(["proplist", *local_flags])
 
-    def propset(self, *args, **kwargs):
+    def propset(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn propset
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propset.html>`_ (pset, ps).
@@ -677,9 +677,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["propset", *local_flags])
+        return self.run(["propset", *local_flags])
 
-    def relocate(self, *args, **kwargs):
+    def relocate(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn relocate
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.relocate.html>`_.
@@ -689,9 +689,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["relocate", *local_flags])
+        return self.run(["relocate", *local_flags])
 
-    def resolve(self, *args, **kwargs):
+    def resolve(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn resolve
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.resolve.html>`_.
@@ -701,9 +701,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["resolve", *local_flags])
+        return self.run(["resolve", *local_flags])
 
-    def resolved(self, *args, **kwargs):
+    def resolved(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn resolved
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.resolved.html>`_.
@@ -713,9 +713,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["resolved", *local_flags])
+        return self.run(["resolved", *local_flags])
 
-    def revert(self, *args, **kwargs):
+    def revert(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn revert
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.revert.html>`_.
@@ -725,9 +725,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["revert", *local_flags])
+        return self.run(["revert", *local_flags])
 
-    def status(self, *args, **kwargs):
+    def status(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn status
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.status.html>`_ (stat, st).
@@ -737,9 +737,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["status", *local_flags])
+        return self.run(["status", *local_flags])
 
-    def switch(self, *args, **kwargs):
+    def switch(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn switch
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.switch.html>`_ (sw).
@@ -749,9 +749,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["switch", *local_flags])
+        return self.run(["switch", *local_flags])
 
-    def unlock(self, *args, **kwargs):
+    def unlock(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn unlock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.unlock.html>`_.
@@ -761,9 +761,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["unlock", *local_flags])
+        return self.run(["unlock", *local_flags])
 
-    def update(self, *args, **kwargs):
+    def update(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn update
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.update.html>`_ (up).
@@ -773,9 +773,9 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["update", *local_flags])
+        return self.run(["update", *local_flags])
 
-    def upgrade(self, *args, **kwargs):
+    def upgrade(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn upgrade
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.upgrade.html>`_.
@@ -785,4 +785,4 @@ class Svn:
         """
         local_flags: list[str] = [*args]
 
-        self.run(["upgrade", *local_flags])
+        return self.run(["upgrade", *local_flags])

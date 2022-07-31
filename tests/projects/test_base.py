@@ -1,6 +1,8 @@
 """tests for libvcs repo abstract base class."""
+import datetime
 import pathlib
 import sys
+from typing import AnyStr, List
 
 import pytest
 
@@ -8,7 +10,7 @@ from libvcs._internal.shortcuts import create_project
 from libvcs.projects.base import BaseProject, convert_pip_url
 
 
-def test_repr():
+def test_repr() -> None:
     repo = create_project(url="file://path/to/myrepo", dir="/hello/", vcs="git")
 
     str_repo = str(repo)
@@ -17,7 +19,7 @@ def test_repr():
     assert "<GitProject hello>" == str_repo
 
 
-def test_repr_base():
+def test_repr_base() -> None:
     repo = BaseProject(url="file://path/to/myrepo", dir="/hello/")
 
     str_repo = str(repo)
@@ -26,7 +28,7 @@ def test_repr_base():
     assert "<BaseProject hello>" == str_repo
 
 
-def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
+def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path) -> None:
     projects_path = tmp_path / "projects_path"  # doesn't exist yet
     dir = projects_path / "myrepo"
     repo = BaseProject(url="file://path/to/myrepo", dir=dir)
@@ -35,7 +37,7 @@ def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path):
     assert projects_path.is_dir()
 
 
-def test_convert_pip_url():
+def test_convert_pip_url() -> None:
     url, rev = convert_pip_url(pip_url="git+file://path/to/myrepo@therev")
 
     assert url, rev == "therev"
@@ -46,17 +48,20 @@ def test_progress_callback(
     capsys: pytest.CaptureFixture[str],
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
-):
-    def progress_cb(output, timestamp):
-        sys.stdout.write(output)
+) -> None:
+    def progress_cb(output: AnyStr, timestamp: datetime.datetime) -> None:
+        sys.stdout.write(str(output))
         sys.stdout.flush()
 
     class Project(BaseProject):
         bin_name = "git"
 
-        def obtain(self, *args, **kwargs):
+        def obtain(self, *args: List[str], **kwargs: dict[str, str]) -> None:
             self.ensure_dir()
-            self.run(["clone", "--progress", self.url, self.dir], log_in_real_time=True)
+            self.run(
+                ["clone", "--progress", self.url, pathlib.Path(self.dir)],
+                log_in_real_time=True,
+            )
 
     r = Project(
         url=f"file://{str(git_remote_repo)}",

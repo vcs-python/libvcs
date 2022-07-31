@@ -18,22 +18,19 @@ import dataclasses
 import logging
 import pathlib
 import re
-from typing import Dict, Optional, TypedDict, Union
+from typing import Any, Dict, Optional, Union
 from urllib import parse as urlparse
 
-from libvcs._internal.types import StrPath
+from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs.projects.base import (
+    BaseProject,
+    VCSLocation,
+    convert_pip_url as base_convert_pip_url,
+)
 
 from .. import exc
-from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
-
-
-class GitRemoteDict(TypedDict):
-    """For use when hydrating GitProject via dict."""
-
-    fetch_url: str
-    push_url: str
 
 
 @dataclasses.dataclass
@@ -44,35 +41,22 @@ class GitRemote:
     fetch_url: str
     push_url: str
 
-    def to_dict(self):
-        return dataclasses.asdict(self)
-
-    def to_tuple(self):
-        return dataclasses.astuple(self)
-
 
 GitProjectRemoteDict = Dict[str, GitRemote]
-GitFullRemoteDict = Dict[str, GitRemoteDict]
-GitRemotesArgs = Union[None, GitFullRemoteDict, GitProjectRemoteDict, Dict[str, str]]
+GitRemotesArgs = Union[None, GitProjectRemoteDict, Dict[str, str]]
 
 
 @dataclasses.dataclass
 class GitStatus:
-    branch_oid: Optional[str]
-    branch_head: Optional[str]
-    branch_upstream: Optional[str]
-    branch_ab: Optional[str]
-    branch_ahead: Optional[str]
-    branch_behind: Optional[str]
-
-    def to_dict(self):
-        return dataclasses.asdict(self)
-
-    def to_tuple(self):
-        return dataclasses.astuple(self)
+    branch_oid: Optional[str] = None
+    branch_head: Optional[str] = None
+    branch_upstream: Optional[str] = None
+    branch_ab: Optional[str] = None
+    branch_ahead: Optional[str] = None
+    branch_behind: Optional[str] = None
 
     @classmethod
-    def from_stdout(cls, value: str):
+    def from_stdout(cls, value: str) -> "GitStatus":
         """Returns ``git status -sb --porcelain=2`` extracted to a dict
 
         Returns
@@ -160,8 +144,8 @@ class GitProject(BaseProject):
     _remotes: GitProjectRemoteDict
 
     def __init__(
-        self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs
-    ):
+        self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs: Any
+    ) -> None:
         """A git repository.
 
         Parameters
@@ -257,20 +241,20 @@ class GitProject(BaseProject):
         self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
-    def from_pip_url(cls, pip_url, **kwargs):
+    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "GitProject":
         url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, **kwargs)
 
         return self
 
-    def get_revision(self):
+    def get_revision(self) -> str:
         """Return current revision. Initial repositories return 'initial'."""
         try:
             return self.run(["rev-parse", "--verify", "HEAD"])
         except exc.CommandError:
             return "initial"
 
-    def set_remotes(self, overwrite: bool = False):
+    def set_remotes(self, overwrite: bool = False) -> None:
         remotes = self._remotes
         if isinstance(remotes, dict):
             for remote_name, git_remote_repo in remotes.items():
@@ -310,13 +294,13 @@ class GitProject(BaseProject):
                             overwrite=overwrite,
                         )
 
-    def obtain(self, *args, **kwargs):
+    def obtain(self, *args: Any, **kwargs: Any) -> None:
         """Retrieve the repository, clone if doesn't exist."""
         self.ensure_dir()
 
         url = self.url
 
-        cmd = ["clone", "--progress"]
+        cmd: list[StrOrBytesPath] = ["clone", "--progress"]
         if self.git_shallow:
             cmd.extend(["--depth", "1"])
         if self.tls_verify:
@@ -333,7 +317,7 @@ class GitProject(BaseProject):
 
         self.set_remotes(overwrite=True)
 
-    def update_repo(self, set_remotes: bool = False, *args, **kwargs):
+    def update_repo(self, set_remotes: bool = False, *args: Any, **kwargs: Any) -> None:
         self.ensure_dir()
 
         if not pathlib.Path(self.dir / ".git").is_dir():
@@ -405,7 +389,7 @@ class GitProject(BaseProject):
                 ]
             )
         except exc.CommandError as e:
-            error_code = e.returncode
+            error_code = e.returncode if e.returncode is not None else 0
             tag_sha = ""
         self.log.debug("tag_sha: %s" % tag_sha)
 
@@ -517,7 +501,7 @@ class GitProject(BaseProject):
                 remotes[remote_name] = remote
         return remotes
 
-    def remote(self, name, **kwargs) -> Optional[GitRemote]:
+    def remote(self, name: str, **kwargs: Any) -> Optional[GitRemote]:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters
@@ -544,7 +528,9 @@ class GitProject(BaseProject):
         except exc.LibVCSException:
             return None
 
-    def set_remote(self, name, url, push: bool = False, overwrite=False):
+    def set_remote(
+        self, name: str, url: str, push: bool = False, overwrite: bool = False
+    ) -> GitRemote:
         """Set remote with name and URL like git remote add.
 
         Parameters
@@ -562,10 +548,14 @@ class GitProject(BaseProject):
             self.run(["remote", "set-url", name, url])
         else:
             self.run(["remote", "add", name, url])
-        return self.remote(name=name)
+
+        remote = self.remote(name=name)
+        if remote is None:
+            raise Exception("Remote {name} not found after setting")
+        return remote
 
     @staticmethod
-    def chomp_protocol(url) -> str:
+    def chomp_protocol(url: str) -> str:
         """Return clean VCS url from RFC-style url
 
         Parameters
@@ -607,7 +597,7 @@ class GitProject(BaseProject):
             version = ""
         return ".".join(version.split(".")[:3])
 
-    def status(self):
+    def status(self) -> GitStatus:
         """Retrieve status of project in dict format.
 
         Wraps ``git status --sb --porcelain=2``. Does not include changed files, yet.
@@ -645,5 +635,10 @@ branch_behind='0'\
         match = self.status()
 
         if match.branch_upstream is None:  # no upstream set
+            if match.branch_head is None:
+                raise Exception("No branch found for git repository")
             return match.branch_head
+        if match.branch_head is None:
+            return match.branch_upstream
+
         return match.branch_upstream.replace("/" + match.branch_head, "")

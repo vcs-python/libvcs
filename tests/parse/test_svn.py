@@ -69,7 +69,7 @@ def test_svn_url(
     is_valid: bool,
     svn_url: SvnURL,
     svn_repo: SubversionProject,
-):
+) -> None:
     url = url.format(local_repo=svn_repo.dir)
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
@@ -122,7 +122,7 @@ def test_svn_url_extension_pip(
     is_valid: bool,
     svn_url_kwargs: SvnURLKwargs,
     svn_repo: SubversionProject,
-):
+) -> None:
     class SvnURLWithPip(SvnURL):
         matchers: MatcherRegistry = MatcherRegistry(
             _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
@@ -198,7 +198,7 @@ def test_svn_to_url(
     expected: str,
     svn_url: SvnURL,
     svn_repo: SubversionProject,
-):
+) -> None:
     """Test SvnURL.to_url()"""
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 

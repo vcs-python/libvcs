@@ -2,10 +2,12 @@ import pathlib
 
 import pytest
 
+from _pytest.monkeypatch import MonkeyPatch
+
 from libvcs._internal.run import mkdir_p, which
 
 
-def test_mkdir_p(tmp_path: pathlib.Path):
+def test_mkdir_p(tmp_path: pathlib.Path) -> None:
     path = tmp_path / "file"
     path.touch()
 
@@ -17,7 +19,7 @@ def test_mkdir_p(tmp_path: pathlib.Path):
     mkdir_p(tmp_path)
 
 
-def test_which_no_hg_found(monkeypatch):
+def test_which_no_hg_found(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("PATH", "/")
     which("hg")
     which("hg", "/")

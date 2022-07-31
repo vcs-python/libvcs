@@ -9,49 +9,53 @@ from typing import Union
 
 from libvcs import GitProject, MercurialProject, SubversionProject
 from libvcs._internal.run import ProgressCallbackProtocol
-from libvcs._internal.types import VCSLiteral
+from libvcs._internal.types import StrPath, VCSLiteral
 from libvcs.exc import InvalidVCS
 
 
 @t.overload
 def create_project(
+    *,
     url: str,
+    dir: StrPath,
     vcs: t.Literal["git"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
-    *args,
-    **kwargs
+    **kwargs: dict[t.Any, t.Any]
 ) -> GitProject:
     ...
 
 
 @t.overload
 def create_project(
+    *,
     url: str,
+    dir: StrPath,
     vcs: t.Literal["svn"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
-    *args,
-    **kwargs
+    **kwargs: dict[t.Any, t.Any]
 ) -> SubversionProject:
     ...
 
 
 @t.overload
 def create_project(
+    *,
     url: str,
+    dir: StrPath,
     vcs: t.Literal["hg"],
-    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
-    *args,
-    **kwargs
+    progress_callback: t.Optional[ProgressCallbackProtocol] = ...,
+    **kwargs: dict[t.Any, t.Any]
 ) -> MercurialProject:
     ...
 
 
 def create_project(
+    *,
     url: str,
+    dir: StrPath,
     vcs: VCSLiteral,
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
-    *args,
-    **kwargs
+    **kwargs: dict[t.Any, t.Any]
 ) -> Union[GitProject, MercurialProject, SubversionProject]:
     r"""Return an object representation of a VCS repository.
 
@@ -68,14 +72,16 @@ def create_project(
     True
     """
     if vcs == "git":
-        return GitProject(url=url, progress_callback=progress_callback, *args, **kwargs)
+        return GitProject(
+            url=url, dir=dir, progress_callback=progress_callback, **kwargs
+        )
     elif vcs == "hg":
         return MercurialProject(
-            url=url, progress_callback=progress_callback, *args, **kwargs
+            url=url, dir=dir, progress_callback=progress_callback, **kwargs
         )
     elif vcs == "svn":
         return SubversionProject(
-            url=url, progress_callback=progress_callback, *args, **kwargs
+            url=url, dir=dir, progress_callback=progress_callback, **kwargs
         )
     else:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)

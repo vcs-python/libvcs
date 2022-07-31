@@ -12,7 +12,7 @@ if not which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
 
 
-def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo):
+def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None:
     repo_name = "my_svn_project"
 
     svn_repo = SubversionProject(
@@ -33,7 +33,7 @@ def test_repo_svn_remote_checkout(
     create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
-):
+) -> None:
     svn_server = create_svn_remote_repo()
     svn_repo_checkout_dir = projects_path / "my_svn_checkout"
     svn_repo = SubversionProject(
