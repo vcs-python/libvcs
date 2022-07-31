@@ -1,7 +1,7 @@
 __title__ = "libvcs"
 __package_name__ = "libvcs"
 __description__ = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
-__version__ = "0.14.0a7"
+__version__ = "0.14.0a8"
 __author__ = "Tony Narlock"
 __github__ = "https://github.com/vcs-python/libvcs"
 __docs__ = "https://libvcs.git-pull.com"
