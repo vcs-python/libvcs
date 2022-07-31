@@ -1,4 +1,4 @@
-# Add and extend URL parsers - `libvcs.parse.base`
+# Framework: Add and extend URL parsers - `libvcs.parse.base`
 
 ```{eval-rst}
 .. autoapimodule:: libvcs.parse.base
