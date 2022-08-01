@@ -1,8 +1,4 @@
-"""Exceptions for libvcs.
-
-If you see this, we're publishing to S3 automatically
-
-"""
+"""Exceptions for libvcs."""
 from typing import List, Optional, Union
 
 
