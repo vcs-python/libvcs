@@ -26,11 +26,13 @@ skip_if_hg_missing = pytest.mark.skipif(not which("hg"), reason="hg is not avail
 
 
 def pytest_ignore_collect(path: LocalPath, config: pytest.Config) -> bool:
-    if not which("svn") and any(needle in path for needle in ["svn", "subversion"]):
+    if not which("svn") and any(
+        needle in str(path) for needle in ["svn", "subversion"]
+    ):
         return True
-    if not which("git") and "git" in path:
+    if not which("git") and "git" in str(path):
         return True
-    if not which("hg") and any(needle in path for needle in ["hg", "mercurial"]):
+    if not which("hg") and any(needle in str(path) for needle in ["hg", "mercurial"]):
         return True
 
     return False
