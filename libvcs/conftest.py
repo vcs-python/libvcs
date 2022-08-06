@@ -9,6 +9,8 @@ from typing import Any, Optional, Protocol
 import pytest
 from py._path.local import LocalPath
 
+from _pytest.doctest import DoctestItem
+from _pytest.fixtures import SubRequest
 from faker import Faker
 
 from libvcs._internal.run import run, which
@@ -376,6 +378,7 @@ def svn_repo(
 
 @pytest.fixture(autouse=True)
 def add_doctest_fixtures(
+    request: SubRequest,
     doctest_namespace: dict[str, Any],
     tmp_path: pathlib.Path,
     home_default: pathlib.Path,
@@ -385,6 +388,8 @@ def add_doctest_fixtures(
     create_hg_remote_repo: CreateProjectCallbackFixtureProtocol,
     git_repo: pathlib.Path,
 ) -> None:
+    if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
+        return
     doctest_namespace["tmp_path"] = tmp_path
     if which("git"):
         doctest_namespace["gitconfig"] = gitconfig
