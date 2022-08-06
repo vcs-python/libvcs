@@ -9,7 +9,8 @@
 """
 import enum
 import pathlib
-from typing import Any, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Any, Optional, Union
 
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath

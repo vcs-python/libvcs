@@ -18,7 +18,7 @@ import logging
 import os
 import pathlib
 import re
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional
 from urllib import parse as urlparse
 
 from libvcs._internal.run import run
@@ -64,7 +64,7 @@ class SubversionProject(BaseProject):
         self.rev = kwargs.get("rev")
         super().__init__(url=url, dir=dir, **kwargs)
 
-    def _user_pw_args(self) -> List[Any]:
+    def _user_pw_args(self) -> list[Any]:
         args = []
         for param_name in ["svn_username", "svn_password"]:
             if hasattr(self, param_name):
@@ -149,7 +149,7 @@ class SubversionProject(BaseProject):
             self.update_repo()
 
     @classmethod
-    def _get_svn_url_rev(cls, location: str) -> Tuple[Optional[str], int]:
+    def _get_svn_url_rev(cls, location: str) -> tuple[Optional[str], int]:
         _svn_xml_url_re = re.compile('url="([^"]+)"')
         _svn_rev_re = re.compile(r'committed-rev="(\d+)"')
         _svn_info_xml_rev_re = re.compile(r'\s*revision="(\d+)"')
@@ -200,7 +200,7 @@ class SubversionProject(BaseProject):
         return url, rev
 
 
-def get_rev_options(url: str, rev: None) -> List[Any]:
+def get_rev_options(url: str, rev: None) -> list[Any]:
     """Return revision options. From pip pip.vcs.subversion."""
     if rev:
         rev_options = ["-r", rev]

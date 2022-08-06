@@ -14,22 +14,8 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import (
-    IO,
-    TYPE_CHECKING,
-    Any,
-    AnyStr,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-)
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Optional, Protocol, Union
 
 from typing_extensions import TypeAlias
 
@@ -54,7 +40,7 @@ def console_to_str(s: bytes) -> str:
 
 def which(
     exe: Optional[str] = None,
-    default_paths: Union[str, List[str]] = [
+    default_paths: Union[str, list[str]] = [
         "/bin",
         "/sbin",
         "/usr/bin",
@@ -162,7 +148,7 @@ class CmdLoggingAdapter(_LoggerAdapter):
 
     def process(
         self, msg: str, kwargs: MutableMapping[str, Any]
-    ) -> Tuple[Any, MutableMapping[str, Any]]:
+    ) -> tuple[Any, MutableMapping[str, Any]]:
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict["bin_name"] = self.bin_name

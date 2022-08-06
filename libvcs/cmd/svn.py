@@ -7,7 +7,8 @@
    <https://github.com/vcs-python/libvcs>`_, 'APIs unstable until we fit the spec.
 """
 import pathlib
-from typing import Any, Literal, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Any, Literal, Optional, Union
 
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath

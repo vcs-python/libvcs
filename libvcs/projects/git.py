@@ -18,7 +18,7 @@ import dataclasses
 import logging
 import pathlib
 import re
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 from urllib import parse as urlparse
 
 from libvcs._internal.types import StrOrBytesPath, StrPath
@@ -42,8 +42,8 @@ class GitRemote:
     push_url: str
 
 
-GitProjectRemoteDict = Dict[str, GitRemote]
-GitRemotesArgs = Union[None, GitProjectRemoteDict, Dict[str, str]]
+GitProjectRemoteDict = dict[str, GitRemote]
+GitRemotesArgs = Union[None, GitProjectRemoteDict, dict[str, str]]
 
 
 @dataclasses.dataclass

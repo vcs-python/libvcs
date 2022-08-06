@@ -41,18 +41,8 @@ Examples
 import dataclasses
 import subprocess
 import sys
-from typing import (
-    IO,
-    Any,
-    Callable,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    TypeVar,
-    Union,
-    overload,
-)
+from collections.abc import Mapping, Sequence
+from typing import IO, Any, Callable, Literal, Optional, TypeVar, Union, overload
 
 from typing_extensions import TypeAlias
 

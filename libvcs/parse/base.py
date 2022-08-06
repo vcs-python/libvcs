@@ -1,5 +1,7 @@
 import dataclasses
-from typing import TYPE_CHECKING, Iterator, Optional, Pattern, Protocol
+from collections.abc import Iterator
+from re import Pattern
+from typing import TYPE_CHECKING, Optional, Protocol
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 

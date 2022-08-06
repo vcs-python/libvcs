@@ -3,7 +3,7 @@ import datetime
 import os
 import pathlib
 import textwrap
-from typing import Callable, Dict, TypedDict
+from typing import Callable, TypedDict
 
 import pytest
 
@@ -26,7 +26,7 @@ if not which("git"):
 
 ProjectTestFactory = Callable[..., GitProject]
 ProjectTestFactoryLazyKwargs = Callable[..., dict]
-ProjectTestFactoryRemoteLazyExpected = Callable[..., Dict[str, GitRemote]]
+ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
 
 
 @pytest.mark.parametrize(

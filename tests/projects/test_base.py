@@ -2,7 +2,7 @@
 import datetime
 import pathlib
 import sys
-from typing import AnyStr, List
+from typing import AnyStr
 
 import pytest
 
@@ -56,7 +56,7 @@ def test_progress_callback(
     class Project(BaseProject):
         bin_name = "git"
 
-        def obtain(self, *args: List[str], **kwargs: dict[str, str]) -> None:
+        def obtain(self, *args: list[str], **kwargs: dict[str, str]) -> None:
             self.ensure_dir()
             self.run(
                 ["clone", "--progress", self.url, pathlib.Path(self.dir)],

@@ -1,5 +1,5 @@
 """Exceptions for libvcs."""
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 
 class LibVCSException(Exception):
@@ -13,7 +13,7 @@ class CommandError(LibVCSException):
         self,
         output: str,
         returncode: Optional[int] = None,
-        cmd: Optional[Union[str, List[str]]] = None,
+        cmd: Optional[Union[str, list[str]]] = None,
     ) -> None:
         self.returncode = returncode
         self.output = output

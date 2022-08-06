@@ -6,18 +6,9 @@ This is an internal API not covered by versioning policy.
 """
 import re
 import traceback
-from typing import (
-    Any,
-    Callable,
-    List,
-    Mapping,
-    Optional,
-    Pattern,
-    Protocol,
-    Sequence,
-    TypeVar,
-    Union,
-)
+from collections.abc import Mapping, Sequence
+from re import Pattern
+from typing import Any, Callable, Optional, Protocol, TypeVar, Union
 
 T = TypeVar("T", Any, Any)
 
@@ -25,7 +16,7 @@ T = TypeVar("T", Any, Any)
 def keygetter(
     obj: Mapping[str, Any],
     path: str,
-) -> Union[None, Any, str, List[str], Mapping[str, str]]:
+) -> Union[None, Any, str, list[str], Mapping[str, str]]:
     """obj, "foods__breakfast", obj['foods']['breakfast']
 
     >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods__breakfast")

@@ -1,6 +1,5 @@
 # flake8: NOQA E501
 import inspect
-import os
 import sys
 from os.path import dirname, relpath
 from pathlib import Path

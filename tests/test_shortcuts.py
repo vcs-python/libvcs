@@ -1,5 +1,5 @@
 import pathlib
-from typing import Literal, Optional, Tuple, Type, TypedDict, TypeVar, Union
+from typing import Literal, Optional, TypedDict, TypeVar, Union
 
 import pytest
 
@@ -48,8 +48,8 @@ E = TypeVar("E", bound=BaseException)
 def test_create_project(
     tmp_path: pathlib.Path,
     repo_dict: CreateProjectKwargsDict,
-    repo_class: Type[Union[SubversionProject, GitProject, MercurialProject]],
-    raises_exception: Union[None, Union[Type[E], Tuple[Type[E], ...]]],
+    repo_class: type[Union[SubversionProject, GitProject, MercurialProject]],
+    raises_exception: Union[None, Union[type[E], tuple[type[E], ...]]],
 ) -> None:
     # add parent_dir via fixture
     repo_dict["dir"] = tmp_path / "repo_name"
