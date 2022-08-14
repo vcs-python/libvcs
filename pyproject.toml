@@ -80,7 +80,7 @@ pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
 pytest-watcher = "^0.2.3"
-Faker = "^13.3.4"
+Faker = "*"
 
 ### Coverage ###
 codecov = "*"
