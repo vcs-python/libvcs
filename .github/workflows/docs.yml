@@ -34,14 +34,10 @@ jobs:
         run: echo "PUBLISH=$(echo true)" >> $GITHUB_ENV
 
       - name: Install poetry
-        run: |
-          curl -O -sSL https://install.python-poetry.org/install-poetry.py
-          python install-poetry.py -y --version 1.1.14
-          echo "PATH=${HOME}/.poetry/bin:${PATH}" >> $GITHUB_ENV
-          rm install-poetry.py
+        run: pipx install "poetry==1.1.14"
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
@@ -50,9 +46,7 @@ jobs:
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies [w/ docs]
-        run: |
-          poetry env use ${{ matrix.python-version }}
-          poetry install --extras "docs lint"
+        run: poetry install --extras "docs lint"
 
       - name: Build documentation
         run: |

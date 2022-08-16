@@ -20,23 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
-        run: |
-          curl -O -sSL https://install.python-poetry.org/install-poetry.py
-          python install-poetry.py -y --version 1.1.14
-          echo "PATH=${HOME}/.poetry/bin:${PATH}" >> $GITHUB_ENV
-          rm install-poetry.py
+        run: pipx install "poetry==1.1.14"
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
 
       - name: Install dependencies
-        run: |
-          # This is required to do as of @actions/checkout@v3 to prevent default python from being used
-          poetry env use ${{ matrix.python-version }}
-          poetry install -E "docs test coverage lint format"
+        run: poetry install -E "docs test coverage lint format"
 
       - name: Lint with flake8
         run: poetry run flake8
