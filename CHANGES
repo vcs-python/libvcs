@@ -18,6 +18,10 @@ $ pip install --user --upgrade --pre libvcs
 - Remove `.pre-commit-config.yaml`: This can be done less obtrusively via flake8 and having the user
   run the tools themselves.
 
+### Documentation
+
+- Render changelog in sphinx-autoissues (#396)
+
 ## libvcs 0.14.0 (2022-07-31)
 
 ### What's new
