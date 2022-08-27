@@ -15,8 +15,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
-- Remove `.pre-commit-config.yaml`: This can be done less obtrusively via flake8
-  and having the user run the tools themselves.
+- Remove `.pre-commit-config.yaml`: This can be done less obtrusively via flake8 and having the user
+  run the tools themselves.
 
 ## libvcs 0.14.0 (2022-07-31)
 
@@ -25,12 +25,11 @@ $ pip install --user --upgrade --pre libvcs
 - New and improved logo
 - **Improved typings**
 
-  Now [`mypy --strict`] compliant ({issue}`390`)
+  Now [`mypy --strict`] compliant (#390)
 
   [`mypy --strict`]: https://mypy.readthedocs.io/en/stable/command_line.html#cmdoption-mypy-strict
 
-- **Parser**: Experimental VCS URL parsing added ({issue}`376`, {issue}`381`, {issue}`384`,
-  {issue}`386`):
+- **Parser**: Experimental VCS URL parsing added (#376, #381, #384, #386):
 
   VCS Parsers return {func}`dataclasses.dataclass` instances. The new tools support validation,
   parsing, mutating and exporting into URLs consumable by the VCS.
@@ -74,16 +73,16 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
-- {issue}`391` Removed `flat` keyword argument for {class}`libvcs.projects.git.GitProject`. This was
-  unused and the equivalent can be retrieved via `.to_dict()` on `GitRemote`
-- {issue}`379` Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being
-  insecure [^pip-git+git]
-- {issue}`372` Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
-- {issue}`377` Remove deprecated functions and exceptions
+- #391 Removed `flat` keyword argument for {class}`libvcs.projects.git.GitProject`. This was unused
+  and the equivalent can be retrieved via `.to_dict()` on `GitRemote`
+- #379 Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being insecure
+  [^pip-git+git]
+- #372 Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
+- #377 Remove deprecated functions and exceptions
 
   - Removed `libvcs.shortcuts`
     - Removed `libvcs.shortcuts.create_project_from_pip_url()`: This will be replaced in future
-      versions by {issue}`376` / parsing utilities
+      versions by #376 / parsing utilities
     - Moved `libvcs.shortcuts.create_project()` to {func}`libvcs._internal.shortcuts.create_project`
   - Removed {exc}`libvcs.exc.InvalidPipURL`
 
@@ -109,8 +108,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Cleanup
 
-- {issue}`378` {issue}`380` Remove duplicate `uses_netloc` scheme for `git+ssh` (this was in cpython
-  since 2.7 / 3.1 [^git+ssh][^python:bugs:8657])
+- #378 #380 Remove duplicate `uses_netloc` scheme for `git+ssh` (this was in cpython since 2.7 / 3.1
+  [^git+ssh][^python:bugs:8657])
 
 [^git+ssh]: `uses_netloc` added `'git'` and `'git+ssh'` in {mod}`urllib.parse`
 
@@ -164,8 +163,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
-- {issue}`343`: `libvcs.cmd.core` moved to `libvcs._internal.run` to make it more clear the API is
-  closed.
+- #343: `libvcs.cmd.core` moved to `libvcs._internal.run` to make it more clear the API is closed.
 
   This includes {func}`~libvcs._internal.run.run`
 
@@ -181,7 +179,7 @@ $ pip install --user --upgrade --pre libvcs
   from libvcs._internal.run import run
   ```
 
-- {issue}`361`: {class}`~libvcs._internal.run.run`'s params are now a pass-through to
+- #361: {class}`~libvcs._internal.run.run`'s params are now a pass-through to
   {class}`subprocess.Popen`.
 
   - `run(cmd, ...)` is now `run(args, ...)` to match `Popen`'s convention.
@@ -198,9 +196,9 @@ $ pip install --user --upgrade --pre libvcs
 
 - Keyword-only arguments via [PEP 3102], [PEP 570]
 
-  - {issue}`366`: `libvcs.cmd` for hg, git, and svn updated to use
+  - #366: `libvcs.cmd` for hg, git, and svn updated to use
 
-  - {issue}`364`: Project classes no longer accept positional arguments.
+  - #364: Project classes no longer accept positional arguments.
 
     Deprecated in >=0.13:
 
@@ -219,7 +217,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### What's new
 
-- **Commands**: Experimental command wrappers added ({issue}`346`):
+- **Commands**: Experimental command wrappers added (#346):
 
   - {class}`libvcs.cmd.git.Git`
 
@@ -227,19 +225,19 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.git.Git.reset`
     - {meth}`libvcs.cmd.git.Git.checkout`
     - {meth}`libvcs.cmd.git.Git.status`
-    - {meth}`libvcs.cmd.git.Git.config` via {issue}`360`
+    - {meth}`libvcs.cmd.git.Git.config` via #360
 
 - **Command**: Now support `-C` (which accepts `.git` dirs, see git's manual) in addition to `cwd`
-  (subprocess-passthrough), {issue}`360`
+  (subprocess-passthrough), #360
 
 ### Bug fixes
 
 - Fix argument input for commands, e.g. `git config --get color.diff` would not properly
-  pass-through to subprocess. git: {issue}`360`, svn and hg: {issue}`365`
+  pass-through to subprocess. git: #360, svn and hg: #365
 
 ### Internals
 
-- {issue}`362` [mypy] support added:
+- #362 [mypy] support added:
 
   - Basic mypy tests now pass
   - Type annotations added, including improved typings for:
@@ -252,12 +250,11 @@ $ pip install --user --upgrade --pre libvcs
   - `make mypy` and `make watch_mypy`
   - Automatic checking on CI
 
-- {issue}`345` `libvcs.utils` -> `libvcs._internal` to make it more obvious the APIs are strictly
-  closed.
+- #345 `libvcs.utils` -> `libvcs._internal` to make it more obvious the APIs are strictly closed.
 - `StrOrPath` -> `StrPath`
-- {issue}`336`: {class}`~libvcs._internal.subprocess.SubprocessCommand`: Encapsulated
-  {mod}`subprocess` call in a {func}`dataclasses.dataclass` for introspecting, modifying, mocking
-  and controlling execution.
+- #336: {class}`~libvcs._internal.subprocess.SubprocessCommand`: Encapsulated {mod}`subprocess` call
+  in a {func}`dataclasses.dataclass` for introspecting, modifying, mocking and controlling
+  execution.
 - Dataclass helper: {class}`~libvcs._internal.dataclasses.SkipDefaultFieldsReprMixin`
 
   Skip default fields in object representations.
@@ -268,7 +265,7 @@ $ pip install --user --upgrade --pre libvcs
 ### Documentation
 
 - Document `libvcs.types`
-- {issue}`362`: Improve developer documentation to note [mypy] and have tabbed examples for flake8.
+- #362: Improve developer documentation to note [mypy] and have tabbed examples for flake8.
 
 [mypy]: http://mypy-lang.org/
 
@@ -279,14 +276,14 @@ $ pip install --user --upgrade --pre libvcs
 ## libvcs 0.12.4 (2022-05-30)
 
 - _Backport from 0.13.x_ Fix argument input for hg and svn commands, would not properly pass-through
-  to subprocess. {issue}`365`
+  to subprocess. #365
 
 ## libvcs 0.12.3 (2022-05-28)
 
 ### Bug fixes
 
 - _Backport from 0.13.x_. Fix argument input for git commands, e.g. `git config --get color.diff`
-  would not properly pass-through to subprocess. {issue}`360`
+  would not properly pass-through to subprocess. #360
 
 ## libvcs 0.12.2 (2022-05-10)
 
@@ -306,7 +303,7 @@ $ pip install --user --upgrade --pre libvcs
 ### Breaking
 
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to `GitProject`, `SVNProject`,
-  `MercurialProject`, `BaseProject` ({issue}`327`)
+  `MercurialProject`, `BaseProject` (#327)
 - `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` have been moved to
   `libvcs.projects.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
@@ -315,19 +312,19 @@ $ pip install --user --upgrade --pre libvcs
 
   After: `GitProject(url='...', dir='...')`
 
-  {issue}`324`
+  #324
 
 - `dir` to `pathlib`, `BaseProject.path` -> `BaseProject.dir`
-- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` ({issue}`322`)
+- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` (#322)
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 - `create_repo` -> `create_project`
-- `GitRemote` and `GitStatus`: Move to {func}`dataclasses.dataclass` ({issue}`329`)
-- `extract_status()`: Move to `GitStatus.from_stdout` ({issue}`329`)
+- `GitRemote` and `GitStatus`: Move to {func}`dataclasses.dataclass` (#329)
+- `extract_status()`: Move to `GitStatus.from_stdout` (#329)
 
 ### What's new
 
-- **Commands**: Experimental command wrappers added ({issue}`319`):
+- **Commands**: Experimental command wrappers added (#319):
 
   - {class}`libvcs.cmd.git.Git`
 
@@ -388,10 +385,10 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
-- Add codeql analysis ({issue}`303`)
-- git test suite: Lots of parametrization ({issue}`309`)
+- Add codeql analysis (#303)
+- git test suite: Lots of parametrization (#309)
 - CI: Use poetry caching from
-  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), ({issue}`316`)
+  [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (#316)
 - New constants for `str` -> class mappings
 
   - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_MAP`
@@ -401,14 +398,14 @@ $ pip install --user --upgrade --pre libvcs
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)
 - Add [doctest](https://docs.python.org/3/library/doctest.html) w/
-  [pytest + doctest](https://docs.pytest.org/en/7.1.x/how-to/doctest.html), ({issue}`321`).
+  [pytest + doctest](https://docs.pytest.org/en/7.1.x/how-to/doctest.html), (#321).
 - Publish to PyPI via CI when git tags are set.
 
 ### Documentation
 
 - API: Split documentation of modules to separate pages
-- Fix sphinx-issues ({issue}`321`)
-- Experiment with sphinx-autoapi ({issue}`328`) for table of contents support
+- Fix sphinx-issues (#321)
+- Experiment with sphinx-autoapi (#328) for table of contents support
 
 ## libvcs 0.11.1 (2022-03-12)
 
