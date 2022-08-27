@@ -28,7 +28,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.linkcode",
     "sphinx_inline_tabs",
-    "sphinx_issues",
+    "sphinx_autoissues",
     "sphinx_copybutton",
     "sphinxext.opengraph",
     "sphinxext.rediraffe",
@@ -86,6 +86,10 @@ html_sidebars = {
     ]
 }
 
+# sphinx-autoissues
+issuetracker = "github"
+issuetracker_project = "vcs-python/libvcs"
+
 # sphinx.ext.autodoc
 autoclass_content = "both"
 autodoc_member_order = "bysource"
@@ -115,9 +119,6 @@ copybutton_prompt_text = (
 )
 copybutton_prompt_is_regexp = True
 copybutton_remove_prompts = True
-
-# sphinx-issues
-issues_github_path = "vcs-python/libvcs"
 
 # sphinxext-rediraffe
 rediraffe_redirects = "redirects.txt"
