@@ -1,3 +1,7 @@
+# Most of this is copied from Sphinx
+# Credit:
+# - https://gist.github.com/agoose77/e8f0f8f7d7133e73483ca5c2dd7b907f
+# - https://gist.github.com/asmeurer/5009f8845f864bd671769d10e07d1184
 from typing import List, TypeVar
 
 import sphinx.environment.collectors.toctree as toctree_collector
@@ -13,7 +17,7 @@ N = TypeVar("N")
 
 logger = logging.getLogger(__name__)
 
-# Most of this is copied from Sphinx
+
 class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
     def process_doc(self, app: Sphinx, doctree: nodes.document) -> None:
         """Build a TOC from the doctree and store it in the inventory."""
@@ -177,5 +181,5 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
         app.env.toc_num_entries[docname] = numentries[0]
 
 
-def setup(app):
+def setup(app: Sphinx) -> None:
     app.add_env_collector(BetterTocTreeCollector)
