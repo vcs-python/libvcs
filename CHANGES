@@ -17,7 +17,7 @@ $ pip install --user --upgrade --pre libvcs
 
 - Deprecate custom functions in favor of standard library:
   - `which()` in favor of {func}`shutil.which`, via #397
-  - `mkdir_p()` in favor of {func}`os.makedirs` and {meth}`pathlib.Path.mkdir` w/ `parents=True`
+  - `mkdir_p()` in favor of {func}`os.makedirs` and {meth}`pathlib.Path.mkdir` w/ `parents=True`, via #399
 
 ### Development
 
