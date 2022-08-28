@@ -21,7 +21,6 @@ with open(project_root / "libvcs" / "__about__.py") as fp:
 
 extensions = [
     "sphinx.ext.napoleon",  # Should go first
-    "autoapi.extension",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
@@ -97,11 +96,6 @@ autodoc_member_order = "bysource"
 # sphinx-autodoc-typehints
 autodoc_typehints = "description"  # show type hints in doc body instead of signature
 simplify_optional_unions = True
-
-# sphinx-autoapi
-autoapi_type = "python"
-autoapi_dirs = [project_root / "libvcs"]
-autoapi_generate_api_docs = False  # when False, use directives
 
 # sphinx.ext.napoleon
 napoleon_google_docstring = True
