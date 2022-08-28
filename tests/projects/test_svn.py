@@ -1,14 +1,14 @@
 """tests for libvcs svn repos."""
 import os
 import pathlib
+import shutil
 
 import pytest
 
-from libvcs._internal.run import which
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.svn import SubversionProject
 
-if not which("svn"):
+if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
 
 

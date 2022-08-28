@@ -2,6 +2,7 @@
 import datetime
 import os
 import pathlib
+import shutil
 import textwrap
 from typing import Callable, TypedDict
 
@@ -10,7 +11,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from libvcs import exc
-from libvcs._internal.run import run, which
+from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
 from libvcs.projects.git import (
@@ -20,7 +21,7 @@ from libvcs.projects.git import (
     convert_pip_url as git_convert_pip_url,
 )
 
-if not which("git"):
+if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 

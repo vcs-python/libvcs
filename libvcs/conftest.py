@@ -13,28 +13,32 @@ from _pytest.doctest import DoctestItem
 from _pytest.fixtures import SubRequest
 from faker import Faker
 
-from libvcs._internal.run import run, which
+from libvcs._internal.run import run
 from libvcs.projects.git import GitProject, GitRemote
 from libvcs.projects.hg import MercurialProject
 from libvcs.projects.svn import SubversionProject
 
 skip_if_git_missing = pytest.mark.skipif(
-    not which("git"), reason="git is not available"
+    not shutil.which("git"), reason="git is not available"
 )
 skip_if_svn_missing = pytest.mark.skipif(
-    not which("svn"), reason="svn is not available"
+    not shutil.which("svn"), reason="svn is not available"
 )
-skip_if_hg_missing = pytest.mark.skipif(not which("hg"), reason="hg is not available")
+skip_if_hg_missing = pytest.mark.skipif(
+    not shutil.which("hg"), reason="hg is not available"
+)
 
 
 def pytest_ignore_collect(path: LocalPath, config: pytest.Config) -> bool:
-    if not which("svn") and any(
+    if not shutil.which("svn") and any(
         needle in str(path) for needle in ["svn", "subversion"]
     ):
         return True
-    if not which("git") and "git" in str(path):
+    if not shutil.which("git") and "git" in str(path):
         return True
-    if not which("hg") and any(needle in str(path) for needle in ["hg", "mercurial"]):
+    if not shutil.which("hg") and any(
+        needle in str(path) for needle in ["hg", "mercurial"]
+    ):
         return True
 
     return False
@@ -391,7 +395,7 @@ def add_doctest_fixtures(
     if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
         return
     doctest_namespace["tmp_path"] = tmp_path
-    if which("git"):
+    if shutil.which("git"):
         doctest_namespace["gitconfig"] = gitconfig
         doctest_namespace["create_git_remote_repo"] = functools.partial(
             create_git_remote_repo,
@@ -399,9 +403,9 @@ def add_doctest_fixtures(
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
         doctest_namespace["git_local_clone"] = git_repo
-    if which("svn"):
+    if shutil.which("svn"):
         doctest_namespace["create_svn_remote_repo"] = create_svn_remote_repo
-    if which("hg"):
+    if shutil.which("hg"):
         doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
         doctest_namespace["create_hg_remote_repo"] = functools.partial(
             create_hg_remote_repo,
