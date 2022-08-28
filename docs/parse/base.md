@@ -3,7 +3,5 @@
 ```{eval-rst}
 .. automodule:: libvcs.parse.base
    :members:
-   :show-inheritance:
    :undoc-members:
-   :exclude-members: SkipDefaultFieldsReprMixin
 ```

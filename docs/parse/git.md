@@ -5,7 +5,6 @@ For git, aka `git(1)`.
 ```{eval-rst}
 .. automodule:: libvcs.parse.git
    :members:
-   :inherited-members:
-   :exclude-members: StrOrBytesPath, StrPath, SkipDefaultFieldsReprMixin,
-       Matcher, MatcherRegistry, URLProtocol
+   :undoc-members:
+   :show-inheritance:
 ```

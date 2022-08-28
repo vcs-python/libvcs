@@ -28,5 +28,4 @@ base
 ```{eval-rst}
 .. automodule:: libvcs.projects.constants
    :members:
-   :exclude-members: GitProject, MercurialProject, SubversionProject
 ```

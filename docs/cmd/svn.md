@@ -7,5 +7,4 @@ For subversion, aka `svn(1)`
    :members:
    :show-inheritance:
    :undoc-members:
-   :exclude-members: StrOrBytesPath, StrPath, run
 ```
