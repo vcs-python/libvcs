@@ -13,6 +13,10 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### Breaking changes
+
+- Deprecate our custom `which()` in favor of {func}`shutil.which`, via #397
+
 ### Development
 
 - Remove `.pre-commit-config.yaml`: This can be done less obtrusively via flake8 and having the user

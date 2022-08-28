@@ -1,12 +1,13 @@
 """Tests for libvcs hg repos."""
 import pathlib
+import shutil
 
 import pytest
 
-from libvcs._internal.run import run, which
+from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 
-if not which("hg"):
+if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 

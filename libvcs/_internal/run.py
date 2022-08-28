@@ -38,67 +38,6 @@ def console_to_str(s: bytes) -> str:
         return str(s)
 
 
-def which(
-    exe: Optional[str] = None,
-    default_paths: Union[str, list[str]] = [
-        "/bin",
-        "/sbin",
-        "/usr/bin",
-        "/usr/sbin",
-        "/usr/local/bin",
-    ],
-) -> Optional[str]:
-    """Return path of bin. Python clone of /usr/bin/which.
-
-    from salt.util - https://www.github.com/saltstack/salt - license apache
-
-    Parameters
-    ----------
-    exe : str
-        Application to search PATHs for.
-    default_path : list
-        Application to search PATHs for.
-
-    Returns
-    -------
-    str :
-        Path to binary
-    """
-
-    def _is_executable_file_or_link(exe: str) -> bool:
-        # check for os.X_OK doesn't suffice because directory may executable
-        return os.access(exe, os.X_OK) and (os.path.isfile(exe) or os.path.islink(exe))
-
-    if exe is None:
-        return None
-
-    if _is_executable_file_or_link(exe):
-        # executable in cwd or fullpath
-        return exe
-
-    # Enhance POSIX path for the reliability at some environments, when
-    # $PATH is changing. This also keeps order, where 'first came, first
-    # win' for cases to find optional alternatives
-    search_path = (
-        os.environ.get("PATH") and os.environ["PATH"].split(os.pathsep) or list()
-    )
-    for default_path in default_paths:
-        if default_path not in search_path:
-            search_path.append(default_path)
-    os.environ["PATH"] = os.pathsep.join(search_path)
-    for path in search_path:
-        if path:
-            full_path = os.path.join(path, exe)
-            if _is_executable_file_or_link(full_path):
-                return full_path
-    logger.info(
-        "'{}' could not be found in the following search path: "
-        "'{}'".format(exe, search_path)
-    )
-
-    return None
-
-
 def mkdir_p(path: pathlib.Path) -> None:
     """Make directories recursively.
 
