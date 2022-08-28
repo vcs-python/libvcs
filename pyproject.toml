@@ -95,6 +95,7 @@ flake8 = "*"
 flake8-bugbear = "^22.8.23"
 flake8-comprehensions = "*"
 mypy = "*"
+types-docutils = "^0.19.0"
 
 [tool.poetry.extras]
 docs = [
@@ -118,7 +119,13 @@ test = [
 ]
 coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
-lint = ["flake8", "flake8-bugbear", "flake8-comprehensions", "mypy"]
+lint = [
+  "flake8",
+  "flake8-bugbear",
+  "flake8-comprehensions",
+  "mypy",
+  "types-docutils",
+]
 
 [tool.mypy]
 strict = true
