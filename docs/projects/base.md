@@ -8,5 +8,5 @@ Adding your own VCS / Extending libvcs can be done through subclassing `BaseProj
 .. autoapimodule:: libvcs.projects.base
    :members:
    :show-inheritance:
-   :exclude-members: run, CmdLoggingAdapter, mkdir_p, StrPath, logger
+   :exclude-members: run, CmdLoggingAdapter, StrPath, logger
 ```

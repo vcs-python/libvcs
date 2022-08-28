@@ -8,10 +8,7 @@ Note
 This is an internal API not covered by versioning policy.
 """
 import datetime
-import errno
 import logging
-import os
-import pathlib
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
@@ -36,23 +33,6 @@ def console_to_str(s: bytes) -> str:
         return s.decode("utf_8")
     except AttributeError:  # for tests, #13
         return str(s)
-
-
-def mkdir_p(path: pathlib.Path) -> None:
-    """Make directories recursively.
-
-    Parameters
-    ----------
-    path : str
-        path to create
-    """
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise Exception("Could not create directory %s" % path)
 
 
 if TYPE_CHECKING:
