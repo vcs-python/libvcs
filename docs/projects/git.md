@@ -8,7 +8,7 @@ Compare to:
 [`ansible.builtin.git`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.projects.git
+.. automodule:: libvcs.projects.git
    :members:
    :show-inheritance:
    :undoc-members:

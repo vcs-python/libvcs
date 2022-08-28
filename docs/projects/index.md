@@ -26,7 +26,7 @@ base
 ## Constants
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.projects.constants
+.. automodule:: libvcs.projects.constants
    :members:
    :exclude-members: GitProject, MercurialProject, SubversionProject
 ```

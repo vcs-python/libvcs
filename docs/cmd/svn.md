@@ -3,7 +3,7 @@
 For subversion, aka `svn(1)`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.cmd.svn
+.. automodule:: libvcs.cmd.svn
    :members:
    :show-inheritance:
    :undoc-members:
