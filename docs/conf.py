@@ -32,6 +32,7 @@ extensions = [
     "sphinxext.opengraph",
     "sphinxext.rediraffe",
     "myst_parser",
+    "sphinx_toctree_signature",
 ]
 myst_enable_extensions = ["colon_fence", "substitution", "replacements"]
 
