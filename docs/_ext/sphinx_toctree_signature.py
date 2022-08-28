@@ -2,7 +2,7 @@
 # Credit:
 # - https://gist.github.com/agoose77/e8f0f8f7d7133e73483ca5c2dd7b907f
 # - https://gist.github.com/asmeurer/5009f8845f864bd671769d10e07d1184
-from typing import List, TypeVar
+from typing import Generator, List, TypeVar, Union
 
 import sphinx.environment.collectors.toctree as toctree_collector
 from docutils import nodes
@@ -25,7 +25,7 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
         numentries = [0]  # nonlocal again...
 
         # This is changed to a generator, and the class condition removed
-        def traverse_in_section(node: Element) -> List[N]:
+        def traverse_in_section(node: Element) -> Generator[Element, None, None]:
             """Like traverse(), but stay within the same section."""
             yield node
             for child in node.children:
@@ -41,7 +41,12 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
 
             current_class = None
 
-            for sectionnode in node:
+            if isinstance(node, addnodes.desc):
+                section_nodes: Union[List[nodes.Node], List[addnodes.desc]] = [node]
+            else:
+                section_nodes = node.children
+
+            for sectionnode in section_nodes:
                 # find all toctree nodes in this section and add them
                 # to the toc (just copying the toctree node which is then
                 # resolved in self.get_and_resolve_doctree)
@@ -73,11 +78,11 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
                         *nodetext,
                     )
                     para = addnodes.compact_paragraph("", "", reference)
-                    item: Element = nodes.list_item("", para)
+                    i: Element = nodes.list_item("", para)
                     sub_item = build_toc(sectionnode, depth + 1)
                     if sub_item:
-                        item += sub_item
-                    entries.append(item)
+                        i += sub_item
+                    entries.append(i)
                 elif isinstance(sectionnode, addnodes.only):
                     onlynode = addnodes.only(expr=sectionnode["expr"])
                     blist = build_toc(sectionnode, depth)
@@ -88,8 +93,8 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
                 elif isinstance(sectionnode, nodes.Element):
                     for node in traverse_in_section(sectionnode):
                         if isinstance(node, addnodes.toctree):
-                            item = node.copy()
-                            entries.append(item)
+                            toc_item = node.copy()
+                            entries.append(toc_item)
                             # important: do the inventory stuff
                             TocTree(app.env).note(docname, node)
                         # For signatures within some section, we add them to the ToC
@@ -103,7 +108,7 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
                             if classname != current_class:
                                 current_class = fullname
                             else:
-                                subtoc = build_toc([node], depth + 1)
+                                subtoc = build_toc(node, depth + 1)
                                 if subtoc:
                                     entries.append(subtoc)
                                 continue
@@ -165,8 +170,8 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
                                 anchorname=anchorname,
                             )
                             para = addnodes.compact_paragraph("", "", reference)
-                            item: Element = nodes.list_item("", para)
-                            entries.append(item)
+                            term_item: Element = nodes.list_item("", para)
+                            entries.append(term_item)
 
             if entries:
                 return nodes.bullet_list("", *entries)
