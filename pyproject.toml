@@ -71,7 +71,6 @@ sphinx-inline-tabs = "*"
 sphinxext-opengraph = "*"
 sphinx-copybutton = "*"
 sphinxext-rediraffe = "*"
-sphinx-autoapi = "*"
 sphinx-autoissues = "*"
 myst_parser = "*"
 
@@ -100,7 +99,6 @@ mypy = "*"
 [tool.poetry.extras]
 docs = [
   "sphinx",
-  "sphinx-autoapi",
   "sphinx-autodoc-typehints",
   "sphinx-autobuild",
   "sphinx-copybutton",
