@@ -116,7 +116,7 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
                             if nodetype in ["function", "method"]:
                                 fullname += "()"
 
-                            nodetext = [nodes.literal(fullname, fullname)]
+                            nodetext = [nodes.Text(fullname)]
 
                             if not numentries[0]:
                                 # for the very first toc entry, don't add an anchor
@@ -138,6 +138,7 @@ class BetterTocTreeCollector(toctree_collector.TocTreeCollector):
                                 anchorname=anchorname,
                                 *nodetext,
                             )
+
                             para = addnodes.compact_paragraph("", "", reference)
                             item: Element = nodes.list_item("", para)
                             entries.append(item)
