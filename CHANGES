@@ -17,12 +17,14 @@ $ pip install --user --upgrade --pre libvcs
 
 - Deprecate custom functions in favor of standard library:
   - `which()` in favor of {func}`shutil.which`, via #397
-  - `mkdir_p()` in favor of {func}`os.makedirs` and {meth}`pathlib.Path.mkdir` w/ `parents=True`, via #399
+  - `mkdir_p()` in favor of {func}`os.makedirs` and {meth}`pathlib.Path.mkdir` w/ `parents=True`,
+    via #399
 
 ### Development
 
 - Remove `.pre-commit-config.yaml`: This can be done less obtrusively via flake8 and having the user
   run the tools themselves.
+- Add [flake8-bugbear](https://github.com/PyCQA/flake8-bugbear) (#379)
 
 ### Documentation
 
