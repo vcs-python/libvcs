@@ -25,6 +25,7 @@ $ pip install --user --upgrade --pre libvcs
 - Remove `.pre-commit-config.yaml`: This can be done less obtrusively via flake8 and having the user
   run the tools themselves.
 - Add [flake8-bugbear](https://github.com/PyCQA/flake8-bugbear) (#379)
+- Add [flake8-comprehensions](https://github.com/adamchainz/flake8-comprehensions) (#402)
 
 ### Documentation
 
