@@ -7,7 +7,6 @@ import textwrap
 from typing import Any, Optional, Protocol
 
 import pytest
-from py._path.local import LocalPath
 
 from _pytest.doctest import DoctestItem
 from _pytest.fixtures import SubRequest
@@ -29,15 +28,15 @@ skip_if_hg_missing = pytest.mark.skipif(
 )
 
 
-def pytest_ignore_collect(path: LocalPath, config: pytest.Config) -> bool:
+def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) -> bool:
     if not shutil.which("svn") and any(
-        needle in str(path) for needle in ["svn", "subversion"]
+        needle in str(collection_path) for needle in ["svn", "subversion"]
     ):
         return True
-    if not shutil.which("git") and "git" in str(path):
+    if not shutil.which("git") and "git" in str(collection_path):
         return True
     if not shutil.which("hg") and any(
-        needle in str(path) for needle in ["hg", "mercurial"]
+        needle in str(collection_path) for needle in ["hg", "mercurial"]
     ):
         return True
 
