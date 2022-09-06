@@ -51,7 +51,7 @@ GitURL(url=git@github.com:vcs-python/libvcs.git,
 Switch repo libvcs -> vcspull:
 
 ```python
-from libvcs.parse.git import GitUrl
+from libvcs.parse.git import GitURL
 
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
