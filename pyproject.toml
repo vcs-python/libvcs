@@ -71,11 +71,10 @@ sphinx-inline-tabs = "*"
 sphinxext-opengraph = "*"
 sphinx-copybutton = "*"
 sphinxext-rediraffe = "*"
-sphinx-autoapi = "*"
-sphinx-autoissues = "*"
 myst_parser = "*"
 
 ### Testing ###
+gp-libs = "^0.0.1-alpha.9"
 pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
@@ -96,23 +95,24 @@ flake8 = "*"
 flake8-bugbear = "^22.8.23"
 flake8-comprehensions = "*"
 mypy = "*"
+types-docutils = "^0.19.0"
 
 [tool.poetry.extras]
 docs = [
+  "gp-libs",
   "sphinx",
-  "sphinx-autoapi",
   "sphinx-autodoc-typehints",
   "sphinx-autobuild",
   "sphinx-copybutton",
   "sphinxext-opengraph",
   "sphinx-inline-tabs",
   "sphinxext-rediraffe",
-  "sphinx-autoissues",
   "myst_parser",
   "furo",
 ]
 test = [
   "faker",
+  "gp-libs",
   "pytest",
   "pytest-rerunfailures",
   "pytest-mock",
@@ -120,7 +120,13 @@ test = [
 ]
 coverage = ["codecov", "coverage", "pytest-cov"]
 format = ["black", "isort"]
-lint = ["flake8", "flake8-bugbear", "flake8-comprehensions", "mypy"]
+lint = [
+  "flake8",
+  "flake8-bugbear",
+  "flake8-comprehensions",
+  "mypy",
+  "types-docutils",
+]
 
 [tool.mypy]
 strict = true

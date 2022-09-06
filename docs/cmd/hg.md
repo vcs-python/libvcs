@@ -3,9 +3,8 @@
 For mercurial, aka `hg(1)`.
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.cmd.hg
+.. automodule:: libvcs.cmd.hg
    :members:
    :show-inheritance:
    :undoc-members:
-   :exclude-members: StrOrBytesPath, StrPath, run
 ```

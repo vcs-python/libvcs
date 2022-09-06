@@ -1,7 +1,7 @@
 # Exceptions - `libvcs.exc`
 
 ```{eval-rst}
-.. autoapimodule:: libvcs.exc
+.. automodule:: libvcs.exc
    :members:
    :show-inheritance:
    :undoc-members:

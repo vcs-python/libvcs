@@ -21,20 +21,25 @@ with open(project_root / "libvcs" / "__about__.py") as fp:
 
 extensions = [
     "sphinx.ext.napoleon",  # Should go first
-    "autoapi.extension",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.linkcode",
     "sphinx_inline_tabs",
-    "sphinx_autoissues",
     "sphinx_copybutton",
     "sphinxext.opengraph",
     "sphinxext.rediraffe",
     "myst_parser",
+    "sphinx_toctree_autodoc_fix",
+    "linkify_issues",
 ]
-myst_enable_extensions = ["colon_fence", "substitution", "replacements"]
+myst_enable_extensions = [
+    "colon_fence",
+    "substitution",
+    "replacements",
+    "strikethrough",
+]
 
 templates_path = ["_templates"]
 
@@ -87,8 +92,7 @@ html_sidebars = {
 }
 
 # sphinx-autoissues
-issuetracker = "github"
-issuetracker_project = "vcs-python/libvcs"
+issue_url_tpl = "https://github.com/vcs-python/libvcs/issues/{issue_id}"
 
 # sphinx.ext.autodoc
 autoclass_content = "both"
@@ -97,11 +101,6 @@ autodoc_member_order = "bysource"
 # sphinx-autodoc-typehints
 autodoc_typehints = "description"  # show type hints in doc body instead of signature
 simplify_optional_unions = True
-
-# sphinx-autoapi
-autoapi_type = "python"
-autoapi_dirs = [project_root / "libvcs"]
-autoapi_generate_api_docs = False  # when False, use directives
 
 # sphinx.ext.napoleon
 napoleon_google_docstring = True
@@ -162,6 +161,7 @@ intersphinx_mapping = {
     "py": ("https://docs.python.org/3", None),
     "pip": ("https://pip.pypa.io/en/latest/", None),
     "vcspull": ("https://vcspull.git-pull.com/", None),
+    "gp-libs": ("https://gp-libs.git-pull.com/", None),
 }
 
 

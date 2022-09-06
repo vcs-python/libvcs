@@ -29,7 +29,14 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Documentation
 
-- Render changelog in sphinx-autoissues (#396)
+- Render changelog in [`linkify_issues`] (~~#396~~, #403)
+- Fix Table of contents rendering with sphinx autodoc with [`sphinx_toctree_autodoc_fix`] (#403)
+- Deprecate `sphinx-autoapi`, per above fixing the table of contents issue (#403)
+
+  This also removes the need to workaround autoapi bugs.
+
+[`linkify_issues`]: https://gp-libs.git-pull.com/linkify_issues/
+[`sphinx_toctree_autodoc_fix`]: https://gp-libs.git-pull.com/sphinx_toctree_autodoc_fix/
 
 ## libvcs 0.14.0 (2022-07-31)
 
