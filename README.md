@@ -35,15 +35,15 @@ True
 Parse and adjust a Git URL:
 
 ```
-from libvcs.parse.git import GitURL
+>>> from libvcs.parse.git import GitURL
 
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
 >>> git_location
 GitURL(url=git@github.com:vcs-python/libvcs.git,
+        user=git,
         hostname=github.com,
         path=vcs-python/libvcs,
-        user=git,
         suffix=.git,
         matcher=core-git-scp)
 ```
@@ -51,7 +51,7 @@ GitURL(url=git@github.com:vcs-python/libvcs.git,
 Switch repo libvcs -> vcspull:
 
 ```python
-from libvcs.parse.git import GitURL
+>>> from libvcs.parse.git import GitURL
 
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
