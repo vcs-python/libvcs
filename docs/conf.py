@@ -27,12 +27,12 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.linkcode",
     "sphinx_inline_tabs",
-    "sphinx_autoissues",
     "sphinx_copybutton",
     "sphinxext.opengraph",
     "sphinxext.rediraffe",
     "myst_parser",
     "sphinx_toctree_autodoc_fix",
+    "linkify_issues",
 ]
 myst_enable_extensions = ["colon_fence", "substitution", "replacements"]
 
@@ -87,8 +87,7 @@ html_sidebars = {
 }
 
 # sphinx-autoissues
-issuetracker = "github"
-issuetracker_project = "vcs-python/libvcs"
+issue_url_tpl = "https://github.com/vcs-python/libvcs/issues/{issue_id}"
 
 # sphinx.ext.autodoc
 autoclass_content = "both"
