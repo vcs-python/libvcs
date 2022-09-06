@@ -26,7 +26,7 @@ You can validate and parse Git, Mercurial, and Subversion URLs through
 Validate:
 
 ```python
->>> from libvcs.parse.git import GitUrl
+>>> from libvcs.parse.git import GitURL
 
 >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
 True
@@ -35,7 +35,7 @@ True
 Parse and adjust a Git URL:
 
 ```
-from libvcs.parse.git import GitUrl
+from libvcs.parse.git import GitURL
 
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
@@ -51,6 +51,10 @@ GitURL(url=git@github.com:vcs-python/libvcs.git,
 Switch repo libvcs -> vcspull:
 
 ```python
+from libvcs.parse.git import GitUrl
+
+>>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+
 >>> git_location.path = 'vcs-python/vcspull'
 
 >>> git_location.to_url()
@@ -97,18 +101,12 @@ repo = GitProject(
        'gitlab': 'https://gitlab.com/vcs-python/libvcs'
    }
 )
-```
 
-Update / clone repo:
+# Update / clone repo:
+>>> repo.update_repo()
 
-```python
->>> r.update_repo()
-```
-
-Get revision:
-
-```python
->>> r.get_revision()
+# Get revision:
+>>> repo.get_revision()
 u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 ```
 
