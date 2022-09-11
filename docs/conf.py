@@ -161,6 +161,7 @@ texinfo_documents = [
 intersphinx_mapping = {
     "py": ("https://docs.python.org/3", None),
     "pip": ("https://pip.pypa.io/en/latest/", None),
+    "pytest": ("https://docs.pytest.org/en/stable/", None),
     "vcspull": ("https://vcspull.git-pull.com/", None),
     "gp-libs": ("https://gp-libs.git-pull.com/", None),
 }
