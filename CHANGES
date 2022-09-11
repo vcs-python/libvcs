@@ -15,6 +15,18 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
+- Moves (#408):
+
+  - `libvcs.parse` -> `libvcs.url`
+  - `libvcs.projects` -> `libvcs.sync`
+
+- Renames (#408):
+
+  - `BaseProject` -> `BaseSync`
+  - `MercurialProject` -> `HgSync`
+  - `SubversionProject` -> `SvnSync`
+  - `GitProject` -> `GitSync`
+
 - Deprecate custom functions in favor of standard library:
   - `which()` in favor of {func}`shutil.which`, via #397
   - `mkdir_p()` in favor of {func}`os.makedirs` and {meth}`pathlib.Path.mkdir` w/ `parents=True`,
@@ -60,41 +72,41 @@ $ pip install --user --upgrade --pre libvcs
 
   :::
 
-  - {mod}`libvcs.parse.git`
+  - {mod}`libvcs.url.git`
 
-    - {class}`~libvcs.parse.git.GitBaseURL` - Parse git URLs, `git(1)` compatible
+    - {class}`~libvcs.url.git.GitBaseURL` - Parse git URLs, `git(1)` compatible
 
-      - {meth}`~libvcs.parse.git.GitBaseURL.is_valid`
-      - {meth}`~libvcs.parse.git.GitBaseURL.to_url` - export `git clone`-compatible URL
+      - {meth}`~libvcs.url.git.GitBaseURL.is_valid`
+      - {meth}`~libvcs.url.git.GitBaseURL.to_url` - export `git clone`-compatible URL
 
-    - {class}`~libvcs.parse.git.GitPipURL` - Pip URLs, {meth}`~libvcs.parse.git.GitPipURL.is_valid`,
-      {meth}`~libvcs.parse.git.GitPipURL.to_url`
+    - {class}`~libvcs.url.git.GitPipURL` - Pip URLs, {meth}`~libvcs.url.git.GitPipURL.is_valid`,
+      {meth}`~libvcs.url.git.GitPipURL.to_url`
 
-    - {class}`~libvcs.parse.git.GitURL` - Compatibility focused,
-      {meth}`~libvcs.parse.git.GitURL.is_valid` {meth}`~libvcs.parse.git.GitURL.to_url`
+    - {class}`~libvcs.url.git.GitURL` - Compatibility focused,
+      {meth}`~libvcs.url.git.GitURL.is_valid` {meth}`~libvcs.url.git.GitURL.to_url`
 
-  - {mod}`libvcs.parse.hg`
+  - {mod}`libvcs.url.hg`
 
-    - {class}`~libvcs.parse.hg.HgURL` - Parse Mercurial URLs
-      - {meth}`~libvcs.parse.hg.HgURL.is_valid`
-      - {meth}`~libvcs.parse.hg.HgURL.to_url` - export `hg clone`-compatible URL
+    - {class}`~libvcs.url.hg.HgURL` - Parse Mercurial URLs
+      - {meth}`~libvcs.url.hg.HgURL.is_valid`
+      - {meth}`~libvcs.url.hg.HgURL.to_url` - export `hg clone`-compatible URL
 
-  - {mod}`libvcs.parse.svn`
+  - {mod}`libvcs.url.svn`
 
-    - {class}`~libvcs.parse.svn.SvnURL` - Parse Subversion URLs
-      - {meth}`~libvcs.parse.svn.SvnURL.is_valid`
-      - {meth}`~libvcs.parse.svn.SvnURL.to_url` - export `svn checkout`-compatible URL
+    - {class}`~libvcs.url.svn.SvnURL` - Parse Subversion URLs
+      - {meth}`~libvcs.url.svn.SvnURL.is_valid`
+      - {meth}`~libvcs.url.svn.SvnURL.to_url` - export `svn checkout`-compatible URL
 
-  Detection can be extended through writing {class}`~libvcs.parse.base.Matcher`s and adding them to
-  the classes' {class}`~libvcs.parse.base.MatcherRegistry`
+  Detection can be extended through writing {class}`~libvcs.url.base.Matcher`s and adding them to
+  the classes' {class}`~libvcs.url.base.MatcherRegistry`
 
-  You can write your own VCS parser by implementing {class}`~libvcs.parse.base.URLProtocol`, but it
+  You can write your own VCS parser by implementing {class}`~libvcs.url.base.URLProtocol`, but it
   would be most efficient if you studied the source of the `git(1)` parser to see how it's done.
 
 ### Breaking changes
 
-- #391 Removed `flat` keyword argument for {class}`libvcs.projects.git.GitProject`. This was unused
-  and the equivalent can be retrieved via `.to_dict()` on `GitRemote`
+- #391 Removed `flat` keyword argument for {class}`libvcs.sync.git.GitSync`. This was unused and the
+  equivalent can be retrieved via `.to_dict()` on `GitRemote`
 - #379 Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being insecure
   [^pip-git+git]
 - #372 Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
@@ -111,7 +123,7 @@ $ pip install --user --upgrade --pre libvcs
 ### Fixes
 
 - Minor spelling fix in Git's `convert_pip_url()` exception
-- Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
+- Fix mercurial cloning in {class}`libvcs.sync.hg.HgSync`
 
   _Backport from 0.13.1_
 
@@ -122,7 +134,7 @@ $ pip install --user --upgrade --pre libvcs
   _Backport from 0.13.4_
 
 - {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.
-  {class}`~libvcs.projects.git.GitProject`)
+  {class}`~libvcs.sync.git.GitSync`)
 
   _Backport from 0.13.3_
 
@@ -165,19 +177,19 @@ $ pip install --user --upgrade --pre libvcs
 ### Typings
 
 - `create_project()`: Add overloads that return the typed project (e.g.
-  {class}`~libvcs.projects.git.GitProject`)
+  {class}`~libvcs.sync.git.GitSync`)
 
 ## libvcs 0.13.2 (2022-06-12)
 
 ### Typings
 
-- {func}`libvcs.projects.git.GitProject.remotes`: Add overload
+- {func}`libvcs.sync.git.GitSync.remotes`: Add overload
 
 ## libvcs 0.13.1 (2022-06-01)
 
 ### Fixes
 
-- Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
+- Fix mercurial cloning in {class}`libvcs.sync.hg.HgSync`
 
 ## libvcs 0.13.0, "Jane" (2022-05-30)
 
@@ -204,7 +216,7 @@ $ pip install --user --upgrade --pre libvcs
 
   - `run(cmd, ...)` is now `run(args, ...)` to match `Popen`'s convention.
 
-- {class}`libvcs.projects.base.BaseProject`:
+- {class}`libvcs.sync.base.BaseSync`:
 
   - Removed `parent_dir`:
 
@@ -223,13 +235,13 @@ $ pip install --user --upgrade --pre libvcs
     Deprecated in >=0.13:
 
     ```python
-    GitProject('https://github.com/vcs-python/libvcs.git')
+    GitSync('https://github.com/vcs-python/libvcs.git')
     ```
 
     New style in >=0.13:
 
     ```python
-    GitProject(url='https://github.com/vcs-python/libvcs.git')
+    GitSync(url='https://github.com/vcs-python/libvcs.git')
     ```
 
 [pep 570]: https://peps.python.org/pep-0570/
@@ -322,20 +334,20 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking
 
-- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to `GitProject`, `SVNProject`,
-  `MercurialProject`, `BaseProject` (#327)
-- `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` have been moved to
-  `libvcs.projects.{module}.{Module}Project`
+- `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to `GitSync`, `SVNProject`,
+  `HgSync`, `BaseSync` (#327)
+- `GitSync`, `SVNProject`, `HgSync`, `BaseSync` have been moved to
+  `libvcs.sync.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
 
-  Before: `GitProject(url='...', repo_dir='...')`
+  Before: `GitSync(url='...', repo_dir='...')`
 
-  After: `GitProject(url='...', dir='...')`
+  After: `GitSync(url='...', dir='...')`
 
   #324
 
-- `dir` to `pathlib`, `BaseProject.path` -> `BaseProject.dir`
-- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` (#322)
+- `dir` to `pathlib`, `BaseSync.path` -> `BaseSync.dir`
+- Logging functions moved to {attr}`libvcs.sync.base.BaseSync.log` (#322)
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 - `create_repo` -> `create_project`
@@ -369,10 +381,10 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.hg.Hg.run`
     - {meth}`libvcs.cmd.hg.Hg.clone`
 
-- {class}`libvcs.projects.git.GitProject` now accepts remotes in `__init__`
+- {class}`libvcs.sync.git.GitSync` now accepts remotes in `__init__`
 
   ```python
-  repo = GitProject(
+  repo = GitSync(
       url="https://github.com/vcs-python/libvcs",
       repo_dir=checkout,
       remotes={
@@ -382,7 +394,7 @@ $ pip install --user --upgrade --pre libvcs
   ```
 
   ```python
-  repo = GitProject(
+  repo = GitSync(
       url="https://github.com/vcs-python/libvcs",
       repo_dir=checkout,
       remotes={
@@ -394,7 +406,7 @@ $ pip install --user --upgrade --pre libvcs
   )
   ```
 
-- {meth}`libvcs.projects.git.GitProject.update_repo` now accepts `set_remotes=True`
+- {meth}`libvcs.sync.git.GitSync.update_repo` now accepts `set_remotes=True`
 
 ### Compatibility
 
@@ -411,9 +423,9 @@ $ pip install --user --upgrade --pre libvcs
   [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (#316)
 - New constants for `str` -> class mappings
 
-  - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_MAP`
-  - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_UNION`
-  - {data}`libvcs.projects.constants.DEFAULT_VCS_LITERAL`
+  - {data}`libvcs.sync.constants.DEFAULT_VCS_CLASS_MAP`
+  - {data}`libvcs.sync.constants.DEFAULT_VCS_CLASS_UNION`
+  - {data}`libvcs.sync.constants.DEFAULT_VCS_LITERAL`
 
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)

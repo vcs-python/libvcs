@@ -4,20 +4,20 @@
 
    The following is from pypa/pip (MIT license):
 
-   - [`MercurialProject.convert_pip_url`](libvcs.hg.convert_pip_url)
-   - [`MercurialProject.get_url`](libvcs.hg.MercurialProject.get_url)
-   - [`MercurialProject.get_revision`](libvcs.hg.MercurialProject.get_revision)
+   - [`HgSync.convert_pip_url`](libvcs.hg.convert_pip_url)
+   - [`HgSync.get_url`](libvcs.hg.HgSync.get_url)
+   - [`HgSync.get_revision`](libvcs.hg.HgSync.get_revision)
 """  # NOQA E5
 import logging
 import pathlib
 from typing import Any
 
-from .base import BaseProject
+from .base import BaseSync
 
 logger = logging.getLogger(__name__)
 
 
-class MercurialProject(BaseProject):
+class HgSync(BaseSync):
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
 

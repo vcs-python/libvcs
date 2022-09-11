@@ -46,10 +46,10 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
     def register(self, cls: Matcher) -> None:
         r"""
 
-        .. currentmodule:: libvcs.parse.git
+        .. currentmodule:: libvcs.url.git
 
         >>> from dataclasses import dataclass
-        >>> from libvcs.parse.git import GitURL, GitBaseURL
+        >>> from libvcs.url.git import GitURL, GitBaseURL
 
         :class:`GitBaseURL` - the ``git(1)`` compliant parser - won't accept a pip-style URL:
 
@@ -177,9 +177,9 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         sake of showing how extensibility works, here is a recreation based on
         :class:`GitBaseURL`:
 
-        >>> from libvcs.parse.git import GitBaseURL
+        >>> from libvcs.url.git import GitBaseURL
 
-        >>> from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS
+        >>> from libvcs.url.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitURLWithPip(GitBaseURL):

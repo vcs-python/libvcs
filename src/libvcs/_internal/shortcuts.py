@@ -1,4 +1,4 @@
-"""Shortcuts for creating projects.
+"""Shortcuts for creating repos.
 
 Note
 ----
@@ -7,7 +7,7 @@ This is an internal API not covered by versioning policy.
 import typing as t
 from typing import Union
 
-from libvcs import GitProject, MercurialProject, SubversionProject
+from libvcs import GitSync, HgSync, SvnSync
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath, VCSLiteral
 from libvcs.exc import InvalidVCS
@@ -21,7 +21,7 @@ def create_project(
     vcs: t.Literal["git"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any]
-) -> GitProject:
+) -> GitSync:
     ...
 
 
@@ -33,7 +33,7 @@ def create_project(
     vcs: t.Literal["svn"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any]
-) -> SubversionProject:
+) -> SvnSync:
     ...
 
 
@@ -45,7 +45,7 @@ def create_project(
     vcs: t.Literal["hg"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = ...,
     **kwargs: dict[t.Any, t.Any]
-) -> MercurialProject:
+) -> HgSync:
     ...
 
 
@@ -56,7 +56,7 @@ def create_project(
     vcs: VCSLiteral,
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any]
-) -> Union[GitProject, MercurialProject, SubversionProject]:
+) -> Union[GitSync, HgSync, SvnSync]:
     r"""Return an object representation of a VCS repository.
 
     Examples
@@ -68,20 +68,14 @@ def create_project(
     ...     dir=tmp_path
     ... )
 
-    >>> isinstance(r, GitProject)
+    >>> isinstance(r, GitSync)
     True
     """
     if vcs == "git":
-        return GitProject(
-            url=url, dir=dir, progress_callback=progress_callback, **kwargs
-        )
+        return GitSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)
     elif vcs == "hg":
-        return MercurialProject(
-            url=url, dir=dir, progress_callback=progress_callback, **kwargs
-        )
+        return HgSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)
     elif vcs == "svn":
-        return SubversionProject(
-            url=url, dir=dir, progress_callback=progress_callback, **kwargs
-        )
+        return SvnSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)
     else:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)

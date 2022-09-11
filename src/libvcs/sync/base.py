@@ -17,7 +17,7 @@ class VCSLocation(NamedTuple):
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
-    """Parse pip URL via `libvcs.projects.base.BaseProject.url`."""
+    """Parse pip URL via `libvcs.sync.base.BaseSync.url`."""
     error_message = (
         "Sorry, '%s' is a malformed VCS url. "
         "The format is <vcs>+<protocol>://<url>, "
@@ -33,7 +33,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class BaseProject:
+class BaseSync:
     """Base class for repositories."""
 
     log_in_real_time = None
@@ -65,7 +65,7 @@ class BaseProject:
             >>> def progress_cb(output, timestamp):
             ...     sys.stdout.write(output)
             ...     sys.stdout.flush()
-            >>> class Project(BaseProject):
+            >>> class Project(BaseSync):
             ...     bin_name = 'git'
             ...     def obtain(self, *args, **kwargs):
             ...         self.ensure_dir()
@@ -120,7 +120,7 @@ class BaseProject:
         return self.dir.stem
 
     @classmethod
-    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseProject":
+    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseSync":
         url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, **kwargs)
 
@@ -138,12 +138,12 @@ class BaseProject:
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
-        using the cwd `libvcs.projects.base.BaseProject.dir` of the repo.
+        using the cwd `libvcs.sync.base.BaseSync.dir` of the repo.
 
         Parameters
         ----------
         cwd : str
-            dir command is run from, defaults to `libvcs.projects.base.BaseProject.dir`.
+            dir command is run from, defaults to `libvcs.sync.base.BaseSync.dir`.
 
         check_returncode : bool
             Indicate whether a :exc:`~exc.CommandError` should be raised if return code

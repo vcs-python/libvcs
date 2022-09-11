@@ -1,6 +1,6 @@
 (projects)=
 
-# Projects - `libvcs.projects`
+# Sync - `libvcs.sync`
 
 Compare to:
 [`fabtools.require.git`](https://fabtools.readthedocs.io/en/0.19.0/api/require/git.html),
@@ -26,6 +26,6 @@ base
 ## Constants
 
 ```{eval-rst}
-.. automodule:: libvcs.projects.constants
+.. automodule:: libvcs.sync.constants
    :members:
 ```

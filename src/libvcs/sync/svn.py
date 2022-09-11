@@ -5,13 +5,13 @@
 
     The follow are from saltstack/salt (Apache license):
 
-    - [`SubversionProject.get_revision_file`](libvcs.svn.SubversionProject.get_revision_file)
+    - [`SvnSync.get_revision_file`](libvcs.svn.SvnSync.get_revision_file)
 
     The following are pypa/pip (MIT license):
 
-    - [`SubversionProject.convert_pip_url`](libvcs.svn.SubversionProject.convert_pip_url)
-    - [`SubversionProject.get_url`](libvcs.svn.SubversionProject.get_url)
-    - [`SubversionProject.get_revision`](libvcs.svn.SubversionProject.get_revision)
+    - [`SvnSync.convert_pip_url`](libvcs.svn.SvnSync.convert_pip_url)
+    - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
+    - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
     - [`get_rev_options`](libvcs.svn.get_rev_options)
 """  # NOQA: E5
 import logging
@@ -24,7 +24,7 @@ from urllib import parse as urlparse
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-from .base import BaseProject, VCSLocation, convert_pip_url as base_convert_pip_url
+from .base import BaseSync, VCSLocation, convert_pip_url as base_convert_pip_url
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class SubversionProject(BaseProject):
+class SvnSync(BaseSync):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
 
@@ -117,7 +117,7 @@ class SubversionProject(BaseProject):
                 # FIXME: should we warn?
                 continue
 
-            dirurl, localrev = SubversionProject._get_svn_url_rev(base)
+            dirurl, localrev = SvnSync._get_svn_url_rev(base)
 
             if base == location:
                 assert dirurl is not None

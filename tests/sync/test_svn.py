@@ -6,7 +6,7 @@ import shutil
 import pytest
 
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
-from libvcs.projects.svn import SubversionProject
+from libvcs.sync.svn import SvnSync
 
 if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
@@ -15,7 +15,7 @@ if not shutil.which("svn"):
 def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None:
     repo_name = "my_svn_project"
 
-    svn_repo = SubversionProject(
+    svn_repo = SvnSync(
         url=f"file://{svn_remote_repo}",
         dir=str(tmp_path / repo_name),
     )
@@ -36,9 +36,7 @@ def test_repo_svn_remote_checkout(
 ) -> None:
     svn_server = create_svn_remote_repo()
     svn_repo_checkout_dir = projects_path / "my_svn_checkout"
-    svn_repo = SubversionProject(
-        dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}"
-    )
+    svn_repo = SvnSync(dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}")
 
     svn_repo.obtain()
     svn_repo.update_repo()

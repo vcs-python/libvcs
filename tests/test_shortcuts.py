@@ -3,7 +3,7 @@ from typing import Literal, Optional, TypedDict, TypeVar, Union
 
 import pytest
 
-from libvcs import GitProject, MercurialProject, SubversionProject
+from libvcs import GitSync, HgSync, SvnSync
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.shortcuts import create_project
 from libvcs._internal.types import StrPath
@@ -25,17 +25,17 @@ E = TypeVar("E", bound=BaseException)
     [
         (
             {"url": "https://github.com/freebsd/freebsd.git", "vcs": "git"},
-            GitProject,
+            GitSync,
             None,
         ),
         (
             {"url": "https://bitbucket.org/birkenfeld/sphinx", "vcs": "hg"},
-            MercurialProject,
+            HgSync,
             None,
         ),
         (
             {"url": "http://svn.code.sf.net/p/docutils/code/trunk", "vcs": "svn"},
-            SubversionProject,
+            SvnSync,
             None,
         ),
         (
@@ -48,7 +48,7 @@ E = TypeVar("E", bound=BaseException)
 def test_create_project(
     tmp_path: pathlib.Path,
     repo_dict: CreateProjectKwargsDict,
-    repo_class: type[Union[SubversionProject, GitProject, MercurialProject]],
+    repo_class: type[Union[SvnSync, GitSync, HgSync]],
     raises_exception: Union[None, Union[type[E], tuple[type[E], ...]]],
 ) -> None:
     # add parent_dir via fixture

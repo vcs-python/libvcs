@@ -1,4 +1,4 @@
-# `libvcs.projects.git`
+# `libvcs.sync.git`
 
 For `git(1)`.
 
@@ -8,7 +8,7 @@ Compare to:
 [`ansible.builtin.git`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)
 
 ```{eval-rst}
-.. automodule:: libvcs.projects.git
+.. automodule:: libvcs.sync.git
    :members:
    :show-inheritance:
    :undoc-members:

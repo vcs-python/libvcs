@@ -1,4 +1,4 @@
-"""tests for libvcs repo abstract base class."""
+"""tests for libvcs.sync abstract base class."""
 import datetime
 import pathlib
 import sys
@@ -7,31 +7,31 @@ from typing import AnyStr
 import pytest
 
 from libvcs._internal.shortcuts import create_project
-from libvcs.projects.base import BaseProject, convert_pip_url
+from libvcs.sync.base import BaseSync, convert_pip_url
 
 
 def test_repr() -> None:
     repo = create_project(url="file://path/to/myrepo", dir="/hello/", vcs="git")
 
     str_repo = str(repo)
-    assert "GitProject" in str_repo
+    assert "GitSync" in str_repo
     assert "hello" in str_repo
-    assert "<GitProject hello>" == str_repo
+    assert "<GitSync hello>" == str_repo
 
 
 def test_repr_base() -> None:
-    repo = BaseProject(url="file://path/to/myrepo", dir="/hello/")
+    repo = BaseSync(url="file://path/to/myrepo", dir="/hello/")
 
     str_repo = str(repo)
-    assert "Project" in str_repo
+    assert "Sync" in str_repo
     assert "hello" in str_repo
-    assert "<BaseProject hello>" == str_repo
+    assert "<BaseSync hello>" == str_repo
 
 
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path) -> None:
     projects_path = tmp_path / "projects_path"  # doesn't exist yet
     dir = projects_path / "myrepo"
-    repo = BaseProject(url="file://path/to/myrepo", dir=dir)
+    repo = BaseSync(url="file://path/to/myrepo", dir=dir)
 
     repo.ensure_dir()
     assert projects_path.is_dir()
@@ -53,7 +53,7 @@ def test_progress_callback(
         sys.stdout.write(str(output))
         sys.stdout.flush()
 
-    class Project(BaseProject):
+    class Project(BaseSync):
         bin_name = "git"
 
         def obtain(self, *args: list[str], **kwargs: dict[str, str]) -> None:
