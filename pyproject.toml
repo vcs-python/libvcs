@@ -61,6 +61,7 @@ Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 [tool.poetry.dependencies]
 python = "^3.9"
 typing-extensions = { version = "^4.1.1", python = '3.10' }
+Faker = "*"
 
 [tool.poetry.dev-dependencies]
 ### Docs ###
@@ -80,7 +81,6 @@ pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
 pytest-watcher = "^0.2.3"
-Faker = "*"
 
 ### Coverage ###
 codecov = "*"
@@ -112,7 +112,6 @@ docs = [
   "furo",
 ]
 test = [
-  "faker",
   "gp-libs",
   "pytest",
   "pytest-rerunfailures",
