@@ -206,7 +206,7 @@ sphinx-basic-ng = "*"
 
 [[package]]
 name = "gp-libs"
-version = "0.0.1a9"
+version = "0.0.1a10"
 description = "Internal utilities for projects following git-pull python package spec"
 category = "dev"
 optional = false
@@ -853,7 +853,7 @@ python-versions = ">= 3.7"
 
 [[package]]
 name = "types-docutils"
-version = "0.19.0"
+version = "0.19.1"
 description = "Typing stubs for docutils"
 category = "dev"
 optional = false
@@ -1055,8 +1055,8 @@ furo = [
     {file = "furo-2022.6.21.tar.gz", hash = "sha256:9aa983b7488a4601d13113884bfb7254502c8729942e073a0acb87a5512af223"},
 ]
 gp-libs = [
-    {file = "gp-libs-0.0.1a9.tar.gz", hash = "sha256:835608ba29220c4d77e7e3f5a9ae27368ac1eb4b43f0cd1e6cdec9c27e9a9e3a"},
-    {file = "gp_libs-0.0.1a9-py3-none-any.whl", hash = "sha256:2c055bd65f0880325a800775a2ee4c23dacc9eb8a56408fdb665a66da7d38ed3"},
+    {file = "gp-libs-0.0.1a10.tar.gz", hash = "sha256:54fbe07f42628b114f0b1472bb03ce75be2928090ec26d8d6f675f3bd9f58c2e"},
+    {file = "gp_libs-0.0.1a10-py3-none-any.whl", hash = "sha256:701b190ffd468ca4d776b196707344748dd550aea03db9aaa1ffdecdd0c32506"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -1365,8 +1365,8 @@ tornado = [
     {file = "tornado-6.2.tar.gz", hash = "sha256:9b630419bde84ec666bfd7ea0a4cb2a8a651c2d5cccdbdd1972a0c859dfc3c13"},
 ]
 types-docutils = [
-    {file = "types-docutils-0.19.0.tar.gz", hash = "sha256:94936b1961aacda61ec6bb0acf1169cd7830b5230b645855c1d4789baf19685e"},
-    {file = "types_docutils-0.19.0-py3-none-any.whl", hash = "sha256:198ed1c0ef6c1a79411da9e1745514eda433d37770e24f26b0e13a302904cc97"},
+    {file = "types-docutils-0.19.1.tar.gz", hash = "sha256:7df133b87105af410fc6a992030a70ee9f5a2c2636c5afe7e0de285eb9fdb015"},
+    {file = "types_docutils-0.19.1-py3-none-any.whl", hash = "sha256:6b110b17ba4bfbde765b69acca6a6da373094d99a5a3bce1d5a8c9d29b293d89"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
