@@ -11,6 +11,7 @@ Features for Git, Subversion, and Mercurial:
 - **Detect and parse** VCS URLs
 - **Command** VCS via python API
 - **Sync** repos locally
+- **Test fixtures** for temporary local repos and working copies
 
 To **get started**, see the [quickstart](https://libvcs.git-pull.com/quickstart.html) for more.
 
@@ -108,6 +109,43 @@ repo = GitSync(
 >>> repo.get_revision()
 u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 ```
+
+## Pytest plugin
+
+libvcs also provides a test rig for local repositories. It automatically can provide clean local
+repositories and working copies for git, svn, and mercurial. They are automatically cleaned up after
+each test.
+
+It works by bootstrapping a temporary `$HOME` environment in a
+[`TmpPathFactory`](https://docs.pytest.org/en/7.1.x/reference/reference.html#tmp-path-factory-factory-api)
+for automatic cleanup.
+
+```python
+import pathlib
+
+from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
+from libvcs.sync.git import GitSync
+
+
+def test_repo_git_remote_checkout(
+    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    tmp_path: pathlib.Path,
+    projects_path: pathlib.Path,
+) -> None:
+    git_server = create_git_remote_repo()
+    git_repo_checkout_dir = projects_path / "my_git_checkout"
+    git_repo = GitSync(dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
+
+    git_repo.obtain()
+    git_repo.update_repo()
+
+    assert git_repo.get_revision() == "initial"
+
+    assert git_repo_checkout_dir.exists()
+    assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
+```
+
+Learn more on the docs at https://libvcs.git-pull.com/pytest-plugin.html
 
 ## Donations
 
