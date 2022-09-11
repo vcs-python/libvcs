@@ -91,7 +91,7 @@ html_sidebars = {
     ]
 }
 
-# sphinx-autoissues
+# linkify_issues
 issue_url_tpl = "https://github.com/vcs-python/libvcs/issues/{issue_id}"
 
 # sphinx.ext.autodoc
