@@ -5,7 +5,7 @@ import shutil
 
 import pytest
 
-from libvcs.conftest import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
 from libvcs.sync.svn import SvnSync
 
 if not shutil.which("svn"):

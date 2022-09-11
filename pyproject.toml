@@ -26,6 +26,7 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",
   "Environment :: Console",
+  "Framework :: Pytest",
   "Intended Audience :: Developers",
   "Operating System :: POSIX",
   "Operating System :: MacOS :: MacOS X",
@@ -127,6 +128,9 @@ lint = [
   "mypy",
   "types-docutils",
 ]
+
+[tool.poetry.plugins.pytest11]
+libvcs = "libvcs.pytest_plugin"
 
 [tool.mypy]
 strict = true

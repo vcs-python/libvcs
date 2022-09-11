@@ -3,7 +3,7 @@ import shutil
 
 import pytest
 
-from libvcs.conftest import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")

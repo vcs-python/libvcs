@@ -1,14 +1,21 @@
 [run]
+parallel = 1
+branch = 1
+
 omit =
-    */_*
-    pkg/*
-    */log.py
+    docs/conf.py
+    */_compat.py
     */conftest.py
 
 [report]
+skip_covered = True
+show_missing = True
 exclude_lines =
-    pragma: no cover
-    def __repr__
-    raise NotImplementedError
-    if __name__ == .__main__.:
-    def parse_args
+    \#\s*pragma: no cover
+    ^\s*raise NotImplementedError\b
+    ^\s*return NotImplemented\b
+    ^\s*assert False(,|$)
+    ^\s*assert_never\(
+
+    ^\s*if TYPE_CHECKING:
+    ^\s*@overload( |$)
