@@ -9,9 +9,11 @@ To install the unreleased libvcs version, see
 $ pip install --user --upgrade --pre libvcs
 ```
 
-## libvcs 0.16.x (unreleased)
+## libvcs 0.17.x (unreleased)
 
 - _Add your latest changes from PRs here_
+
+## libvcs 0.16.0 (2022-09-11)
 
 ### New features
 
