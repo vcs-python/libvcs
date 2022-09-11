@@ -2,9 +2,9 @@ import typing
 
 import pytest
 
-from libvcs.parse.base import MatcherRegistry
-from libvcs.parse.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 from libvcs.projects.git import GitProject
+from libvcs.url.base import MatcherRegistry
+from libvcs.url.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 
 
 class GitURLFixture(typing.NamedTuple):

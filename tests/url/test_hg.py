@@ -2,9 +2,9 @@ import typing
 
 import pytest
 
-from libvcs.parse.base import MatcherRegistry
-from libvcs.parse.hg import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, HgURL
 from libvcs.projects.hg import MercurialProject
+from libvcs.url.base import MatcherRegistry
+from libvcs.url.hg import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, HgURL
 
 
 class HgURLFixture(typing.NamedTuple):

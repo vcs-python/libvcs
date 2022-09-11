@@ -10,3 +10,8 @@
 "contributing/internals/query_list.md" "internals/query_list.md"
 "contributing/internals/subprocess.md" "internals/subprocess.md"
 "contributing/internals/types.md" "internals/types.md"
+"parse/index.md" "url/index.md"
+"parse/base.md" "url/base.md"
+"parse/git.md" "url/git.md"
+"parse/hg.md" "url/hg.md"
+"parse/svn.md" "url/svn.md"

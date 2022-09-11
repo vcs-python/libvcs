@@ -18,15 +18,15 @@ To **get started**, see the [quickstart](https://libvcs.git-pull.com/quickstart.
 $ pip install --user libvcs
 ```
 
-## URL Parsing (experimental)
+## URL Parser
 
 You can validate and parse Git, Mercurial, and Subversion URLs through
-[`libvcs.parse`](https://libvcs.git-pull.com/parse/index.html):
+[`libvcs.url`](https://libvcs.git-pull.com/url/index.html):
 
 Validate:
 
 ```python
->>> from libvcs.parse.git import GitURL
+>>> from libvcs.url.git import GitURL
 
 >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
 True
@@ -35,7 +35,7 @@ True
 Parse and adjust a Git URL:
 
 ```python
->>> from libvcs.parse.git import GitURL
+>>> from libvcs.url.git import GitURL
 
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
@@ -51,7 +51,7 @@ GitURL(url=git@github.com:vcs-python/libvcs.git,
 Switch repo libvcs -> vcspull:
 
 ```python
->>> from libvcs.parse.git import GitURL
+>>> from libvcs.url.git import GitURL
 
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
 
@@ -126,7 +126,7 @@ See donation options at <https://www.git-pull.com/support.html>.
 - Docs: <https://libvcs.git-pull.com>
 - Changelog: <https://libvcs.git-pull.com/history.html>
 - APIs for git, hg, and svn:
-  - [`libvcs.parse`](https://libvcs.git-pull.com/parse/): Detect and Parse
+  - [`libvcs.url`](https://libvcs.git-pull.com/url/): URL Parser
   - [`libvcs.cmd`](https://libvcs.git-pull.com/cmd/): Commands
   - [`libvcs.projects`](https://libvcs.git-pull.com/projects/): High-level synchronization commands
 - Issues: <https://github.com/vcs-python/libvcs/issues>

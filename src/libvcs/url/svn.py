@@ -6,8 +6,8 @@
   compare to :class:`urllib.parse.ParseResult`
 
   - Output ``svn(1)`` URL: :meth:`SvnURL.to_url()`
-- Extendable via :class:`~libvcs.parse.base.MatcherRegistry`,
-  :class:`~libvcs.parse.base.Matcher`
+- Extendable via :class:`~libvcs.url.base.MatcherRegistry`,
+  :class:`~libvcs.url.base.Matcher`
 
 .. Note::
 
@@ -153,7 +153,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
     Attributes
     ----------
     matcher : str
-        name of the :class:`~libvcs.parse.base.Matcher`
+        name of the :class:`~libvcs.url.base.Matcher`
     """
 
     url: str

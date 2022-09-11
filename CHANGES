@@ -60,35 +60,35 @@ $ pip install --user --upgrade --pre libvcs
 
   :::
 
-  - {mod}`libvcs.parse.git`
+  - {mod}`libvcs.url.git`
 
-    - {class}`~libvcs.parse.git.GitBaseURL` - Parse git URLs, `git(1)` compatible
+    - {class}`~libvcs.url.git.GitBaseURL` - Parse git URLs, `git(1)` compatible
 
-      - {meth}`~libvcs.parse.git.GitBaseURL.is_valid`
-      - {meth}`~libvcs.parse.git.GitBaseURL.to_url` - export `git clone`-compatible URL
+      - {meth}`~libvcs.url.git.GitBaseURL.is_valid`
+      - {meth}`~libvcs.url.git.GitBaseURL.to_url` - export `git clone`-compatible URL
 
-    - {class}`~libvcs.parse.git.GitPipURL` - Pip URLs, {meth}`~libvcs.parse.git.GitPipURL.is_valid`,
-      {meth}`~libvcs.parse.git.GitPipURL.to_url`
+    - {class}`~libvcs.url.git.GitPipURL` - Pip URLs, {meth}`~libvcs.url.git.GitPipURL.is_valid`,
+      {meth}`~libvcs.url.git.GitPipURL.to_url`
 
-    - {class}`~libvcs.parse.git.GitURL` - Compatibility focused,
-      {meth}`~libvcs.parse.git.GitURL.is_valid` {meth}`~libvcs.parse.git.GitURL.to_url`
+    - {class}`~libvcs.url.git.GitURL` - Compatibility focused,
+      {meth}`~libvcs.url.git.GitURL.is_valid` {meth}`~libvcs.url.git.GitURL.to_url`
 
-  - {mod}`libvcs.parse.hg`
+  - {mod}`libvcs.url.hg`
 
-    - {class}`~libvcs.parse.hg.HgURL` - Parse Mercurial URLs
-      - {meth}`~libvcs.parse.hg.HgURL.is_valid`
-      - {meth}`~libvcs.parse.hg.HgURL.to_url` - export `hg clone`-compatible URL
+    - {class}`~libvcs.url.hg.HgURL` - Parse Mercurial URLs
+      - {meth}`~libvcs.url.hg.HgURL.is_valid`
+      - {meth}`~libvcs.url.hg.HgURL.to_url` - export `hg clone`-compatible URL
 
-  - {mod}`libvcs.parse.svn`
+  - {mod}`libvcs.url.svn`
 
-    - {class}`~libvcs.parse.svn.SvnURL` - Parse Subversion URLs
-      - {meth}`~libvcs.parse.svn.SvnURL.is_valid`
-      - {meth}`~libvcs.parse.svn.SvnURL.to_url` - export `svn checkout`-compatible URL
+    - {class}`~libvcs.url.svn.SvnURL` - Parse Subversion URLs
+      - {meth}`~libvcs.url.svn.SvnURL.is_valid`
+      - {meth}`~libvcs.url.svn.SvnURL.to_url` - export `svn checkout`-compatible URL
 
-  Detection can be extended through writing {class}`~libvcs.parse.base.Matcher`s and adding them to
-  the classes' {class}`~libvcs.parse.base.MatcherRegistry`
+  Detection can be extended through writing {class}`~libvcs.url.base.Matcher`s and adding them to
+  the classes' {class}`~libvcs.url.base.MatcherRegistry`
 
-  You can write your own VCS parser by implementing {class}`~libvcs.parse.base.URLProtocol`, but it
+  You can write your own VCS parser by implementing {class}`~libvcs.url.base.URLProtocol`, but it
   would be most efficient if you studied the source of the `git(1)` parser to see how it's done.
 
 ### Breaking changes

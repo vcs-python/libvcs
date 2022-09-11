@@ -1,6 +1,6 @@
 (parse)=
 
-# Parser - `libvcs.parse`
+# URL Parser - `libvcs.url`
 
 VCS URL parser for python.
 
@@ -15,23 +15,23 @@ please file an issue.
 
 1. Detect VCS URLs
 
-   - git: {meth}`libvcs.parse.git.GitURL.is_valid()`
-   - hg: {meth}`libvcs.parse.hg.HgURL.is_valid()`
-   - svn: {meth}`libvcs.parse.svn.SvnURL.is_valid()`
+   - git: {meth}`libvcs.url.git.GitURL.is_valid()`
+   - hg: {meth}`libvcs.url.hg.HgURL.is_valid()`
+   - svn: {meth}`libvcs.url.svn.SvnURL.is_valid()`
 
 - Parse results of URL to a structure
 
   _Compare to {class}`urllib.parse.ParseResult`_
 
-  - {class}`libvcs.parse.git.GitURL`
-  - {class}`libvcs.parse.hg.HgURL`
-  - {class}`libvcs.parse.svn.SvnURL`
+  - {class}`libvcs.url.git.GitURL`
+  - {class}`libvcs.url.hg.HgURL`
+  - {class}`libvcs.url.svn.SvnURL`
 
 3. Convert input VCS to _usable_ URLs
 
-   - git: {meth}`libvcs.parse.git.GitURL.to_url()`
-   - hg: {meth}`libvcs.parse.hg.HgURL.to_url()`
-   - svn: {meth}`libvcs.parse.svn.SvnURL.to_url()`
+   - git: {meth}`libvcs.url.git.GitURL.to_url()`
+   - hg: {meth}`libvcs.url.hg.HgURL.to_url()`
+   - svn: {meth}`libvcs.url.svn.SvnURL.to_url()`
 
    `pip` knows what a certain URL string means, but `git clone` won't.
 

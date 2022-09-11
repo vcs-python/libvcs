@@ -1,9 +1,9 @@
-# SVN URL Parser - `libvcs.parse.svn`
+# SVN URL Parser - `libvcs.url.svn`
 
 For svn, aka `svn(1)`.
 
 ```{eval-rst}
-.. automodule:: libvcs.parse.svn
+.. automodule:: libvcs.url.svn
    :members:
    :undoc-members:
 ```

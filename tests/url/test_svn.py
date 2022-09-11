@@ -2,9 +2,9 @@ import typing
 
 import pytest
 
-from libvcs.parse.base import MatcherRegistry
-from libvcs.parse.svn import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, SvnURL
 from libvcs.projects.svn import SubversionProject
+from libvcs.url.base import MatcherRegistry
+from libvcs.url.svn import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, SvnURL
 
 
 class SvnURLFixture(typing.NamedTuple):

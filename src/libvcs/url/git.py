@@ -12,8 +12,8 @@
   - Strict ``git(1)`` compatibility: :class:`GitBaseURL`.
 
     - Output ``git(1)`` URL: :meth:`GitBaseURL.to_url()`
-- Extendable via :class:`~libvcs.parse.base.MatcherRegistry`,
-  :class:`~libvcs.parse.base.Matcher`
+- Extendable via :class:`~libvcs.url.base.MatcherRegistry`,
+  :class:`~libvcs.url.base.Matcher`
 """
 
 import dataclasses
@@ -248,7 +248,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     Attributes
     ----------
     matcher : str
-        name of the :class:`~libvcs.parse.base.Matcher`
+        name of the :class:`~libvcs.url.base.Matcher`
     """
 
     url: str
