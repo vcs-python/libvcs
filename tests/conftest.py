@@ -1,1 +1,1 @@
-from libvcs.conftest import *  # noqa F40
+from libvcs.conftest import *  # NOQA: F4
