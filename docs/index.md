@@ -12,6 +12,7 @@ quickstart
 url/index
 cmd/index
 sync/index
+pytest-plugin
 ```
 
 ```{toctree}
