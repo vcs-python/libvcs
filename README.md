@@ -84,15 +84,14 @@ git = Git(dir=pathlib.Path.cwd() / 'my_git_repo')
 git.clone(url='https://github.com/vcs-python/libvcs.git')
 ```
 
-## Projects
+## Sync
 
-Create a
-[`GitProject`](https://libvcs.git-pull.com/projects/git.html#libvcs.projects.git.GitProject) object
-of the project to inspect / checkout / update:
+Create a [`GitProject`](https://libvcs.git-pull.com/projects/git.html#libvcs.sync.git.GitProject)
+object of the project to inspect / checkout / update:
 
 ```python
 import pathlib
-from libvcs.projects.git import GitProject
+from libvcs.sync.git import GitProject
 
 repo = GitProject(
    url="https://github.com/vcs-python/libvcs",
@@ -128,7 +127,7 @@ See donation options at <https://www.git-pull.com/support.html>.
 - APIs for git, hg, and svn:
   - [`libvcs.url`](https://libvcs.git-pull.com/url/): URL Parser
   - [`libvcs.cmd`](https://libvcs.git-pull.com/cmd/): Commands
-  - [`libvcs.projects`](https://libvcs.git-pull.com/projects/): High-level synchronization commands
+  - [`libvcs.sync`](https://libvcs.git-pull.com/sync/): Clone and update
 - Issues: <https://github.com/vcs-python/libvcs/issues>
 - Test Coverage: <https://codecov.io/gh/vcs-python/libvcs>
 - pypi: <https://pypi.python.org/pypi/libvcs>

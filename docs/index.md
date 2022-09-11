@@ -11,7 +11,7 @@
 quickstart
 url/index
 cmd/index
-projects/index
+sync/index
 ```
 
 ```{toctree}

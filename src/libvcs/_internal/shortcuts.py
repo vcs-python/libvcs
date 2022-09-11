@@ -1,4 +1,4 @@
-"""Shortcuts for creating projects.
+"""Shortcuts for creating repos.
 
 Note
 ----

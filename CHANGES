@@ -93,8 +93,8 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
-- #391 Removed `flat` keyword argument for {class}`libvcs.projects.git.GitProject`. This was unused
-  and the equivalent can be retrieved via `.to_dict()` on `GitRemote`
+- #391 Removed `flat` keyword argument for {class}`libvcs.sync.git.GitProject`. This was unused and
+  the equivalent can be retrieved via `.to_dict()` on `GitRemote`
 - #379 Support for `git+git` URLs removed. Pip removed these in 21.0 due to them being insecure
   [^pip-git+git]
 - #372 Typings moved from `libvcs.types` -> {mod}`libvcs._internal.types`
@@ -111,7 +111,7 @@ $ pip install --user --upgrade --pre libvcs
 ### Fixes
 
 - Minor spelling fix in Git's `convert_pip_url()` exception
-- Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
+- Fix mercurial cloning in {class}`libvcs.sync.hg.MercurialProject`
 
   _Backport from 0.13.1_
 
@@ -122,7 +122,7 @@ $ pip install --user --upgrade --pre libvcs
   _Backport from 0.13.4_
 
 - {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.
-  {class}`~libvcs.projects.git.GitProject`)
+  {class}`~libvcs.sync.git.GitProject`)
 
   _Backport from 0.13.3_
 
@@ -165,19 +165,19 @@ $ pip install --user --upgrade --pre libvcs
 ### Typings
 
 - `create_project()`: Add overloads that return the typed project (e.g.
-  {class}`~libvcs.projects.git.GitProject`)
+  {class}`~libvcs.sync.git.GitProject`)
 
 ## libvcs 0.13.2 (2022-06-12)
 
 ### Typings
 
-- {func}`libvcs.projects.git.GitProject.remotes`: Add overload
+- {func}`libvcs.sync.git.GitProject.remotes`: Add overload
 
 ## libvcs 0.13.1 (2022-06-01)
 
 ### Fixes
 
-- Fix mercurial cloning in {class}`libvcs.projects.hg.MercurialProject`
+- Fix mercurial cloning in {class}`libvcs.sync.hg.MercurialProject`
 
 ## libvcs 0.13.0, "Jane" (2022-05-30)
 
@@ -204,7 +204,7 @@ $ pip install --user --upgrade --pre libvcs
 
   - `run(cmd, ...)` is now `run(args, ...)` to match `Popen`'s convention.
 
-- {class}`libvcs.projects.base.BaseProject`:
+- {class}`libvcs.sync.base.BaseProject`:
 
   - Removed `parent_dir`:
 
@@ -325,7 +325,7 @@ $ pip install --user --upgrade --pre libvcs
 - `GitRepo`, `SVNRepo`, `MercurialRepo`, `BaseRepo` have been renamed to `GitProject`, `SVNProject`,
   `MercurialProject`, `BaseProject` (#327)
 - `GitProject`, `SVNProject`, `MercurialProject`, `BaseProject` have been moved to
-  `libvcs.projects.{module}.{Module}Project`
+  `libvcs.sync.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
 
   Before: `GitProject(url='...', repo_dir='...')`
@@ -335,7 +335,7 @@ $ pip install --user --upgrade --pre libvcs
   #324
 
 - `dir` to `pathlib`, `BaseProject.path` -> `BaseProject.dir`
-- Logging functions moved to {attr}`libvcs.projects.base.BaseProject.log` (#322)
+- Logging functions moved to {attr}`libvcs.sync.base.BaseProject.log` (#322)
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
 - `create_repo` -> `create_project`
@@ -369,7 +369,7 @@ $ pip install --user --upgrade --pre libvcs
     - {meth}`libvcs.cmd.hg.Hg.run`
     - {meth}`libvcs.cmd.hg.Hg.clone`
 
-- {class}`libvcs.projects.git.GitProject` now accepts remotes in `__init__`
+- {class}`libvcs.sync.git.GitProject` now accepts remotes in `__init__`
 
   ```python
   repo = GitProject(
@@ -394,7 +394,7 @@ $ pip install --user --upgrade --pre libvcs
   )
   ```
 
-- {meth}`libvcs.projects.git.GitProject.update_repo` now accepts `set_remotes=True`
+- {meth}`libvcs.sync.git.GitProject.update_repo` now accepts `set_remotes=True`
 
 ### Compatibility
 
@@ -411,9 +411,9 @@ $ pip install --user --upgrade --pre libvcs
   [@actions/setup v3.1](https://github.com/actions/setup-python/releases/tag/v3.1.0), (#316)
 - New constants for `str` -> class mappings
 
-  - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_MAP`
-  - {data}`libvcs.projects.constants.DEFAULT_VCS_CLASS_UNION`
-  - {data}`libvcs.projects.constants.DEFAULT_VCS_LITERAL`
+  - {data}`libvcs.sync.constants.DEFAULT_VCS_CLASS_MAP`
+  - {data}`libvcs.sync.constants.DEFAULT_VCS_CLASS_UNION`
+  - {data}`libvcs.sync.constants.DEFAULT_VCS_LITERAL`
 
 - Remove tox and tox-poetry-installer. It turns out installing poetry inside a poetry project
   doesn't work well. (`poetry update`, `poetry publish`, etc. commands would fail)

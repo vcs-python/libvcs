@@ -2,7 +2,7 @@ import typing
 
 import pytest
 
-from libvcs.projects.hg import MercurialProject
+from libvcs.sync.hg import MercurialProject
 from libvcs.url.base import MatcherRegistry
 from libvcs.url.hg import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, HgURL
 

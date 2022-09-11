@@ -22,7 +22,7 @@ from typing import Any, Optional, Union
 from urllib import parse as urlparse
 
 from libvcs._internal.types import StrOrBytesPath, StrPath
-from libvcs.projects.base import (
+from libvcs.sync.base import (
     BaseProject,
     VCSLocation,
     convert_pip_url as base_convert_pip_url,
@@ -162,7 +162,7 @@ class GitProject(BaseProject):
         .. code-block:: python
 
             import os
-            from libvcs.projects.git import GitProject
+            from libvcs.sync.git import GitProject
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
@@ -177,7 +177,7 @@ class GitProject(BaseProject):
         .. code-block:: python
 
             import os
-            from libvcs.projects.git import GitProject
+            from libvcs.sync.git import GitProject
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 

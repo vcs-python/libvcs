@@ -2,10 +2,10 @@
 import logging
 
 from ._internal.run import CmdLoggingAdapter
-from .projects.base import BaseProject
-from .projects.git import GitProject
-from .projects.hg import MercurialProject
-from .projects.svn import SubversionProject
+from .sync.base import BaseProject
+from .sync.git import GitProject
+from .sync.hg import MercurialProject
+from .sync.svn import SubversionProject
 
 __all__ = [
     "GitProject",

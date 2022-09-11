@@ -6,7 +6,7 @@ import shutil
 import pytest
 
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
-from libvcs.projects.svn import SubversionProject
+from libvcs.sync.svn import SubversionProject
 
 if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")

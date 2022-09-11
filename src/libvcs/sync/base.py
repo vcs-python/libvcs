@@ -17,7 +17,7 @@ class VCSLocation(NamedTuple):
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
-    """Parse pip URL via `libvcs.projects.base.BaseProject.url`."""
+    """Parse pip URL via `libvcs.sync.base.BaseProject.url`."""
     error_message = (
         "Sorry, '%s' is a malformed VCS url. "
         "The format is <vcs>+<protocol>://<url>, "
@@ -138,12 +138,12 @@ class BaseProject:
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
-        using the cwd `libvcs.projects.base.BaseProject.dir` of the repo.
+        using the cwd `libvcs.sync.base.BaseProject.dir` of the repo.
 
         Parameters
         ----------
         cwd : str
-            dir command is run from, defaults to `libvcs.projects.base.BaseProject.dir`.
+            dir command is run from, defaults to `libvcs.sync.base.BaseProject.dir`.
 
         check_returncode : bool
             Indicate whether a :exc:`~exc.CommandError` should be raised if return code

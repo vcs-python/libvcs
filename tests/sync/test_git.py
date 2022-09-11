@@ -14,7 +14,7 @@ from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 from libvcs.conftest import CreateProjectCallbackFixtureProtocol
-from libvcs.projects.git import (
+from libvcs.sync.git import (
     GitProject,
     GitRemote,
     GitStatus,

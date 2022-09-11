@@ -2,7 +2,7 @@ import typing
 
 import pytest
 
-from libvcs.projects.git import GitProject
+from libvcs.sync.git import GitProject
 from libvcs.url.base import MatcherRegistry
 from libvcs.url.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 

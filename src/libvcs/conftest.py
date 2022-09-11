@@ -13,9 +13,9 @@ from _pytest.fixtures import SubRequest
 from faker import Faker
 
 from libvcs._internal.run import run
-from libvcs.projects.git import GitProject, GitRemote
-from libvcs.projects.hg import MercurialProject
-from libvcs.projects.svn import SubversionProject
+from libvcs.sync.git import GitProject, GitRemote
+from libvcs.sync.hg import MercurialProject
+from libvcs.sync.svn import SubversionProject
 
 skip_if_git_missing = pytest.mark.skipif(
     not shutil.which("git"), reason="git is not available"

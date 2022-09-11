@@ -1,4 +1,4 @@
-"""tests for libvcs repo abstract base class."""
+"""tests for libvcs.sync abstract base class."""
 import datetime
 import pathlib
 import sys
@@ -7,7 +7,7 @@ from typing import AnyStr
 import pytest
 
 from libvcs._internal.shortcuts import create_project
-from libvcs.projects.base import BaseProject, convert_pip_url
+from libvcs.sync.base import BaseProject, convert_pip_url
 
 
 def test_repr() -> None:
