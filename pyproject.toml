@@ -45,7 +45,7 @@ classifiers = [
 homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.md"
 packages = [
-  { include = "libvcs" },
+  { include = "*", from = "src" },
 ]
 include = [
   { path = "tests", format = "sdist" },
