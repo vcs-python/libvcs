@@ -15,6 +15,18 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
+- Moves (#408):
+
+  - `libvcs.parse` -> `libvcs.url`
+  - `libvcs.projects` -> `libvcs.sync`
+
+- Renames (#408):
+
+  - `BaseProject` -> `BaseSync`
+  - `MercurialProject` -> `HgSync`
+  - `SubversionProject` -> `SvnSync`
+  - `GitProject` -> `GitSync`
+
 - Deprecate custom functions in favor of standard library:
   - `which()` in favor of {func}`shutil.which`, via #397
   - `mkdir_p()` in favor of {func}`os.makedirs` and {meth}`pathlib.Path.mkdir` w/ `parents=True`,
