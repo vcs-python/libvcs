@@ -13,6 +13,12 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.16.1 (2022-09-11)
+
+### Bug fix
+
+Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (#411)
+
 ## libvcs 0.16.0 (2022-09-11)
 
 ### New features
