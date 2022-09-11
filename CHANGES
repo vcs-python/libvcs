@@ -13,6 +13,11 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### New features
+
+- Added a [pytest plugin](https://libvcs.git-pull.com/pytest-plugin.html). Create fresh, temporarily
+  repos on your machine locally for git, mercurial, and svn (#409)
+
 ## libvcs 0.15.0 (2022-09-11)
 
 ### Breaking changes
