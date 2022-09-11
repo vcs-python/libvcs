@@ -70,7 +70,7 @@ Switch repo libvcs -> vcspull:
 
 See more in the [parser document](https://libvcs.git-pull.com/parse/index.html).
 
-## Commands (experimental)
+## Commands
 
 Simple [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrappers around `git(1)`,
 `hg(1)`, `svn(1)`. Here is [`Git`](https://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git) w/
