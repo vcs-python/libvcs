@@ -10,13 +10,14 @@ import libvcs
 # Get the project root dir, which is the parent dir of this
 doc_path = Path(__file__).parent
 project_root = doc_path.parent
+src_root = project_root / "src"
 
-sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(src_root))
 sys.path.insert(0, str(doc_path / "_ext"))
 
 # package data
 about: dict[str, str] = {}
-with open(project_root / "libvcs" / "__about__.py") as fp:
+with open(src_root / "libvcs" / "__about__.py") as fp:
     exec(fp.read(), about)
 
 extensions = [
@@ -223,16 +224,18 @@ def linkcode_resolve(
     fn = relpath(fn, start=dirname(libvcs.__file__))
 
     if "dev" in about["__version__"]:
-        return "{}/blob/master/{}/{}{}".format(
+        return "{}/blob/master/{}/{}/{}{}".format(
             about["__github__"],
+            "src",
             about["__package_name__"],
             fn,
             linespec,
         )
     else:
-        return "{}/blob/v{}/{}/{}{}".format(
+        return "{}/blob/v{}/{}/{}/{}{}".format(
             about["__github__"],
             about["__version__"],
+            "src",
             about["__package_name__"],
             fn,
             linespec,
