@@ -86,14 +86,14 @@ git.clone(url='https://github.com/vcs-python/libvcs.git')
 
 ## Sync
 
-Create a [`GitProject`](https://libvcs.git-pull.com/projects/git.html#libvcs.sync.git.GitProject)
+Create a [`GitSync`](https://libvcs.git-pull.com/projects/git.html#libvcs.sync.git.GitProject)
 object of the project to inspect / checkout / update:
 
 ```python
 import pathlib
-from libvcs.sync.git import GitProject
+from libvcs.sync.git import GitSync
 
-repo = GitProject(
+repo = GitSync(
    url="https://github.com/vcs-python/libvcs",
    dir=pathlib.Path().cwd() / "my_repo",
    remotes={

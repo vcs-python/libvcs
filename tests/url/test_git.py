@@ -2,7 +2,7 @@ import typing
 
 import pytest
 
-from libvcs.sync.git import GitProject
+from libvcs.sync.git import GitSync
 from libvcs.url.base import MatcherRegistry
 from libvcs.url.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 
@@ -80,7 +80,7 @@ def test_git_url(
     url: str,
     is_valid: bool,
     git_url: GitURL,
-    git_repo: GitProject,
+    git_repo: GitSync,
 ) -> None:
     url = url.format(local_repo=git_repo.dir)
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
@@ -139,7 +139,7 @@ def test_git_url_extension_pip(
     url: str,
     is_valid: bool,
     git_url_kwargs: GitURLKwargs,
-    git_repo: GitProject,
+    git_repo: GitSync,
 ) -> None:
     class GitURLWithPip(GitBaseURL):
         matchers: MatcherRegistry = MatcherRegistry(
@@ -213,7 +213,7 @@ class ToURLFixture(typing.NamedTuple):
 def test_git_to_url(
     expected: str,
     git_url: GitURL,
-    git_repo: GitProject,
+    git_repo: GitSync,
 ) -> None:
     """Test GitURL.to_url()"""
     git_url.url = git_url.url.format(local_repo=git_repo.dir)

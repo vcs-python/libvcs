@@ -2,7 +2,7 @@ import typing
 
 import pytest
 
-from libvcs.sync.hg import MercurialProject
+from libvcs.sync.hg import HgSync
 from libvcs.url.base import MatcherRegistry
 from libvcs.url.hg import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, HgURL
 
@@ -45,7 +45,7 @@ def test_hg_url(
     url: str,
     is_valid: bool,
     hg_url: HgURL,
-    hg_repo: MercurialProject,
+    hg_repo: HgSync,
 ) -> None:
     url = url.format(local_repo=hg_repo.dir)
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
@@ -104,7 +104,7 @@ def test_hg_url_extension_pip(
     url: str,
     is_valid: bool,
     hg_url_kwargs: HgURLKwargs,
-    hg_repo: MercurialProject,
+    hg_repo: HgSync,
 ) -> None:
     class HgURLWithPip(HgURL):
         matchers: MatcherRegistry = MatcherRegistry(
@@ -180,7 +180,7 @@ class ToURLFixture(typing.NamedTuple):
 def test_hg_to_url(
     expected: str,
     hg_url: HgURL,
-    hg_repo: MercurialProject,
+    hg_repo: HgSync,
 ) -> None:
     """Test HgURL.to_url()"""
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)

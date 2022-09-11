@@ -13,9 +13,9 @@ from _pytest.fixtures import SubRequest
 from faker import Faker
 
 from libvcs._internal.run import run
-from libvcs.sync.git import GitProject, GitRemote
-from libvcs.sync.hg import MercurialProject
-from libvcs.sync.svn import SubversionProject
+from libvcs.sync.git import GitRemote, GitSync
+from libvcs.sync.hg import HgSync
+from libvcs.sync.svn import SvnSync
 
 skip_if_git_missing = pytest.mark.skipif(
     not shutil.which("git"), reason="git is not available"
@@ -336,9 +336,9 @@ def hg_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
 
 
 @pytest.fixture
-def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitProject:
+def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitSync:
     """Pre-made git clone of remote repo checked out to user's projects dir."""
-    git_repo = GitProject(
+    git_repo = GitSync(
         url=f"file://{git_remote_repo}",
         dir=str(projects_path / "git_repo"),
         remotes={
@@ -354,11 +354,9 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitP
 
 
 @pytest.fixture
-def hg_repo(
-    projects_path: pathlib.Path, hg_remote_repo: pathlib.Path
-) -> MercurialProject:
+def hg_repo(projects_path: pathlib.Path, hg_remote_repo: pathlib.Path) -> HgSync:
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
-    hg_repo = MercurialProject(
+    hg_repo = HgSync(
         url=f"file://{hg_remote_repo}",
         dir=str(projects_path / "hg_repo"),
     )
@@ -367,11 +365,9 @@ def hg_repo(
 
 
 @pytest.fixture
-def svn_repo(
-    projects_path: pathlib.Path, svn_remote_repo: pathlib.Path
-) -> SubversionProject:
+def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnSync:
     """Pre-made svn clone of remote repo checked out to user's projects dir."""
-    svn_repo = SubversionProject(
+    svn_repo = SvnSync(
         url=f"file://{svn_remote_repo}",
         dir=str(projects_path / "svn_repo"),
     )

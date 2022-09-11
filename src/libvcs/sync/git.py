@@ -4,15 +4,15 @@
 
     From https://github.com/saltstack/salt (Apache License):
 
-    - [`GitProject.remote`](libvcs.git.GitProject.remote) (renamed to ``remote``)
-    - [`GitProject.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
+    - [`GitSync.remote`](libvcs.git.GitProject.remote) (renamed to ``remote``)
+    - [`GitSync.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
 
     From pip (MIT Licnese):
 
-    - [`GitProject.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
-    - [`GitProject.convert_pip_url`](libvcs.git.GitProject.convert_pip_url`) (``get_url_rev``)
-    - [`GitProject.get_revision`](libvcs.git.GitProject.get_revision)
-    - [`GitProject.get_git_version`](libvcs.git.GitProject.get_git_version)
+    - [`GitSync.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
+    - [`GitSync.convert_pip_url`](libvcs.git.GitProject.convert_pip_url`) (``get_url_rev``)
+    - [`GitSync.get_revision`](libvcs.git.GitProject.get_revision)
+    - [`GitSync.get_git_version`](libvcs.git.GitProject.get_git_version)
 """  # NOQA: E501
 import dataclasses
 import logging
@@ -23,7 +23,7 @@ from urllib import parse as urlparse
 
 from libvcs._internal.types import StrOrBytesPath, StrPath
 from libvcs.sync.base import (
-    BaseProject,
+    BaseSync,
     VCSLocation,
     convert_pip_url as base_convert_pip_url,
 )
@@ -42,8 +42,8 @@ class GitRemote:
     push_url: str
 
 
-GitProjectRemoteDict = dict[str, GitRemote]
-GitRemotesArgs = Union[None, GitProjectRemoteDict, dict[str, str]]
+GitSyncRemoteDict = dict[str, GitRemote]
+GitRemotesArgs = Union[None, GitSyncRemoteDict, dict[str, str]]
 
 
 @dataclasses.dataclass
@@ -138,10 +138,10 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     return VCSLocation(url=url, rev=rev)
 
 
-class GitProject(BaseProject):
+class GitSync(BaseSync):
     bin_name = "git"
     schemes = ("git+http", "git+https", "git+file")
-    _remotes: GitProjectRemoteDict
+    _remotes: GitSyncRemoteDict
 
     def __init__(
         self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs: Any
@@ -162,11 +162,11 @@ class GitProject(BaseProject):
         .. code-block:: python
 
             import os
-            from libvcs.sync.git import GitProject
+            from libvcs.sync.git import GitSync
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
-            repo = GitProject(
+            repo = GitSync(
                url="https://github.com/vcs-python/libvcs",
                dir=checkout,
                remotes={
@@ -177,11 +177,11 @@ class GitProject(BaseProject):
         .. code-block:: python
 
             import os
-            from libvcs.sync.git import GitProject
+            from libvcs.sync.git import GitSync
 
             checkout = pathlib.Path(__name__) + '/' + 'my_libvcs'
 
-            repo = GitProject(
+            repo = GitSync(
                url="https://github.com/vcs-python/libvcs",
                dir=checkout,
                remotes={
@@ -197,10 +197,10 @@ class GitProject(BaseProject):
         if "tls_verify" not in kwargs:
             self.tls_verify = False
 
-        self._remotes: GitProjectRemoteDict
+        self._remotes: GitSyncRemoteDict
 
         if remotes is None:
-            self._remotes: GitProjectRemoteDict = {
+            self._remotes: GitSyncRemoteDict = {
                 "origin": GitRemote(name="origin", fetch_url=url, push_url=url)
             }
         elif isinstance(remotes, dict):
@@ -241,7 +241,7 @@ class GitProject(BaseProject):
         self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
-    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "GitProject":
+    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "GitSync":
         url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, **kwargs)
 
@@ -478,7 +478,7 @@ class GitProject(BaseProject):
         cmd = ["submodule", "update", "--recursive", "--init"]
         self.run(cmd, log_in_real_time=True)
 
-    def remotes(self) -> GitProjectRemoteDict:
+    def remotes(self) -> GitSyncRemoteDict:
         """Return remotes like git remote -v.
 
         Parameters
@@ -608,7 +608,7 @@ class GitProject(BaseProject):
 
         Examples
         --------
-        >>> git_repo = GitProject(
+        >>> git_repo = GitSync(
         ...     url=f'file://{create_git_remote_repo()}',
         ...     dir=tmp_path
         ... )

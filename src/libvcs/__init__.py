@@ -2,16 +2,16 @@
 import logging
 
 from ._internal.run import CmdLoggingAdapter
-from .sync.base import BaseProject
-from .sync.git import GitProject
-from .sync.hg import MercurialProject
-from .sync.svn import SubversionProject
+from .sync.base import BaseSync
+from .sync.git import GitSync
+from .sync.hg import HgSync
+from .sync.svn import SvnSync
 
 __all__ = [
-    "GitProject",
-    "MercurialProject",
-    "SubversionProject",
-    "BaseProject",
+    "GitSync",
+    "HgSync",
+    "SvnSync",
+    "BaseSync",
     "CmdLoggingAdapter",
 ]
 

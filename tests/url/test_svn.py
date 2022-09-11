@@ -2,7 +2,7 @@ import typing
 
 import pytest
 
-from libvcs.sync.svn import SubversionProject
+from libvcs.sync.svn import SvnSync
 from libvcs.url.base import MatcherRegistry
 from libvcs.url.svn import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, SvnURL
 
@@ -68,7 +68,7 @@ def test_svn_url(
     url: str,
     is_valid: bool,
     svn_url: SvnURL,
-    svn_repo: SubversionProject,
+    svn_repo: SvnSync,
 ) -> None:
     url = url.format(local_repo=svn_repo.dir)
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
@@ -121,7 +121,7 @@ def test_svn_url_extension_pip(
     url: str,
     is_valid: bool,
     svn_url_kwargs: SvnURLKwargs,
-    svn_repo: SubversionProject,
+    svn_repo: SvnSync,
 ) -> None:
     class SvnURLWithPip(SvnURL):
         matchers: MatcherRegistry = MatcherRegistry(
@@ -197,7 +197,7 @@ class ToURLFixture(typing.NamedTuple):
 def test_svn_to_url(
     expected: str,
     svn_url: SvnURL,
-    svn_repo: SubversionProject,
+    svn_repo: SvnSync,
 ) -> None:
     """Test SvnURL.to_url()"""
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
