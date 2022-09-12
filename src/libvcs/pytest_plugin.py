@@ -2,6 +2,7 @@
 import functools
 import getpass
 import pathlib
+import random
 import shutil
 import textwrap
 from typing import Any, Optional, Protocol
@@ -10,7 +11,6 @@ import pytest
 
 from _pytest.doctest import DoctestItem
 from _pytest.fixtures import SubRequest
-from faker import Faker
 
 from libvcs._internal.run import run
 from libvcs.sync.git import GitRemote, GitSync
@@ -26,6 +26,22 @@ skip_if_svn_missing = pytest.mark.skipif(
 skip_if_hg_missing = pytest.mark.skipif(
     not shutil.which("hg"), reason="hg is not available"
 )
+
+
+class RandomStrSequence:
+    def __init__(
+        self, characters: str = "abcdefghijklmnopqrstuvwxyz0123456789_"
+    ) -> None:
+        self.characters: str = characters
+
+    def __iter__(self) -> "RandomStrSequence":
+        return self
+
+    def __next__(self) -> str:
+        return "".join(random.sample(self.characters, k=8))
+
+
+namer = RandomStrSequence()
 
 
 def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) -> bool:
@@ -153,16 +169,14 @@ def remote_repos_path(
     return dir
 
 
-def unique_repo_name(
-    faker: Faker, remote_repos_path: pathlib.Path, max_retries: int = 15
-) -> str:
+def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> str:
     attempts = 1
     while True:
         if attempts > max_retries:
             raise Exception(
                 f"Could not find unused repo destination (attempts: {attempts})"
             )
-        remote_repo_name: str = faker.slug()
+        remote_repo_name: str = next(namer)
         suggestion = remote_repos_path / remote_repo_name
         if suggestion.exists():
             attempts += 1
@@ -202,7 +216,7 @@ def _create_git_remote_repo(
 @pytest.fixture
 @skip_if_git_missing
 def create_git_remote_repo(
-    remote_repos_path: pathlib.Path, faker: Faker
+    remote_repos_path: pathlib.Path,
 ) -> CreateProjectCallbackFixtureProtocol:
     """Factory. Create git remote repo to for clone / push purposes"""
 
@@ -215,7 +229,7 @@ def create_git_remote_repo(
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else unique_repo_name(faker=faker, remote_repos_path=remote_repos_path),
+            else unique_repo_name(remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
         )
 
@@ -260,7 +274,7 @@ def _create_svn_remote_repo(
 @pytest.fixture
 @skip_if_svn_missing
 def create_svn_remote_repo(
-    remote_repos_path: pathlib.Path, faker: Faker
+    remote_repos_path: pathlib.Path,
 ) -> CreateProjectCallbackFixtureProtocol:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -273,7 +287,7 @@ def create_svn_remote_repo(
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else unique_repo_name(faker=faker, remote_repos_path=remote_repos_path),
+            else unique_repo_name(remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
         )
 
@@ -320,7 +334,6 @@ def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> No
 @skip_if_hg_missing
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
-    faker: Faker,
     hgconfig: pathlib.Path,
     set_home: pathlib.Path,
 ) -> CreateProjectCallbackFixtureProtocol:
@@ -335,7 +348,7 @@ def create_hg_remote_repo(
             remote_repos_path=remote_repos_path,
             remote_repo_name=remote_repo_name
             if remote_repo_name is not None
-            else unique_repo_name(faker=faker, remote_repos_path=remote_repos_path),
+            else unique_repo_name(remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
         )
 
