@@ -61,7 +61,6 @@ Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 [tool.poetry.dependencies]
 python = "^3.9"
 typing-extensions = { version = "^4.1.1", python = '3.10' }
-Faker = "*"
 
 [tool.poetry.dev-dependencies]
 ### Docs ###
