@@ -98,8 +98,8 @@ def test_repo_git_remote_checkout(
     # Setup: Files
     tests_path.mkdir()
     for file_name, text in files.items():
-        rst_file = tests_path / file_name
-        rst_file.write_text(
+        test_file = tests_path / file_name
+        test_file.write_text(
             text,
             encoding="utf-8",
         )
