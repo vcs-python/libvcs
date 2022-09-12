@@ -13,6 +13,10 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### Tests
+
+- Basic pytest plugin test (#413)
+
 ## libvcs 0.16.2 (2022-09-11)
 
 ### Bug fix
