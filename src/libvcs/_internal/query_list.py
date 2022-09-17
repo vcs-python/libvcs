@@ -29,10 +29,14 @@ def keygetter(
         sub_fields = path.split("__")
         dct = obj
         for sub_field in sub_fields:
-            dct = dct[sub_field]
+            if isinstance(dct, dict):
+                dct = dct[sub_field]
+            elif hasattr(dct, sub_field):
+                dct = getattr(dct, sub_field)
         return dct
-    except Exception:
+    except Exception as e:
         traceback.print_stack()
+        print(f"Above error was {e}")
     return None
 
 
