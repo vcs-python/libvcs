@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, Optional, Union
 
 import pytest
@@ -5,12 +6,24 @@ import pytest
 from libvcs._internal.query_list import QueryList
 
 
+@dataclasses.dataclass
+class Obj:
+    test: int
+    fruit: list[str] = dataclasses.field(default_factory=list)
+
+
 @pytest.mark.parametrize(
     "items,filter_expr,expected_result",
     [
+        [[Obj(test=1)], None, [Obj(test=1)]],
         [[{"test": 1}], None, [{"test": 1}]],
         [[{"test": 1}], None, QueryList([{"test": 1}])],
         [[{"fruit": "apple"}], None, QueryList([{"fruit": "apple"}])],
+        [
+            [Obj(test=2, fruit=["apple"])],
+            None,
+            QueryList([Obj(test=2, fruit=["apple"])]),
+        ],
         [
             [{"fruit": "apple", "banana": object()}],
             None,
