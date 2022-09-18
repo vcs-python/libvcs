@@ -16,14 +16,16 @@ class Obj:
     "items,filter_expr,expected_result",
     [
         [[Obj(test=1)], None, [Obj(test=1)]],
+        [[Obj(test=1)], dict(test=1), [Obj(test=1)]],
+        [[Obj(test=1)], dict(test=2), []],
+        [
+            [Obj(test=2, fruit=["apple"])],
+            dict(fruit__in="apple"),
+            QueryList([Obj(test=2, fruit=["apple"])]),
+        ],
         [[{"test": 1}], None, [{"test": 1}]],
         [[{"test": 1}], None, QueryList([{"test": 1}])],
         [[{"fruit": "apple"}], None, QueryList([{"fruit": "apple"}])],
-        [
-            [Obj(test=2, fruit=["apple"])],
-            None,
-            QueryList([Obj(test=2, fruit=["apple"])]),
-        ],
         [
             [{"fruit": "apple", "banana": object()}],
             None,

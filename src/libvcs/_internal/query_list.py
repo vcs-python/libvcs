@@ -17,22 +17,68 @@ def keygetter(
     obj: Mapping[str, Any],
     path: str,
 ) -> Union[None, Any, str, list[str], Mapping[str, str]]:
-    """obj, "foods__breakfast", obj['foods']['breakfast']
+    """Fetch values in objects and keys, deeply.
 
-    >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods__breakfast")
-    'cereal'
-    >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods")
+    **With dictionaries**:
+
+    >>> keygetter({ "menu": { "breakfast": "cereal" } }, "menu")
     {'breakfast': 'cereal'}
 
+    >>> keygetter({ "menu": { "breakfast": "cereal" } }, "menu__breakfast")
+    'cereal'
+
+    **With objects**:
+
+    >>> from typing import Optional
+    >>> from dataclasses import dataclass, field
+
+    >>> @dataclass()
+    ... class Menu:
+    ...     fruit: list[str] = field(default_factory=list)
+    ...     breakfast: Optional[str] = None
+
+
+    >>> @dataclass()
+    ... class Restaurant:
+    ...     place: str
+    ...     city: str
+    ...     state: str
+    ...     menu: Menu = field(default_factory=Menu)
+
+
+    >>> restaurant = Restaurant(
+    ...     place="Largo",
+    ...     city="Tampa",
+    ...     state="Florida",
+    ...     menu=Menu(
+    ...         fruit=["banana", "orange"], breakfast="cereal"
+    ...     )
+    ... )
+
+    >>> restaurant
+    Restaurant(place='Largo',
+        city='Tampa',
+        state='Florida',
+        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))
+
+    >>> keygetter(restaurant, "menu")
+    Menu(fruit=['banana', 'orange'], breakfast='cereal')
+
+    >>> keygetter(restaurant, "menu__breakfast")
+    'cereal'
     """
     try:
         sub_fields = path.split("__")
         dct = obj
         for sub_field in sub_fields:
-            dct = dct[sub_field]
+            if isinstance(dct, dict):
+                dct = dct[sub_field]
+            elif hasattr(dct, sub_field):
+                dct = getattr(dct, sub_field)
         return dct
-    except Exception:
+    except Exception as e:
         traceback.print_stack()
+        print(f"Above error was {e}")
     return None
 
 
@@ -41,9 +87,23 @@ def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any
 
     If comparator not used or value not found, return None.
 
-    mykey__endswith("mykey") -> "mykey" else None
-
     >>> parse_lookup({ "food": "red apple" }, "food__istartswith", "__istartswith")
+    'red apple'
+
+    It can also look up objects:
+
+    >>> from dataclasses import dataclass
+
+    >>> @dataclass()
+    ... class Inventory:
+    ...     food: str
+
+    >>> item = Inventory(food="red apple")
+
+    >>> item
+    Inventory(food='red apple')
+
+    >>> parse_lookup(item, "food__istartswith", "__istartswith")
     'red apple'
     """
     try:
@@ -257,6 +317,89 @@ class QueryList(list[T]):
     >>> query.filter(foods__fruit__in="cantelope")[0]['city']
     'Elmhurst'
     >>> query.filter(foods__fruit__in="orange")[0]['city']
+    'Tampa'
+
+    Examples of object lookups:
+
+    >>> from typing import Any
+    >>> from dataclasses import dataclass, field
+
+    >>> @dataclass()
+    ... class Restaurant:
+    ...     place: str
+    ...     city: str
+    ...     state: str
+    ...     foods: dict[str, Any]
+
+    >>> restaurant = Restaurant(
+    ...     place="Largo",
+    ...     city="Tampa",
+    ...     state="Florida",
+    ...     foods={
+    ...         "fruit": ["banana", "orange"], "breakfast": "cereal"
+    ...     }
+    ... )
+
+    >>> restaurant
+    Restaurant(place='Largo',
+        city='Tampa',
+        state='Florida',
+        foods={'fruit': ['banana', 'orange'], 'breakfast': 'cereal'})
+
+    >>> query = QueryList([restaurant])
+
+    >>> query.filter(foods__fruit__in="banana")
+    [Restaurant(place='Largo',
+        city='Tampa',
+        state='Florida',
+        foods={'fruit': ['banana', 'orange'], 'breakfast': 'cereal'})]
+
+    >>> query.filter(foods__fruit__in="banana")[0].city
+    'Tampa'
+
+    Example of deeper object lookups:
+
+    >>> from typing import Optional
+    >>> from dataclasses import dataclass, field
+
+    >>> @dataclass()
+    ... class Menu:
+    ...     fruit: list[str] = field(default_factory=list)
+    ...     breakfast: Optional[str] = None
+
+
+    >>> @dataclass()
+    ... class Restaurant:
+    ...     place: str
+    ...     city: str
+    ...     state: str
+    ...     menu: Menu = field(default_factory=Menu)
+
+
+    >>> restaurant = Restaurant(
+    ...     place="Largo",
+    ...     city="Tampa",
+    ...     state="Florida",
+    ...     menu=Menu(
+    ...         fruit=["banana", "orange"], breakfast="cereal"
+    ...     )
+    ... )
+
+    >>> restaurant
+    Restaurant(place='Largo',
+        city='Tampa',
+        state='Florida',
+        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))
+
+    >>> query = QueryList([restaurant])
+
+    >>> query.filter(menu__fruit__in="banana")
+    [Restaurant(place='Largo',
+        city='Tampa',
+        state='Florida',
+        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))]
+
+    >>> query.filter(menu__fruit__in="banana")[0].city
     'Tampa'
     """
 

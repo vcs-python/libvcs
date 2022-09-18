@@ -13,9 +13,21 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.16.3 (unreleased)
+
+### Bug fixes
+
+- `QueryList`: Fix lookups of objects (#415)
+
 ### Tests
 
 - Basic pytest plugin test (#413)
+- Add test for object based lookups (#414)
+
+### Documentation
+
+- Improve doc examples / tests for `keygetter` and `QueryList` to show deep lookups for objects
+  (#415)
 
 ## libvcs 0.16.2 (2022-09-11)
 
