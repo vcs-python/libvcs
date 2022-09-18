@@ -17,7 +17,7 @@ def keygetter(
     obj: Mapping[str, Any],
     path: str,
 ) -> Union[None, Any, str, list[str], Mapping[str, str]]:
-    """Fetch values in objects and keys, deeply.
+    """Fetch values in objects and keys, supported nested data.
 
     **With dictionaries**:
 
@@ -292,6 +292,8 @@ class QueryList(list[T]):
 
     *Experimental, unstable*.
 
+    **With dictionaries**:
+
     >>> query = QueryList(
     ...     [
     ...         {
@@ -319,7 +321,7 @@ class QueryList(list[T]):
     >>> query.filter(foods__fruit__in="orange")[0]['city']
     'Tampa'
 
-    Examples of object lookups:
+    **With objects**:
 
     >>> from typing import Any
     >>> from dataclasses import dataclass, field
@@ -357,7 +359,7 @@ class QueryList(list[T]):
     >>> query.filter(foods__fruit__in="banana")[0].city
     'Tampa'
 
-    Example of deeper object lookups:
+    **With objects (nested)**:
 
     >>> from typing import Optional
     >>> from dataclasses import dataclass, field
