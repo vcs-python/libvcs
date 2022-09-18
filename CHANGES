@@ -13,7 +13,7 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
-## libvcs 0.16.4 (unreleased)
+## libvcs 0.16.4 (2022-09-18)
 
 ### Infrastructure
 
