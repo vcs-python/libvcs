@@ -19,10 +19,53 @@ def keygetter(
 ) -> Union[None, Any, str, list[str], Mapping[str, str]]:
     """Fetch values in objects and keys, deeply.
 
-    >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods__breakfast")
-    'cereal'
-    >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods")
+    **With dictionaries**:
+
+    >>> keygetter({ "menu": { "breakfast": "cereal" } }, "menu")
     {'breakfast': 'cereal'}
+
+    >>> keygetter({ "menu": { "breakfast": "cereal" } }, "menu__breakfast")
+    'cereal'
+
+    **With objects**:
+
+    >>> from typing import Optional
+    >>> from dataclasses import dataclass, field
+
+    >>> @dataclass()
+    ... class Menu:
+    ...     fruit: list[str] = field(default_factory=list)
+    ...     breakfast: Optional[str] = None
+
+
+    >>> @dataclass()
+    ... class Restaurant:
+    ...     place: str
+    ...     city: str
+    ...     state: str
+    ...     menu: Menu = field(default_factory=Menu)
+
+
+    >>> restaurant = Restaurant(
+    ...     place="Largo",
+    ...     city="Tampa",
+    ...     state="Florida",
+    ...     menu=Menu(
+    ...         fruit=["banana", "orange"], breakfast="cereal"
+    ...     )
+    ... )
+
+    >>> restaurant
+    Restaurant(place='Largo',
+        city='Tampa',
+        state='Florida',
+        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))
+
+    >>> keygetter(restaurant, "menu")
+    Menu(fruit=['banana', 'orange'], breakfast='cereal')
+
+    >>> keygetter(restaurant, "menu__breakfast")
+    'cereal'
     """
     try:
         sub_fields = path.split("__")
