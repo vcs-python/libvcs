@@ -310,6 +310,7 @@ class QueryList(list[T]):
     ...         },
     ...     ]
     ... )
+
     >>> query.filter(place="Chicago suburbs")[0]['city']
     'Elmhurst'
     >>> query.filter(place__icontains="chicago")[0]['city']
@@ -320,6 +321,16 @@ class QueryList(list[T]):
     'Elmhurst'
     >>> query.filter(foods__fruit__in="orange")[0]['city']
     'Tampa'
+
+    >>> query.filter(foods__fruit__in="apple")
+    [{'place': 'Chicago suburbs',
+        'city': 'Elmhurst',
+        'state': 'Illinois',
+        'foods':
+            {'fruit': ['apple', 'cantelope'], 'breakfast': 'waffles'}}]
+
+    >>> query.filter(foods__fruit__in="non_existent")
+    []
 
     **With objects**:
 
@@ -389,7 +400,7 @@ class QueryList(list[T]):
     ...     ),
     ...     Restaurant(
     ...         place="Chicago suburbs",
-    ...         city="Elmhurt",
+    ...         city="Elmhurst",
     ...         state="Illinois",
     ...         food=Food(
     ...             fruit=["apple", "cantelope"], breakfast="waffles"
@@ -405,6 +416,18 @@ class QueryList(list[T]):
 
     >>> query.filter(food__fruit__in="banana")[0].city
     'Tampa'
+
+    >>> query.filter(food__breakfast="waffles")
+    [Restaurant(place='Chicago suburbs',
+        city='Elmhurst',
+        state='Illinois',
+        food=Food(fruit=['apple', 'cantelope'], breakfast='waffles'))]
+
+    >>> query.filter(food__breakfast="waffles")[0].city
+    'Elmhurst'
+
+    >>> query.filter(food__breakfast="non_existent")
+    []
     """
 
     data: Sequence[T]
