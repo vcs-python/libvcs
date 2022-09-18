@@ -29,6 +29,14 @@ $ pip install --user --upgrade --pre libvcs
 - Improve doc examples / tests for `keygetter` and `QueryList` to show deep lookups for objects
   (#415)
 
+### Infrastructure
+
+- CI speedups (#416)
+
+  - Avoid fetching unused apt package
+  - Split out release to separate job so the PyPI Upload docker image isn't pulled on normal runs
+  - Clean up CodeQL
+
 ## libvcs 0.16.2 (2022-09-11)
 
 ### Bug fix
