@@ -13,6 +13,12 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+## libvcs 0.16.4 (unreleased)
+
+### Infrastructure
+
+- Bump poetry to 1.1.x to 1.2.x
+
 ## libvcs 0.16.3 (2022-09-18)
 
 ### Bug fixes
