@@ -87,8 +87,6 @@ def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any
 
     If comparator not used or value not found, return None.
 
-    mykey__endswith("mykey") -> "mykey" else None
-
     >>> parse_lookup({ "food": "red apple" }, "food__istartswith", "__istartswith")
     'red apple'
 
