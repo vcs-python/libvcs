@@ -17,13 +17,12 @@ def keygetter(
     obj: Mapping[str, Any],
     path: str,
 ) -> Union[None, Any, str, list[str], Mapping[str, str]]:
-    """obj, "foods__breakfast", obj['foods']['breakfast']
+    """Fetch values in objects and keys, deeply.
 
     >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods__breakfast")
     'cereal'
     >>> keygetter({ "foods": { "breakfast": "cereal" } }, "foods")
     {'breakfast': 'cereal'}
-
     """
     try:
         sub_fields = path.split("__")
