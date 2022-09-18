@@ -21,10 +21,10 @@ def keygetter(
 
     **With dictionaries**:
 
-    >>> keygetter({ "menu": { "breakfast": "cereal" } }, "menu")
+    >>> keygetter({ "food": { "breakfast": "cereal" } }, "food")
     {'breakfast': 'cereal'}
 
-    >>> keygetter({ "menu": { "breakfast": "cereal" } }, "menu__breakfast")
+    >>> keygetter({ "food": { "breakfast": "cereal" } }, "food__breakfast")
     'cereal'
 
     **With objects**:
@@ -33,7 +33,7 @@ def keygetter(
     >>> from dataclasses import dataclass, field
 
     >>> @dataclass()
-    ... class Menu:
+    ... class Food:
     ...     fruit: list[str] = field(default_factory=list)
     ...     breakfast: Optional[str] = None
 
@@ -43,14 +43,14 @@ def keygetter(
     ...     place: str
     ...     city: str
     ...     state: str
-    ...     menu: Menu = field(default_factory=Menu)
+    ...     food: Food = field(default_factory=Food)
 
 
     >>> restaurant = Restaurant(
     ...     place="Largo",
     ...     city="Tampa",
     ...     state="Florida",
-    ...     menu=Menu(
+    ...     food=Food(
     ...         fruit=["banana", "orange"], breakfast="cereal"
     ...     )
     ... )
@@ -59,12 +59,12 @@ def keygetter(
     Restaurant(place='Largo',
         city='Tampa',
         state='Florida',
-        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))
+        food=Food(fruit=['banana', 'orange'], breakfast='cereal'))
 
-    >>> keygetter(restaurant, "menu")
-    Menu(fruit=['banana', 'orange'], breakfast='cereal')
+    >>> keygetter(restaurant, "food")
+    Food(fruit=['banana', 'orange'], breakfast='cereal')
 
-    >>> keygetter(restaurant, "menu__breakfast")
+    >>> keygetter(restaurant, "food__breakfast")
     'cereal'
     """
     try:
@@ -365,7 +365,7 @@ class QueryList(list[T]):
     >>> from dataclasses import dataclass, field
 
     >>> @dataclass()
-    ... class Menu:
+    ... class Food:
     ...     fruit: list[str] = field(default_factory=list)
     ...     breakfast: Optional[str] = None
 
@@ -375,33 +375,35 @@ class QueryList(list[T]):
     ...     place: str
     ...     city: str
     ...     state: str
-    ...     menu: Menu = field(default_factory=Menu)
+    ...     food: Food = field(default_factory=Food)
 
 
-    >>> restaurant = Restaurant(
-    ...     place="Largo",
-    ...     city="Tampa",
-    ...     state="Florida",
-    ...     menu=Menu(
-    ...         fruit=["banana", "orange"], breakfast="cereal"
+    >>> query = QueryList([
+    ...     Restaurant(
+    ...         place="Largo",
+    ...         city="Tampa",
+    ...         state="Florida",
+    ...         food=Food(
+    ...             fruit=["banana", "orange"], breakfast="cereal"
+    ...         )
+    ...     ),
+    ...     Restaurant(
+    ...         place="Chicago suburbs",
+    ...         city="Elmhurt",
+    ...         state="Illinois",
+    ...         food=Food(
+    ...             fruit=["apple", "cantelope"], breakfast="waffles"
+    ...         )
     ...     )
-    ... )
+    ... ])
 
-    >>> restaurant
-    Restaurant(place='Largo',
-        city='Tampa',
-        state='Florida',
-        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))
-
-    >>> query = QueryList([restaurant])
-
-    >>> query.filter(menu__fruit__in="banana")
+    >>> query.filter(food__fruit__in="banana")
     [Restaurant(place='Largo',
         city='Tampa',
         state='Florida',
-        menu=Menu(fruit=['banana', 'orange'], breakfast='cereal'))]
+        food=Food(fruit=['banana', 'orange'], breakfast='cereal'))]
 
-    >>> query.filter(menu__fruit__in="banana")[0].city
+    >>> query.filter(food__fruit__in="banana")[0].city
     'Tampa'
     """
 
