@@ -173,18 +173,18 @@ class RuleMap(SkipDefaultFieldsReprMixin):
 
         **Example: git URLs + pip-style git URLs:**
 
-        This is already in :class:`GitURL` via :data:`PIP_DEFAULT_MATCHERS`. For the
+        This is already in :class:`GitURL` via :data:`PIP_DEFAULT_RULES`. For the
         sake of showing how extensibility works, here is a recreation based on
         :class:`GitBaseURL`:
 
         >>> from libvcs.url.git import GitBaseURL
 
-        >>> from libvcs.url.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS
+        >>> from libvcs.url.git import DEFAULT_RULES, PIP_DEFAULT_RULES
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitURLWithPip(GitBaseURL):
         ...    rule_map: RuleMap = RuleMap(
-        ...        _rule_map={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        ...        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         ...    )
 
         >>> GitURLWithPip.is_valid(url="git+ssh://git@github.com/tony/AlgoXY.git")

@@ -47,7 +47,7 @@ RE_SCHEME = r"""
     )
 """
 
-DEFAULT_MATCHERS: list[Rule] = [
+DEFAULT_RULES: list[Rule] = [
     Rule(
         label="core-svn",
         description="Vanilla svn pattern",
@@ -78,7 +78,7 @@ RE_PIP_SCHEME = r"""
     )
 """
 
-PIP_DEFAULT_MATCHERS: list[Rule] = [
+PIP_DEFAULT_RULES: list[Rule] = [
     Rule(
         label="pip-url",
         description="pip-style svn URL",
@@ -170,7 +170,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
     ref: Optional[str] = None
 
     rule: Optional[str] = None
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
         url = self.url

@@ -43,7 +43,7 @@ RE_SCHEME = r"""
     )
 """
 
-DEFAULT_MATCHERS: list[Rule] = [
+DEFAULT_RULES: list[Rule] = [
     Rule(
         label="core-hg",
         description="Vanilla hg pattern",
@@ -74,7 +74,7 @@ RE_PIP_SCHEME = r"""
     )
 """
 
-PIP_DEFAULT_MATCHERS: list[Rule] = [
+PIP_DEFAULT_RULES: list[Rule] = [
     Rule(
         label="pip-url",
         description="pip-style hg URL",
@@ -176,7 +176,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     rule: Optional[str] = None
     # name of the :class:`Rule`
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
         url = self.url

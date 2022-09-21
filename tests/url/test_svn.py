@@ -4,7 +4,7 @@ import pytest
 
 from libvcs.sync.svn import SvnSync
 from libvcs.url.base import RuleMap
-from libvcs.url.svn import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, SvnURL
+from libvcs.url.svn import DEFAULT_RULES, PIP_DEFAULT_RULES, SvnURL
 
 
 class SvnURLFixture(typing.NamedTuple):
@@ -125,7 +125,7 @@ def test_svn_url_extension_pip(
 ) -> None:
     class SvnURLWithPip(SvnURL):
         rule_map: RuleMap = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         )
 
     svn_url_kwargs["url"] = svn_url_kwargs["url"].format(local_repo=svn_repo.dir)

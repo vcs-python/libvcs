@@ -60,7 +60,7 @@ RE_SUFFIX = r"(?P<suffix>\.git)"
 # Some https repos have .git at the end, e.g. https://github.com/org/repo.git
 
 
-DEFAULT_MATCHERS: list[Rule] = [
+DEFAULT_RULES: list[Rule] = [
     Rule(
         label="core-git-https",
         description="Vanilla git pattern, URL ending with optional .git suffix",
@@ -125,7 +125,7 @@ RE_PIP_REV = r"""
 """
 
 
-PIP_DEFAULT_MATCHERS: list[Rule] = [
+PIP_DEFAULT_RULES: list[Rule] = [
     Rule(
         label="pip-url",
         description="pip-style git URL",
@@ -191,7 +191,7 @@ Notes
 - https://pip.pypa.io/en/stable/topics/vcs-support/
 """  # NOQA: E501
 
-NPM_DEFAULT_MATCHERS: list[Rule] = []
+NPM_DEFAULT_RULES: list[Rule] = []
 """NPM-style git URLs.
 
 Git URL pattern (from docs.npmjs.com)::
@@ -262,7 +262,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     suffix: Optional[str] = None
 
     rule: Optional[str] = None
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
         url = self.url
@@ -370,7 +370,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     def to_url(self) -> str:
         """Exports a pip-compliant URL.
@@ -479,7 +479,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     """
 
     rule_map: RuleMap = RuleMap(
-        _rule_map={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
     )
 
     @classmethod

@@ -4,7 +4,7 @@ import pytest
 
 from libvcs.sync.hg import HgSync
 from libvcs.url.base import RuleMap
-from libvcs.url.hg import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, HgURL
+from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgURL
 
 
 class HgURLFixture(typing.NamedTuple):
@@ -108,7 +108,7 @@ def test_hg_url_extension_pip(
 ) -> None:
     class HgURLWithPip(HgURL):
         rule_map: RuleMap = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         )
 
     hg_url_kwargs["url"] = hg_url_kwargs["url"].format(local_repo=hg_repo.dir)
