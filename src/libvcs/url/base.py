@@ -24,7 +24,7 @@ class URLProtocol(Protocol):
 
 @dataclasses.dataclass(repr=False)
 class Rule(SkipDefaultFieldsReprMixin):
-    """Structure for a rule"""
+    """A Rule represents an eligible pattern mapping to URL."""
 
     label: str
     """Computer readable name / ID"""
