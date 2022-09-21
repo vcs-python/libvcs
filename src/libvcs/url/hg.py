@@ -189,9 +189,9 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
             for k, v in groups.items():
                 setattr(self, k, v)
 
-            for k, v in rule.pattern_defaults.items():
+            for k, v in rule.defaults.items():
                 if getattr(self, k, None) is None:
-                    setattr(self, k, rule.pattern_defaults[k])
+                    setattr(self, k, rule.defaults[k])
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:

@@ -87,7 +87,7 @@ DEFAULT_MATCHERS: list[Rule] = [
         """,
             re.VERBOSE,
         ),
-        pattern_defaults={"username": "git"},
+        defaults={"username": "git"},
     ),
     # SCP-style URLs, e.g. git@
 ]
@@ -275,9 +275,9 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
             for k, v in groups.items():
                 setattr(self, k, v)
 
-            for k, v in rule.pattern_defaults.items():
+            for k, v in rule.defaults.items():
                 if getattr(self, k, None) is None:
-                    setattr(self, k, rule.pattern_defaults[k])
+                    setattr(self, k, rule.defaults[k])
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
@@ -544,7 +544,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         ...         re.VERBOSE,
         ...     ),
         ...     is_explicit=True,
-        ...     pattern_defaults={
+        ...     defaults={
         ...         'hostname': 'github.com'
         ...     }
         ... )

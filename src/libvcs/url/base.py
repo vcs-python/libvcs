@@ -32,7 +32,7 @@ class Rule(SkipDefaultFieldsReprMixin):
     """Human readable description"""
     pattern: Pattern[str]
     """Regex pattern"""
-    pattern_defaults: dict[str, str] = dataclasses.field(default_factory=dict)
+    defaults: dict[str, str] = dataclasses.field(default_factory=dict)
     """Is the match unambiguous with other VCS systems? e.g. git+ prefix"""
     is_explicit: bool = False
 
@@ -88,7 +88,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
         ...     label = 'gh-prefix'
         ...     description ='Matches prefixes like github:org/repo'
         ...     pattern = r'^github:(?P<path>.*)$'
-        ...     pattern_defaults = {
+        ...     defaults = {
         ...         'hostname': 'github.com',
         ...         'scheme': 'https'
         ...     }
@@ -107,7 +107,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
         >>> GitHubURL.is_valid(url='github:vcs-python/libvcs', is_explicit=True)
         True
 
-        Notice how ``pattern_defaults`` neatly fills the values for us.
+        Notice how ``defaults`` neatly fills the values for us.
 
         >>> GitHubURL(url='github:vcs-python/libvcs')
         GitHubURL(url=github:vcs-python/libvcs,
@@ -137,7 +137,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
         ...     label = 'gl-prefix'
         ...     description ='Matches prefixes like gitlab:org/repo'
         ...     pattern = r'^gitlab:(?P<path>)'
-        ...     pattern_defaults = {
+        ...     defaults = {
         ...         'hostname': 'gitlab.com',
         ...         'scheme': 'https',
         ...         'suffix': '.git'
