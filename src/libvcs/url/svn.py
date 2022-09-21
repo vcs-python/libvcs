@@ -170,7 +170,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
     ref: Optional[str] = None
 
     matcher: Optional[str] = None
-    matchers = MatcherRegistry = MatcherRegistry(
+    matchers: MatcherRegistry = MatcherRegistry(
         _matchers={m.label: m for m in DEFAULT_MATCHERS}
     )
 
