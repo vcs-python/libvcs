@@ -6,8 +6,8 @@
   compare to :class:`urllib.parse.ParseResult`
 
   - Output ``svn(1)`` URL: :meth:`SvnURL.to_url()`
-- Extendable via :class:`~libvcs.url.base.MatcherRegistry`,
-  :class:`~libvcs.url.base.Matcher`
+- Extendable via :class:`~libvcs.url.base.Rules`,
+  :class:`~libvcs.url.base.Rule`
 
 .. Note::
 
@@ -24,7 +24,7 @@ from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
-from .base import Matcher, MatcherRegistry, URLProtocol
+from .base import Rule, Rules, URLProtocol
 
 RE_PATH = r"""
     ((?P<user>.*)@)?
@@ -47,8 +47,8 @@ RE_SCHEME = r"""
     )
 """
 
-DEFAULT_MATCHERS: list[Matcher] = [
-    Matcher(
+DEFAULT_MATCHERS: list[Rule] = [
+    Rule(
         label="core-svn",
         description="Vanilla svn pattern",
         pattern=re.compile(
@@ -78,8 +78,8 @@ RE_PIP_SCHEME = r"""
     )
 """
 
-PIP_DEFAULT_MATCHERS: list[Matcher] = [
-    Matcher(
+PIP_DEFAULT_MATCHERS: list[Rule] = [
+    Rule(
         label="pip-url",
         description="pip-style svn URL",
         pattern=re.compile(
@@ -92,7 +92,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         ),
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
-    Matcher(
+    Rule(
         label="pip-file-url",
         description="pip-style svn+file:// URL",
         pattern=re.compile(
@@ -135,7 +135,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
            scheme=svn+ssh,
            hostname=svn.debian.org,
            path=svn/aliothproj/path/in/project/repository,
-           matcher=core-svn)
+           rule=core-svn)
 
     >>> myrepo = SvnURL(
     ...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository'
@@ -152,8 +152,8 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     Attributes
     ----------
-    matcher : str
-        name of the :class:`~libvcs.url.base.Matcher`
+    rule : str
+        name of the :class:`~libvcs.url.base.Rule`
     """
 
     url: str
@@ -169,25 +169,23 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
     #
     ref: Optional[str] = None
 
-    matcher: Optional[str] = None
-    matchers: MatcherRegistry = MatcherRegistry(
-        _matchers={m.label: m for m in DEFAULT_MATCHERS}
-    )
+    rule: Optional[str] = None
+    rules: Rules = Rules(_rules={m.label: m for m in DEFAULT_MATCHERS})
 
     def __post_init__(self) -> None:
         url = self.url
-        for matcher in self.matchers.values():
-            match = re.match(matcher.pattern, url)
+        for rule in self.rules.values():
+            match = re.match(rule.pattern, url)
             if match is None:
                 continue
             groups = match.groupdict()
-            setattr(self, "matcher", matcher.label)
+            setattr(self, "rule", rule.label)
             for k, v in groups.items():
                 setattr(self, k, v)
 
-            for k, v in matcher.pattern_defaults.items():
+            for k, v in rule.pattern_defaults.items():
                 if getattr(self, k, None) is None:
-                    setattr(self, k, matcher.pattern_defaults[k])
+                    setattr(self, k, rule.pattern_defaults[k])
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
@@ -204,7 +202,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> SvnURL.is_valid(url='notaurl')
         False
         """
-        return any(re.search(matcher.pattern, url) for matcher in cls.matchers.values())
+        return any(re.search(rule.pattern, url) for rule in cls.rules.values())
 
     def to_url(self) -> str:
         """Return a ``svn(1)``-compatible URL. Can be used with ``svn checkout``.
@@ -222,7 +220,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
                 user=my-username,
                 hostname=my-server,
                 path=vcs-python/libvcs,
-                matcher=core-svn)
+                rule=core-svn)
 
         Switch repo libvcs -> vcspull:
 

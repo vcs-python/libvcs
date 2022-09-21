@@ -23,8 +23,8 @@ class URLProtocol(Protocol):
 
 
 @dataclasses.dataclass(repr=False)
-class Matcher(SkipDefaultFieldsReprMixin):
-    """Structure for a matcher"""
+class Rule(SkipDefaultFieldsReprMixin):
+    """Structure for a rule"""
 
     label: str
     """Computer readable name / ID"""
@@ -38,12 +38,12 @@ class Matcher(SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class MatcherRegistry(SkipDefaultFieldsReprMixin):
+class Rules(SkipDefaultFieldsReprMixin):
     """Pattern matching and parsing capabilities for URL parsers, e.g. GitURL"""
 
-    _matchers: dict[str, Matcher] = dataclasses.field(default_factory=dict)
+    _rules: dict[str, Rule] = dataclasses.field(default_factory=dict)
 
-    def register(self, cls: Matcher) -> None:
+    def register(self, cls: Rule) -> None:
         r"""
 
         .. currentmodule:: libvcs.url.git
@@ -72,7 +72,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         GitURL(url=github:org/repo,
            hostname=github,
            path=org/repo,
-           matcher=core-git-scp)
+           rule=core-git-scp)
 
         >>> GitURL(url="github:org/repo").to_url()
         'git@github:org/repo'
@@ -84,7 +84,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         **Extending matching capability:**
 
-        >>> class GitHubPrefix(Matcher):
+        >>> class GitHubPrefix(Rule):
         ...     label = 'gh-prefix'
         ...     description ='Matches prefixes like github:org/repo'
         ...     pattern = r'^github:(?P<path>.*)$'
@@ -97,8 +97,8 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitHubURL(GitURL):
-        ...    matchers: MatcherRegistry = MatcherRegistry(
-        ...        _matchers={'github_prefix': GitHubPrefix}
+        ...    rules: Rules = Rules(
+        ...        _rules={'github_prefix': GitHubPrefix}
         ...    )
 
         >>> GitHubURL.is_valid(url='github:vcs-python/libvcs')
@@ -114,7 +114,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
             scheme=https,
             hostname=github.com,
             path=vcs-python/libvcs,
-            matcher=gh-prefix)
+            rule=gh-prefix)
 
         >>> GitHubURL(url='github:vcs-python/libvcs').to_url()
         'https://github.com/vcs-python/libvcs'
@@ -122,7 +122,7 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         >>> GitHubURL.is_valid(url='gitlab:vcs-python/libvcs')
         False
 
-        ``GitHubURL`` sees this as invalid since it only has one matcher,
+        ``GitHubURL`` sees this as invalid since it only has one rule,
         ``GitHubPrefix``.
 
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
@@ -130,10 +130,10 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         Same story, getting caught in ``git(1)``'s own liberal scp-style URL:
 
-        >>> GitURL(url='gitlab:vcs-python/libvcs').matcher
+        >>> GitURL(url='gitlab:vcs-python/libvcs').rule
         'core-git-scp'
 
-        >>> class GitLabPrefix(Matcher):
+        >>> class GitLabPrefix(Rule):
         ...     label = 'gl-prefix'
         ...     description ='Matches prefixes like gitlab:org/repo'
         ...     pattern = r'^gitlab:(?P<path>)'
@@ -143,12 +143,12 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
         ...         'suffix': '.git'
         ...     }
 
-        Option 1: Create a brand new matcher
+        Option 1: Create a brand new rule
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitLabURL(GitURL):
-        ...     matchers: MatcherRegistry = MatcherRegistry(
-        ...         _matchers={'gitlab_prefix': GitLabPrefix}
+        ...     rules: Rules = Rules(
+        ...         _rules={'gitlab_prefix': GitLabPrefix}
         ...     )
 
         >>> GitLabURL.is_valid(url='gitlab:vcs-python/libvcs')
@@ -161,12 +161,12 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         Are we home free, though? Remember our issue with vague matches.
 
-        >>> GitURL(url='gitlab:vcs-python/libvcs').matcher
+        >>> GitURL(url='gitlab:vcs-python/libvcs').rule
         'core-git-scp'
 
         Register:
 
-        >>> GitURL.matchers.register(GitLabPrefix)
+        >>> GitURL.rules.register(GitLabPrefix)
 
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
         True
@@ -183,8 +183,8 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitURLWithPip(GitBaseURL):
-        ...    matchers: MatcherRegistry = MatcherRegistry(
-        ...        _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        ...    rules: Rules = Rules(
+        ...        _rules={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         ...    )
 
         >>> GitURLWithPip.is_valid(url="git+ssh://git@github.com/tony/AlgoXY.git")
@@ -197,19 +197,19 @@ class MatcherRegistry(SkipDefaultFieldsReprMixin):
             hostname=github.com,
             path=tony/AlgoXY,
             suffix=.git,
-            matcher=pip-url)
+            rule=pip-url)
         """  # NOQA: E501
-        if cls.label not in self._matchers:
-            self._matchers[cls.label] = cls
+        if cls.label not in self._rules:
+            self._rules[cls.label] = cls
 
     def unregister(self, label: str) -> None:
-        if label in self._matchers:
-            del self._matchers[label]
+        if label in self._rules:
+            del self._rules[label]
 
     def __iter__(self) -> Iterator[str]:
-        return self._matchers.__iter__()
+        return self._rules.__iter__()
 
     def values(
         self,  # https://github.com/python/typing/discussions/1033
-    ) -> "dict_values[str, Matcher]":
-        return self._matchers.values()
+    ) -> "dict_values[str, Rule]":
+        return self._rules.values()

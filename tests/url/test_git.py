@@ -3,7 +3,7 @@ import typing
 import pytest
 
 from libvcs.sync.git import GitSync
-from libvcs.url.base import MatcherRegistry
+from libvcs.url.base import Rules
 from libvcs.url.git import DEFAULT_MATCHERS, PIP_DEFAULT_MATCHERS, GitBaseURL, GitURL
 
 
@@ -142,8 +142,8 @@ def test_git_url_extension_pip(
     git_repo: GitSync,
 ) -> None:
     class GitURLWithPip(GitBaseURL):
-        matchers: MatcherRegistry = MatcherRegistry(
-            _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        rules: Rules = Rules(
+            _rules={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 
     git_url_kwargs["url"] = git_url_kwargs["url"].format(local_repo=git_repo.dir)
@@ -255,8 +255,8 @@ def test_git_revs(
     git_url_kwargs: GitURLKwargs,
 ) -> None:
     class GitURLWithPip(GitURL):
-        matchers: MatcherRegistry = MatcherRegistry(
-            _matchers={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        rules: Rules = Rules(
+            _rules={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         )
 
     git_url = GitURLWithPip(**git_url_kwargs)
