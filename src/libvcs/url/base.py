@@ -38,10 +38,10 @@ class Rule(SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class Rules(SkipDefaultFieldsReprMixin):
+class RuleMap(SkipDefaultFieldsReprMixin):
     """Pattern matching and parsing capabilities for URL parsers, e.g. GitURL"""
 
-    _rules: dict[str, Rule] = dataclasses.field(default_factory=dict)
+    _rule_map: dict[str, Rule] = dataclasses.field(default_factory=dict)
 
     def register(self, cls: Rule) -> None:
         r"""
@@ -97,8 +97,8 @@ class Rules(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitHubURL(GitURL):
-        ...    rules: Rules = Rules(
-        ...        _rules={'github_prefix': GitHubPrefix}
+        ...    rule_map: RuleMap = RuleMap(
+        ...        _rule_map={'github_prefix': GitHubPrefix}
         ...    )
 
         >>> GitHubURL.is_valid(url='github:vcs-python/libvcs')
@@ -147,8 +147,8 @@ class Rules(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitLabURL(GitURL):
-        ...     rules: Rules = Rules(
-        ...         _rules={'gitlab_prefix': GitLabPrefix}
+        ...     rule_map: RuleMap = RuleMap(
+        ...         _rule_map={'gitlab_prefix': GitLabPrefix}
         ...     )
 
         >>> GitLabURL.is_valid(url='gitlab:vcs-python/libvcs')
@@ -166,7 +166,7 @@ class Rules(SkipDefaultFieldsReprMixin):
 
         Register:
 
-        >>> GitURL.rules.register(GitLabPrefix)
+        >>> GitURL.rule_map.register(GitLabPrefix)
 
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
         True
@@ -183,8 +183,8 @@ class Rules(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitURLWithPip(GitBaseURL):
-        ...    rules: Rules = Rules(
-        ...        _rules={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+        ...    rule_map: RuleMap = RuleMap(
+        ...        _rule_map={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
         ...    )
 
         >>> GitURLWithPip.is_valid(url="git+ssh://git@github.com/tony/AlgoXY.git")
@@ -199,17 +199,17 @@ class Rules(SkipDefaultFieldsReprMixin):
             suffix=.git,
             rule=pip-url)
         """  # NOQA: E501
-        if cls.label not in self._rules:
-            self._rules[cls.label] = cls
+        if cls.label not in self._rule_map:
+            self._rule_map[cls.label] = cls
 
     def unregister(self, label: str) -> None:
-        if label in self._rules:
-            del self._rules[label]
+        if label in self._rule_map:
+            del self._rule_map[label]
 
     def __iter__(self) -> Iterator[str]:
-        return self._rules.__iter__()
+        return self._rule_map.__iter__()
 
     def values(
         self,  # https://github.com/python/typing/discussions/1033
     ) -> "dict_values[str, Rule]":
-        return self._rules.values()
+        return self._rule_map.values()

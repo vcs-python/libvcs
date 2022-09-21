@@ -12,7 +12,7 @@
   - Strict ``git(1)`` compatibility: :class:`GitBaseURL`.
 
     - Output ``git(1)`` URL: :meth:`GitBaseURL.to_url()`
-- Extendable via :class:`~libvcs.url.base.Rules`,
+- Extendable via :class:`~libvcs.url.base.RuleMap`,
   :class:`~libvcs.url.base.Rule`
 """
 
@@ -22,7 +22,7 @@ from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
-from .base import Rule, Rules, URLProtocol
+from .base import Rule, RuleMap, URLProtocol
 
 # Credit, pip (license: MIT):
 # https://github.com/pypa/pip/blob/22.1.2/src/pip/_internal/vcs/git.py#L39-L52
@@ -262,11 +262,11 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     suffix: Optional[str] = None
 
     rule: Optional[str] = None
-    rules: Rules = Rules(_rules={m.label: m for m in DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_MATCHERS})
 
     def __post_init__(self) -> None:
         url = self.url
-        for rule in self.rules.values():
+        for rule in self.rule_map.values():
             match = re.match(rule.pattern, url)
             if match is None:
                 continue
@@ -311,10 +311,10 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
         if is_explicit is not None:
             return any(
                 re.search(rule.pattern, url)
-                for rule in cls.rules.values()
+                for rule in cls.rule_map.values()
                 if rule.is_explicit == is_explicit
             )
-        return any(re.search(rule.pattern, url) for rule in cls.rules.values())
+        return any(re.search(rule.pattern, url) for rule in cls.rule_map.values())
 
     def to_url(self) -> str:
         """Return a ``git(1)``-compatible URL. Can be used with ``git clone``.
@@ -370,7 +370,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    rules: Rules = Rules(_rules={m.label: m for m in PIP_DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_MATCHERS})
 
     def to_url(self) -> str:
         """Exports a pip-compliant URL.
@@ -452,7 +452,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         **Explicit VCS detection**
 
-        Pip-style URLs are prefixed with the VCS name in front, so its rules can
+        Pip-style URLs are prefixed with the VCS name in front, so its rule_map can
         unambigously narrow the type of VCS:
 
         >>> GitPipURL.is_valid(
@@ -478,13 +478,13 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
       - :meth:`GitBaseURL.to_url`
     """
 
-    rules: Rules = Rules(
-        _rules={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
+    rule_map: RuleMap = RuleMap(
+        _rule_map={m.label: m for m in [*DEFAULT_MATCHERS, *PIP_DEFAULT_MATCHERS]}
     )
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
-        r"""Whether URL is compatible included Git URL rules or not.
+        r"""Whether URL is compatible included Git URL rule_map or not.
 
         Examples
         --------
@@ -510,7 +510,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         **Explicit VCS detection**
 
-        Pip-style URLs are prefixed with the VCS name in front, so its rules can
+        Pip-style URLs are prefixed with the VCS name in front, so its rule_map can
         unambigously narrow the type of VCS:
 
         >>> GitURL.is_valid(
@@ -549,7 +549,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         ...     }
         ... )
 
-        >>> GitURL.rules.register(GitHubRule)
+        >>> GitURL.rule_map.register(GitHubRule)
 
         >>> GitURL.is_valid(
         ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
@@ -561,7 +561,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         This is just us cleaning up:
 
-        >>> GitURL.rules.unregister('gh-rule')
+        >>> GitURL.rule_map.unregister('gh-rule')
 
         >>> GitURL(url='git@github.com:vcs-python/libvcs.git').rule
         'core-git-scp'

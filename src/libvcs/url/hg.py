@@ -6,7 +6,7 @@
   compare to :class:`urllib.parse.ParseResult`
 
   - Output ``hg(1)`` URL: :meth:`HgURL.to_url()`
-- Extendable via :class:`~libvcs.url.base.Rules`,
+- Extendable via :class:`~libvcs.url.base.RuleMap`,
   :class:`~libvcs.url.base.Rule`
 
 .. Note::
@@ -23,7 +23,7 @@ from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
-from .base import Rule, Rules, URLProtocol
+from .base import Rule, RuleMap, URLProtocol
 
 RE_PATH = r"""
     ((?P<user>\w+)@)?
@@ -176,11 +176,11 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     rule: Optional[str] = None
     # name of the :class:`Rule`
-    rules: Rules = Rules(_rules={m.label: m for m in DEFAULT_MATCHERS})
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_MATCHERS})
 
     def __post_init__(self) -> None:
         url = self.url
-        for rule in self.rules.values():
+        for rule in self.rule_map.values():
             match = re.match(rule.pattern, url)
             if match is None:
                 continue
@@ -211,7 +211,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> HgURL.is_valid(url='notaurl')
         False
         """
-        return any(re.search(rule.pattern, url) for rule in cls.rules.values())
+        return any(re.search(rule.pattern, url) for rule in cls.rule_map.values())
 
     def to_url(self) -> str:
         """Return a ``hg(1)``-compatible URL. Can be used with ``hg clone``.
