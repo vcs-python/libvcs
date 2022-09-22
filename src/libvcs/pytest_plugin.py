@@ -9,8 +9,6 @@ from typing import Any, Optional, Protocol
 
 import pytest
 
-from _pytest.doctest import DoctestItem
-
 from libvcs._internal.run import run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
@@ -419,6 +417,8 @@ def add_doctest_fixtures(
     create_hg_remote_repo: CreateProjectCallbackFixtureProtocol,
     git_repo: pathlib.Path,
 ) -> None:
+    from _pytest.doctest import DoctestItem
+
     if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
         return
     doctest_namespace["tmp_path"] = tmp_path
