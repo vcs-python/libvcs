@@ -10,7 +10,6 @@ from typing import Any, Optional, Protocol
 import pytest
 
 from _pytest.doctest import DoctestItem
-from _pytest.fixtures import SubRequest
 
 from libvcs._internal.run import run
 from libvcs.sync.git import GitRemote, GitSync
@@ -410,7 +409,7 @@ def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnS
 
 @pytest.fixture
 def add_doctest_fixtures(
-    request: SubRequest,
+    request: pytest.FixtureRequest,
     doctest_namespace: dict[str, Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
