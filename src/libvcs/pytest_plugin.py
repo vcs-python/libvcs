@@ -9,9 +9,6 @@ from typing import Any, Optional, Protocol
 
 import pytest
 
-from _pytest.doctest import DoctestItem
-from _pytest.fixtures import SubRequest
-
 from libvcs._internal.run import run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
@@ -410,7 +407,7 @@ def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnS
 
 @pytest.fixture
 def add_doctest_fixtures(
-    request: SubRequest,
+    request: pytest.FixtureRequest,
     doctest_namespace: dict[str, Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
@@ -420,6 +417,8 @@ def add_doctest_fixtures(
     create_hg_remote_repo: CreateProjectCallbackFixtureProtocol,
     git_repo: pathlib.Path,
 ) -> None:
+    from _pytest.doctest import DoctestItem
+
     if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
         return
     doctest_namespace["tmp_path"] = tmp_path

@@ -4,8 +4,6 @@ import textwrap
 
 import pytest
 
-import _pytest.pytester
-
 from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
 
 
@@ -34,7 +32,7 @@ def test_create_svn_remote_repo(
 
 
 def test_plugin(
-    pytester: _pytest.pytester.Pytester,
+    pytester: pytest.Pytester,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Initialize variables
