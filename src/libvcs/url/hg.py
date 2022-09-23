@@ -6,8 +6,8 @@
   compare to :class:`urllib.parse.ParseResult`
 
   - Output ``hg(1)`` URL: :meth:`HgURL.to_url()`
-- Extendable via :class:`~libvcs.url.base.MatcherRegistry`,
-  :class:`~libvcs.url.base.Matcher`
+- Extendable via :class:`~libvcs.url.base.RuleMap`,
+  :class:`~libvcs.url.base.Rule`
 
 .. Note::
 
@@ -23,7 +23,7 @@ from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
-from .base import Matcher, MatcherRegistry, URLProtocol
+from .base import Rule, RuleMap, URLProtocol
 
 RE_PATH = r"""
     ((?P<user>\w+)@)?
@@ -43,8 +43,8 @@ RE_SCHEME = r"""
     )
 """
 
-DEFAULT_MATCHERS: list[Matcher] = [
-    Matcher(
+DEFAULT_RULES: list[Rule] = [
+    Rule(
         label="core-hg",
         description="Vanilla hg pattern",
         pattern=re.compile(
@@ -74,8 +74,8 @@ RE_PIP_SCHEME = r"""
     )
 """
 
-PIP_DEFAULT_MATCHERS: list[Matcher] = [
-    Matcher(
+PIP_DEFAULT_RULES: list[Rule] = [
+    Rule(
         label="pip-url",
         description="pip-style hg URL",
         pattern=re.compile(
@@ -88,7 +88,7 @@ PIP_DEFAULT_MATCHERS: list[Matcher] = [
         ),
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
-    Matcher(
+    Rule(
         label="pip-file-url",
         description="pip-style hg+file:// URL",
         pattern=re.compile(
@@ -129,8 +129,8 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     Attributes
     ----------
-    matcher : str
-        name of the :class:`~libvcs.url.base.Matcher`
+    rule : str
+        name of the :class:`~libvcs.url.base.Rule`
 
     Examples
     --------
@@ -139,7 +139,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
             scheme=https,
             hostname=hg.mozilla.org,
             path=mozilla-central/,
-            matcher=core-hg)
+            rule=core-hg)
 
     >>> myrepo = HgURL(url='https://hg.mozilla.org/mozilla-central/')
 
@@ -155,7 +155,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
             user=username,
             hostname=machinename,
             path=path/to/repo,
-            matcher=core-hg)
+            rule=core-hg)
 
     - Compatibility checking: :meth:`HgURL.is_valid()`
     - URLs compatible with ``hg(1)``: :meth:`HgURL.to_url()`
@@ -174,26 +174,24 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
     #
     ref: Optional[str] = None
 
-    matcher: Optional[str] = None
-    # name of the :class:`Matcher`
-    matchers: MatcherRegistry = MatcherRegistry(
-        _matchers={m.label: m for m in DEFAULT_MATCHERS}
-    )
+    rule: Optional[str] = None
+    # name of the :class:`Rule`
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
         url = self.url
-        for matcher in self.matchers.values():
-            match = re.match(matcher.pattern, url)
+        for rule in self.rule_map.values():
+            match = re.match(rule.pattern, url)
             if match is None:
                 continue
             groups = match.groupdict()
-            setattr(self, "matcher", matcher.label)
+            setattr(self, "rule", rule.label)
             for k, v in groups.items():
                 setattr(self, k, v)
 
-            for k, v in matcher.pattern_defaults.items():
+            for k, v in rule.defaults.items():
                 if getattr(self, k, None) is None:
-                    setattr(self, k, matcher.pattern_defaults[k])
+                    setattr(self, k, rule.defaults[k])
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
@@ -213,7 +211,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> HgURL.is_valid(url='notaurl')
         False
         """
-        return any(re.search(matcher.pattern, url) for matcher in cls.matchers.values())
+        return any(re.search(rule.pattern, url) for rule in cls.rule_map.values())
 
     def to_url(self) -> str:
         """Return a ``hg(1)``-compatible URL. Can be used with ``hg clone``.
@@ -228,7 +226,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
                 scheme=https,
                 hostname=hg.mozilla.org,
                 path=mozilla-central,
-                matcher=core-hg)
+                rule=core-hg)
 
         Switch repo libvcs -> vcspull:
 
@@ -255,7 +253,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
                 hostname=hugin.hg.sourceforge.net,
                 port=8000,
                 path=hgroot/hugin/hugin,
-                matcher=core-hg)
+                rule=core-hg)
 
         >>> hugin.to_url()
         'http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin'
@@ -272,7 +270,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
                 user=yourid,
                 hostname=hg.GraphicsMagick.org,
                 path=/hg/GraphicsMagick,
-                matcher=core-hg)
+                rule=core-hg)
 
         >>> graphicsmagick.to_url()
         'ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick'

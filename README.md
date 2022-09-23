@@ -46,7 +46,7 @@ GitURL(url=git@github.com:vcs-python/libvcs.git,
         hostname=github.com,
         path=vcs-python/libvcs,
         suffix=.git,
-        matcher=core-git-scp)
+        rule=core-git-scp)
 ```
 
 Switch repo libvcs -> vcspull:

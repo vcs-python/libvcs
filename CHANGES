@@ -13,6 +13,15 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### Breaking changes
+
+URL renamings (#417):
+
+- `Matcher` -> `Rule`, `MatcherRegistry` -> `Rules`
+- `matches` -> `rule_map`
+- `default_patterns` -> `patterns`
+- `MATCHERS` -> `RULES`
+
 ## libvcs 0.16.5 (2022-09-21)
 
 ### Bug fixes
