@@ -22,18 +22,20 @@ import re
 from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
+from libvcs.url.git import RE_PIP_REV, RE_SUFFIX, SCP_REGEX
 
 from .base import Rule, RuleMap, URLProtocol
 
 RE_PATH = r"""
     ((?P<user>\w+)@)?
-    (?P<hostname>([^/:@]+))
+    (?P<hostname>([^/:]+))
     (:(?P<port>\d{1,5}))?
-    (?P<separator>/)?
+    (?P<separator>[:,/])?
     (?P<path>
-      /?(\w[^:.]*)
+      /?(\w[^:.@]*)
     )?
 """
+
 
 RE_SCHEME = r"""
     (?P<scheme>
@@ -52,10 +54,26 @@ DEFAULT_RULES: list[Rule] = [
         ^{RE_SCHEME}
         ://
         {RE_PATH}
+        {RE_SUFFIX}?
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
     ),
+    Rule(
+        label="core-hg-scp",
+        description="Vanilla scp(1) / ssh(1) type URL",
+        pattern=re.compile(
+            rf"""
+        ^(?P<scheme>ssh)?
+        {SCP_REGEX}
+        {RE_SUFFIX}?
+        """,
+            re.VERBOSE,
+        ),
+        defaults={"username": "hg"},
+    ),
+    # SCP-style URLs, e.g. hg@
 ]
 """Core regular expressions. These are patterns understood by ``hg(1)``"""
 
@@ -80,12 +98,15 @@ PIP_DEFAULT_RULES: list[Rule] = [
         description="pip-style hg URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME}
+        ^{RE_PIP_SCHEME}
         ://
         {RE_PATH}
+        {RE_SUFFIX}?
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
     Rule(
@@ -98,6 +119,7 @@ PIP_DEFAULT_RULES: list[Rule] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
 ]
 """pip-style hg URLs.
@@ -118,13 +140,12 @@ Refs (via pip.pypa.io)::
 
 Notes
 -----
-
 - https://pip.pypa.io/en/stable/topics/vcs-support/
 """  # NOQA: E501
 
 
 @dataclasses.dataclass(repr=False)
-class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     """Mercurial repository location. Parses URLs on initialization.
 
     Attributes
@@ -134,8 +155,8 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     Examples
     --------
-    >>> HgURL(url='https://hg.mozilla.org/mozilla-central/')
-    HgURL(url=https://hg.mozilla.org/mozilla-central/,
+    >>> HgBaseURL(url='https://hg.mozilla.org/mozilla-central/')
+    HgBaseURL(url=https://hg.mozilla.org/mozilla-central/,
             scheme=https,
             hostname=hg.mozilla.org,
             path=mozilla-central/,
@@ -149,8 +170,11 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
     >>> myrepo.path
     'mozilla-central/'
 
-    >>> HgURL(url='ssh://username@machinename/path/to/repo')
-    HgURL(url=ssh://username@machinename/path/to/repo,
+    >>> HgBaseURL.is_valid(url='ssh://username@machinename/path/to/repo')
+    True
+
+    >>> HgBaseURL(url='ssh://username@machinename/path/to/repo')
+    HgBaseURL(url=ssh://username@machinename/path/to/repo,
             scheme=ssh,
             user=username,
             hostname=machinename,
@@ -169,6 +193,9 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
     separator: str = dataclasses.field(default="/")
     path: str = dataclasses.field(default="")
 
+    # Decoration
+    suffix: Optional[str] = None
+
     #
     # commit-ish: tag, branch, ref, revision
     #
@@ -176,6 +203,7 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     rule: Optional[str] = None
     # name of the :class:`Rule`
+
     rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
@@ -194,21 +222,21 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
                     setattr(self, k, rule.defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
         --------
 
-        >>> HgURL.is_valid(
+        >>> HgBaseURL.is_valid(
         ...     url='https://hg.mozilla.org/mozilla-central'
         ... )
         True
 
-        >>> HgURL.is_valid(url='ssh://hg@hg.python.org/cpython')
+        >>> HgBaseURL.is_valid(url='ssh://hg@hg.python.org/cpython')
         True
 
-        >>> HgURL.is_valid(url='notaurl')
+        >>> HgBaseURL.is_valid(url='notaurl')
         False
         """
         return any(re.search(rule.pattern, url) for rule in cls.rule_map.values())
@@ -219,10 +247,10 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> hg_url = HgURL(url='https://hg.mozilla.org/mozilla-central')
+        >>> hg_url = HgBaseURL(url='https://hg.mozilla.org/mozilla-central')
 
         >>> hg_url
-        HgURL(url=https://hg.mozilla.org/mozilla-central,
+        HgBaseURL(url=https://hg.mozilla.org/mozilla-central,
                 scheme=https,
                 hostname=hg.mozilla.org,
                 path=mozilla-central,
@@ -245,10 +273,11 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Another example, `hugin <http://hugin.hg.sourceforge.net>`_:
 
-        >>> hugin = HgURL(url="http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin")
+        >>> hugin = HgBaseURL(
+        ...     url="http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin")
 
         >>> hugin
-        HgURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
+        HgBaseURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
                 scheme=http,
                 hostname=hugin.hg.sourceforge.net,
                 port=8000,
@@ -260,12 +289,12 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         SSH URL with a username, `graphicsmagic <http://graphicsmagick.org/Hg.html>`_:
 
-        >>> graphicsmagick = HgURL(
+        >>> graphicsmagick = HgBaseURL(
         ...     url="ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick"
         ... )
 
         >>> graphicsmagick
-        HgURL(url=ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick,
+        HgBaseURL(url=ssh://yourid@hg.GraphicsMagick.org//hg/GraphicsMagick,
                 scheme=ssh,
                 user=yourid,
                 hostname=hg.GraphicsMagick.org,
@@ -283,6 +312,83 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         'ssh://lucas@hg.GraphicsMagick.org//hg/GraphicsMagick'
 
         """
+        if self.scheme is not None:
+            parts = [self.scheme, "://"]
+
+            if self.user is not None:
+                parts.append(f"{self.user}@")
+            parts.append(self.hostname)
+        else:
+            parts = [self.user or "hg", "@", self.hostname]
+
+        if self.port is not None:
+            parts.extend([":", f"{self.port}"])
+
+        parts.extend([self.separator, self.path])
+
+        return "".join(part for part in parts if isinstance(part, str))
+
+
+@dataclasses.dataclass(repr=False)
+class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Supports pip hg URLs."""
+
+    # commit-ish (rev): tag, branch, ref
+    rev: Optional[str] = None
+
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Whether URL is compatible with VCS or not.
+
+        Examples
+        --------
+
+        >>> HgPipURL.is_valid(
+        ...     url='hg+https://hg.mozilla.org/mozilla-central'
+        ... )
+        True
+
+        >>> HgPipURL.is_valid(url='hg+ssh://hg@hg.python.org:cpython')
+        True
+
+        >>> HgPipURL.is_valid(url='notaurl')
+        False
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
+
+    def to_url(self) -> str:
+        """Return a ``hg(1)``-compatible URL. Can be used with ``hg clone``.
+
+        Examples
+        --------
+
+        >>> hg_url = HgPipURL(url='hg+https://hg.mozilla.org/mozilla-central')
+
+        >>> hg_url
+        HgPipURL(url=hg+https://hg.mozilla.org/mozilla-central,
+                scheme=hg+https,
+                hostname=hg.mozilla.org,
+                path=mozilla-central,
+                rule=pip-url)
+
+        Switch repo mozilla-central -> mobile-browser:
+
+        >>> hg_url.path = 'mobile-browser'
+
+        >>> hg_url.to_url()
+        'hg+https://hg.mozilla.org/mobile-browser'
+
+        Switch them to localhost:
+
+        >>> hg_url.hostname = 'localhost'
+        >>> hg_url.scheme = 'http'
+
+        >>> hg_url.to_url()
+        'http://localhost/mobile-browser'
+
+        """
         parts = [self.scheme or "ssh", "://"]
         if self.user:
             parts.extend([self.user, "@"])
@@ -295,3 +401,162 @@ class HgURL(URLProtocol, SkipDefaultFieldsReprMixin):
         parts.extend([self.separator, self.path])
 
         return "".join(part for part in parts if isinstance(part, str))
+
+
+@dataclasses.dataclass(repr=False)
+class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Batteries included URL Parser. Supports hg(1) and pip URLs.
+
+    **Ancestors (MRO)**
+    This URL parser inherits methods and attributes from the following parsers:
+
+    - :class:`HgPipURL`
+
+      - :meth:`HgPipURL.to_url`
+    - :class:`HgBaseURL`
+
+      - :meth:`HgBaseURL.to_url`
+    """
+
+    rule_map: RuleMap = RuleMap(
+        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+    )
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        r"""Whether URL is compatible included Hg URL rule_map or not.
+
+        Examples
+        --------
+
+        **Will** match normal ``hg(1)`` URLs, use :meth:`HgURL.is_valid` for that.
+
+        >>> HgURL.is_valid(url='https://hg.mozilla.org/mozilla-central/mozilla-central')
+        True
+
+        >>> HgURL.is_valid(url='hg@hg.mozilla.org:MyProject/project')
+        True
+
+        Pip-style URLs:
+
+        >>> HgURL.is_valid(url='hg+https://hg.mozilla.org/mozilla-central/project')
+        True
+
+        >>> HgURL.is_valid(url='hg+ssh://hg@hg.mozilla.org:MyProject/project')
+        True
+
+        >>> HgURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        Pip-style URLs are prefixed with the VCS name in front, so its rule_map can
+        unambigously narrow the type of VCS:
+
+        >>> HgURL.is_valid(
+        ...     url='hg+ssh://hg@hg.mozilla.org:mozilla-central/image', is_explicit=True
+        ... )
+        True
+
+        Below, while it's hg.mozilla.org, that doesn't necessarily mean that the URL
+        itself is conclusively a `hg` URL (e.g. the pattern is too broad):
+
+        >>> HgURL.is_valid(
+        ...     url='hg@hg.mozilla.org:mozilla-central/image', is_explicit=True
+        ... )
+        False
+
+        You could create a Mozilla rule that consider hg.mozilla.org hostnames to be
+        exclusively hg:
+
+        >>> MozillaRule = Rule(
+        ...     # Since hg.mozilla.org exclusively serves hg repos, make explicit
+        ...     label='mozilla-rule',
+        ...     description='Matches hg.mozilla.org https URLs, exact VCS match',
+        ...     pattern=re.compile(
+        ...         rf'''
+        ...         ^(?P<scheme>ssh)?
+        ...         ((?P<user>\w+)@)?
+        ...         (?P<hostname>(hg.mozilla.org)+):
+        ...         (?P<path>(\w[^:]+))
+        ...         {RE_SUFFIX}?
+        ...         ''',
+        ...         re.VERBOSE,
+        ...     ),
+        ...     is_explicit=True,
+        ...     defaults={
+        ...         'hostname': 'hg.mozilla.org'
+        ...     }
+        ... )
+
+        >>> HgURL.rule_map.register(MozillaRule)
+
+        >>> HgURL.is_valid(
+        ...     url='hg@hg.mozilla.org:mozilla-central/image', is_explicit=True
+        ... )
+        True
+
+        >>> HgURL(url='hg@hg.mozilla.org:mozilla-central/image').rule
+        'mozilla-rule'
+
+        This is just us cleaning up:
+
+        >>> HgURL.rule_map.unregister('mozilla-rule')
+
+        >>> HgURL(url='hg@hg.mozilla.org:mozilla-central/mozilla-rule').rule
+        'core-hg-scp'
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
+
+    def to_url(self) -> str:
+        """Return a ``hg(1)``-compatible URL. Can be used with ``hg clone``.
+
+        Examples
+        --------
+
+        SSH style URL:
+
+        >>> hg_url = HgURL(url='hg@hg.mozilla.org:mozilla-central/browser')
+
+        >>> hg_url.path = 'mozilla-central/gfx'
+
+        >>> hg_url.to_url()
+        'ssh://hg@hg.mozilla.org:mozilla-central/gfx'
+
+        HTTPs URL:
+
+        >>> hg_url = HgURL(url='https://hg.mozilla.org/mozilla-central/memory')
+
+        >>> hg_url.path = 'mozilla-central/image'
+
+        >>> hg_url.to_url()
+        'https://hg.mozilla.org/mozilla-central/image'
+
+        Switch them to hglab:
+
+        >>> hg_url.hostname = 'localhost'
+        >>> hg_url.scheme = 'http'
+
+        >>> hg_url.to_url()
+        'http://localhost/mozilla-central/image'
+
+        Pip style URL, thanks to this class implementing :class:`HgPipURL`:
+
+        >>> hg_url = HgURL(url='hg+ssh://hg@hg.mozilla.org/mozilla-central/image')
+
+        >>> hg_url.hostname = 'localhost'
+
+        >>> hg_url.to_url()
+        'hg+ssh://hg@localhost/mozilla-central/image'
+
+        >>> hg_url.user = None
+
+        >>> hg_url.to_url()
+        'hg+ssh://localhost/mozilla-central/image'
+
+        See also
+        --------
+
+        :meth:`HgBaseURL.to_url`, :meth:`HgPipURL.to_url`
+        """
+        return super().to_url()
