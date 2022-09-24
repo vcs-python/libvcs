@@ -418,9 +418,9 @@ class GitSync(BaseSync):
             # to be able to perform git pull --rebase
             if need_stash:
                 # If Git < 1.7.6, uses --quiet --all
-                git_stash_save_options = "--quiet"
+                git_stash_save_options = ["--quiet", "--include-untracked"]
                 try:
-                    process = self.run(["stash", "save", git_stash_save_options])
+                    process = self.run(["stash", "save"] + git_stash_save_options)
                 except exc.CommandError:
                     self.log.error("Failed to stash changes")
 

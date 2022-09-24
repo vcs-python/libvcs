@@ -112,7 +112,7 @@ def test_repo_git_obtain_full(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    "constructor,lazy_constructor_options,has_untracked_files",
     [
         [
             GitSync,
@@ -121,6 +121,16 @@ def test_repo_git_obtain_full(
                 "dir": tmp_path / "myrepo",
                 "vcs": "git",
             },
+            False,
+        ],
+        [
+            GitSync,
+            lambda git_remote_repo, tmp_path, **kwargs: {
+                "url": f"file://{git_remote_repo}",
+                "dir": tmp_path / "myrepo",
+                "vcs": "git",
+            },
+            True,
         ],
         [
             create_project,
@@ -129,6 +139,16 @@ def test_repo_git_obtain_full(
                 "dir": tmp_path / "myrepo",
                 "vcs": "git",
             },
+            False,
+        ],
+        [
+            create_project,
+            lambda git_remote_repo, tmp_path, **kwargs: {
+                "url": f"git+file://{git_remote_repo}",
+                "dir": tmp_path / "myrepo",
+                "vcs": "git",
+            },
+            True,
         ],
     ],
 )
@@ -138,9 +158,16 @@ def test_repo_update_handle_cases(
     mocker: MockerFixture,
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
+    has_untracked_files: bool,
 ) -> None:
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
+
+    if has_untracked_files:
+        some_file = git_repo.dir.joinpath("some_file")
+        with open(some_file, "w") as untracked_file:
+            untracked_file.write("some content")
+
     mocka = mocker.spy(git_repo, "run")
     git_repo.update_repo()
 
