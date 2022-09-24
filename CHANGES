@@ -22,6 +22,10 @@ URL renamings (#417):
 - `default_patterns` -> `patterns`
 - `MATCHERS` -> `RULES`
 
+### Packaging
+
+- Migrate `.coveragerc` to `pyproject.toml` (#421)
+
 ## libvcs 0.16.5 (2022-09-21)
 
 ### Bug fixes
