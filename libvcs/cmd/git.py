@@ -123,7 +123,7 @@ class Git:
         --------
         >>> git = Git(dir=tmp_path)
         >>> git.run(['help'])
-        "usage: git [--version] [--help] [-C <path>]..."
+        "usage: git [...] [-C <path>]..."
         """
 
         if isinstance(args, Sequence):
@@ -1075,16 +1075,16 @@ class Git:
         >>> git = Git(dir=tmp_path)
 
         >>> git.help()
-        "usage: git [--version] [--help] [-C <path>]..."
+        "usage: git [...] [-C <path>]..."
 
         >>> git.help(all=True)
         "See 'git help <command>' to read about a specific subcommand..."
 
         >>> git.help(info=True)
-        "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]..."
+        "usage: git ... [-C <path>] [-c <name>=<value>]..."
 
         >>> git.help(man=True)
-        "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]..."
+        "usage: git ... [-C <path>] [-c <name>=<value>]..."
         """
         local_flags: list[str] = []
 
