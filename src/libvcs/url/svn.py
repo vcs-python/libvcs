@@ -202,6 +202,12 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> SvnURL.is_valid(url='notaurl')
         False
         """
+        if is_explicit is not None:
+            return any(
+                re.search(rule.pattern, url)
+                for rule in cls.rule_map.values()
+                if rule.is_explicit == is_explicit
+            )
         return any(re.search(rule.pattern, url) for rule in cls.rule_map.values())
 
     def to_url(self) -> str:
