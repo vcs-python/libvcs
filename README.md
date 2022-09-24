@@ -56,18 +56,12 @@ repo = GitProject(
        'gitlab': 'https://gitlab.com/vcs-python/libvcs'
    }
 )
-```
 
-Update / clone repo:
+# Update / clone repo:
+>>> repo.update_repo()
 
-```python
->>> r.update_repo()
-```
-
-Get revision:
-
-```python
->>> r.get_revision()
+# Get revision:
+>>> repo.get_revision()
 u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 ```
 
