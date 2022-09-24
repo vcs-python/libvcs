@@ -613,12 +613,4 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         :meth:`GitBaseURL.to_url`, :meth:`GitPipURL.to_url`
         """
-        if self.scheme is not None:
-            parts = [self.scheme, "://", self.hostname, "/", self.path]
-        else:
-            parts = [self.user or "git", "@", self.hostname, ":", self.path]
-
-        if self.suffix:
-            parts.append(self.suffix)
-
-        return "".join(part for part in parts if isinstance(part, str))
+        return super().to_url()
