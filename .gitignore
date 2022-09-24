@@ -83,3 +83,6 @@ pip-wheel-metadata/
 
 # Used by publish-docs.yml CI
 .updated_files
+
+# Monkeytype
+monkeytype.sqlite3
