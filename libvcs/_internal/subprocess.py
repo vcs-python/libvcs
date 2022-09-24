@@ -76,7 +76,7 @@ _CMD: TypeAlias = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 @dataclasses.dataclass(repr=False)
 class SubprocessCommand(SkipDefaultFieldsReprMixin):
-    """Encapsulate a :mod:`subprocess` request. Inspect, mutate, control before invocation.
+    """Wraps a :mod:`subprocess` request. Inspect, mutate, control before invocation.
 
     Attributes
     ----------
@@ -392,7 +392,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Optional[bool] = None,
         **kwargs,
     ) -> Union[bytes, str]:
-        r"""Run command :func:`subprocess.check_output`, optionally overrides via kwargs.
+        r"""Run command :func:`subprocess.check_output`, optionally override via kwargs.
 
         Parameters
         ----------
