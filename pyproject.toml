@@ -50,6 +50,7 @@ packages = [
 ]
 include = [
   { path = "tests", format = "sdist" },
+  { path = "conftest.py", format = "sdist" },
 ]
 
 [tool.poetry.urls]
