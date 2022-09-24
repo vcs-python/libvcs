@@ -188,7 +188,7 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
                     setattr(self, k, rule.defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
