@@ -26,6 +26,13 @@ URL renamings (#417):
 
 - Migrate `.coveragerc` to `pyproject.toml` (#421)
 - Remove `.tmuxp.before-script.sh` (was a `before_script` in `.tmuxp.yaml`) that was unused.
+- Move `conftest.py` to root level
+
+  - Can be excluded from wheel, included in sdist
+  - Required to satisfy pytest's `pytest_plugins` only being in top-level confte conftest.py files
+    since 4.0 (see
+    [notice](https://docs.pytest.org/en/stable/deprecations.html#pytest-plugins-in-non-top-level-conftest-files))
+  - Makes it possible to run `pytest README.md` with doctest plugin
 
 ## libvcs 0.16.5 (2022-09-21)
 
