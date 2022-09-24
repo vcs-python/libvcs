@@ -25,6 +25,7 @@ URL renamings (#417):
 ### Packaging
 
 - Migrate `.coveragerc` to `pyproject.toml` (#421)
+- Remove `.tmuxp.before-script.sh` (was a `before_script` in `.tmuxp.yaml`) that was unused.
 
 ## libvcs 0.16.5 (2022-09-21)
 
