@@ -64,23 +64,23 @@ typing-extensions = { version = "^4.1.1", python = '3.10' }
 [tool.poetry.dev-dependencies]
 ### Docs ###
 sphinx = "*"
-furo = "^2022.2.23"
-sphinx-autobuild = "^2021.3.14"
-sphinx-autodoc-typehints = "~1.17.0"
+furo = "*"
+sphinx-autobuild = "*"
+sphinx-autodoc-typehints = "*"
 sphinx-issues = "^3.0.0"
 sphinx-inline-tabs = "*"
 sphinxext-opengraph = "*"
 sphinx-copybutton = "^0.5.0"
 sphinxext-rediraffe = "*"
 sphinx-autoapi = "*"
-myst_parser = "~0.17.0"
+myst_parser = "*"
 
 ### Testing ###
 pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
-pytest-watcher = "^0.2.3"
-Faker = "^13.3.4"
+pytest-watcher = "*"
+Faker = "*"
 
 ### Coverage ###
 codecov = "*"
