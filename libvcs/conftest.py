@@ -22,12 +22,16 @@ skip_if_svn_missing = pytest.mark.skipif(
 skip_if_hg_missing = pytest.mark.skipif(not which("hg"), reason="hg is not available")
 
 
-def pytest_ignore_collect(path, config: pytest.Config):
-    if not which("svn") and any(needle in path for needle in ["svn", "subversion"]):
+def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) -> bool:
+    if not which("svn") and any(
+        needle in str(collection_path) for needle in ["svn", "subversion"]
+    ):
         return True
-    if not which("git") and "git" in path:
+    if not which("git") and "git" in str(collection_path):
         return True
-    if not which("hg") and any(needle in path for needle in ["hg", "mercurial"]):
+    if not which("hg") and any(
+        needle in str(collection_path) for needle in ["hg", "mercurial"]
+    ):
         return True
 
     return False
