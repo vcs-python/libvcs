@@ -4,7 +4,7 @@ import pytest
 
 from libvcs.sync.hg import HgSync
 from libvcs.url.base import RuleMap
-from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgURL
+from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgBaseURL, HgURL
 
 
 class HgURLFixture(typing.NamedTuple):
@@ -117,7 +117,7 @@ def test_hg_url_extension_pip(
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
 
     assert (
-        HgURL.is_valid(url) != is_valid
+        HgBaseURL.is_valid(url) != is_valid
     ), f"{url} compatibility should work with core, expects {not is_valid}"
     assert (
         HgURLWithPip.is_valid(url) == is_valid

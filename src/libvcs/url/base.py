@@ -18,7 +18,8 @@ class URLProtocol(Protocol):
     def to_url(self) -> str:
         ...
 
-    def is_valid(self, url: str, is_explicit: Optional[bool] = None) -> bool:
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
         ...
 
 

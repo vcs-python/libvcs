@@ -23,16 +23,17 @@ import re
 from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
+from libvcs.url.git import RE_PIP_REV, SCP_REGEX
 
 from .base import Rule, RuleMap, URLProtocol
 
 RE_PATH = r"""
-    ((?P<user>.*)@)?
-    (?P<hostname>([^/:]+))
+    ((?P<user>[^/:@]+)@)?
+    (?P<hostname>([^/:@]+))
     (:(?P<port>\d{1,5}))?
-    (?P<separator>/)?
+    (?P<separator>[:,/])?
     (?P<path>
-      (\w[^:.]*)
+      (\w[^:.@]*)
     )?
 """
 
@@ -56,10 +57,25 @@ DEFAULT_RULES: list[Rule] = [
         ^{RE_SCHEME}
         ://
         {RE_PATH}
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
     ),
+    Rule(
+        label="core-svn-scp",
+        description="Vanilla scp(1) / ssh(1) type URL",
+        pattern=re.compile(
+            rf"""
+        ^(?P<scheme>ssh)?
+        {SCP_REGEX}
+        {RE_PIP_REV}?
+        """,
+            re.VERBOSE,
+        ),
+        defaults={"username": "svn"},
+    ),
+    # SCP-style URLs, e.g. hg@
 ]
 """Core regular expressions. These are patterns understood by ``svn(1)``"""
 
@@ -72,8 +88,7 @@ RE_PIP_SCHEME = r"""
       (
         svn\+ssh|
         svn\+https|
-        svn\+http|
-        svn\+file
+        svn\+http
       )
     )
 """
@@ -84,12 +99,14 @@ PIP_DEFAULT_RULES: list[Rule] = [
         description="pip-style svn URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME}
+        ^{RE_PIP_SCHEME}
         ://
         {RE_PATH}
+        {RE_PIP_REV}?
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
     Rule(
@@ -102,6 +119,7 @@ PIP_DEFAULT_RULES: list[Rule] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
 ]
 """pip-style svn URLs.
@@ -125,19 +143,20 @@ Notes
 
 
 @dataclasses.dataclass(repr=False)
-class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     """SVN repository location. Parses URLs on initialization.
 
     Examples
     --------
-    >>> SvnURL(url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository')
-    SvnURL(url=svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository,
+    >>> SvnBaseURL(
+    ...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository')
+    SvnBaseURL(url=svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository,
            scheme=svn+ssh,
            hostname=svn.debian.org,
            path=svn/aliothproj/path/in/project/repository,
            rule=core-svn)
 
-    >>> myrepo = SvnURL(
+    >>> myrepo = SvnBaseURL(
     ...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository'
     ... )
 
@@ -147,8 +166,8 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
     >>> myrepo.path
     'svn/aliothproj/path/in/project/repository'
 
-    - Compatibility checking: :meth:`SvnURL.is_valid()`
-    - URLs compatible with ``svn(1)``: :meth:`SvnURL.to_url()`
+    - Compatibility checking: :meth:`SvnBaseURL.is_valid()`
+    - URLs compatible with ``svn(1)``: :meth:`SvnBaseURL.to_url()`
 
     Attributes
     ----------
@@ -188,20 +207,26 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
                     setattr(self, k, rule.defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = False) -> bool:
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
         --------
 
-        >>> SvnURL.is_valid(
+        >>> SvnBaseURL.is_valid(
         ...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository'
         ... )
         True
 
-        >>> SvnURL.is_valid(url='notaurl')
+        >>> SvnBaseURL.is_valid(url='notaurl')
         False
         """
+        if is_explicit is not None:
+            return any(
+                re.search(rule.pattern, url)
+                for rule in cls.rule_map.values()
+                if rule.is_explicit == is_explicit
+            )
         return any(re.search(rule.pattern, url) for rule in cls.rule_map.values())
 
     def to_url(self) -> str:
@@ -210,12 +235,12 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> svn_url = SvnURL(
+        >>> svn_url = SvnBaseURL(
         ...     url='svn+ssh://my-username@my-server/vcs-python/libvcs'
         ... )
 
         >>> svn_url
-        SvnURL(url=svn+ssh://my-username@my-server/vcs-python/libvcs,
+        SvnBaseURL(url=svn+ssh://my-username@my-server/vcs-python/libvcs,
                 scheme=svn+ssh,
                 user=my-username,
                 hostname=my-server,
@@ -236,11 +261,14 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         >>> svn_url.to_url()
         'svn+ssh://tom@my-server/vcs-python/vcspull'
         """
-        parts = [self.scheme or "ssh", "://"]
-        if self.user:
-            parts.extend([self.user, "@"])
+        if self.scheme is not None:
+            parts = [self.scheme, "://"]
 
-        parts.append(self.hostname)
+            if self.user is not None:
+                parts.append(f"{self.user}@")
+            parts.append(self.hostname)
+        else:
+            parts = [self.user or "hg", "@", self.hostname]
 
         if self.port is not None:
             parts.extend([":", f"{self.port}"])
@@ -248,3 +276,226 @@ class SvnURL(URLProtocol, SkipDefaultFieldsReprMixin):
         parts.extend([self.separator, self.path])
 
         return "".join(part for part in parts if isinstance(part, str))
+
+
+@dataclasses.dataclass(repr=False)
+class SvnPipURL(SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Supports pip svn URLs."""
+
+    # commit-ish (rev): tag, branch, ref
+    rev: Optional[str] = None
+
+    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Whether URL is compatible with VCS or not.
+
+        Examples
+        --------
+
+        >>> SvnPipURL.is_valid(
+        ...     url='svn+https://svn.project.org/project-central'
+        ... )
+        True
+
+        >>> SvnPipURL.is_valid(url='svn+ssh://svn@svn.python.org:cpython')
+        True
+
+        >>> SvnPipURL.is_valid(url='notaurl')
+        False
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
+
+    def to_url(self) -> str:
+        """Return a ``svn(1)``-compatible URL. Can be used with ``svn clone``.
+
+        Examples
+        --------
+
+        >>> svn_url = SvnPipURL(url='svn+https://svn.project.org/project-central')
+
+        >>> svn_url
+        SvnPipURL(url=svn+https://svn.project.org/project-central,
+                scheme=svn+https,
+                hostname=svn.project.org,
+                path=project-central,
+                rule=pip-url)
+
+        Switch repo project-central -> mobile-browser:
+
+        >>> svn_url.path = 'mobile-browser'
+
+        >>> svn_url.to_url()
+        'svn+https://svn.project.org/mobile-browser'
+
+        Switch them to localhost:
+
+        >>> svn_url.hostname = 'localhost'
+        >>> svn_url.scheme = 'http'
+
+        >>> svn_url.to_url()
+        'http://localhost/mobile-browser'
+
+        """
+        return super().to_url()
+
+
+@dataclasses.dataclass(repr=False)
+class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+    """Batteries included URL Parser. Supports svn(1) and pip URLs.
+
+    **Ancestors (MRO)**
+    This URL parser inherits methods and attributes from the following parsers:
+
+    - :class:`SvnPipURL`
+
+      - :meth:`SvnPipURL.to_url`
+    - :class:`SvnBaseURL`
+
+      - :meth:`SvnBaseURL.to_url`
+    """
+
+    rule_map: RuleMap = RuleMap(
+        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+    )
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        r"""Whether URL is compatible included Svn URL rule_map or not.
+
+        Examples
+        --------
+
+        **Will** match normal ``svn(1)`` URLs, use :meth:`SvnURL.is_valid` for that.
+
+        >>> SvnURL.is_valid(
+        ... url='https://svn.project.org/project-central/project-central')
+        True
+
+        >>> SvnURL.is_valid(url='svn@svn.project.org:MyProject/project')
+        True
+
+        Pip-style URLs:
+
+        >>> SvnURL.is_valid(url='svn+https://svn.project.org/project-central/project')
+        True
+
+        >>> SvnURL.is_valid(url='svn+ssh://svn@svn.project.org:MyProject/project')
+        True
+
+        >>> SvnURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        Pip-style URLs are prefixed with the VCS name in front, so its rule_map can
+        unambigously narrow the type of VCS:
+
+        >>> SvnURL.is_valid(
+        ...     url='svn+ssh://svn@svn.project.org:project-central/image',
+        ...     is_explicit=True
+        ... )
+        True
+
+        Below, while it's svn.project.org, that doesn't necessarily mean that the URL
+        itself is conclusively a `svn` URL (e.g. the pattern is too broad):
+
+        >>> SvnURL.is_valid(
+        ...     url='svn@svn.project.org:project-central/image', is_explicit=True
+        ... )
+        False
+
+        You could create a project rule that consider svn.project.org hostnames to be
+        exclusively svn:
+
+        >>> projectRule = Rule(
+        ...     # Since svn.project.org exclusively serves svn repos, make explicit
+        ...     label='project-rule',
+        ...     description='Matches svn.project.org https URLs, exact VCS match',
+        ...     pattern=re.compile(
+        ...         rf'''
+        ...         ^(?P<scheme>ssh)?
+        ...         ((?P<user>\w+)@)?
+        ...         (?P<hostname>(svn.project.org)+):
+        ...         (?P<path>(\w[^:]+))
+        ...         ''',
+        ...         re.VERBOSE,
+        ...     ),
+        ...     is_explicit=True,
+        ...     defaults={
+        ...         'hostname': 'svn.project.org'
+        ...     }
+        ... )
+
+        >>> SvnURL.rule_map.register(projectRule)
+
+        >>> SvnURL.is_valid(
+        ...     url='svn@svn.project.org:project-central/image', is_explicit=True
+        ... )
+        True
+
+        >>> SvnURL(url='svn@svn.project.org:project-central/image').rule
+        'project-rule'
+
+        This is just us cleaning up:
+
+        >>> SvnURL.rule_map.unregister('project-rule')
+
+        >>> SvnURL(url='svn@svn.project.org:project-central/project-rule').rule
+        'core-svn-scp'
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
+
+    def to_url(self) -> str:
+        """Return a ``svn(1)``-compatible URL. Can be used with ``svn clone``.
+
+        Examples
+        --------
+
+        SSH style URL:
+
+        >>> svn_url = SvnURL(url='svn@svn.project.org:project-central/browser')
+
+        >>> svn_url.path = 'project-central/gfx'
+
+        >>> svn_url.to_url()
+        'svn@svn.project.org:project-central/gfx'
+
+        HTTPs URL:
+
+        >>> svn_url = SvnURL(url='https://svn.project.org/project-central/memory')
+
+        >>> svn_url.path = 'project-central/image'
+
+        >>> svn_url.to_url()
+        'https://svn.project.org/project-central/image'
+
+        Switch them to svnlab:
+
+        >>> svn_url.hostname = 'localhost'
+        >>> svn_url.scheme = 'http'
+
+        >>> svn_url.to_url()
+        'http://localhost/project-central/image'
+
+        Pip style URL, thanks to this class implementing :class:`SvnPipURL`:
+
+        >>> svn_url = SvnURL(url='svn+ssh://svn@svn.project.org/project-central/image')
+
+        >>> svn_url.hostname = 'localhost'
+
+        >>> svn_url.to_url()
+        'svn+ssh://svn@localhost/project-central/image'
+
+        >>> svn_url.user = None
+
+        >>> svn_url.to_url()
+        'svn+ssh://localhost/project-central/image'
+
+        See also
+        --------
+
+        :meth:`SvnBaseURL.to_url`, :meth:`SvnPipURL.to_url`
+        """
+        return super().to_url()

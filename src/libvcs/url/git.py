@@ -31,7 +31,8 @@ SCP_REGEX = r"""
     # Optional user, e.g. 'git@'
     ((?P<user>\w+)@)?
     # Server, e.g. 'github.com'.
-    (?P<hostname>([^/:]+)):
+    (?P<hostname>([^/:]+))
+    (?P<separator>:)
     # The server-side path. e.g. 'user/project.git'. Must start with an
     # alphanumeric character so as not to be confusable with a Windows paths
     # like 'C:/foo/bar' or 'C:\foo\bar'.
@@ -613,12 +614,4 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         :meth:`GitBaseURL.to_url`, :meth:`GitPipURL.to_url`
         """
-        if self.scheme is not None:
-            parts = [self.scheme, "://", self.hostname, "/", self.path]
-        else:
-            parts = [self.user or "git", "@", self.hostname, ":", self.path]
-
-        if self.suffix:
-            parts.append(self.suffix)
-
-        return "".join(part for part in parts if isinstance(part, str))
+        return super().to_url()
