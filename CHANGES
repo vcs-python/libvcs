@@ -22,6 +22,15 @@ URL renamings (#417):
 - `default_patterns` -> `patterns`
 - `MATCHERS` -> `RULES`
 
+### Improvements
+
+- URLs (#423):
+  - `hg`: Add `HgBaseURL`, `HgPipURL`
+  - `svn`: Add `SvnBaseURL`, `SvnPipURL`
+  - `URLProtocol`: Fix `is_valid` to use `classmethod`
+  - All: Fix `is_valid` to use default of `None` to avoid implicitly filtering
+  - Reduce duplicated code in methods by using `super()`
+
 ### Packaging
 
 - Migrate `.coveragerc` to `pyproject.toml` (#421)
