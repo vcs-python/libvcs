@@ -13,6 +13,10 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### New features
+
+- URLs: Added `registry`, match find which VCS a URL matches with (#420)
+
 ### Breaking changes
 
 URL renamings (#417):
