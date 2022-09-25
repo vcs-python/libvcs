@@ -16,6 +16,7 @@ $ pip install --user --upgrade --pre libvcs
 ### New features
 
 - URLs: Added `registry`, match find which VCS a URL matches with (#420)
+- `create_project`: Learn to guess VCS from URL, if none provided (#420)
 
 ### Breaking changes
 
