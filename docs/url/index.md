@@ -159,4 +159,5 @@ git
 svn
 hg
 base
+registry
 ```
