@@ -74,6 +74,17 @@ def create_project(
 
     >>> isinstance(r, GitSync)
     True
+
+    create_project can also guess VCS for certain URLs:
+
+    >>> r = create_project(
+    ...     # Note the git+ before the URL
+    ...     url=f'git+file://{create_git_remote_repo()}',
+    ...     dir=tmp_path
+    ... )
+
+    >>> isinstance(r, GitSync)
+    True
     """
     if vcs is None:
         vcs_matches = url_tools.registry.match(url=url, is_explicit=True)
