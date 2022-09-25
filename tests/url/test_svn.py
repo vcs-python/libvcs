@@ -4,7 +4,7 @@ import pytest
 
 from libvcs.sync.svn import SvnSync
 from libvcs.url.base import RuleMap
-from libvcs.url.svn import DEFAULT_RULES, PIP_DEFAULT_RULES, SvnURL
+from libvcs.url.svn import DEFAULT_RULES, PIP_DEFAULT_RULES, SvnBaseURL, SvnURL
 
 
 class SvnURLFixture(typing.NamedTuple):
@@ -134,7 +134,10 @@ def test_svn_url_extension_pip(
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
     assert (
-        SvnURL.is_valid(url) != is_valid
+        SvnBaseURL.is_valid(url) != is_valid
+    ), f"{url} compatibility should work with core, expects {not is_valid}"
+    assert (
+        SvnURL.is_valid(url) == is_valid
     ), f"{url} compatibility should work with core, expects {not is_valid}"
     assert (
         SvnURLWithPip.is_valid(url) == is_valid
