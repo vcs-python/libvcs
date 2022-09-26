@@ -207,7 +207,7 @@ def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    init_cmd_args: InitCmdArgs = None,
+    init_cmd_args: InitCmdArgs = ["--bare"],
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
@@ -231,7 +231,7 @@ def create_git_remote_repo(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-        init_cmd_args: InitCmdArgs = None,
+        init_cmd_args: InitCmdArgs = ["--bare"],
     ) -> pathlib.Path:
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -261,6 +261,7 @@ def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
         remote_repos_path=remote_repos_path,
         remote_repo_name="dummyrepo",
         remote_repo_post_init=git_remote_repo_single_commit_post_init,
+        init_cmd_args=None,  # Don't do --bare
     )
 
 
@@ -450,6 +451,7 @@ def add_doctest_fixtures(
         doctest_namespace["create_git_remote_repo"] = functools.partial(
             create_git_remote_repo,
             remote_repo_post_init=git_remote_repo_single_commit_post_init,
+            init_cmd_args=None,
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
         doctest_namespace["git_local_clone"] = git_repo
