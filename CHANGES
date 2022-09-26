@@ -29,13 +29,17 @@ URL renamings (#417):
 
 ### Improvements
 
-- URLs (#423):
-  - `hg`: Add `HgBaseURL`, `HgPipURL`
-  - `svn`: Add `SvnBaseURL`, `SvnPipURL`
-  - `URLProtocol`: Fix `is_valid` to use `classmethod`
-  - All: Fix `is_valid` to use default of `None` to avoid implicitly filtering
-  - Reduce duplicated code in methods by using `super()`
-  - `git`: Fix `update_repo` when there are only untracked files
+Sync:
+
+- `git`: Fix `update_repo` when there are only untracked files (#425, credit: @jfpedroza)
+
+URLs (#423):
+
+- `hg`: Add `HgBaseURL`, `HgPipURL`
+- `svn`: Add `SvnBaseURL`, `SvnPipURL`
+- `URLProtocol`: Fix `is_valid` to use `classmethod`
+- All: Fix `is_valid` to use default of `None` to avoid implicitly filtering
+- Reduce duplicated code in methods by using `super()`
 
 ### Packaging
 
