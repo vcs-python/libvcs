@@ -29,11 +29,18 @@ URL renamings (#417):
 
 ### Improvements
 
+pytest plugin:
+
+- `create_{git,svn,hg}_remote_repo()` now accepts `init_cmd_args` (`list[str]`, default:
+  `['--bare']`, #426)
+
+  To not use bare, pass `init_cmd_args=None`
+
 Sync:
 
 - `git`: Fix `update_repo` when there are only untracked files (#425, credit: @jfpedroza)
 
-URLs (#423):
+URL (#423):
 
 - `hg`: Add `HgBaseURL`, `HgPipURL`
 - `svn`: Add `SvnBaseURL`, `SvnPipURL`
