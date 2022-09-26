@@ -408,7 +408,7 @@ class GitSync(BaseSync):
         if is_remote_ref:
             # Check if stash is needed
             try:
-                process = self.run(["status", "--porcelain"])
+                process = self.run(["status", "--porcelain", "--untracked-files=no"])
             except exc.CommandError:
                 self.log.error("Failed to get the status")
                 return
@@ -435,7 +435,7 @@ class GitSync(BaseSync):
             try:
                 process = self.run(["rebase", git_remote_name + "/" + git_tag])
             except exc.CommandError as e:
-                if "invalid_upstream" in str(e):
+                if any(msg in str(e) for msg in ["invalid_upstream", "Aborting"]):
                     self.log.error(e)
                 else:
                     # Rebase failed: Restore previous state.

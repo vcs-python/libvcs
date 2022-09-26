@@ -2,6 +2,7 @@
 import datetime
 import os
 import pathlib
+import random
 import shutil
 import textwrap
 from typing import Callable, TypedDict
@@ -141,6 +142,7 @@ def test_repo_update_handle_cases(
 ) -> None:
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
+
     mocka = mocker.spy(git_repo, "run")
     git_repo.update_repo()
 
@@ -152,6 +154,69 @@ def test_repo_update_handle_cases(
     git_repo.rev = "HEAD"
     git_repo.update_repo()
     assert mocker.call(["symbolic-ref", "--short", "HEAD"]) not in mocka.mock_calls
+
+
+@pytest.mark.parametrize(
+    "has_untracked_files,needs_stash,has_remote_changes",
+    [
+        [True, True, True],
+        [True, True, False],
+        [True, False, True],
+        [True, False, False],
+        [False, True, True],
+        [False, True, False],
+        [False, False, True],
+        [False, False, False],
+    ],
+)
+def test_repo_update_stash_cases(
+    tmp_path: pathlib.Path,
+    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    mocker: MockerFixture,
+    has_untracked_files: bool,
+    needs_stash: bool,
+    has_remote_changes: bool,
+) -> None:
+    git_remote_repo = create_git_remote_repo()
+
+    git_repo: GitSync = GitSync(
+        url=f"file://{git_remote_repo}",
+        dir=tmp_path / "myrepo",
+        vcs="git",
+    )
+    git_repo.obtain()  # clone initial repo
+
+    def make_file(filename: str) -> pathlib.Path:
+        some_file = git_repo.dir.joinpath(filename)
+        with open(some_file, "w") as file:
+            file.write("some content: " + str(random.random()))
+
+        return some_file
+
+    # Make an initial commit so we can reset
+    some_file = make_file("initial_file")
+    git_repo.run(["add", some_file])
+    git_repo.run(["commit", "-m", "a commit"])
+    git_repo.run(["push"])
+
+    if has_remote_changes:
+        some_file = make_file("some_file")
+        git_repo.run(["add", some_file])
+        git_repo.run(["commit", "-m", "a commit"])
+        git_repo.run(["push"])
+        git_repo.run(["reset", "--hard", "HEAD^"])
+
+    if has_untracked_files:
+        make_file("some_file")
+
+    if needs_stash:
+        some_file = make_file("some_stashed_file")
+        git_repo.run(["add", some_file])
+
+    mocka = mocker.spy(git_repo, "run")
+    git_repo.update_repo()
+
+    mocka.assert_any_call(["symbolic-ref", "--short", "HEAD"])
 
 
 @pytest.mark.parametrize(
