@@ -5,7 +5,7 @@ import pathlib
 import random
 import shutil
 import textwrap
-from typing import Any, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 import pytest
 
@@ -13,6 +13,9 @@ from libvcs._internal.run import run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 skip_if_git_missing = pytest.mark.skipif(
     not shutil.which("git"), reason="git is not available"
@@ -181,6 +184,9 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
         return remote_repo_name
 
 
+InitCmdArgs: "TypeAlias" = Optional[list[str]]
+
+
 class CreateProjectCallbackProtocol(Protocol):
     def __call__(self, remote_repo_path: pathlib.Path) -> None:
         ...
@@ -192,6 +198,7 @@ class CreateProjectCallbackFixtureProtocol(Protocol):
         remote_repos_path: pathlib.Path = ...,
         remote_repo_name: Optional[str] = ...,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = ...,
+        init_cmd_args: InitCmdArgs = ...,
     ) -> pathlib.Path:
         ...
 
@@ -200,9 +207,12 @@ def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+    init_cmd_args: InitCmdArgs = ["--bare"],
 ) -> pathlib.Path:
+    if init_cmd_args is None:
+        init_cmd_args = []
     remote_repo_path = remote_repos_path / remote_repo_name
-    run(["git", "init", remote_repo_name], cwd=remote_repos_path)
+    run(["git", "init", remote_repo_name, *init_cmd_args], cwd=remote_repos_path)
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -221,6 +231,7 @@ def create_git_remote_repo(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+        init_cmd_args: InitCmdArgs = ["--bare"],
     ) -> pathlib.Path:
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -228,6 +239,7 @@ def create_git_remote_repo(
             if remote_repo_name is not None
             else unique_repo_name(remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
+            init_cmd_args=init_cmd_args,
         )
 
     return fn
@@ -249,6 +261,7 @@ def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
         remote_repos_path=remote_repos_path,
         remote_repo_name="dummyrepo",
         remote_repo_post_init=git_remote_repo_single_commit_post_init,
+        init_cmd_args=None,  # Don't do --bare
     )
 
 
@@ -256,11 +269,14 @@ def _create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+    init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
     """Create a test SVN repo to for checkout / commit purposes"""
+    if init_cmd_args is None:
+        init_cmd_args = []
 
     remote_repo_path = remote_repos_path / remote_repo_name
-    run(["svnadmin", "create", remote_repo_path])
+    run(["svnadmin", "create", remote_repo_path, *init_cmd_args])
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -279,6 +295,7 @@ def create_svn_remote_repo(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+        init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
         return _create_svn_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -286,6 +303,7 @@ def create_svn_remote_repo(
             if remote_repo_name is not None
             else unique_repo_name(remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
+            init_cmd_args=init_cmd_args,
         )
 
     return fn
@@ -309,10 +327,14 @@ def _create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+    init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
     """Create a test hg repo to for checkout / commit purposes"""
+    if init_cmd_args is None:
+        init_cmd_args = []
+
     remote_repo_path = remote_repos_path / remote_repo_name
-    run(["hg", "init", remote_repo_name], cwd=remote_repos_path)
+    run(["hg", "init", remote_repo_name, *init_cmd_args], cwd=remote_repos_path)
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -340,6 +362,7 @@ def create_hg_remote_repo(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+        init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
         return _create_hg_remote_repo(
             remote_repos_path=remote_repos_path,
@@ -347,6 +370,7 @@ def create_hg_remote_repo(
             if remote_repo_name is not None
             else unique_repo_name(remote_repos_path=remote_repos_path),
             remote_repo_post_init=remote_repo_post_init,
+            init_cmd_args=init_cmd_args,
         )
 
     return fn
@@ -427,6 +451,7 @@ def add_doctest_fixtures(
         doctest_namespace["create_git_remote_repo"] = functools.partial(
             create_git_remote_repo,
             remote_repo_post_init=git_remote_repo_single_commit_post_init,
+            init_cmd_args=None,
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
         doctest_namespace["git_local_clone"] = git_repo
