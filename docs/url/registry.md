@@ -43,6 +43,7 @@ This will match `github:org/repo`:
 ...         'scheme': 'https'
 ...     }
 ...     is_explicit = True  # We know it's git, not any other VCS
+...     weight = 100
 
 Prefix for KDE infrastructure, `kde:group/repository`:
 
@@ -55,6 +56,7 @@ Prefix for KDE infrastructure, `kde:group/repository`:
 ...         'scheme': 'https'
 ...     }
 ...     is_explicit = True
+...     weight = 100
 
 >>> @dataclasses.dataclass(repr=False)
 ... class MyGitURLParser(GitURL):
@@ -87,21 +89,46 @@ Still works with everything GitURL does:
 >>> vcs_matcher.match('github:webpack/webpack', is_explicit=True)
 [ParserMatch(vcs='git',
     match=MyGitURLParser(url=github:webpack/webpack,
+    scheme=https,
     hostname=github.com,
     path=webpack/webpack,
     rule=gh-prefix))]
 
->>> vcs_matcher.match('github:webpack/webpack', is_explicit=True)[0].match.to_url()
+>>> git_match = vcs_matcher.match('github:webpack/webpack', is_explicit=True)[0].match
+
+>>> git_match.to_url()
+'https://github.com/webpack/webpack'
+
+If an ssh URL is preferred:
+
+>>> git_match.scheme = None
+
+>>> git_match.to_url()
 'git@github.com:webpack/webpack'
 
 >>> vcs_matcher.match('kde:frameworks/kirigami', is_explicit=True)
 [ParserMatch(vcs='git',
     match=MyGitURLParser(url=kde:frameworks/kirigami,
+    scheme=https,
     hostname=invent.kde.org,
     path=frameworks/kirigami,
     rule=kde-prefix))]
 
->>> vcs_matcher.match('kde:frameworks/kirigami', is_explicit=True)[0].match.to_url()
+>>> kde_match = vcs_matcher.match('kde:frameworks/kirigami', is_explicit=True)[0].match
+
+>>> kde_match
+MyGitURLParser(url=kde:frameworks/kirigami,
+    scheme=https,
+    hostname=invent.kde.org,
+    path=frameworks/kirigami,
+    rule=kde-prefix)
+
+>>> kde_match.to_url()
+'https://invent.kde.org/frameworks/kirigami'
+
+>>> kde_match.scheme = None
+
+>>> kde_match.to_url()
 'git@invent.kde.org:frameworks/kirigami'
 ```
 
