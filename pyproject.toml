@@ -61,7 +61,7 @@ Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-typing-extensions = { version = "^4.1.1", python = '3.10' }
+typing-extensions = { version = "*", python = '3.10' }
 
 [tool.poetry.dev-dependencies]
 ### Docs ###
@@ -80,7 +80,7 @@ gp-libs = "^0.0.1-alpha.9"
 pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
-pytest-watcher = "^0.2.3"
+pytest-watcher = "*"
 
 ### Coverage ###
 codecov = "*"
@@ -93,10 +93,10 @@ isort = "*"
 
 ### Lint ###
 flake8 = "*"
-flake8-bugbear = "^22.8.23"
+flake8-bugbear = "*"
 flake8-comprehensions = "*"
 mypy = "*"
-types-docutils = "^0.19.0"
+types-docutils = "*"
 
 [tool.poetry.extras]
 docs = [
