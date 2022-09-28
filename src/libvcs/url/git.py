@@ -274,7 +274,8 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
             groups = match.groupdict()
             setattr(self, "rule", rule.label)
             for k, v in groups.items():
-                setattr(self, k, v)
+                if v is not None:
+                    setattr(self, k, v)
 
             for k, v in rule.defaults.items():
                 if getattr(self, k, None) is not None:
