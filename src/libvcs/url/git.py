@@ -277,7 +277,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
                 setattr(self, k, v)
 
             for k, v in rule.defaults.items():
-                if getattr(self, k, None) is None:
+                if getattr(self, k, None) is not None:
                     setattr(self, k, rule.defaults[k])
 
     @classmethod
