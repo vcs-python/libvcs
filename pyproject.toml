@@ -98,6 +98,9 @@ flake8-comprehensions = "*"
 mypy = "*"
 types-docutils = "*"
 
+### Quirks ###
+importlib-metadata = "<5"  # https://github.com/PyCQA/flake8/issues/1701
+
 [tool.poetry.extras]
 docs = [
   "gp-libs",
