@@ -11,7 +11,9 @@ $ pip install --user --upgrade --pre libvcs
 
 ## libvcs 0.18.x (unreleased)
 
-- _Add your latest changes from PRs here_
+- Notes on upcoming releases will be added here
+
+<!-- Maintainers, insert changes / features for the next release here -->
 
 ### New features
 
