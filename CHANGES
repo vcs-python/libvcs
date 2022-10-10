@@ -13,6 +13,18 @@ $ pip install --user --upgrade --pre libvcs
 
 - _Add your latest changes from PRs here_
 
+### New features
+
+#### URLs
+
+- Added `weight` to matchers (#428)
+
+  - More heavily weighted matcher will have preference over others
+  - Fixes an issue where `defaults` would be overwritten
+
+    The first, highest weighted will "win", avoiding the recursion causing defau defaults for other
+    matchers to be applied.
+
 ## libvcs 0.17.0 (2022-09-25)
 
 ### New features
