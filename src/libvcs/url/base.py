@@ -36,6 +36,8 @@ class Rule(SkipDefaultFieldsReprMixin):
     defaults: dict[str, str] = dataclasses.field(default_factory=dict)
     """Is the match unambiguous with other VCS systems? e.g. git+ prefix"""
     is_explicit: bool = False
+    """Weight: Higher is more likely to win"""
+    weight: int = 0
 
 
 @dataclasses.dataclass(repr=False)
@@ -95,6 +97,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
         ...     }
         ...     # We know it's git, not any other VCS
         ...     is_explicit = True
+        ...     weight = 50
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitHubURL(GitURL):

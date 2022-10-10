@@ -64,7 +64,6 @@ TEST_FIXTURES: list[GitURLFixture] = [
         is_valid=True,
         git_url=GitURL(
             url="git@github.com:vcs-python/libvcs.git",
-            scheme="https",
             hostname="github.com",
             path="vcs-python/libvcs",
         ),
@@ -200,7 +199,7 @@ class ToURLFixture(typing.NamedTuple):
             ),
         ),
         ToURLFixture(
-            expected="git@github.com:vcs-python/libvcs.git",
+            expected="https://github.com/vcs-python/libvcs.git",
             git_url=GitURL(
                 url="git@github.com:vcs-python/libvcs.git",
                 scheme="https",

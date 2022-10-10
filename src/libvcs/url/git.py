@@ -267,18 +267,29 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     def __post_init__(self) -> None:
         url = self.url
-        for rule in self.rule_map.values():
+        sorted_maps = {
+            k: v
+            for k, v in sorted(
+                self.rule_map._rule_map.items(),
+                key=lambda item: item[1].weight,
+                reverse=True,
+            )
+        }
+
+        for rule in sorted_maps.values():
             match = re.match(rule.pattern, url)
             if match is None:
                 continue
             groups = match.groupdict()
             setattr(self, "rule", rule.label)
             for k, v in groups.items():
-                setattr(self, k, v)
+                if v is not None:
+                    setattr(self, k, v)
 
             for k, v in rule.defaults.items():
                 if getattr(self, k, None) is None:
                     setattr(self, k, rule.defaults[k])
+            break
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
@@ -547,7 +558,8 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         ...     is_explicit=True,
         ...     defaults={
         ...         'hostname': 'github.com'
-        ...     }
+        ...     },
+        ...     weight=100,
         ... )
 
         >>> GitURL.rule_map.register(GitHubRule)
