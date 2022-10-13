@@ -219,3 +219,21 @@ class Hg:
         return self.run(
             ["clone", *local_flags, "--", *required_flags], check_returncode=False
         )
+
+    def update(self) -> str:
+        """Update working directory
+
+        Wraps `hg update <https://www.mercurial-scm.org/doc/hg.1.html#update>`_.
+
+        Examples
+        --------
+        >>> hg = Hg(dir=tmp_path)
+        >>> hg_remote_repo = create_hg_remote_repo()
+        >>> hg.clone(url=f'file://{hg_remote_repo}')
+        'updating to branch default...1 files updated, 0 files merged, ...'
+        >>> hg.update()
+        '0 files updated, 0 files merged, 0 files removed, 0 files unresolved'
+        """
+        local_flags: list[str] = []
+
+        return self.run(["update", *local_flags], check_returncode=False)
