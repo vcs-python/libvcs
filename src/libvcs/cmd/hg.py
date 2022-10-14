@@ -77,6 +77,7 @@ class Hg:
         time: Optional[bool] = None,
         pager: Optional[HgPagerType] = None,
         color: Optional[HgColorType] = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """
@@ -125,6 +126,8 @@ class Hg:
             ``--pager TYPE``
         config :
             ``--config CONFIG [+]``, ``section.name=value``
+        check_returncode : bool, default: ``True``
+            Passthrough to :func:`libvcs._internal.run.run()`
 
         Examples
         --------
@@ -150,7 +153,7 @@ class Hg:
         if color is not None:
             cli_args.append(["--color", color])
         if verbose is True:
-            cli_args.append("verbose")
+            cli_args.append("--verbose")
         if quiet is True:
             cli_args.append("--quiet")
         if debug is True:
@@ -168,7 +171,11 @@ class Hg:
         if help is True:
             cli_args.append("--help")
 
-        return run(args=cli_args, **kwargs)
+        return run(
+            args=cli_args,
+            check_returncode=True if check_returncode is None else check_returncode,
+            **kwargs,
+        )
 
     def clone(
         self,
@@ -183,8 +190,10 @@ class Hg:
         pull: Optional[bool] = None,
         stream: Optional[bool] = None,
         insecure: Optional[bool] = None,
+        quiet: Optional[bool] = None,
         # Special behavior
         make_parents: Optional[bool] = True,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Clone a working copy from a mercurial repo.
 
@@ -194,6 +203,8 @@ class Hg:
         ----------
         make_parents : bool, default: ``True``
             Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+        check_returncode : bool, default: ``None``
+            Passthrough to :meth:`Hg.run`
 
         Examples
         --------
@@ -223,15 +234,26 @@ class Hg:
             local_flags.append("--stream")
         if insecure is True:
             local_flags.append("--insecure")
+        if quiet is True:
+            local_flags.append("--quiet")
 
         # libvcs special behavior
         if make_parents and not self.dir.exists():
             self.dir.mkdir(parents=True)
         return self.run(
-            ["clone", *local_flags, "--", *required_flags], check_returncode=False
+            ["clone", *local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
         )
 
-    def update(self) -> str:
+    def update(
+        self,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = True,
+        *args: object,
+        **kwargs: object,
+    ) -> str:
         """Update working directory
 
         Wraps `hg update <https://www.mercurial-scm.org/doc/hg.1.html#update>`_.
@@ -247,4 +269,9 @@ class Hg:
         """
         local_flags: list[str] = []
 
-        return self.run(["update", *local_flags], check_returncode=False)
+        if quiet:
+            local_flags.append("--quiet")
+        if verbose:
+            local_flags.append("--verbose")
+
+        return self.run(["update", *local_flags], check_returncode=check_returncode)
