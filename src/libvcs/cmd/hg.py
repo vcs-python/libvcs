@@ -275,3 +275,39 @@ class Hg:
             local_flags.append("--verbose")
 
         return self.run(["update", *local_flags], check_returncode=check_returncode)
+
+    def pull(
+        self,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        update: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = True,
+        *args: object,
+        **kwargs: object,
+    ) -> str:
+        """Update working directory
+
+        Wraps `hg update <https://www.mercurial-scm.org/doc/hg.1.html#pull>`_.
+
+        Examples
+        --------
+        >>> hg = Hg(dir=tmp_path)
+        >>> hg_remote_repo = create_hg_remote_repo()
+        >>> hg.clone(url=f'file://{hg_remote_repo}')
+        'updating to branch default...1 files updated, 0 files merged, ...'
+        >>> hg.pull()
+        'pulling from ...searching for changes...no changes found'
+        >>> hg.pull(update=True)
+        'pulling from ...searching for changes...no changes found'
+        """
+        local_flags: list[str] = []
+
+        if quiet:
+            local_flags.append("--quiet")
+        if verbose:
+            local_flags.append("--verbose")
+        if update:
+            local_flags.append("--update")
+
+        return self.run(["pull", *local_flags], check_returncode=check_returncode)
