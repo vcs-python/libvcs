@@ -183,10 +183,17 @@ class Hg:
         pull: Optional[bool] = None,
         stream: Optional[bool] = None,
         insecure: Optional[bool] = None,
+        # Special behavior
+        make_parents: Optional[bool] = True,
     ) -> str:
         """Clone a working copy from a mercurial repo.
 
         Wraps `hg clone <https://www.mercurial-scm.org/doc/hg.1.html#clone>`_.
+
+        Parameters
+        ----------
+        make_parents : bool, default: ``True``
+            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
 
         Examples
         --------
@@ -216,6 +223,10 @@ class Hg:
             local_flags.append("--stream")
         if insecure is True:
             local_flags.append("--insecure")
+
+        # libvcs special behavior
+        if make_parents and not self.dir.exists():
+            self.dir.mkdir(parents=True)
         return self.run(
             ["clone", *local_flags, "--", *required_flags], check_returncode=False
         )
