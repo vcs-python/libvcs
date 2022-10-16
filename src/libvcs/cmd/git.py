@@ -58,7 +58,7 @@ class Git:
         noglob_pathspecs: Optional[bool] = None,
         icase_pathspecs: Optional[bool] = None,
         no_optional_locks: Optional[bool] = None,
-        config: Optional[str] = None,
+        config: Optional[dict[str, Any]] = None,
         config_env: Optional[str] = None,
         **kwargs: Any,
     ) -> str:
@@ -156,6 +156,18 @@ class Git:
                 C = [C]
             C = [str(c) for c in C]
             cli_args.extend(["-C", C])
+        if config is not None:
+            assert isinstance(config, dict)
+
+            def stringify(v: Any) -> str:
+                if isinstance(v, bool):
+                    return "true" if True else "false"
+                elif not isinstance(v, str):
+                    return str(v)
+                return v
+
+            for k, v in config.items():
+                cli_args.extend(["--config", f"{k}={stringify(v)}"])
         if git_dir is not None:
             cli_args.extend(["--git-dir", str(git_dir)])
         if work_tree is not None:
@@ -189,7 +201,7 @@ class Git:
         url: str,
         separate_git_dir: Optional[StrOrBytesPath] = None,
         template: Optional[str] = None,
-        depth: Optional[str] = None,
+        depth: Optional[int] = None,
         branch: Optional[str] = None,
         origin: Optional[str] = None,
         upload_pack: Optional[str] = None,
@@ -216,6 +228,8 @@ class Git:
         no_remote_submodules: Optional[bool] = None,
         verbose: Optional[bool] = None,
         quiet: Optional[bool] = None,
+        # Pass-through to run
+        config: Optional[dict[str, Any]] = None,
         # Special behavior
         make_parents: Optional[bool] = True,
         **kwargs: Any,
@@ -254,7 +268,7 @@ class Git:
         if (filter := kwargs.pop("filter", None)) is not None:
             local_flags.append(f"--filter={filter}")
         if depth is not None:
-            local_flags.extend(["--depth", depth])
+            local_flags.extend(["--depth", str(depth)])
         if branch is not None:
             local_flags.extend(["--branch", branch])
         if origin is not None:
@@ -308,7 +322,9 @@ class Git:
         if make_parents and not self.dir.exists():
             self.dir.mkdir(parents=True)
         return self.run(
-            ["clone", *local_flags, "--", *required_flags], check_returncode=False
+            ["clone", *local_flags, "--", *required_flags],
+            config=config,
+            check_returncode=False,
         )
 
     def fetch(
