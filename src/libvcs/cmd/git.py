@@ -1648,3 +1648,31 @@ class Git:
             ["config", *local_flags],
             check_returncode=False,
         )
+
+    def version(
+        self,
+        *,
+        build_options: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Version. Wraps `git version <https://git-scm.com/docs/git-version>`_.
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.version()
+        'git version ...'
+
+        >>> git.version(build_options=True)
+        'git version ...'
+        """
+        local_flags: list[str] = []
+
+        if build_options is True:
+            local_flags.append("--build-options")
+
+        return self.run(
+            ["version", *local_flags],
+            check_returncode=False,
+        )
