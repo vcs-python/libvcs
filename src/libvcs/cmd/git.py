@@ -31,7 +31,7 @@ class Git:
             self.dir = pathlib.Path(dir)
 
         # Initial git-submodule
-        self.submodule = GitSubmodule(dir=self.dir, cmd=self)
+        self.submodule = GitSubmoduleCmd(dir=self.dir, cmd=self)
 
     def __repr__(self) -> str:
         return f"<Git dir={self.dir}>"
@@ -63,6 +63,8 @@ class Git:
         no_optional_locks: Optional[bool] = None,
         config: Optional[dict[str, Any]] = None,
         config_env: Optional[str] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
         **kwargs: Any,
     ) -> str:
         """
@@ -233,7 +235,9 @@ class Git:
         quiet: Optional[bool] = None,
         # Pass-through to run
         config: Optional[dict[str, Any]] = None,
+        log_in_real_time: bool = False,
         # Special behavior
+        check_returncode: Optional[bool] = None,
         make_parents: Optional[bool] = True,
         **kwargs: Any,
     ) -> str:
@@ -327,7 +331,8 @@ class Git:
         return self.run(
             ["clone", *local_flags, "--", *required_flags],
             config=config,
-            check_returncode=False,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
         )
 
     def fetch(
@@ -384,6 +389,8 @@ class Git:
         show_forced_updates: Optional[bool] = None,
         no_show_forced_updates: Optional[bool] = None,
         negotiate_only: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Download from repo. Wraps `git fetch <https://git-scm.com/docs/git-fetch>`_.
@@ -485,7 +492,8 @@ class Git:
         if negotiate_only:
             local_flags.append("--negotiate-only")
         return self.run(
-            ["fetch", *local_flags, "--", *required_flags], check_returncode=False
+            ["fetch", *local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
         )
 
     def rebase(
@@ -543,6 +551,8 @@ class Git:
         show_current_patch: Optional[bool] = None,
         abort: Optional[bool] = None,
         quit: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Reapply commit on top of another tip.
@@ -682,7 +692,7 @@ class Git:
             local_flags.append("--quit")
 
         return self.run(
-            ["rebase", *local_flags, *required_flags], check_returncode=False
+            ["rebase", *local_flags, *required_flags], check_returncode=check_returncode
         )
 
     def pull(
@@ -780,6 +790,9 @@ class Git:
         show_forced_updates: Optional[bool] = None,
         no_show_forced_updates: Optional[bool] = None,
         negotiate_only: Optional[bool] = None,
+        # Pass-through to run
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Download from repo. Wraps `git pull <https://git-scm.com/docs/git-pull>`_.
@@ -961,7 +974,9 @@ class Git:
         if negotiate_only:
             local_flags.append("--negotiate-only")
         return self.run(
-            ["pull", *local_flags, "--", *required_flags], check_returncode=False
+            ["pull", *local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
         )
 
     def init(
@@ -975,6 +990,8 @@ class Git:
         shared: Optional[bool] = None,
         quiet: Optional[bool] = None,
         bare: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
@@ -1041,7 +1058,8 @@ class Git:
             local_flags.append("--bare")
 
         return self.run(
-            ["init", *local_flags, "--", *required_flags], check_returncode=False
+            ["init", *local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
         )
 
     def help(
@@ -1056,6 +1074,8 @@ class Git:
         info: Optional[bool] = None,
         man: Optional[bool] = None,
         web: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Help info. Wraps `git help <https://git-scm.com/docs/git-help>`_.
@@ -1126,7 +1146,7 @@ class Git:
         if web is True:
             local_flags.append("--web")
 
-        return self.run(["help", *local_flags], check_returncode=False)
+        return self.run(["help", *local_flags], check_returncode=check_returncode)
 
     def reset(
         self,
@@ -1144,6 +1164,8 @@ class Git:
         commit: Optional[str] = None,
         recurse_submodules: Optional[bool] = None,
         no_recurse_submodules: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Reset HEAD. Wraps `git help <https://git-scm.com/docs/git-help>`_.
@@ -1217,7 +1239,7 @@ class Git:
 
         return self.run(
             ["reset", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
-            check_returncode=False,
+            check_returncode=check_returncode,
         )
 
     def checkout(
@@ -1252,6 +1274,8 @@ class Git:
         new_branch: Optional[str] = None,
         start_point: Optional[str] = None,
         treeish: Optional[str] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Switches branches or checks out files. Wraps
@@ -1351,7 +1375,7 @@ class Git:
 
         return self.run(
             ["checkout", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
-            check_returncode=False,
+            check_returncode=check_returncode,
         )
 
     def status(
@@ -1374,6 +1398,8 @@ class Git:
         ignored: Optional[Literal["traditional", "no", "matching"]] = None,
         ignored_submodules: Optional[Literal["untracked", "dirty", "all"]] = None,
         pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Status of working tree. Wraps
@@ -1479,7 +1505,7 @@ class Git:
 
         return self.run(
             ["status", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
-            check_returncode=False,
+            check_returncode=check_returncode,
         )
 
     def config(
@@ -1516,6 +1542,8 @@ class Git:
         no_includes: Optional[bool] = None,
         includes: Optional[bool] = None,
         add: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Status of working tree. Wraps
@@ -1665,15 +1693,17 @@ class Git:
 
         return self.run(
             ["config", *local_flags],
-            check_returncode=False,
+            check_returncode=check_returncode,
         )
 
-    submodule: "GitSubmodule"
+    submodule: "GitSubmoduleCmd"
 
     def version(
         self,
         *,
         build_options: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Version. Wraps `git version <https://git-scm.com/docs/git-version>`_.
@@ -1695,11 +1725,11 @@ class Git:
 
         return self.run(
             ["version", *local_flags],
-            check_returncode=False,
+            check_returncode=check_returncode,
         )
 
 
-GitSubmoduleCommandLiteral = Literal[
+GitSubmoduleCmdCommandLiteral = Literal[
     "status",
     "init",
     "deinit",
@@ -1713,7 +1743,7 @@ GitSubmoduleCommandLiteral = Literal[
 ]
 
 
-class GitSubmodule:
+class GitSubmoduleCmd:
     def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-submodule(1).
 
@@ -1724,13 +1754,13 @@ class GitSubmodule:
 
         Examples
         --------
-        >>> GitSubmodule(dir=tmp_path)
-        <GitSubmodule dir=...>
+        >>> GitSubmoduleCmd(dir=tmp_path)
+        <GitSubmoduleCmd dir=...>
 
-        >>> GitSubmodule(dir=tmp_path).run(quiet=True)
+        >>> GitSubmoduleCmd(dir=tmp_path).run(quiet=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitSubmodule(dir=git_local_clone.dir).run(quiet=True)
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).run(quiet=True)
         ''
         """
         #: Directory to check out
@@ -1743,23 +1773,30 @@ class GitSubmodule:
         self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
 
     def __repr__(self) -> str:
-        return f"<GitSubmodule dir={self.dir}>"
+        return f"<GitSubmoduleCmd dir={self.dir}>"
 
     def run(
         self,
+        command: Optional[GitSubmoduleCmdCommandLiteral] = None,
+        local_flags: Optional[list[str]] = None,
         *,
-        command: Optional[GitSubmoduleCommandLiteral] = None,
         quiet: Optional[bool] = None,
         cached: Optional[bool] = None,  # Only when no command entered and status
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Version. Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+        """Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
 
         Examples
         --------
-        >>> git = GitSubmodule(dir=git_local_clone.dir)
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).run()
+        ''
         """
-        local_flags: list[str] = []
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
 
         if quiet is True:
             local_flags.append("--quiet")
@@ -1768,5 +1805,424 @@ class GitSubmodule:
 
         return self.cmd.run(
             ["submodule", *local_flags],
-            check_returncode=False,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def init(
+        self,
+        *,
+        path: Optional[Union[list[StrPath], StrPath]] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule init
+
+        Examples
+        --------
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).init()
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = []
+
+        if isinstance(path, list):
+            required_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            required_flags.append(str(pathlib.Path(path).absolute()))
+
+        return self.run(
+            "init",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        path: Optional[Union[list[StrPath], StrPath]] = None,
+        init: Optional[bool] = None,
+        force: Optional[bool] = None,
+        checkout: Optional[bool] = None,
+        rebase: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        recursive: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """git submodule update
+
+        Examples
+        --------
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update()
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(init=True)
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(init=True, recursive=True)
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(
+        ...     init=True, filter="blob:none"
+        ... )
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(force=True)
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(checkout=True)
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(rebase=True)
+        ''
+        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(merge=True)
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = []
+
+        if isinstance(path, list):
+            required_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            required_flags.append(str(pathlib.Path(path).absolute()))
+
+        if init is True:
+            local_flags.append("--init")
+        if force is True:
+            local_flags.append("--force")
+
+        if checkout is True:
+            local_flags.append("--checkout")
+        elif rebase is True:
+            local_flags.append("--rebase")
+        elif merge is True:
+            local_flags.append("--merge")
+        if (filter := kwargs.pop("filter", None)) is not None:
+            local_flags.append(f"--filter={filter}")
+
+        return self.run(
+            "update",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+GitRemoteCommandLiteral = Literal[
+    "add",
+    "rename",
+    "remove",
+    "set-branches",
+    "set-head",
+    "set-branch",
+    "get-url",
+    "set-url",
+    "set-url --add",
+    "set-url --delete",
+    "prune",
+]
+
+
+class GitRemoteCmd:
+    def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
+        r"""Lite, typed, pythonic wrapper for git-remote(1).
+
+        Parameters
+        ----------
+        dir :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(dir=tmp_path)
+        <GitRemoteCmd dir=...>
+
+        >>> GitRemoteCmd(dir=tmp_path).run(verbose=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitRemoteCmd(dir=git_local_clone.dir).run(verbose=True)
+        'origin\tfile:///...'
+        """
+        #: Directory to check out
+        self.dir: pathlib.Path
+        if isinstance(dir, pathlib.Path):
+            self.dir = dir
+        else:
+            self.dir = pathlib.Path(dir)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
+
+    def __repr__(self) -> str:
+        return f"<GitRemoteCmd dir={self.dir}>"
+
+    def run(
+        self,
+        command: Optional[GitRemoteCommandLiteral] = None,
+        local_flags: Optional[list[str]] = None,
+        *,
+        verbose: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        r"""Wraps `git submodule <https://git-scm.com/docs/git-remote>`_.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(dir=git_local_clone.dir).run()
+        'origin'
+        >>> GitRemoteCmd(dir=git_local_clone.dir).run(verbose=True)
+        'origin\tfile:///...'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        if verbose is True:
+            local_flags.append("--verbose")
+
+        return self.cmd.run(
+            ["remote", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def add(
+        self,
+        *,
+        name: str,
+        url: str,
+        fetch: Optional[bool] = None,
+        track: Optional[str] = None,
+        master: Optional[str] = None,
+        mirror: Optional[Union[Literal["push", "fetch"], bool]] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule add
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(dir=git_local_clone.dir).add(
+        ...     name='my_remote', url=f'file://{git_remote_repo}'
+        ... )
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name, url]
+
+        if mirror is not None:
+            if isinstance(mirror, str):
+                assert any(f for f in ["push", "fetch"])
+                local_flags.extend(["--mirror", mirror])
+            if isinstance(mirror, bool) and mirror:
+                local_flags.append("--mirror")
+        return self.run(
+            "add",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def rename(
+        self,
+        *,
+        old: str,
+        new: str,
+        progress: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule rename
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(dir=git_local_clone.dir).rename(old='origin', new='new_name')
+        ''
+        >>> GitRemoteCmd(dir=git_local_clone.dir).run()
+        'new_name'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [old, new]
+
+        if progress is not None:
+            if progress:
+                local_flags.append("--progress")
+            else:
+                local_flags.append("--no-progress")
+        return self.run(
+            "rename",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def remove(
+        self,
+        *,
+        name: str,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule remove
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(dir=git_local_clone.dir).remove(name='origin')
+        ''
+        >>> GitRemoteCmd(dir=git_local_clone.dir).run()
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name]
+
+        return self.run(
+            "remove",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def prune(
+        self,
+        *,
+        name: str,
+        dry_run: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule get-url
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(dir=git_local_clone.dir).prune(name='origin')
+        ''
+
+        >>> GitRemoteCmd(dir=git_local_clone.dir).prune(name='origin', dry_run=True)
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name]
+
+        if dry_run:
+            local_flags.append("--dry-run")
+
+        return self.run(
+            "prune",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def get_url(
+        self,
+        *,
+        name: str,
+        push: Optional[bool] = None,
+        all: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule remove
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin')
+        'file:///...'
+
+        >>> GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin', push=True)
+        'file:///...'
+
+        >>> GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin', all=True)
+        'file:///...'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name]
+
+        if push:
+            local_flags.append("--push")
+        if all:
+            local_flags.append("--all")
+
+        return self.run(
+            "get-url",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_url(
+        self,
+        *,
+        name: str,
+        url: str,
+        old_url: Optional[str] = None,
+        push: Optional[bool] = None,
+        add: Optional[bool] = None,
+        delete: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule remove
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        ...     name='origin',
+        ...     url='http://localhost'
+        ... )
+        ''
+
+        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        ...     name='origin',
+        ...     url='http://localhost',
+        ...     push=True
+        ... )
+        ''
+
+        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        ...     name='origin',
+        ...     url='http://localhost',
+        ...     add=True
+        ... )
+        ''
+
+        >>> current_url = GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin')
+        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        ...     name='origin',
+        ...     url=current_url,
+        ...     delete=True
+        ... )
+        'fatal: Will not delete all non-push URLs'
+
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name, url]
+        if old_url is not None:
+            required_flags.append(old_url)
+
+        if push:
+            local_flags.append("--push")
+        if add:
+            local_flags.append("--add")
+        if delete:
+            local_flags.append("--delete")
+
+        return self.run(
+            "set-url",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
         )
