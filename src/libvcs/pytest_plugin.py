@@ -276,12 +276,32 @@ def _create_svn_remote_repo(
         init_cmd_args = []
 
     remote_repo_path = remote_repos_path / remote_repo_name
-    run(["svnadmin", "create", remote_repo_path, *init_cmd_args])
+    run(["svnadmin", "create", str(remote_repo_path), *init_cmd_args])
+
+    assert remote_repo_path.exists()
+    assert remote_repo_path.is_dir()
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
 
     return remote_repo_path
+
+
+def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> None:
+    assert remote_repo_path.exists()
+    repo_dumpfile = pathlib.Path(__file__).parent / "data" / "repotest.dump"
+    run(
+        " ".join(
+            [
+                "svnadmin",
+                "load",
+                str(remote_repo_path),
+                "<",
+                str(repo_dumpfile),
+            ]
+        ),
+        shell=True,
+    )
 
 
 @pytest.fixture
@@ -313,10 +333,9 @@ def create_svn_remote_repo(
 @skip_if_svn_missing
 def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
-    svn_repo_name = "svn_server_dir"
     remote_repo_path = _create_svn_remote_repo(
         remote_repos_path=remote_repos_path,
-        remote_repo_name=svn_repo_name,
+        remote_repo_name="svn_server_dir",
         remote_repo_post_init=None,
     )
 
@@ -456,7 +475,11 @@ def add_doctest_fixtures(
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
         doctest_namespace["git_local_clone"] = git_repo
     if shutil.which("svn"):
-        doctest_namespace["create_svn_remote_repo"] = create_svn_remote_repo
+        doctest_namespace["create_svn_remote_repo_bare"] = create_svn_remote_repo
+        doctest_namespace["create_svn_remote_repo"] = functools.partial(
+            create_svn_remote_repo,
+            remote_repo_post_init=svn_remote_repo_single_commit_post_init,
+        )
     if shutil.which("hg"):
         doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
         doctest_namespace["create_hg_remote_repo"] = functools.partial(
