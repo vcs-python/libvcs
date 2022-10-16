@@ -8,7 +8,7 @@
 """
 import pathlib
 from collections.abc import Sequence
-from typing import Any, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath
@@ -55,6 +55,9 @@ class Svn:
         trust_server_cert: Optional[bool] = None,
         config_dir: Optional[pathlib.Path] = None,
         config_option: Optional[pathlib.Path] = None,
+        # Special behavior
+        make_parents: Optional[bool] = True,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """
@@ -86,6 +89,10 @@ class Svn:
             --config-option, ``FILE:SECTION:OPTION=[VALUE]``
         cwd : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             Defaults to :attr:`~.cwd`
+        make_parents : bool, default: ``True``
+            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+        check_returncode : bool, default: ``None``
+            Passthrough to :meth:`Svn.run`
 
         Examples
         --------
@@ -117,7 +124,11 @@ class Svn:
         if config_option is not None:
             cli_args.extend(["--config-option", str(config_option)])
 
-        return run(args=cli_args, **kwargs)
+        return run(
+            args=cli_args,
+            check_returncode=True if check_returncode is None else check_returncode,
+            **kwargs,
+        )
 
     def checkout(
         self,
@@ -127,6 +138,15 @@ class Svn:
         force: Optional[bool] = None,
         ignore_externals: Optional[bool] = None,
         depth: DepthLiteral = None,
+        quiet: Optional[bool] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        no_auth_cache: Optional[bool] = None,
+        non_interactive: Optional[bool] = True,
+        trust_server_cert: Optional[bool] = None,
+        # Special behavior
+        make_parents: Optional[bool] = True,
+        check_returncode: Optional[bool] = False,
     ) -> str:
         """Check out a working copy from an SVN repo.
 
@@ -144,6 +164,10 @@ class Svn:
             ignore externals definitions
         depth :
             Sparse checkout support, Optional
+        make_parents : bool, default: ``True``
+            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+        check_returncode : bool, default: True
+            Passthrough to :meth:`Svn.run`
 
         Examples
         --------
@@ -157,15 +181,28 @@ class Svn:
         local_flags: list[str] = [url, str(self.dir)]
 
         if revision is not None:
-            local_flags.append(f"--revision={revision}")
+            local_flags.extend(["--revision", revision])
         if depth is not None:
-            local_flags.append(depth)
+            local_flags.extend(["--depth", depth])
         if force is True:
             local_flags.append("--force")
         if ignore_externals is True:
             local_flags.append("--ignore-externals")
 
-        return self.run(["checkout", *local_flags], check_returncode=False)
+        # libvcs special behavior
+        if make_parents and not self.dir.exists():
+            self.dir.mkdir(parents=True)
+
+        return self.run(
+            ["checkout", *local_flags],
+            quiet=quiet,
+            username=username,
+            password=password,
+            no_auth_cache=no_auth_cache,
+            non_interactive=non_interactive,
+            trust_server_cert=trust_server_cert,
+            check_returncode=check_returncode,
+        )
 
     def add(
         self,
@@ -317,7 +354,7 @@ class Svn:
         local_flags: list[str] = [str(target)]
 
         if revision is not None:
-            local_flags.append(f"--revision={revision}")
+            local_flags.extend(["--revision", revision])
         if verbose is True:
             local_flags.append("--verbose")
         if use_merge_history is True:
@@ -764,7 +801,21 @@ class Svn:
 
         return self.run(["unlock", *local_flags])
 
-    def update(self, *args: Any, **kwargs: Any) -> str:
+    def update(
+        self,
+        accept: Optional[str] = None,
+        changelist: Optional[List[str]] = None,
+        diff3_cmd: Optional[str] = None,
+        editor_cmd: Optional[str] = None,
+        force: Optional[bool] = None,
+        ignore_externals: Optional[bool] = None,
+        parents: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        revision: Optional[str] = None,
+        set_depth: Optional[str] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn update
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.update.html>`_ (up).
@@ -773,6 +824,25 @@ class Svn:
         ----------
         """
         local_flags: list[str] = [*args]
+
+        if revision is not None:
+            local_flags.extend(["--revision", revision])
+        if diff3_cmd is not None:
+            local_flags.extend(["--diff3-cmd", diff3_cmd])
+        if editor_cmd is not None:
+            local_flags.extend(["--editor-cmd", editor_cmd])
+        if set_depth is not None:
+            local_flags.extend(["--set-depth", set_depth])
+        if changelist is not None:
+            local_flags.extend(["--changelist", *changelist])
+        if force is True:
+            local_flags.append("--force")
+        if quiet is True:
+            local_flags.append("--quiet")
+        if parents is True:
+            local_flags.append("--parents")
+        if ignore_externals is True:
+            local_flags.append("--ignore-externals")
 
         return self.run(["update", *local_flags])
 
