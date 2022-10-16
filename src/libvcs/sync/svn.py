@@ -11,14 +11,12 @@
 
     - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
-    - [`get_rev_options`](libvcs.svn.get_rev_options)
 """  # NOQA: E5
 import logging
 import os
 import pathlib
 import re
 from typing import Any, Optional
-from urllib import parse as urlparse
 
 from libvcs._internal.run import run
 from libvcs._internal.types import StrPath
@@ -203,32 +201,3 @@ class SvnSync(BaseSync):
     @property
     def cmd(self, *args: object, **kwargs: object) -> Svn:
         return Svn(dir=self.dir, *args, **kwargs)
-
-
-def get_rev_options(url: str, rev: None) -> list[Any]:
-    """Return revision options. From pip pip.vcs.subversion."""
-    if rev:
-        rev_options = ["-r", rev]
-    else:
-        rev_options = []
-
-    r = urlparse.urlsplit(url)
-    if hasattr(r, "username"):
-        # >= Python-2.5
-        username, password = r.username, r.password
-    else:
-        netloc = r[1]
-        if "@" in netloc:
-            auth = netloc.split("@")[0]
-            if ":" in auth:
-                username, password = auth.split(":", 1)
-            else:
-                username, password = auth, None
-        else:
-            username, password = None, None
-
-    if username:
-        rev_options += ["--username", username]
-    if password:
-        rev_options += ["--password", password]
-    return rev_options
