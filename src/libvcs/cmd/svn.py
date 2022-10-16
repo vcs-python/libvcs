@@ -549,15 +549,58 @@ class Svn:
 
         return self.run(["import", *local_flags])
 
-    def info(self, *args: Any, **kwargs: Any) -> str:
+    def info(
+        self,
+        target: Optional[StrPath] = None,
+        targets: Optional[Union[list[StrPath], StrPath]] = None,
+        changelist: Optional[List[str]] = None,
+        revision: Optional[str] = None,
+        depth: DepthLiteral = None,
+        incremental: Optional[bool] = None,
+        recursive: Optional[bool] = None,
+        xml: Optional[bool] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn info
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.info.html>`_.
 
         Parameters
         ----------
+        targets : pathlib.Path
+            `--targets ARG`: contents of file ARG as additional args
+        xml : bool
+            `--xml`, xml output
+        revision : Union[RevisionLiteral, str]
+            Number, '{ DATE }', 'HEAD', 'BASE', 'COMMITTED', 'PREV'
+        depth :
+            `--depth ARG`, Sparse checkout support, Optional
+        incremental : bool
+            `--incremental`, give output suitable for concatenation
         """
         local_flags: list[str] = [*args]
+
+        if isinstance(target, pathlib.Path):
+            local_flags.append(str(target.absolute()))
+        elif isinstance(target, str):
+            local_flags.append(target)
+
+        if revision is not None:
+            local_flags.extend(["--revision", revision])
+        if targets is not None:
+            if isinstance(targets, Sequence):
+                local_flags.extend(["--targets", *[str(t) for t in targets]])
+            else:
+                local_flags.extend(["--targets", str(targets)])
+        if changelist is not None:
+            local_flags.extend(["--changelist", *changelist])
+        if recursive is True:
+            local_flags.append("--recursive")
+        if xml is True:
+            local_flags.append("--xml")
+        if incremental is True:
+            local_flags.append("--incremental")
 
         return self.run(["info", *local_flags])
 
