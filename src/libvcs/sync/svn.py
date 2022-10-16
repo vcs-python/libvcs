@@ -9,7 +9,6 @@
 
     The following are pypa/pip (MIT license):
 
-    - [`SvnSync.convert_pip_url`](libvcs.svn.SvnSync.convert_pip_url)
     - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
     - [`get_rev_options`](libvcs.svn.get_rev_options)
@@ -24,17 +23,9 @@ from urllib import parse as urlparse
 from libvcs._internal.run import run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-from .base import BaseSync, VCSLocation, convert_pip_url as base_convert_pip_url
+from .base import BaseSync
 
 logger = logging.getLogger(__name__)
-
-
-def convert_pip_url(pip_url: str) -> VCSLocation:
-    # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
-    url, rev = base_convert_pip_url(pip_url)
-    if url.startswith("ssh://"):
-        url = "svn+" + url
-    return VCSLocation(url=url, rev=rev)
 
 
 class SvnSync(BaseSync):
