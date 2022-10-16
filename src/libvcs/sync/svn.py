@@ -18,7 +18,6 @@ import pathlib
 import re
 from typing import Any, Optional
 
-from libvcs._internal.run import run
 from libvcs._internal.types import StrPath
 from libvcs.cmd.svn import Svn
 
@@ -88,8 +87,7 @@ class SvnSync(BaseSync):
 
     def get_revision_file(self, location: str) -> int:
         """Return revision for a file."""
-
-        current_rev = self.run(["info", location])
+        current_rev = self.cmd.info(location)
 
         _INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.M)
 
@@ -181,8 +179,8 @@ class SvnSync(BaseSync):
                 # We don't need to worry about making sure interactive mode
                 # is being used to prompt for passwords, because passwords
                 # are only potentially needed for remote server requests.
-                xml = run(
-                    ["svn", "info", "--xml", location],
+                xml = Svn(dir=pathlib.Path(location).parent).info(
+                    target=pathlib.Path(location), xml=True
                 )
                 match = _svn_info_xml_url_re.search(xml)
                 assert match is not None
