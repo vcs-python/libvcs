@@ -21,7 +21,8 @@ from typing import Any, Optional
 from urllib import parse as urlparse
 
 from libvcs._internal.run import run
-from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrPath
+from libvcs.cmd.svn import Svn
 
 from .base import BaseSync
 
@@ -32,7 +33,13 @@ class SvnSync(BaseSync):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
 
-    def __init__(self, *, url: str, dir: StrPath, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        url: str,
+        dir: StrPath,
+        **kwargs: Any,
+    ) -> None:
         """A svn repository.
 
         Parameters
@@ -40,17 +47,19 @@ class SvnSync(BaseSync):
         url : str
             URL in subversion repository
 
-        svn_username : str, optional
+        username : str, optional
             username to use for checkout and update
 
-        svn_password : str, optional
+        password : str, optional
             password to use for checkout and update
 
         svn_trust_cert : bool
             trust the Subversion server site certificate, default False
         """
-        if "svn_trust_cert" not in kwargs:
-            self.svn_trust_cert = False
+        self.svn_trust_cert = kwargs.pop("svn_trust_cert", False)
+
+        self.username = kwargs.get("username")
+        self.password = kwargs.get("password")
 
         self.rev = kwargs.get("rev")
         super().__init__(url=url, dir=dir, **kwargs)
@@ -63,18 +72,21 @@ class SvnSync(BaseSync):
         return args
 
     def obtain(self, quiet: Optional[bool] = None, *args: Any, **kwargs: Any) -> None:
-        self.ensure_dir()
-
         url, rev = self.url, self.rev
 
-        cmd: list[StrOrBytesPath] = ["checkout", "-q", url, "--non-interactive"]
+        if rev is not None:
+            kwargs["revision"] = rev
         if self.svn_trust_cert:
-            cmd.append("--trust-server-cert")
-        cmd.extend(self._user_pw_args())
-        cmd.extend(get_rev_options(url, rev))
-        cmd.append(self.dir)
-
-        self.run(cmd)
+            kwargs["trust_server_cert"] = True
+        self.cmd.checkout(
+            url=url,
+            username=self.username,
+            password=self.password,
+            non_interactive=True,
+            quiet=True,
+            check_returncode=True,
+            **kwargs,
+        )
 
     def get_revision_file(self, location: str) -> int:
         """Return revision for a file."""
@@ -124,17 +136,15 @@ class SvnSync(BaseSync):
     ) -> None:
         self.ensure_dir()
         if pathlib.Path(self.dir / ".svn").exists():
-            if dest is None:
-                dest = str(self.dir)
-
-            url, rev = self.url, self.rev
-
-            cmd = ["update"]
-            cmd.extend(self._user_pw_args())
-            cmd.extend(get_rev_options(url, rev))
-            cmd.append(dest)
-
-            self.run(cmd)
+            self.cmd.checkout(
+                url=self.url,
+                username=self.username,
+                password=self.password,
+                non_interactive=True,
+                quiet=True,
+                check_returncode=True,
+                **kwargs,
+            )
         else:
             self.obtain()
             self.update_repo()
@@ -189,6 +199,10 @@ class SvnSync(BaseSync):
             rev = 0
 
         return url, rev
+
+    @property
+    def cmd(self, *args: object, **kwargs: object) -> Svn:
+        return Svn(dir=self.dir, *args, **kwargs)
 
 
 def get_rev_options(url: str, rev: None) -> list[Any]:
