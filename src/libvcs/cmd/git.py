@@ -30,6 +30,9 @@ class Git:
         else:
             self.dir = pathlib.Path(dir)
 
+        # Initial git-submodule
+        self.submodule = GitSubmodule(dir=self.dir, cmd=self)
+
     def __repr__(self) -> str:
         return f"<Git dir={self.dir}>"
 
@@ -1665,6 +1668,8 @@ class Git:
             check_returncode=False,
         )
 
+    submodule: "GitSubmodule"
+
     def version(
         self,
         *,
@@ -1690,5 +1695,78 @@ class Git:
 
         return self.run(
             ["version", *local_flags],
+            check_returncode=False,
+        )
+
+
+GitSubmoduleCommandLiteral = Literal[
+    "status",
+    "init",
+    "deinit",
+    "update",
+    "set-branch",
+    "set-url",
+    "summary",
+    "foreach",
+    "sync",
+    "absorbgitdirs",
+]
+
+
+class GitSubmodule:
+    def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
+        """Lite, typed, pythonic wrapper for git-submodule(1).
+
+        Parameters
+        ----------
+        dir :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitSubmodule(dir=tmp_path)
+        <GitSubmodule dir=...>
+
+        >>> GitSubmodule(dir=tmp_path).run(quiet=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitSubmodule(dir=git_local_clone.dir).run(quiet=True)
+        ''
+        """
+        #: Directory to check out
+        self.dir: pathlib.Path
+        if isinstance(dir, pathlib.Path):
+            self.dir = dir
+        else:
+            self.dir = pathlib.Path(dir)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
+
+    def __repr__(self) -> str:
+        return f"<GitSubmodule dir={self.dir}>"
+
+    def run(
+        self,
+        *,
+        command: Optional[GitSubmoduleCommandLiteral] = None,
+        quiet: Optional[bool] = None,
+        cached: Optional[bool] = None,  # Only when no command entered and status
+        **kwargs: Any,
+    ) -> str:
+        """Version. Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+
+        Examples
+        --------
+        >>> git = GitSubmodule(dir=git_local_clone.dir)
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if cached is True:
+            local_flags.append("--cached")
+
+        return self.cmd.run(
+            ["submodule", *local_flags],
             check_returncode=False,
         )
