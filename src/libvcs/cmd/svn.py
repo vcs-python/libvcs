@@ -174,14 +174,14 @@ class Svn:
         >>> svn = Svn(dir=tmp_path)
         >>> svn_remote_repo = create_svn_remote_repo()
         >>> svn.checkout(url=f'file://{svn_remote_repo}')
-        'Checked out revision ...'
-        >>> svn.checkout(url=f'file://{svn_remote_repo}', revision=1)
-        'svn: E160006: No such revision 1...'
+        '...Checked out revision ...'
+        >>> svn.checkout(url=f'file://{svn_remote_repo}', revision=10)
+        'svn: E160006: No such revision 10...'
         """
         local_flags: list[str] = [url, str(self.dir)]
 
         if revision is not None:
-            local_flags.extend(["--revision", revision])
+            local_flags.extend(["--revision", str(revision)])
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if force is True:
@@ -339,8 +339,9 @@ class Svn:
         Examples
         --------
         >>> svn = Svn(dir=tmp_path)
-        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
-        'Checked out revision ...'
+        >>> repo = create_svn_remote_repo()
+        >>> svn.checkout(url=f'file://{repo}')
+        '...Checked out revision ...'
         >>> new_file = tmp_path / 'new.txt'
         >>> new_file.write_text('example text', encoding="utf-8")
         12
@@ -349,7 +350,7 @@ class Svn:
         >>> svn.commit(path=new_file, message='My new commit')
         '...'
         >>> svn.blame('new.txt')
-        '1        ... example text'
+        '4        ... example text'
         """
         local_flags: list[str] = [str(target)]
 
@@ -449,7 +450,7 @@ class Svn:
         >>> svn.add(path=new_file)
         'A  new.txt'
         >>> svn.commit(path=new_file, message='My new commit')
-        'Adding          new.txt...Transmitting file data...Committed revision 1.'
+        'Adding          new.txt...Transmitting file data...Committed revision 4.'
         """
         local_flags: list[str] = []
 
