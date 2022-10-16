@@ -21,7 +21,8 @@ import re
 from typing import Any, Optional, Union
 from urllib import parse as urlparse
 
-from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrPath
+from libvcs.cmd.git import Git
 from libvcs.sync.base import (
     BaseSync,
     VCSLocation,
@@ -300,20 +301,25 @@ class GitSync(BaseSync):
 
         url = self.url
 
-        cmd: list[StrOrBytesPath] = ["clone", "--progress"]
-        if self.git_shallow:
-            cmd.extend(["--depth", "1"])
-        if self.tls_verify:
-            cmd.extend(["-c", "http.sslVerify=false"])
-        cmd.extend([url, self.dir])
-
         self.log.info("Cloning.")
-        self.run(cmd, log_in_real_time=True)
+        # todo: log_in_real_time
+        self.cmd.clone(
+            url=url,
+            progress=True,
+            depth=1 if self.git_shallow else None,
+            config={"http.sslVerify": False} if self.tls_verify else None,
+            log_in_real_time=True,
+        )
 
         self.log.info("Initializing submodules.")
-        self.run(["submodule", "init"], log_in_real_time=True)
-        cmd = ["submodule", "update", "--recursive", "--init"]
-        self.run(cmd, log_in_real_time=True)
+        self.cmd.submodule.init(
+            log_in_real_time=True,
+        )
+        self.cmd.submodule.update(
+            init=True,
+            recursive=True,
+            log_in_real_time=True,
+        )
 
         self.set_remotes(overwrite=True)
 
@@ -590,7 +596,7 @@ class GitSync(BaseSync):
         git version
         """
         VERSION_PFX = "git version "
-        version = self.run(["version"])
+        version = self.cmd.version()
         if version.startswith(VERSION_PFX):
             version = version[len(VERSION_PFX) :].split()[0]
         else:
@@ -622,7 +628,10 @@ branch_ahead='0', \
 branch_behind='0'\
 )
         """
-        return GitStatus.from_stdout(self.run(["status", "-sb", "--porcelain=2"]))
+        return GitStatus.from_stdout(
+            self.cmd.status(short=True, branch=True, porcelain="2")
+        )
+        # return GitStatus.from_stdout(self.run(["status", "-sb", "--porcelain=2"]))
 
     def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.
@@ -642,3 +651,7 @@ branch_behind='0'\
             return match.branch_upstream
 
         return match.branch_upstream.replace("/" + match.branch_head, "")
+
+    @property
+    def cmd(self, *args: object, **kwargs: object) -> Git:
+        return Git(dir=self.dir, *args, **kwargs)
