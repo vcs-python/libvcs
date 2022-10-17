@@ -126,7 +126,7 @@ def run(
     # Not until sys.version_info >= (3, 10)
     # pipesize: int = -1,
     # custom
-    log_in_real_time: bool = True,
+    log_in_real_time: bool = False,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
 ) -> str:
@@ -196,6 +196,13 @@ def run(
     all_output: list[str] = []
     code = None
     line = None
+    if log_in_real_time and callback is None:
+
+        def progress_cb(output: AnyStr, timestamp: datetime.datetime) -> None:
+            sys.stdout.write(str(output))
+            sys.stdout.flush()
+
+        callback = progress_cb
     while code is None:
         code = proc.poll()
 
