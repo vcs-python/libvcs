@@ -2,65 +2,159 @@
 
 # URL Parser - `libvcs.url`
 
-VCS URL parser for python.
+We all love {mod}`urllib.parse`, but what about VCS systems?
 
-## Parsing capabilities
+Also, things like completions and typings being in demand, what of all these factories? Good python
+code, but how to we get editor support and the nice satisfaction of types snapping together?
 
-:::{warning}
+If there was a type-friendly structure - like writing our own abstract base class - or a
+{mod}`dataclasses` - while also being extensible to patterns and groupings, maybe we could strike a
+perfect balance.
 
-The APIs and structures themselves are still unstable APIs. If you are missing a field or use case,
-please file an issue.
+If we could make it ready-to-go out of the box, but also have framework-like extensibility, it could
+satisfy the niche.
 
-:::
+## Validate and detect VCS URLs
 
-1. Detect VCS URLs
+````{tab} git
 
-   - git: {meth}`libvcs.url.git.GitURL.is_valid()`
-   - hg: {meth}`libvcs.url.hg.HgURL.is_valid()`
-   - svn: {meth}`libvcs.url.svn.SvnURL.is_valid()`
+{meth}`libvcs.url.git.GitURL.is_valid()`
 
-- Parse results of URL to a structure
+```python
+from libvcs.url.git import GitURL
 
-  _Compare to {class}`urllib.parse.ParseResult`_
+>>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+True
+```
 
-  - {class}`libvcs.url.git.GitURL`
-  - {class}`libvcs.url.hg.HgURL`
-  - {class}`libvcs.url.svn.SvnURL`
+```python
+from libvcs.url.git import GitURL
 
-3. Convert input VCS to _usable_ URLs
+>>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+True
+```
 
-   - git: {meth}`libvcs.url.git.GitURL.to_url()`
-   - hg: {meth}`libvcs.url.hg.HgURL.to_url()`
-   - svn: {meth}`libvcs.url.svn.SvnURL.to_url()`
+````
 
-   `pip` knows what a certain URL string means, but `git clone` won't.
+````{tab} hg
+{meth}`libvcs.url.hg.HgURL.is_valid()`
 
-   e.g. `pip install git+https://github.com/django/django.git@3.2` works great with `pip`.
+```python
+>>> HgURL.is_valid(url='https://hg.mozilla.org/mozilla-central/mozilla-central')
+True
+```
 
-   ```console
-   $ pip install git+https://github.com/django/django.git@3.2
-   ...
-   Successfully installed Django-3.2
+```python
+>>> HgURL.is_valid(url='hg@hg.mozilla.org:MyProject/project')
+True
+```
 
-   ```
+````
 
-   but `git clone` can't use that:
+````{tab} svn
 
-   ```console
-   $ git clone git+https://github.com/django/django.git@3.2  # Fail
-   ...
-   Cloning into django.git@3.2''...'
-   git: 'remote-git+https' is not a git command. See 'git --help'.
-   ```
+{meth}`libvcs.url.svn.SvnURL.is_valid()`
 
-   It needs something like this:
 
-   ```console
-   $ git clone https://github.com/django/django.git --branch 3.2
-   ```
+```python
+>>> SvnURL.is_valid(
+... url='https://svn.project.org/project-central/project-central')
+True
+```
 
-   But before we get there, we don't know if we want a URL yet. We return a structure, e.g.
-   `GitURL`.
+```python
+>>> SvnURL.is_valid(url='svn@svn.project.org:MyProject/project')
+True
+```
+
+````
+
+## Parse VCS URLs
+
+_Compare to {class}`urllib.parse.ParseResult`_
+
+````{tab} git
+
+{class}`libvcs.url.git.GitURL`
+
+```python
+>>> GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
+GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
+        user=git,
+        hostname=github.com,
+        path=vcs-python/libvcs,
+        suffix=.git,
+        rule=core-git-scp)
+```
+
+````
+
+````{tab} hg
+
+{class}`libvcs.url.hg.HgURL`
+
+```python
+>>> HgBaseURL(
+...     url="http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin")
+HgBaseURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
+        scheme=http,
+        hostname=hugin.hg.sourceforge.net,
+        port=8000,
+        path=hgroot/hugin/hugin,
+        rule=core-hg)
+```
+
+````
+
+````{tab} svn
+
+{class}`libvcs.url.svn.SvnURL`
+
+```python
+>>> SvnURL(
+...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository')
+SvnURL(url=svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository,
+       scheme=svn+ssh,
+       hostname=svn.debian.org,
+       path=svn/aliothproj/path/in/project/repository,
+       rule=core-svn)
+```
+
+````
+
+## Export usable URLs
+
+- git: {meth}`libvcs.url.git.GitURL.to_url()`
+- hg: {meth}`libvcs.url.hg.HgURL.to_url()`
+- svn: {meth}`libvcs.url.svn.SvnURL.to_url()`
+
+`pip` knows what a certain URL string means, but `git clone` won't.
+
+e.g. `pip install git+https://github.com/django/django.git@3.2` works great with `pip`.
+
+```console
+$ pip install git+https://github.com/django/django.git@3.2
+...
+Successfully installed Django-3.2
+
+```
+
+but `git clone` can't use that:
+
+```console
+$ git clone git+https://github.com/django/django.git@3.2  # Fail
+...
+Cloning into django.git@3.2''...'
+git: 'remote-git+https' is not a git command. See 'git --help'.
+```
+
+It needs something like this:
+
+```console
+$ git clone https://github.com/django/django.git --branch 3.2
+```
+
+But before we get there, we don't know if we want a URL yet. We return a structure, e.g. `GitURL`.
 
 - Common result primitives across VCS, e.g. `GitURL`.
 
@@ -101,7 +195,7 @@ The ambition for this is to build extendable parsers for package-like URLs, e.g.
 
     https://docs.npmjs.com/about-packages-and-modules#npm-package-git-url-formats
 
-### Extendability
+## Extendability
 
 Patterns can be registered. [Similar behavior](https://stackoverflow.com/a/6264214/1396928) exists
 in {mod}`urlparse` (undocumented).
@@ -140,11 +234,14 @@ From there, `GitURL` can be used downstream directly by other projects.
 In our case, `libvcs`s' own {ref}`cmd` and {ref}`projects`, as well as a {ref}`vcspull:index`
 configuration, will be able to detect and accept various URL patterns.
 
-## Location objects
+### Matchers: Defaults
 
-Compare to {class}`urllib.parse.ParseResult`. These are structures that break the VCS location into
-parse so they can be filled, replaced [^api-unstable], and exported into a URL specifier compatible
-with the VCS.
+When a match occurs, its `defaults` will fill in non-matched groups.
+
+### Matchers: First wins
+
+When registering new matchers, higher `weight`s are checked first. If it's a valid regex grouping,
+it will be picked.
 
 [^api-unstable]: Provisional API only
 
