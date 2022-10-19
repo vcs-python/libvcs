@@ -76,7 +76,7 @@ sphinxext-rediraffe = "*"
 myst_parser = "*"
 
 ### Testing ###
-gp-libs = "~0.0.1-alpha.12"
+gp-libs = "~0.0.1-alpha.17"
 pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
