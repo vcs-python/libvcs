@@ -21,14 +21,14 @@ satisfy the niche.
 {meth}`libvcs.url.git.GitURL.is_valid()`
 
 ```python
-from libvcs.url.git import GitURL
+>>> from libvcs.url.git import GitURL
 
 >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
 True
 ```
 
 ```python
-from libvcs.url.git import GitURL
+>>> from libvcs.url.git import GitURL
 
 >>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
 True
@@ -40,11 +40,15 @@ True
 {meth}`libvcs.url.hg.HgURL.is_valid()`
 
 ```python
+>>> from libvcs.url.hg import HgURL
+
 >>> HgURL.is_valid(url='https://hg.mozilla.org/mozilla-central/mozilla-central')
 True
 ```
 
 ```python
+>>> from libvcs.url.hg import HgURL
+
 >>> HgURL.is_valid(url='hg@hg.mozilla.org:MyProject/project')
 True
 ```
@@ -57,12 +61,16 @@ True
 
 
 ```python
+>>> from libvcs.url.svn import SvnURL
+
 >>> SvnURL.is_valid(
 ... url='https://svn.project.org/project-central/project-central')
 True
 ```
 
 ```python
+>>> from libvcs.url.svn import SvnURL
+
 >>> SvnURL.is_valid(url='svn@svn.project.org:MyProject/project')
 True
 ```
@@ -78,8 +86,10 @@ _Compare to {class}`urllib.parse.ParseResult`_
 {class}`libvcs.url.git.GitURL`
 
 ```python
->>> GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
-GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
+>>> from libvcs.url.git import GitURL
+
+>>> GitURL(url='git@github.com:vcs-python/libvcs.git')
+GitURL(url=git@github.com:vcs-python/libvcs.git,
         user=git,
         hostname=github.com,
         path=vcs-python/libvcs,
@@ -94,9 +104,11 @@ GitBaseURL(url=git@github.com:vcs-python/libvcs.git,
 {class}`libvcs.url.hg.HgURL`
 
 ```python
->>> HgBaseURL(
+>>> from libvcs.url.hg import HgURL
+
+>>> HgURL(
 ...     url="http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin")
-HgBaseURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
+HgURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
         scheme=http,
         hostname=hugin.hg.sourceforge.net,
         port=8000,
@@ -111,13 +123,15 @@ HgBaseURL(url=http://hugin.hg.sourceforge.net:8000/hgroot/hugin/hugin,
 {class}`libvcs.url.svn.SvnURL`
 
 ```python
+>>> from libvcs.url.svn import SvnURL
+
 >>> SvnURL(
 ...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository')
 SvnURL(url=svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository,
        scheme=svn+ssh,
        hostname=svn.debian.org,
        path=svn/aliothproj/path/in/project/repository,
-       rule=core-svn)
+       rule=pip-url)
 ```
 
 ````
