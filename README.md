@@ -6,6 +6,8 @@ detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `sv
 
 ## Overview
 
+_Supports Python 3.9 and above_
+
 Features for Git, Subversion, and Mercurial:
 
 - **Detect and parse** VCS URLs
