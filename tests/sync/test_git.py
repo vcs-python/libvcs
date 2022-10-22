@@ -143,17 +143,17 @@ def test_repo_update_handle_cases(
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
 
-    mocka = mocker.spy(git_repo, "run")
+    cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
 
-    mocka.assert_any_call(["symbolic-ref", "--short", "HEAD"])
+    cmd_mock.assert_any_call(name="HEAD", short=True)
 
-    mocka.reset_mock()
+    cmd_mock.reset_mock()
 
     # will only look up symbolic-ref if no rev specified for object
     git_repo.rev = "HEAD"
     git_repo.update_repo()
-    assert mocker.call(["symbolic-ref", "--short", "HEAD"]) not in mocka.mock_calls
+    assert mocker.call(name="HEAD", short=True) not in cmd_mock.mock_calls
 
 
 @pytest.mark.parametrize(
@@ -213,10 +213,10 @@ def test_repo_update_stash_cases(
         some_file = make_file("some_stashed_file")
         git_repo.run(["add", some_file])
 
-    mocka = mocker.spy(git_repo, "run")
+    cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
 
-    mocka.assert_any_call(["symbolic-ref", "--short", "HEAD"])
+    cmd_mock.assert_any_call(name="HEAD", short=True)
 
 
 @pytest.mark.parametrize(
