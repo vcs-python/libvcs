@@ -1,3 +1,4 @@
+import datetime
 import pathlib
 import shlex
 from collections.abc import Sequence
@@ -32,6 +33,8 @@ class Git:
 
         # Initial git-submodule
         self.submodule = GitSubmoduleCmd(dir=self.dir, cmd=self)
+        self.remote = GitRemoteCmd(dir=self.dir, cmd=self)
+        self.stash = GitStashCmd(dir=self.dir, cmd=self)
 
     def __repr__(self) -> str:
         return f"<Git dir={self.dir}>"
@@ -1447,6 +1450,9 @@ class Git:
 
         >>> git.status(C=git_local_clone.dir / '.git', porcelain='2')
         '? new_file.txt'
+
+        >>> git.status(porcelain=True, untracked_files="no")
+        ''
         """
         local_flags: list[str] = []
 
@@ -1728,6 +1734,388 @@ class Git:
             check_returncode=check_returncode,
         )
 
+    def rev_parse(
+        self,
+        *,
+        parseopt: Optional[bool] = None,
+        sq_quote: Optional[bool] = None,
+        keep_dashdash: Optional[bool] = None,
+        stop_at_non_option: Optional[bool] = None,
+        stuck_long: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        args: Optional[str] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """rev-parse. Wraps `git rev-parse <https://git-scm.com/docs/rev-parse>`_.
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.rev_parse()
+        ''
+
+        >>> git.rev_parse(parseopt=True)
+        'usage: git rev-parse --parseopt...'
+
+        >>> git.rev_parse(verify=True, args='HEAD')
+        '...'
+        """
+        local_flags: list[str] = []
+
+        if parseopt is True:
+            local_flags.append("--parseopt")
+
+            if keep_dashdash is True:
+                local_flags.append("--keep-dashdash")
+            if stop_at_non_option is True:
+                local_flags.append("--stop-at-non-option")
+            if stuck_long is True:
+                local_flags.append("--stuck-long")
+        if sq_quote is True:
+            local_flags.append("--sq-quote")
+        if verify is True:
+            local_flags.append("--verify")
+
+        if parseopt is True:
+            if args is not None:
+                local_flags.extend(["--", args])
+        else:
+            if args is not None:
+                local_flags.append(args)
+
+        return self.run(
+            ["rev-parse", *local_flags],
+            check_returncode=check_returncode,
+        )
+
+    def rev_list(
+        self,
+        *,
+        commit: Optional[Union[list[str], str]],
+        path: Optional[Union[list[StrPath], StrPath]] = None,
+        #
+        # Limiting
+        #
+        max_count: Optional[int] = None,
+        skip: Optional[int] = None,
+        since: Optional[str] = None,
+        after: Optional[str] = None,
+        until: Optional[str] = None,
+        before: Optional[str] = None,
+        max_age: Optional[str] = None,
+        min_age: Optional[str] = None,
+        author: Optional[str] = None,
+        committer: Optional[str] = None,
+        grep: Optional[str] = None,
+        all_match: Optional[bool] = None,
+        invert_grep: Optional[bool] = None,
+        regexp_ignore_case: Optional[bool] = None,
+        basic_regexp: Optional[bool] = None,
+        extended_regexp: Optional[bool] = None,
+        fixed_strings: Optional[bool] = None,
+        perl_regexp: Optional[bool] = None,
+        remove_empty: Optional[bool] = None,
+        merges: Optional[bool] = None,
+        no_merges: Optional[bool] = None,
+        no_min_parents: Optional[bool] = None,
+        min_parents: Optional[int] = None,
+        no_max_parents: Optional[bool] = None,
+        max_parents: Optional[int] = None,
+        first_parent: Optional[bool] = None,
+        exclude_first_parent_only: Optional[bool] = None,
+        _not: Optional[bool] = None,
+        all: Optional[bool] = None,
+        branches: Optional[Union[str, bool]] = None,
+        tags: Optional[Union[str, bool]] = None,
+        remotes: Optional[Union[str, bool]] = None,
+        exclude: Optional[bool] = None,
+        reflog: Optional[bool] = None,
+        alternative_refs: Optional[bool] = None,
+        single_worktree: Optional[bool] = None,
+        ignore_missing: Optional[bool] = None,
+        stdin: Optional[bool] = None,
+        disk_usage: Optional[Union[bool, str]] = None,
+        cherry_mark: Optional[bool] = None,
+        cherry_pick: Optional[bool] = None,
+        left_only: Optional[bool] = None,
+        right_only: Optional[bool] = None,
+        cherry: Optional[bool] = None,
+        walk_reflogs: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        boundary: Optional[bool] = None,
+        use_bitmap_index: Optional[bool] = None,
+        progress: Optional[Union[str, bool]] = None,
+        # Formatting
+        #
+        # --parents
+        # --children
+        # --objects | --objects-edge
+        # --disk-usage[=human]
+        # --unpacked
+        # --header | --pretty
+        # --[no-]object-names
+        # --abbrev=<n> | --no-abbrev
+        # --abbrev-commit
+        # --left-right
+        # --count
+        header: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = True,
+        log_in_real_time: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        """rev-list. Wraps `git rev-list <https://git-scm.com/docs/rev-list>`_.
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.rev_list(commit="HEAD")
+        '...'
+
+        >>> git.run(['commit', '--allow-empty', '--message=Moo'])
+        '[master ...] Moo'
+
+        >>> git.rev_list(commit="HEAD", max_count=1)
+        ''
+
+        >>> git.rev_list(commit="HEAD", path=".", max_count=1, header=True)
+        ''
+
+        >>> git.rev_list(commit="origin..HEAD", max_count=1, all=True, header=True)
+        ''
+
+        >>> git.rev_list(commit="origin..HEAD", max_count=1, header=True)
+        ''
+        """
+        required_flags: list[str] = []
+        path_flags: list[str] = []
+        local_flags: list[str] = []
+
+        if isinstance(commit, str):
+            required_flags.append(commit)
+        if isinstance(commit, list):
+            required_flags.extend(commit)
+
+        if isinstance(path, str):
+            path_flags.append(path)
+        if isinstance(path, list):
+            path_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            path_flags.append(str(pathlib.Path(path).absolute()))
+
+        for kwarg, kwarg_shell_flag in [
+            (branches, "--branches"),
+            (tags, "--tags"),
+            (remotes, "--remotes"),
+            (disk_usage, "--disk-usage"),
+            (progress, "--progress"),
+        ]:
+            if kwarg is not None:
+                if isinstance(kwarg, str):
+                    local_flags.extend([kwarg_shell_flag, kwarg])
+                elif kwarg:
+                    local_flags.append(kwarg_shell_flag)
+
+        for datetime_kwarg, datetime_shell_flag in [  # 1.year.ago
+            (since, "--since"),
+            (after, "--after"),
+            (until, "--until"),
+            (before, "--before"),
+            (max_age, "--max-age"),
+            (min_age, "--min-age"),
+        ]:
+            if datetime_kwarg is not None:
+                if isinstance(datetime, str):
+                    local_flags.extend([datetime_shell_flag, datetime_kwarg])
+
+        for int_flag, int_shell_flag in [
+            (max_count, "--max-count"),
+            (skip, "--skip"),
+            (min_parents, "--min-parents"),
+            (max_parents, "--max-parents"),
+        ]:
+            if int_flag is not None:
+                local_flags.extend([int_shell_flag, str(int_shell_flag)])
+
+        for flag, shell_flag in [
+            # Limiting output
+            (all, "--all"),
+            (author, "--author"),
+            (committer, "--committer"),
+            (grep, "--grep"),
+            (all_match, "--all-match"),
+            (invert_grep, "--invert-grep"),
+            (regexp_ignore_case, "--regexp-ignore-case"),
+            (basic_regexp, "--basic-regexp"),
+            (extended_regexp, "--extended-regexp"),
+            (fixed_strings, "--fixed-strings"),
+            (perl_regexp, "--perl-regexp"),
+            (remove_empty, "--remove-empty"),
+            (merges, "--merges"),
+            (no_merges, "--no-merges"),
+            (no_min_parents, "--no-min-parents"),
+            (no_max_parents, "--no-max-parents"),
+            (first_parent, "--first-parent"),
+            (exclude_first_parent_only, "--exclude-first-parent-only"),
+            (_not, "--not"),
+            (all, "--all"),
+            (exclude, "--exclude"),
+            (reflog, "--reflog"),
+            (alternative_refs, "--alternative-refs"),
+            (single_worktree, "--single-worktree"),
+            (ignore_missing, "--ignore-missing"),
+            (stdin, "--stdin"),
+            (cherry_mark, "--cherry-mark"),
+            (cherry_pick, "--cherry-pick"),
+            (left_only, "--left-only"),
+            (right_only, "--right-only"),
+            (cherry, "--cherry"),
+            (walk_reflogs, "--walk-reflogs"),
+            (merge, "--merge"),
+            (boundary, "--boundary"),
+            (use_bitmap_index, "--use-bitmap-index"),
+            # Formatting outputs
+            (header, "--header"),
+        ]:
+            if flag is not None and flag:
+                local_flags.append(shell_flag)
+
+        return self.run(
+            [
+                "rev-list",
+                *local_flags,
+                *required_flags,
+                *(["--", *path_flags] if len(path_flags) else []),
+            ],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def symbolic_ref(
+        self,
+        *,
+        name: str,
+        ref: Optional[str] = None,
+        message: Optional[str] = None,
+        short: Optional[bool] = None,
+        delete: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """symbolic-ref. Wraps `git symbolic-ref
+        <https://git-scm.com/docs/symbolic-ref>`_.
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.symbolic_ref(name="test")
+        'fatal: ref test is not a symbolic ref'
+
+        >>> git.symbolic_ref(name="test")
+        'fatal: ref test is not a symbolic ref'
+        """
+        required_flags: list[str] = [name]
+        local_flags: list[str] = []
+
+        if message is not None and isinstance(message, str):
+            local_flags.extend(["-m", message])
+
+        if delete is True:
+            local_flags.append("--delete")
+        if short is True:
+            local_flags.append("--short")
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        return self.run(
+            ["symbolic-ref", *required_flags, *local_flags],
+            check_returncode=check_returncode,
+        )
+
+    def show_ref(
+        self,
+        *,
+        pattern: Optional[Union[list[str], str]] = None,
+        quiet: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        head: Optional[bool] = None,
+        dereference: Optional[bool] = None,
+        tags: Optional[bool] = None,
+        hash: Optional[Union[str, bool]] = None,
+        abbrev: Optional[Union[str, bool]] = None,
+        # libvcs special behavior
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        r"""show-ref. Wraps `git show-ref <https://git-scm.com/docs/git-show-ref>`_.
+
+        Examples
+        --------
+        >>> git = Git(dir=git_local_clone.dir)
+
+        >>> git.show_ref()
+        '...'
+
+        >>> git.show_ref(pattern='master')
+        '...'
+
+        >>> git.show_ref(pattern='master', head=True)
+        '...'
+
+        >>> git.show_ref(pattern='HEAD', verify=True)
+        '... HEAD'
+
+        >>> git.show_ref(pattern='master', dereference=True)
+        '... refs/heads/master\n... refs/remotes/origin/master'
+
+        >>> git.show_ref(pattern='HEAD', tags=True)
+        ''
+        """
+        local_flags: list[str] = []
+        pattern_flags: list[str] = []
+
+        if pattern is not None:
+            if isinstance(pattern, str):
+                pattern_flags.append(pattern)
+            elif isinstance(pattern, list):
+                pattern_flags.extend(pattern)
+
+        for kwarg, kwarg_shell_flag in [
+            (hash, "--hash"),
+            (abbrev, "--abbrev"),
+        ]:
+            if kwarg is not None:
+                if isinstance(kwarg, str):
+                    local_flags.extend([kwarg_shell_flag, kwarg])
+                elif kwarg:
+                    local_flags.append(kwarg_shell_flag)
+
+        for flag, shell_flag in [
+            (quiet, "--quiet"),
+            (verify, "--verify"),
+            (head, "--head"),
+            (dereference, "--dereference"),
+            (tags, "--tags"),
+        ]:
+            if flag is not None and flag:
+                local_flags.append(shell_flag)
+
+        return self.run(
+            [
+                "show-ref",
+                *local_flags,
+                *(["--", *pattern_flags] if len(pattern_flags) else []),
+            ],
+            check_returncode=check_returncode,
+        )
+
 
 GitSubmoduleCmdCommandLiteral = Literal[
     "status",
@@ -1919,6 +2307,8 @@ GitRemoteCommandLiteral = Literal[
     "set-url --add",
     "set-url --delete",
     "prune",
+    "show",
+    "update",
 ]
 
 
@@ -2073,7 +2463,6 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> git_remote_repo = create_git_remote_repo()
         >>> GitRemoteCmd(dir=git_local_clone.dir).remove(name='origin')
         ''
         >>> GitRemoteCmd(dir=git_local_clone.dir).run()
@@ -2089,6 +2478,42 @@ class GitRemoteCmd:
             log_in_real_time=log_in_real_time,
         )
 
+    def show(
+        self,
+        *,
+        name: Optional[str] = None,
+        verbose: Optional[bool] = None,
+        no_query_remotes: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git submodule show
+
+        Examples
+        --------
+        >>> GitRemoteCmd(dir=git_local_clone.dir).show()
+        'origin'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = []
+
+        if name is not None:
+            required_flags.append(name)
+
+        if verbose is not None:
+            local_flags.append("--verbose")
+
+        if no_query_remotes is not None or no_query_remotes:
+            local_flags.append("-n")
+
+        return self.run(
+            "show",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
     def prune(
         self,
         *,
@@ -2098,7 +2523,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule get-url
+        """git submodule prune
 
         Examples
         --------
@@ -2132,7 +2557,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule remove
+        """git submodule get-url
 
         Examples
         --------
@@ -2174,7 +2599,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule remove
+        """git submodule set-url
 
         Examples
         --------
@@ -2223,6 +2648,250 @@ class GitRemoteCmd:
         return self.run(
             "set-url",
             local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+GitStashCommandLiteral = Literal[
+    "list",
+    "show",
+    "save",
+    "drop",
+    "branch",
+    "pop",
+    "apply",
+    "push",
+    "clear",
+    "create",
+    "store",
+]
+
+
+class GitStashCmd:
+    def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
+        """Lite, typed, pythonic wrapper for git-stash(1).
+
+        Parameters
+        ----------
+        dir :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitStashCmd(dir=tmp_path)
+        <GitStashCmd dir=...>
+
+        >>> GitStashCmd(dir=tmp_path).run(quiet=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).run(quiet=True)
+        ''
+        """
+        #: Directory to check out
+        self.dir: pathlib.Path
+        if isinstance(dir, pathlib.Path):
+            self.dir = dir
+        else:
+            self.dir = pathlib.Path(dir)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
+
+    def __repr__(self) -> str:
+        return f"<GitStashCmd dir={self.dir}>"
+
+    def run(
+        self,
+        command: Optional[GitStashCommandLiteral] = None,
+        local_flags: Optional[list[str]] = None,
+        *,
+        quiet: Optional[bool] = None,
+        cached: Optional[bool] = None,  # Only when no command entered and status
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
+
+        Examples
+        --------
+        >>> GitStashCmd(dir=git_local_clone.dir).run()
+        'No local changes to save'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if cached is True:
+            local_flags.append("--cached")
+
+        return self.cmd.run(
+            ["stash", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _list(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+    ) -> str:
+        """git stash list
+
+        Examples
+        --------
+        >>> GitStashCmd(dir=git_local_clone.dir)._list()
+        ''
+        """
+        return self.run(
+            "list",
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def push(
+        self,
+        *,
+        path: Optional[Union[list[StrPath], StrPath]] = None,
+        patch: Optional[bool] = None,
+        staged: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """git stash update
+
+        TODO: Fill-in
+
+        Examples
+        --------
+        >>> GitStashCmd(dir=git_local_clone.dir).push()
+        'No local changes to save'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).push(path='.')
+        'No local changes to save'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = []
+
+        if isinstance(path, list):
+            required_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            required_flags.append(str(pathlib.Path(path).absolute()))
+
+        if patch is True:
+            local_flags.append("--patch")
+        if staged is True:
+            local_flags.append("--staged")
+
+        return self.run(
+            "push",
+            local_flags=local_flags + ["--"] + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def pop(
+        self,
+        *,
+        stash: Optional[int] = None,
+        index: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """git stash pop
+
+        Examples
+        --------
+        >>> GitStashCmd(dir=git_local_clone.dir).pop()
+        'No stash entries found.'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).pop(stash=0)
+        'error: refs/stash@{0} is not a valid reference'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).pop(stash=1, index=True)
+        'error: refs/stash@{1} is not a valid reference'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).pop(stash=1, quiet=True)
+        'error: refs/stash@{1} is not a valid reference'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).push(path='.')
+        'No local changes to save'
+        """
+        local_flags: list[str] = []
+        stash_flags: list[str] = []
+
+        if stash is not None:
+            stash_flags.extend(["--", str(stash)])
+
+        if index is True:
+            local_flags.append("--index")
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        return self.run(
+            "pop",
+            local_flags=local_flags + stash_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def save(
+        self,
+        *,
+        message: Optional[str] = None,
+        staged: Optional[int] = None,
+        keep_index: Optional[int] = None,
+        patch: Optional[bool] = None,
+        include_untracked: Optional[bool] = None,
+        all: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
+        """git stash save
+
+        Examples
+        --------
+        >>> GitStashCmd(dir=git_local_clone.dir).save()
+        'No local changes to save'
+
+        >>> GitStashCmd(dir=git_local_clone.dir).save(message="Message")
+        'No local changes to save'
+        """
+        local_flags: list[str] = []
+        stash_flags: list[str] = []
+
+        if all is True:
+            local_flags.append("--all")
+        if staged is True:
+            local_flags.append("--staged")
+        if patch is True:
+            local_flags.append("--patch")
+        if include_untracked is True:
+            local_flags.append("--include-untracked")
+        if keep_index is True:
+            local_flags.append("--keep-index")
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        if message is not None:
+            local_flags.extend(["--message", message])
+
+        return self.run(
+            "save",
+            local_flags=local_flags + stash_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
