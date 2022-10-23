@@ -604,7 +604,7 @@ class Svn:
 
         return self.run(["info", *local_flags])
 
-    def list(self, *args: Any, **kwargs: Any) -> str:
+    def _list(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn list
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.list.html>`_ (ls).
@@ -616,15 +616,34 @@ class Svn:
 
         return self.run(["list", *local_flags])
 
-    def lock(self, *args: Any, **kwargs: Any) -> str:
+    def lock(
+        self,
+        targets: Optional[pathlib.Path] = None,
+        force: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn lock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.lock.html>`_.
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.lock(targets='samplepickle')
+        "'samplepickle' locked by user '...'."
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
+
+        if targets is not None:
+            if isinstance(targets, str):
+                local_flags.extend([str(targets)])
+            elif isinstance(targets, Sequence):
+                local_flags.extend([*[str(t) for t in targets]])
+
+        if force:
+            local_flags.append("--force")
 
         return self.run(["lock", *local_flags])
 
@@ -749,63 +768,221 @@ class Svn:
 
         return self.run(["proplist", *local_flags])
 
-    def propset(self, *args: Any, **kwargs: Any) -> str:
+    def propset(
+        self,
+        name: str,
+        path: Optional[StrPath] = None,
+        value: Optional[str] = None,
+        value_path: Optional[StrPath] = None,
+        target: Optional[StrOrBytesPath] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn propset
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propset.html>`_ (pset, ps).
 
         Parameters
         ----------
+        name : str
+            propname
+        value_path :
+            VALFILE
+
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.propset(name="my_prop", value="value", path=".")
+        "property 'my_prop' set on '.'"
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = [name, *args]
+
+        if value is not None:
+            local_flags.append(value)
+        elif isinstance(value_path, pathlib.Path):
+            local_flags.extend(["--file", str(pathlib.Path(value_path).absolute())])
+        else:
+            raise ValueError("Must enter a value or value_path")
+
+        if path is not None:
+            if isinstance(path, (str, pathlib.Path)):
+                local_flags.append(str(pathlib.Path(path).absolute()))
+        elif target is not None:
+            local_flags.append(str(target))
 
         return self.run(["propset", *local_flags])
 
-    def relocate(self, *args: Any, **kwargs: Any) -> str:
+    def relocate(self, *, to_path: StrPath, **kwargs: Any) -> str:
         """
         Wraps `svn relocate
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.relocate.html>`_.
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path / 'initial_place')
+        >>> repo_path = create_svn_remote_repo()
+        >>> svn.checkout(url=repo_path.as_uri())
+        '...Checked out revision ...'
+        >>> new_place = repo_path.rename(tmp_path / 'new_place')
+        >>> svn.relocate(to_path=new_place.absolute().as_uri())
+        ''
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
+        required_flags: list[str] = []
 
-        return self.run(["relocate", *local_flags])
+        if isinstance(to_path, str):
+            if to_path.startswith("file://"):
+                required_flags.append(to_path)
+            else:
+                required_flags.append(str(pathlib.Path(to_path).absolute().as_uri()))
+        elif isinstance(to_path, pathlib.Path):
+            required_flags.append(str(to_path.absolute().as_uri()))
 
-    def resolve(self, *args: Any, **kwargs: Any) -> str:
+        return self.run(["relocate", *local_flags, *required_flags])
+
+    def resolve(
+        self,
+        path: Union[list[pathlib.Path], pathlib.Path],
+        targets: Optional[pathlib.Path] = None,
+        depth: DepthLiteral = None,
+        force: Optional[bool] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn resolve
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.resolve.html>`_.
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.resolve(path='.')
+        ''
         """
         local_flags: list[str] = [*args]
 
+        if isinstance(path, list):
+            local_flags.extend(str(p.absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            local_flags.append(str(path.absolute()))
+
+        if targets is not None:
+            if isinstance(targets, Sequence):
+                local_flags.extend(["--targets", *[str(t) for t in targets]])
+            else:
+                local_flags.extend(["--targets", str(targets)])
+
+        if depth is not None:
+            local_flags.extend(["--depth", depth])
+        if force is not None:
+            local_flags.append("--force")
+
         return self.run(["resolve", *local_flags])
 
-    def resolved(self, *args: Any, **kwargs: Any) -> str:
+    def resolved(
+        self,
+        *,
+        path: Union[list[pathlib.Path], pathlib.Path],
+        targets: Optional[pathlib.Path] = None,
+        depth: DepthLiteral = None,
+        force: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn resolved
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.resolved.html>`_.
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.resolved(path='.')
+        ''
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
+
+        if isinstance(path, list):
+            local_flags.extend(str(p.absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            local_flags.append(str(path.absolute()))
+
+        if path is not None:
+            if isinstance(path, str):
+                local_flags.append(str(pathlib.Path(path).absolute()))
+            if isinstance(path, list):
+                local_flags.extend(str(p.absolute()) for p in path)
+            elif isinstance(path, pathlib.Path):
+                local_flags.append(str(path.absolute()))
+        elif targets is not None:
+            if isinstance(targets, Sequence):
+                local_flags.extend(["--targets", *[str(t) for t in targets]])
+            else:
+                local_flags.extend(["--targets", str(targets)])
+
+        if depth is not None:
+            local_flags.extend(["--depth", depth])
+        if force is not None:
+            local_flags.append("--force")
 
         return self.run(["resolved", *local_flags])
 
-    def revert(self, *args: Any, **kwargs: Any) -> str:
+    def revert(
+        self,
+        *,
+        path: Union[list[pathlib.Path], pathlib.Path],
+        targets: Optional[pathlib.Path] = None,
+        depth: DepthLiteral = None,
+        force: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn revert
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.revert.html>`_.
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> new_file = tmp_path / 'new.txt'
+        >>> new_file.write_text('example text', encoding="utf-8")
+        12
+        >>> svn.add(path=new_file)
+        'A  new.txt'
+        >>> svn.commit(path=new_file, message='My new commit')
+        '...'
+        >>> svn.revert(path=new_file)
+        ''
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
+
+        if isinstance(path, list):
+            local_flags.extend(str(p.absolute()) for p in path)
+        elif isinstance(path, pathlib.Path):
+            local_flags.append(str(path.absolute()))
+
+        if path is not None:
+            if isinstance(path, str):
+                local_flags.append(str(pathlib.Path(path).absolute()))
+            if isinstance(path, list):
+                local_flags.extend(str(p.absolute()) for p in path)
+            elif isinstance(path, pathlib.Path):
+                local_flags.append(str(path.absolute()))
+        elif targets is not None:
+            if isinstance(targets, Sequence):
+                local_flags.extend(["--targets", *[str(t) for t in targets]])
+            else:
+                local_flags.extend(["--targets", str(targets)])
+
+        if depth is not None:
+            local_flags.extend(["--depth", depth])
+        if force is not None:
+            local_flags.append("--force")
 
         return self.run(["revert", *local_flags])
 
@@ -814,34 +991,92 @@ class Svn:
         Wraps `svn status
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.status.html>`_ (stat, st).
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.status()
+        ''
         """
         local_flags: list[str] = [*args]
 
         return self.run(["status", *local_flags])
 
-    def switch(self, *args: Any, **kwargs: Any) -> str:
+    def switch(
+        self,
+        *,
+        to_path: StrPath,
+        path: StrPath,
+        ignore_ancestry: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn switch
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.switch.html>`_ (sw).
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path / 'initial_place')
+        >>> repo_path = create_svn_remote_repo()
+        >>> svn.checkout(url=(repo_path / 'sampledir').as_uri())
+        '...Checked out revision ...'
+        >>> other_dir = repo_path / 'otherdir'
+        >>> svn.switch(to_path=other_dir.as_uri(), path='.', ignore_ancestry=True)
+        'D...Updated to revision...'
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
+        required_flags: list[str] = []
 
-        return self.run(["switch", *local_flags])
+        if isinstance(to_path, str):
+            if to_path.startswith("file://"):
+                local_flags.append(to_path)
+            else:
+                local_flags.append(str(pathlib.Path(to_path).absolute().as_uri()))
+        elif isinstance(to_path, pathlib.Path):
+            local_flags.append(str(to_path.absolute().as_uri()))
 
-    def unlock(self, *args: Any, **kwargs: Any) -> str:
+        if path is not None:
+            if isinstance(path, str):
+                local_flags.append(path)
+            elif isinstance(path, pathlib.Path):
+                local_flags.append(str(path.absolute()))
+
+        if ignore_ancestry:
+            local_flags.append("--ignore-ancestry")
+
+        return self.run(["switch", *local_flags, *required_flags])
+
+    def unlock(
+        self,
+        targets: Optional[pathlib.Path] = None,
+        force: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> str:
         """
         Wraps `svn unlock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.unlock.html>`_.
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.lock(targets='samplepickle')
+        "'samplepickle' locked by user '...'."
+        >>> svn.unlock(targets='samplepickle')
+        "'samplepickle' unlocked."
         """
-        local_flags: list[str] = [*args]
+        local_flags: list[str] = []
+
+        if targets is not None:
+            if isinstance(targets, str):
+                local_flags.extend([str(targets)])
+            elif isinstance(targets, Sequence):
+                local_flags.extend([*[str(t) for t in targets]])
+
+        if force:
+            local_flags.append("--force")
 
         return self.run(["unlock", *local_flags])
 
@@ -864,8 +1099,13 @@ class Svn:
         Wraps `svn update
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.update.html>`_ (up).
 
-        Parameters
-        ----------
+        Examples
+        --------
+        >>> svn = Svn(dir=tmp_path)
+        >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
+        '...Checked out revision ...'
+        >>> svn.update()
+        "Updating ..."
         """
         local_flags: list[str] = [*args]
 
