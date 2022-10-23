@@ -5,7 +5,7 @@ import pathlib
 import random
 import shutil
 import textwrap
-from typing import Callable, TypedDict
+import typing as t
 
 import pytest
 
@@ -26,9 +26,9 @@ if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 
-ProjectTestFactory = Callable[..., GitSync]
-ProjectTestFactoryLazyKwargs = Callable[..., dict]
-ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
+ProjectTestFactory = t.Callable[..., GitSync]
+ProjectTestFactoryLazyKwargs = t.Callable[..., dict]
+ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
 
 
 @pytest.mark.parametrize(
@@ -38,7 +38,7 @@ ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
         [
             GitSync,
             lambda bare_dir, tmp_path, **kwargs: {
-                "url": f"file://{bare_dir}",
+                "url": bare_dir.as_uri(),
                 "dir": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
@@ -46,7 +46,7 @@ ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
         [
             create_project,
             lambda bare_dir, tmp_path, **kwargs: {
-                "url": f"git+file://{bare_dir}",
+                "url": f"git+{bare_dir.as_uri()}",
                 "dir": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
@@ -81,7 +81,7 @@ def test_repo_git_obtain_initial_commit_repo(
         [
             GitSync,
             lambda git_remote_repo, tmp_path, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": tmp_path / "myrepo",
                 "vcs": "git",
             },
@@ -89,7 +89,7 @@ def test_repo_git_obtain_initial_commit_repo(
         [
             create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
-                "url": f"git+file://{git_remote_repo}",
+                "url": f"git+{git_remote_repo.as_uri()}",
                 "dir": tmp_path / "myrepo",
                 "vcs": "git",
             },
@@ -118,7 +118,7 @@ def test_repo_git_obtain_full(
         [
             GitSync,
             lambda git_remote_repo, tmp_path, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": tmp_path / "myrepo",
                 "vcs": "git",
             },
@@ -126,7 +126,7 @@ def test_repo_git_obtain_full(
         [
             create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
-                "url": f"git+file://{git_remote_repo}",
+                "url": f"git+{git_remote_repo.as_uri()}",
                 "dir": tmp_path / "myrepo",
                 "vcs": "git",
             },
@@ -180,38 +180,37 @@ def test_repo_update_stash_cases(
     git_remote_repo = create_git_remote_repo()
 
     git_repo: GitSync = GitSync(
-        url=f"file://{git_remote_repo}",
+        url=git_remote_repo.as_uri(),
         dir=tmp_path / "myrepo",
         vcs="git",
     )
     git_repo.obtain()  # clone initial repo
 
-    def make_file(filename: str) -> pathlib.Path:
-        some_file = git_repo.dir.joinpath(filename)
-        with open(some_file, "w") as file:
-            file.write("some content: " + str(random.random()))
-
-        return some_file
-
     # Make an initial commit so we can reset
-    some_file = make_file("initial_file")
-    git_repo.run(["add", some_file])
+    initial_file = git_repo.dir / "initial_file"
+    initial_file.write_text(f"some content: {random.random()}", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
     git_repo.run(["commit", "-m", "a commit"])
     git_repo.run(["push"])
 
     if has_remote_changes:
-        some_file = make_file("some_file")
+        some_file = git_repo.dir / "some_file"
+        some_file.write_text(f"some content: {random.random()}", encoding="utf-8")
         git_repo.run(["add", some_file])
         git_repo.run(["commit", "-m", "a commit"])
         git_repo.run(["push"])
         git_repo.run(["reset", "--hard", "HEAD^"])
 
     if has_untracked_files:
-        make_file("some_file")
+        some_file = git_repo.dir / "some_file"
+        some_file.write_text(f"some content: {random.random()}", encoding="utf-8")
 
     if needs_stash:
-        some_file = make_file("some_stashed_file")
-        git_repo.run(["add", some_file])
+        some_stashed_file = git_repo.dir / "some_stashed_file"
+        some_stashed_file.write_text(
+            f"some content: {random.random()}", encoding="utf-8"
+        )
+        git_repo.run(["add", some_stashed_file])
 
     cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
@@ -226,7 +225,7 @@ def test_repo_update_stash_cases(
         [
             GitSync,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
                 "vcs": "git",
@@ -235,7 +234,7 @@ def test_repo_update_stash_cases(
         [
             create_project,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
-                "url": f"git+file://{git_remote_repo}",
+                "url": f"git+{git_remote_repo.as_uri()}",
                 "dir": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
                 "vcs": "git",
@@ -272,142 +271,142 @@ def test_progress_callback(
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
-                "remotes": {"origin": f"file://{git_remote_repo}"},
+                "remotes": {"origin": git_remote_repo.as_uri()},
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "remotes": {
-                    "origin": f"file://{git_remote_repo}",
-                    "second_remote": f"file://{git_remote_repo}",
+                    "origin": git_remote_repo.as_uri(),
+                    "second_remote": git_remote_repo.as_uri(),
                 },
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
                 "second_remote": GitRemote(
                     name="second_remote",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "remotes": {
-                    "second_remote": f"file://{git_remote_repo}",
+                    "second_remote": git_remote_repo.as_uri(),
                 },
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
                 "second_remote": GitRemote(
                     name="second_remote",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "remotes": {
                     "origin": GitRemote(
                         name="origin",
-                        fetch_url=f"file://{git_remote_repo}",
-                        push_url=f"file://{git_remote_repo}",
+                        fetch_url=git_remote_repo.as_uri(),
+                        push_url=git_remote_repo.as_uri(),
                     ),
                     "second_remote": GitRemote(
                         name="second_remote",
-                        fetch_url=f"file://{git_remote_repo}",
-                        push_url=f"file://{git_remote_repo}",
+                        fetch_url=git_remote_repo.as_uri(),
+                        push_url=git_remote_repo.as_uri(),
                     ),
                 },
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="second_remote",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
                 "second_remote": GitRemote(
                     name="second_remote",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "vcs": "git",
                 "remotes": {
                     "second_remote": GitRemote(
                         name="second_remote",
-                        fetch_url=f"file://{git_remote_repo}",
-                        push_url=f"file://{git_remote_repo}",
+                        fetch_url=git_remote_repo.as_uri(),
+                        push_url=git_remote_repo.as_uri(),
                     ),
                 },
             },
             lambda git_remote_repo, **kwargs: {
                 "second_remote": GitRemote(
                     name="second_remote",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             create_project,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"git+file://{git_remote_repo}",
+                "url": f"git+{git_remote_repo.as_uri()}",
                 "dir": projects_path / repo_name,
                 "vcs": "git",
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="second_remote",
-                    fetch_url=f"file://{git_remote_repo}",
-                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
@@ -446,66 +445,66 @@ def test_remotes(
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "remotes": {
-                    "origin": f"file://{git_remote_repo}",
+                    "origin": git_remote_repo.as_uri(),
                 },
             },
             lambda git_remote_repo, **kwargs: {
                 "second_remote": GitRemote(
                     **{
                         "name": "second_remote",
-                        "fetch_url": f"file://{git_remote_repo}",
-                        "push_url": f"file://{git_remote_repo}",
+                        "fetch_url": git_remote_repo.as_uri(),
+                        "push_url": git_remote_repo.as_uri(),
                     }
                 )
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    push_url=f"file://{git_remote_repo}",
-                    fetch_url=f"file://{git_remote_repo}",
+                    push_url=git_remote_repo.as_uri(),
+                    fetch_url=git_remote_repo.as_uri(),
                 ),
                 "second_remote": GitRemote(
                     name="second_remote",
-                    push_url=f"file://{git_remote_repo}",
-                    fetch_url=f"file://{git_remote_repo}",
+                    push_url=git_remote_repo.as_uri(),
+                    fetch_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "remotes": {
-                    "origin": f"file://{git_remote_repo}",
+                    "origin": git_remote_repo.as_uri(),
                     # accepts short-hand form since it's inputted in the constructor
-                    "second_remote": f"file://{git_remote_repo}",
+                    "second_remote": git_remote_repo.as_uri(),
                 },
             },
             lambda git_remote_repo, **kwargs: {},
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
                     name="origin",
-                    push_url=f"file://{git_remote_repo}",
-                    fetch_url=f"file://{git_remote_repo}",
+                    push_url=git_remote_repo.as_uri(),
+                    fetch_url=git_remote_repo.as_uri(),
                 ),
                 "second_remote": GitRemote(
                     name="second_remote",
-                    push_url=f"file://{git_remote_repo}",
-                    fetch_url=f"file://{git_remote_repo}",
+                    push_url=git_remote_repo.as_uri(),
+                    fetch_url=git_remote_repo.as_uri(),
                 ),
             },
         ],
         [
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
-                "url": f"file://{git_remote_repo}",
+                "url": git_remote_repo.as_uri(),
                 "dir": projects_path / repo_name,
                 "remotes": {
-                    "origin": f"file://{git_remote_repo}",
+                    "origin": git_remote_repo.as_uri(),
                 },
             },
             lambda git_remote_repo, second_git_remote_repo, **kwargs: {
@@ -587,15 +586,15 @@ def test_git_get_url_and_rev_from_pip_url() -> None:
         [
             GitSync,
             lambda git_remote_repo, dir, **kwargs: {
-                "url": f"file://{git_remote_repo}",
-                "dir": str(dir),
+                "url": git_remote_repo.as_uri(),
+                "dir": dir,
                 "vcs": "git",
             },
         ],
         [
             create_project,
             lambda git_remote_repo, dir, **kwargs: {
-                "url": f"git+file://{git_remote_repo}",
+                "url": f"git+{git_remote_repo.as_uri()}",
                 "dir": dir,
                 "vcs": "git",
             },
@@ -630,7 +629,7 @@ def test_remotes_preserves_git_ssh(
         [
             GitSync,
             lambda bare_dir, tmp_path, **kwargs: {
-                "url": f"file://{bare_dir}",
+                "url": bare_dir.as_uri(),
                 "dir": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
@@ -638,7 +637,7 @@ def test_remotes_preserves_git_ssh(
         [
             create_project,
             lambda bare_dir, tmp_path, **kwargs: {
-                "url": f"git+file://{bare_dir}",
+                "url": f"git+{bare_dir.as_uri()}",
                 "dir": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
@@ -665,6 +664,9 @@ def test_ls_remotes(git_repo: GitSync) -> None:
     remotes = git_repo.remotes()
 
     assert "origin" in remotes
+    assert git_repo.cmd.remote.show() == "origin"
+    assert "origin" in git_repo.cmd.remote.show(name="origin")
+    assert "origin" in git_repo.cmd.remote.show(name="origin", no_query_remotes=True)
     assert git_repo.remotes()["origin"].name == "origin"
 
 
@@ -725,9 +727,7 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
     ), "branch w/o upstream should return branch only"
 
     new_remote_name = "new_remote_name"
-    git_repo.set_remote(
-        name=new_remote_name, url=f"file://{git_repo.dir}", overwrite=True
-    )
+    git_repo.set_remote(name=new_remote_name, url=git_repo.dir.as_uri(), overwrite=True)
     git_repo.run(["fetch", new_remote_name])
     git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])
     assert (
@@ -767,7 +767,7 @@ def test_GitRemote_from_stdout() -> None:
     ) == GitStatus.from_stdout(FIXTURE_A)
 
 
-class GitBranchComplexResult(TypedDict):
+class GitBranchComplexResult(t.TypedDict):
     branch_oid: str
     branch_head: str
     branch_upstream: str
@@ -827,7 +827,7 @@ def test_GitRemote__from_stdout_b(fixture: str, expected_result: GitStatus) -> N
     assert GitStatus.from_stdout(textwrap.dedent(fixture)) == expected_result
 
 
-class GitBranchResult(TypedDict):
+class GitBranchResult(t.TypedDict):
     branch_ab: str
     branch_ahead: str
     branch_behind: str
@@ -895,7 +895,7 @@ def test_repo_git_remote_checkout(
 ) -> None:
     git_server = create_git_remote_repo()
     git_repo_checkout_dir = projects_path / "my_git_checkout"
-    git_repo = GitSync(dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
+    git_repo = GitSync(dir=git_repo_checkout_dir, url=git_server.as_uri())
 
     git_repo.obtain()
     git_repo.update_repo()

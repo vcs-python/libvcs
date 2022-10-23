@@ -16,7 +16,7 @@ versions.
 ```{toctree}
 :caption: API
 
-git
+git/index
 hg
 svn
 ```

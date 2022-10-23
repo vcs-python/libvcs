@@ -24,7 +24,7 @@ class Git:
         dir: StrPath,
         progress_callback: Optional[ProgressCallbackProtocol] = None,
     ) -> None:
-        """Lite, typed, pythonic wrapper for git(1).
+        r"""Lite, typed, pythonic wrapper for git(1).
 
         Parameters
         ----------
@@ -33,8 +33,28 @@ class Git:
 
         Examples
         --------
-        >>> Git(dir=tmp_path)
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git
         <Git dir=...>
+
+        Subcommands:
+
+        >>> git.remote.show()
+        'origin'
+
+        >>> git.remote.add(
+        ...     name='my_remote', url=f'file:///dev/null'
+        ... )
+        ''
+
+        >>> git.remote.show()
+        'my_remote\norigin'
+
+        >>> git.stash.save(message="Message")
+        'No local changes to save'
+
+        >>> git.submodule.init()
+        ''
         """
         #: Directory to check out
         self.dir: pathlib.Path
@@ -2370,7 +2390,7 @@ class GitRemoteCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        r"""Wraps `git submodule <https://git-scm.com/docs/git-remote>`_.
+        r"""Wraps `git remote <https://git-scm.com/docs/git-remote>`_.
 
         Examples
         --------
@@ -2405,7 +2425,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule add
+        """git remote add
 
         Examples
         --------
@@ -2441,7 +2461,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule rename
+        """git remote rename
 
         Examples
         --------
@@ -2474,7 +2494,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule remove
+        """git remote remove
 
         Examples
         --------
@@ -2503,7 +2523,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule show
+        """git remote show
 
         Examples
         --------
@@ -2538,7 +2558,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule prune
+        """git remote prune
 
         Examples
         --------
@@ -2572,7 +2592,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule get-url
+        """git remote get-url
 
         Examples
         --------
@@ -2614,7 +2634,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule set-url
+        """git remote set-url
 
         Examples
         --------
