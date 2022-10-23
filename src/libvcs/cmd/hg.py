@@ -12,7 +12,7 @@ import pathlib
 from collections.abc import Sequence
 from typing import Any, Optional, Union
 
-from libvcs._internal.run import run
+from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
@@ -34,7 +34,14 @@ class HgPagerType(enum.Enum):
 
 
 class Hg:
-    def __init__(self, *, dir: StrPath) -> None:
+    progress_callback: Optional[ProgressCallbackProtocol] = None
+
+    def __init__(
+        self,
+        *,
+        dir: StrPath,
+        progress_callback: Optional[ProgressCallbackProtocol] = None,
+    ) -> None:
         """Lite, typed, pythonic wrapper for hg(1).
 
         Parameters
@@ -53,6 +60,8 @@ class Hg:
             self.dir = dir
         else:
             self.dir = pathlib.Path(dir)
+
+        self.progress_callback = progress_callback
 
     def __repr__(self) -> str:
         return f"<Hg dir={self.dir}>"
@@ -170,6 +179,9 @@ class Hg:
             cli_args.append("--version")
         if help is True:
             cli_args.append("--help")
+
+        if self.progress_callback is not None:
+            kwargs["callback"] = self.progress_callback
 
         return run(
             args=cli_args,
