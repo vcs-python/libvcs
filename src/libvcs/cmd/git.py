@@ -13,6 +13,11 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 class Git:
     progress_callback: Optional[ProgressCallbackProtocol] = None
 
+    # Sub-commands
+    submodule: "GitSubmoduleCmd"
+    remote: "GitRemoteCmd"
+    stash: "GitStashCmd"
+
     def __init__(
         self,
         *,
@@ -1713,8 +1718,6 @@ class Git:
             ["config", *local_flags],
             check_returncode=check_returncode,
         )
-
-    submodule: "GitSubmoduleCmd"
 
     def version(
         self,
