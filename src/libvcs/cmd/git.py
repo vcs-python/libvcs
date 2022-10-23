@@ -2390,7 +2390,7 @@ class GitRemoteCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        r"""Wraps `git submodule <https://git-scm.com/docs/git-remote>`_.
+        r"""Wraps `git remote <https://git-scm.com/docs/git-remote>`_.
 
         Examples
         --------
@@ -2425,7 +2425,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule add
+        """git remote add
 
         Examples
         --------
@@ -2461,7 +2461,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule rename
+        """git remote rename
 
         Examples
         --------
@@ -2494,7 +2494,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule remove
+        """git remote remove
 
         Examples
         --------
@@ -2523,7 +2523,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule show
+        """git remote show
 
         Examples
         --------
@@ -2558,7 +2558,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule prune
+        """git remote prune
 
         Examples
         --------
@@ -2592,7 +2592,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule get-url
+        """git remote get-url
 
         Examples
         --------
@@ -2634,7 +2634,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule set-url
+        """git remote set-url
 
         Examples
         --------
