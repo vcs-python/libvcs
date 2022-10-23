@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 class SvnSync(BaseSync):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
+    cmd: Svn
 
     def __init__(
         self,
@@ -59,7 +60,10 @@ class SvnSync(BaseSync):
         self.password = kwargs.get("password")
 
         self.rev = kwargs.get("rev")
+
         super().__init__(url=url, dir=dir, **kwargs)
+
+        self.cmd = Svn(dir=dir, progress_callback=self.progress_callback)
 
     def _user_pw_args(self) -> list[Any]:
         args = []
@@ -195,7 +199,3 @@ class SvnSync(BaseSync):
             rev = 0
 
         return url, rev
-
-    @property
-    def cmd(self, *args: object, **kwargs: object) -> Svn:
-        return Svn(dir=self.dir, *args, **kwargs)
