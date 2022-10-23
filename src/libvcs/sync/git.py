@@ -21,7 +21,8 @@ import re
 from typing import Any, Optional, Union
 from urllib import parse as urlparse
 
-from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrPath
+from libvcs.cmd.git import Git
 from libvcs.sync.base import (
     BaseSync,
     VCSLocation,
@@ -141,6 +142,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 class GitSync(BaseSync):
     bin_name = "git"
     schemes = ("git+http", "git+https", "git+file")
+    cmd: Git
     _remotes: GitSyncRemoteDict
 
     def __init__(
@@ -231,6 +233,8 @@ class GitSync(BaseSync):
             )
         super().__init__(url=url, dir=dir, **kwargs)
 
+        self.cmd = Git(dir=dir, progress_callback=self.progress_callback)
+
         origin = (
             self._remotes.get("origin")
             if "origin" in self._remotes
@@ -250,7 +254,7 @@ class GitSync(BaseSync):
     def get_revision(self) -> str:
         """Return current revision. Initial repositories return 'initial'."""
         try:
-            return self.run(["rev-parse", "--verify", "HEAD"])
+            return self.cmd.rev_parse(verify=True, args="HEAD", check_returncode=True)
         except exc.CommandError:
             return "initial"
 
@@ -300,20 +304,25 @@ class GitSync(BaseSync):
 
         url = self.url
 
-        cmd: list[StrOrBytesPath] = ["clone", "--progress"]
-        if self.git_shallow:
-            cmd.extend(["--depth", "1"])
-        if self.tls_verify:
-            cmd.extend(["-c", "http.sslVerify=false"])
-        cmd.extend([url, self.dir])
-
         self.log.info("Cloning.")
-        self.run(cmd, log_in_real_time=True)
+        # todo: log_in_real_time
+        self.cmd.clone(
+            url=url,
+            progress=True,
+            depth=1 if self.git_shallow else None,
+            config={"http.sslVerify": False} if self.tls_verify else None,
+            log_in_real_time=True,
+        )
 
         self.log.info("Initializing submodules.")
-        self.run(["submodule", "init"], log_in_real_time=True)
-        cmd = ["submodule", "update", "--recursive", "--init"]
-        self.run(cmd, log_in_real_time=True)
+        self.cmd.submodule.init(
+            log_in_real_time=True,
+        )
+        self.cmd.submodule.update(
+            init=True,
+            recursive=True,
+            log_in_real_time=True,
+        )
 
         self.set_remotes(overwrite=True)
 
@@ -333,7 +342,7 @@ class GitSync(BaseSync):
 
         if not git_tag:
             self.log.debug("No git revision set, defaulting to origin/master")
-            symref = self.run(["symbolic-ref", "--short", "HEAD"])
+            symref = self.cmd.symbolic_ref(name="HEAD", short=True)
             if symref:
                 git_tag = symref.rstrip()
             else:
@@ -344,7 +353,9 @@ class GitSync(BaseSync):
 
         # Get head sha
         try:
-            head_sha = self.run(["rev-list", "--max-count=1", "HEAD"])
+            head_sha = self.cmd.rev_list(
+                commit="HEAD", max_count=1, check_returncode=True
+            )
         except exc.CommandError:
             self.log.error("Failed to get the hash for HEAD")
             return
@@ -353,7 +364,7 @@ class GitSync(BaseSync):
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
-        show_ref_output = self.run(["show-ref", git_tag], check_returncode=False)
+        show_ref_output = self.cmd.show_ref(pattern=git_tag, check_returncode=False)
         self.log.debug("show_ref_output: %s" % show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
         self.log.debug("is_remote_ref: %s" % is_remote_ref)
@@ -381,13 +392,11 @@ class GitSync(BaseSync):
         # been fetched yet).
         try:
             error_code = 0
-            tag_sha = self.run(
-                [
-                    "rev-list",
-                    "--max-count=1",
-                    git_remote_name + "/" + git_tag if is_remote_ref else git_tag,
-                ]
+            tag_sha = self.cmd.rev_list(
+                commit=git_remote_name + "/" + git_tag if is_remote_ref else git_tag,
+                max_count=1,
             )
+
         except exc.CommandError as e:
             error_code = e.returncode if e.returncode is not None else 0
             tag_sha = ""
@@ -400,7 +409,7 @@ class GitSync(BaseSync):
             return
 
         try:
-            process = self.run(["fetch"], log_in_real_time=True)
+            process = self.cmd.fetch(log_in_real_time=True, check_returncode=True)
         except exc.CommandError:
             self.log.error("Failed to fetch repository '%s'" % url)
             return
@@ -408,7 +417,7 @@ class GitSync(BaseSync):
         if is_remote_ref:
             # Check if stash is needed
             try:
-                process = self.run(["status", "--porcelain", "--untracked-files=no"])
+                process = self.cmd.status(porcelain=True, untracked_files="no")
             except exc.CommandError:
                 self.log.error("Failed to get the status")
                 return
@@ -420,28 +429,28 @@ class GitSync(BaseSync):
                 # If Git < 1.7.6, uses --quiet --all
                 git_stash_save_options = "--quiet"
                 try:
-                    process = self.run(["stash", "save", git_stash_save_options])
+                    process = self.cmd.stash.save(message=git_stash_save_options)
                 except exc.CommandError:
                     self.log.error("Failed to stash changes")
 
             # Checkout the remote branch
             try:
-                process = self.run(["checkout", git_tag])
+                process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
                 self.log.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
             # Rebase changes from the remote branch
             try:
-                process = self.run(["rebase", git_remote_name + "/" + git_tag])
+                process = self.cmd.rebase(upstream=git_remote_name + "/" + git_tag)
             except exc.CommandError as e:
                 if any(msg in str(e) for msg in ["invalid_upstream", "Aborting"]):
                     self.log.error(e)
                 else:
                     # Rebase failed: Restore previous state.
-                    self.run(["rebase", "--abort"])
+                    self.cmd.rebase(abort=True)
                     if need_stash:
-                        self.run(["stash", "pop", "--index", "--quiet"])
+                        self.cmd.stash.pop(index=True, quiet=True)
 
                     self.log.error(
                         "\nFailed to rebase in: '%s'.\n"
@@ -451,16 +460,16 @@ class GitSync(BaseSync):
 
             if need_stash:
                 try:
-                    process = self.run(["stash", "pop", "--index", "--quiet"])
+                    process = self.cmd.stash.pop(index=True, quiet=True)
                 except exc.CommandError:
                     # Stash pop --index failed: Try again dropping the index
-                    self.run(["reset", "--hard", "--quiet"])
+                    self.cmd.reset(hard=True, quiet=True)
                     try:
-                        process = self.run(["stash", "pop", "--quiet"])
+                        process = self.cmd.stash.pop(quiet=True)
                     except exc.CommandError:
                         # Stash pop failed: Restore previous state.
-                        self.run(["reset", "--hard", "--quiet", head_sha])
-                        self.run(["stash", "pop", "--index", "--quiet"])
+                        self.cmd.reset(pathspec=head_sha, hard=True, quiet=True)
+                        self.cmd.stash.pop(index=True, quiet=True)
                         self.log.error(
                             "\nFailed to rebase in: '%s'.\n"
                             "You will have to resolve the "
@@ -470,13 +479,12 @@ class GitSync(BaseSync):
 
         else:
             try:
-                process = self.run(["checkout", git_tag])
+                process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
                 self.log.error("Failed to checkout tag: '%s'" % git_tag)
                 return
 
-        cmd = ["submodule", "update", "--recursive", "--init"]
-        self.run(cmd, log_in_real_time=True)
+        self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)
 
     def remotes(self) -> GitSyncRemoteDict:
         """Return remotes like git remote -v.
@@ -492,7 +500,7 @@ class GitSync(BaseSync):
         """
         remotes = {}
 
-        cmd = self.run(["remote"])
+        cmd = self.cmd.remote.run()
         ret: filter[str] = filter(None, cmd.split("\n"))
 
         for remote_name in ret:
@@ -515,7 +523,9 @@ class GitSync(BaseSync):
         """
 
         try:
-            ret = self.run(["remote", "show", "-n", name])
+            ret = self.cmd.remote.show(
+                name=name, no_query_remotes=True, log_in_real_time=True
+            )
             lines = ret.split("\n")
             remote_fetch_url = lines[1].replace("Fetch URL: ", "").strip()
             remote_push_url = lines[2].replace("Push  URL: ", "").strip()
@@ -545,9 +555,9 @@ class GitSync(BaseSync):
         url = self.chomp_protocol(url)
 
         if self.remote(name) and overwrite:
-            self.run(["remote", "set-url", name, url])
+            self.cmd.remote.set_url(name=name, url=url, check_returncode=True)
         else:
-            self.run(["remote", "add", name, url])
+            self.cmd.remote.add(name=name, url=url, check_returncode=True)
 
         remote = self.remote(name=name)
         if remote is None:
@@ -590,7 +600,7 @@ class GitSync(BaseSync):
         git version
         """
         VERSION_PFX = "git version "
-        version = self.run(["version"])
+        version = self.cmd.version()
         if version.startswith(VERSION_PFX):
             version = version[len(VERSION_PFX) :].split()[0]
         else:
@@ -622,7 +632,9 @@ branch_ahead='0', \
 branch_behind='0'\
 )
         """
-        return GitStatus.from_stdout(self.run(["status", "-sb", "--porcelain=2"]))
+        return GitStatus.from_stdout(
+            self.cmd.status(short=True, branch=True, porcelain="2")
+        )
 
     def get_current_remote_name(self) -> str:
         """Retrieve name of the remote / upstream of currently checked out branch.

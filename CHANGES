@@ -15,6 +15,48 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### New features
+
+#### Commands
+
+via #430
+
+- Git
+
+  - Support for progress bar
+  - Add subcommands for:
+    - stash: {attr}`Git.stash <libvcs.cmd.git.Git.stash>` -> {class}`libvcs.cmd.git.GitStashCmd`
+    - remote: {attr}`Git.remote <libvcs.cmd.git.Git.remote>` -> {class}`libvcs.cmd.git.GitRemoteCmd`
+    - submodule: {attr}`Git.submodule <libvcs.cmd.git.Git.submodule>` ->
+      {class}`libvcs.cmd.git.GitSubmoduleCmd`
+  - Added commands for:
+    - {meth}`libvcs.cmd.git.Git.rev_parse`
+    - {meth}`libvcs.cmd.git.Git.rev_list`
+    - {meth}`libvcs.cmd.git.Git.symbolic_ref`
+    - {meth}`libvcs.cmd.git.Git.show_ref`
+
+- SVN
+
+  New and improved:
+
+  - {meth}`libvcs.cmd.svn.Svn.unlock`
+  - {meth}`libvcs.cmd.svn.Svn.lock`
+  - {meth}`libvcs.cmd.svn.Svn.propset`
+
+- Mercurial
+
+  New and improved:
+
+  - {meth}`libvcs.cmd.hg.Hg.pull`
+  - {meth}`libvcs.cmd.hg.Hg.clone`
+  - {meth}`libvcs.cmd.hg.Hg.update`
+
+#### Syncing
+
+via #430
+
+Git, SVN, and Mercurial have moved to `libvcs.cmd`
+
 ## libvcs 0.18.1 (2022-10-23)
 
 _Maintenance only release, no bug fixes or features_

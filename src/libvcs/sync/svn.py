@@ -9,39 +9,35 @@
 
     The following are pypa/pip (MIT license):
 
-    - [`SvnSync.convert_pip_url`](libvcs.svn.SvnSync.convert_pip_url)
     - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
-    - [`get_rev_options`](libvcs.svn.get_rev_options)
 """  # NOQA: E5
 import logging
 import os
 import pathlib
 import re
 from typing import Any, Optional
-from urllib import parse as urlparse
 
-from libvcs._internal.run import run
-from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs._internal.types import StrPath
+from libvcs.cmd.svn import Svn
 
-from .base import BaseSync, VCSLocation, convert_pip_url as base_convert_pip_url
+from .base import BaseSync
 
 logger = logging.getLogger(__name__)
-
-
-def convert_pip_url(pip_url: str) -> VCSLocation:
-    # hotfix the URL scheme after removing svn+ from svn+ssh:// re-add it
-    url, rev = base_convert_pip_url(pip_url)
-    if url.startswith("ssh://"):
-        url = "svn+" + url
-    return VCSLocation(url=url, rev=rev)
 
 
 class SvnSync(BaseSync):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
+    cmd: Svn
 
-    def __init__(self, *, url: str, dir: StrPath, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        url: str,
+        dir: StrPath,
+        **kwargs: Any,
+    ) -> None:
         """A svn repository.
 
         Parameters
@@ -49,20 +45,25 @@ class SvnSync(BaseSync):
         url : str
             URL in subversion repository
 
-        svn_username : str, optional
+        username : str, optional
             username to use for checkout and update
 
-        svn_password : str, optional
+        password : str, optional
             password to use for checkout and update
 
         svn_trust_cert : bool
             trust the Subversion server site certificate, default False
         """
-        if "svn_trust_cert" not in kwargs:
-            self.svn_trust_cert = False
+        self.svn_trust_cert = kwargs.pop("svn_trust_cert", False)
+
+        self.username = kwargs.get("username")
+        self.password = kwargs.get("password")
 
         self.rev = kwargs.get("rev")
+
         super().__init__(url=url, dir=dir, **kwargs)
+
+        self.cmd = Svn(dir=dir, progress_callback=self.progress_callback)
 
     def _user_pw_args(self) -> list[Any]:
         args = []
@@ -72,23 +73,25 @@ class SvnSync(BaseSync):
         return args
 
     def obtain(self, quiet: Optional[bool] = None, *args: Any, **kwargs: Any) -> None:
-        self.ensure_dir()
-
         url, rev = self.url, self.rev
 
-        cmd: list[StrOrBytesPath] = ["checkout", "-q", url, "--non-interactive"]
+        if rev is not None:
+            kwargs["revision"] = rev
         if self.svn_trust_cert:
-            cmd.append("--trust-server-cert")
-        cmd.extend(self._user_pw_args())
-        cmd.extend(get_rev_options(url, rev))
-        cmd.append(self.dir)
-
-        self.run(cmd)
+            kwargs["trust_server_cert"] = True
+        self.cmd.checkout(
+            url=url,
+            username=self.username,
+            password=self.password,
+            non_interactive=True,
+            quiet=True,
+            check_returncode=True,
+            **kwargs,
+        )
 
     def get_revision_file(self, location: str) -> int:
         """Return revision for a file."""
-
-        current_rev = self.run(["info", location])
+        current_rev = self.cmd.info(location)
 
         _INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.M)
 
@@ -133,17 +136,15 @@ class SvnSync(BaseSync):
     ) -> None:
         self.ensure_dir()
         if pathlib.Path(self.dir / ".svn").exists():
-            if dest is None:
-                dest = str(self.dir)
-
-            url, rev = self.url, self.rev
-
-            cmd = ["update"]
-            cmd.extend(self._user_pw_args())
-            cmd.extend(get_rev_options(url, rev))
-            cmd.append(dest)
-
-            self.run(cmd)
+            self.cmd.checkout(
+                url=self.url,
+                username=self.username,
+                password=self.password,
+                non_interactive=True,
+                quiet=True,
+                check_returncode=True,
+                **kwargs,
+            )
         else:
             self.obtain()
             self.update_repo()
@@ -182,8 +183,8 @@ class SvnSync(BaseSync):
                 # We don't need to worry about making sure interactive mode
                 # is being used to prompt for passwords, because passwords
                 # are only potentially needed for remote server requests.
-                xml = run(
-                    ["svn", "info", "--xml", location],
+                xml = Svn(dir=pathlib.Path(location).parent).info(
+                    target=pathlib.Path(location), xml=True
                 )
                 match = _svn_info_xml_url_re.search(xml)
                 assert match is not None
@@ -198,32 +199,3 @@ class SvnSync(BaseSync):
             rev = 0
 
         return url, rev
-
-
-def get_rev_options(url: str, rev: None) -> list[Any]:
-    """Return revision options. From pip pip.vcs.subversion."""
-    if rev:
-        rev_options = ["-r", rev]
-    else:
-        rev_options = []
-
-    r = urlparse.urlsplit(url)
-    if hasattr(r, "username"):
-        # >= Python-2.5
-        username, password = r.username, r.password
-    else:
-        netloc = r[1]
-        if "@" in netloc:
-            auth = netloc.split("@")[0]
-            if ":" in auth:
-                username, password = auth.split(":", 1)
-            else:
-                username, password = auth, None
-        else:
-            username, password = None, None
-
-    if username:
-        rev_options += ["--username", username]
-    if password:
-        rev_options += ["--password", password]
-    return rev_options
