@@ -15,6 +15,15 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+#### Tests
+
+- Sync, git: Update pytest fixtures, via #432
+
+#### Documentation
+
+- CLI, git: Split subcommands into separate pages (remote, stash, submodule),
+  via #432
+
 ## libvcs 0.19.0 (2022-10-23)
 
 ### New features
