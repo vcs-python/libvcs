@@ -258,8 +258,6 @@ def test_progress_callback(
         name="progress_callback_stub", side_effect=progress_callback_spy
     )
 
-    run(["git", "rev-parse", "HEAD"], cwd=git_remote_repo)
-
     # create a new repo with the repo as a remote
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
