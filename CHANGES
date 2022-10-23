@@ -15,6 +15,14 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+## libvcs 0.18.1 (2022-10-23)
+
+_Maintenance only release, no bug fixes or features_
+
+- Documentation improvements
+- Development package updates
+- Add citation file (CITATION.cff)
+
 ## libvcs 0.18.0 (2022-10-09)
 
 ### New features
