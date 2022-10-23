@@ -10,7 +10,7 @@ import pathlib
 from collections.abc import Sequence
 from typing import Any, List, Literal, Optional, Union
 
-from libvcs._internal.run import run
+from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
@@ -20,7 +20,14 @@ RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
 class Svn:
-    def __init__(self, *, dir: StrPath) -> None:
+    progress_callback: Optional[ProgressCallbackProtocol] = None
+
+    def __init__(
+        self,
+        *,
+        dir: StrPath,
+        progress_callback: Optional[ProgressCallbackProtocol] = None,
+    ) -> None:
         """Lite, typed, pythonic wrapper for svn(1).
 
         Parameters
@@ -39,6 +46,8 @@ class Svn:
             self.dir = dir
         else:
             self.dir = pathlib.Path(dir)
+
+        self.progress_callback = progress_callback
 
     def __repr__(self) -> str:
         return f"<Svn dir={self.dir}>"
@@ -123,6 +132,9 @@ class Svn:
             cli_args.extend(["--config-dir", str(config_dir)])
         if config_option is not None:
             cli_args.extend(["--config-option", str(config_option)])
+
+        if self.progress_callback is not None:
+            kwargs["callback"] = self.progress_callback
 
         return run(
             args=cli_args,
