@@ -186,32 +186,31 @@ def test_repo_update_stash_cases(
     )
     git_repo.obtain()  # clone initial repo
 
-    def make_file(filename: str) -> pathlib.Path:
-        some_file = git_repo.dir.joinpath(filename)
-        with open(some_file, "w") as file:
-            file.write("some content: " + str(random.random()))
-
-        return some_file
-
     # Make an initial commit so we can reset
-    some_file = make_file("initial_file")
-    git_repo.run(["add", some_file])
+    initial_file = git_repo.dir / "initial_file"
+    initial_file.write_text(f"some content: {random.random()}", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
     git_repo.run(["commit", "-m", "a commit"])
     git_repo.run(["push"])
 
     if has_remote_changes:
-        some_file = make_file("some_file")
+        some_file = git_repo.dir / "some_file"
+        some_file.write_text(f"some content: {random.random()}", encoding="utf-8")
         git_repo.run(["add", some_file])
         git_repo.run(["commit", "-m", "a commit"])
         git_repo.run(["push"])
         git_repo.run(["reset", "--hard", "HEAD^"])
 
     if has_untracked_files:
-        make_file("some_file")
+        some_file = git_repo.dir / "some_file"
+        some_file.write_text(f"some content: {random.random()}", encoding="utf-8")
 
     if needs_stash:
-        some_file = make_file("some_stashed_file")
-        git_repo.run(["add", some_file])
+        some_stashed_file = git_repo.dir / "some_stashed_file"
+        some_stashed_file.write_text(
+            f"some content: {random.random()}", encoding="utf-8"
+        )
+        git_repo.run(["add", some_stashed_file])
 
     cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
