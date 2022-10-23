@@ -24,7 +24,7 @@ class Git:
         dir: StrPath,
         progress_callback: Optional[ProgressCallbackProtocol] = None,
     ) -> None:
-        """Lite, typed, pythonic wrapper for git(1).
+        r"""Lite, typed, pythonic wrapper for git(1).
 
         Parameters
         ----------
@@ -33,8 +33,28 @@ class Git:
 
         Examples
         --------
-        >>> Git(dir=tmp_path)
+        >>> git = Git(dir=git_local_clone.dir)
+        >>> git
         <Git dir=...>
+
+        Subcommands:
+
+        >>> git.remote.show()
+        'origin'
+
+        >>> git.remote.add(
+        ...     name='my_remote', url=f'file:///dev/null'
+        ... )
+        ''
+
+        >>> git.remote.show()
+        'my_remote\norigin'
+
+        >>> git.stash.save(message="Message")
+        'No local changes to save'
+
+        >>> git.submodule.init()
+        ''
         """
         #: Directory to check out
         self.dir: pathlib.Path
