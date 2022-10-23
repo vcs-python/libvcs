@@ -5,7 +5,7 @@ import pathlib
 import random
 import shutil
 import textwrap
-from typing import Callable, TypedDict
+import typing as t
 
 import pytest
 
@@ -26,9 +26,9 @@ if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 
-ProjectTestFactory = Callable[..., GitSync]
-ProjectTestFactoryLazyKwargs = Callable[..., dict]
-ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
+ProjectTestFactory = t.Callable[..., GitSync]
+ProjectTestFactoryLazyKwargs = t.Callable[..., dict]
+ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
 
 
 @pytest.mark.parametrize(
@@ -769,7 +769,7 @@ def test_GitRemote_from_stdout() -> None:
     ) == GitStatus.from_stdout(FIXTURE_A)
 
 
-class GitBranchComplexResult(TypedDict):
+class GitBranchComplexResult(t.TypedDict):
     branch_oid: str
     branch_head: str
     branch_upstream: str
@@ -829,7 +829,7 @@ def test_GitRemote__from_stdout_b(fixture: str, expected_result: GitStatus) -> N
     assert GitStatus.from_stdout(textwrap.dedent(fixture)) == expected_result
 
 
-class GitBranchResult(TypedDict):
+class GitBranchResult(t.TypedDict):
     branch_ab: str
     branch_ahead: str
     branch_behind: str
