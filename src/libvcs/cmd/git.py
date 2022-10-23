@@ -4,14 +4,21 @@ import shlex
 from collections.abc import Sequence
 from typing import Any, Literal, Optional, Union
 
-from libvcs._internal.run import run
+from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class Git:
-    def __init__(self, *, dir: StrPath) -> None:
+    progress_callback: Optional[ProgressCallbackProtocol] = None
+
+    def __init__(
+        self,
+        *,
+        dir: StrPath,
+        progress_callback: Optional[ProgressCallbackProtocol] = None,
+    ) -> None:
         """Lite, typed, pythonic wrapper for git(1).
 
         Parameters
@@ -30,6 +37,8 @@ class Git:
             self.dir = dir
         else:
             self.dir = pathlib.Path(dir)
+
+        self.progress_callback = progress_callback
 
         # Initial git-submodule
         self.submodule = GitSubmoduleCmd(dir=self.dir, cmd=self)
@@ -200,6 +209,9 @@ class Git:
             cli_args.append("--icase-pathspecs")
         if no_optional_locks is True:
             cli_args.append("--no-optional-locks")
+
+        if self.progress_callback is not None:
+            kwargs["callback"] = self.progress_callback
 
         return run(args=cli_args, **kwargs)
 
