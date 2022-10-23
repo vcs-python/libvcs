@@ -20,3 +20,4 @@
 "projects/git.md" "sync/git.md"
 "projects/hg.md" "sync/hg.md"
 "projects/svn.md" "sync/svn.md"
+"cmd/git.md" "cmd/git/index.md"
