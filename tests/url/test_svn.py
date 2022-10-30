@@ -124,7 +124,7 @@ def test_svn_url_extension_pip(
     svn_repo: SvnSync,
 ) -> None:
     class SvnURLWithPip(SvnURL):
-        rule_map: RuleMap = RuleMap(
+        rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         )
 

@@ -101,7 +101,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitHubURL(GitURL):
-        ...    rule_map: RuleMap = RuleMap(
+        ...    rule_map = RuleMap(
         ...        _rule_map={'github_prefix': GitHubPrefix}
         ...    )
 
@@ -151,7 +151,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitLabURL(GitURL):
-        ...     rule_map: RuleMap = RuleMap(
+        ...     rule_map = RuleMap(
         ...         _rule_map={'gitlab_prefix': GitLabPrefix}
         ...     )
 
@@ -187,7 +187,7 @@ class RuleMap(SkipDefaultFieldsReprMixin):
 
         >>> @dataclasses.dataclass(repr=False)
         ... class GitURLWithPip(GitBaseURL):
-        ...    rule_map: RuleMap = RuleMap(
+        ...    rule_map = RuleMap(
         ...        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         ...    )
 

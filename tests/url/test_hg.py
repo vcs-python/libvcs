@@ -107,7 +107,7 @@ def test_hg_url_extension_pip(
     hg_repo: HgSync,
 ) -> None:
     class HgURLWithPip(HgURL):
-        rule_map: RuleMap = RuleMap(
+        rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         )
 

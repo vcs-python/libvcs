@@ -262,8 +262,11 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     # Decoration
     suffix: Optional[str] = None
 
+    # Matched
     rule: Optional[str] = None
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
+
+    # Settings
+    rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
         url = self.url
@@ -382,7 +385,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
+    rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     def to_url(self) -> str:
         """Exports a pip-compliant URL.
@@ -490,7 +493,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
       - :meth:`GitBaseURL.to_url`
     """
 
-    rule_map: RuleMap = RuleMap(
+    rule_map = RuleMap(
         _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
     )
 

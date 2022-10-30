@@ -141,7 +141,7 @@ def test_git_url_extension_pip(
     git_repo: GitSync,
 ) -> None:
     class GitURLWithPip(GitBaseURL):
-        rule_map: RuleMap = RuleMap(
+        rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         )
 
@@ -254,7 +254,7 @@ def test_git_revs(
     git_url_kwargs: GitURLKwargs,
 ) -> None:
     class GitURLWithPip(GitURL):
-        rule_map: RuleMap = RuleMap(
+        rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
         )
 
