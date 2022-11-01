@@ -24,6 +24,47 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### URLs: Mapping now class attributes (#433)
+
+`URL.rule_map` is now a class attribute rather than a dataclass attribute.
+
+Before:
+
+```python
+@dataclasses.dataclass(repr=False)
+class GitLabURL(GitURL):
+    rule_map: RuleMap = RuleMap(
+        _rule_map={'gitlab_prefix': GitLabPrefix}
+    )
+```
+
+In python 3.11, that raises an error:
+
+```console
+  File "/home/user/.python/3.11.0/lib/python3.11/dataclasses.py", line 1211, in wrap
+    return _process_class(cls, init, repr, eq, order, unsafe_hash,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/.python/3.11.0/lib/python3.11/dataclasses.py", line 959, in _process_class
+    cls_fields.append(_get_field(cls, name, type, kw_only))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/.python/3.11.0/lib/python3.11/dataclasses.py", line 816, in _get_field
+    raise ValueError(f'mutable default {type(f.default)} for field '
+ValueError: mutable default <class 'libvcs.url.base.RuleMap'> for field rule_map is not allowed: use default_factory
+```
+
+After release:
+
+```python
+>>> import dataclasses
+>>> from libvcs.url.base import RuleMap
+>>> from libvcs.url.git import GitURL, DEFAULT_RULES
+>>> @dataclasses.dataclass(repr=False)
+... class MyGitURL(GitURL):
+...     rule_map = RuleMap(
+...         _rule_map={'gitlab_prefix': DEFAULT_RULES}
+...     )
+```
+
 <!---
 # vim: set filetype=markdown:
 -->
