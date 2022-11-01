@@ -189,7 +189,7 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     ref: Optional[str] = None
 
     rule: Optional[str] = None
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
+    rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
         url = self.url
@@ -285,7 +285,7 @@ class SvnPipURL(SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    rule_map: RuleMap = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
+    rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
@@ -356,7 +356,7 @@ class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
       - :meth:`SvnBaseURL.to_url`
     """
 
-    rule_map: RuleMap = RuleMap(
+    rule_map = RuleMap(
         _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
     )
 

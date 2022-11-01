@@ -60,7 +60,7 @@ Prefix for KDE infrastructure, `kde:group/repository`:
 
 >>> @dataclasses.dataclass(repr=False)
 ... class MyGitURLParser(GitURL):
-...    rule_map: RuleMap = RuleMap(
+...    rule_map = RuleMap(
 ...        _rule_map={
 ...            **GitURL.rule_map._rule_map,
 ...            'github_prefix': GitHubPrefix,
