@@ -24,6 +24,8 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+## libvcs 0.20.0 (2022-10-31)
+
 ### URLs: Mapping now class attributes (#433)
 
 `URL.rule_map` is now a class attribute rather than a dataclass attribute.
