@@ -2481,7 +2481,7 @@ class GitRemoteCmd:
                 local_flags.append("--no-progress")
         return self.run(
             "rename",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=local_flags + required_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2508,7 +2508,7 @@ class GitRemoteCmd:
 
         return self.run(
             "remove",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=local_flags + required_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
