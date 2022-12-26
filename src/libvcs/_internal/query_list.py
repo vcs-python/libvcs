@@ -14,6 +14,14 @@ T = TypeVar("T", Any, Any)
 no_arg = object()
 
 
+class MultipleObjectsReturned(Exception):
+    """The requested object does not exist"""
+
+
+class ObjectDoesNotExist(Exception):
+    """The query returned multiple objects when only one was expected."""
+
+
 def keygetter(
     obj: Mapping[str, Any],
     path: str,
@@ -522,9 +530,9 @@ class QueryList(list[T]):
     ) -> Optional[T]:
         objs = self.filter(matcher=matcher, **kwargs)
         if len(objs) > 1:
-            raise Exception("Multiple objects returned")
+            raise MultipleObjectsReturned()
         elif len(objs) == 0:
             if default == no_arg:
-                raise Exception("No objects found")
+                raise ObjectDoesNotExist()
             return default
         return objs[0]

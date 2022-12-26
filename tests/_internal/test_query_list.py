@@ -3,7 +3,11 @@ from typing import Any, Optional, Union
 
 import pytest
 
-from libvcs._internal.query_list import QueryList
+from libvcs._internal.query_list import (
+    MultipleObjectsReturned,
+    ObjectDoesNotExist,
+    QueryList,
+)
 
 
 @dataclasses.dataclass
@@ -269,16 +273,16 @@ def test_filter(
             else:
                 assert qs.get(filter_expr) == expected_result[0]
         elif len(expected_result) > 1:
-            with pytest.raises(Exception) as e:
+            with pytest.raises(MultipleObjectsReturned) as e:
                 if isinstance(filter_expr, dict):
                     assert qs.get(**filter_expr) == expected_result
                 else:
                     assert qs.get(filter_expr) == expected_result
                 assert e.match("Multiple objects returned")
         elif len(expected_result) == 0:
-            with pytest.raises(Exception) as e:
+            with pytest.raises(ObjectDoesNotExist) as exc:
                 if isinstance(filter_expr, dict):
                     assert qs.get(**filter_expr) == expected_result
                 else:
                     assert qs.get(filter_expr) == expected_result
-            assert e.match("No objects found")
+            assert exc.match("No objects found")
