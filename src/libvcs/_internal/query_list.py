@@ -11,6 +11,7 @@ from re import Pattern
 from typing import Any, Callable, Optional, Protocol, TypeVar, Union
 
 T = TypeVar("T", Any, Any)
+no_arg = object()
 
 
 def keygetter(
@@ -370,6 +371,9 @@ class QueryList(list[T]):
     >>> query.filter(foods__fruit__in="banana")[0].city
     'Tampa'
 
+    >>> query.get(foods__fruit__in="banana").city
+    'Tampa'
+
     **With objects (nested)**:
 
     >>> from typing import Optional
@@ -415,6 +419,9 @@ class QueryList(list[T]):
         food=Food(fruit=['banana', 'orange'], breakfast='cereal'))]
 
     >>> query.filter(food__fruit__in="banana")[0].city
+    'Tampa'
+
+    >>> query.get(food__fruit__in="banana").city
     'Tampa'
 
     >>> query.filter(food__breakfast="waffles")
@@ -506,3 +513,18 @@ class QueryList(list[T]):
             _filter = filter_lookup
 
         return self.__class__(k for k in self if _filter(k))
+
+    def get(
+        self,
+        matcher: Optional[Union[Callable[[T], bool], T]] = None,
+        default: Optional[Any] = no_arg,
+        **kwargs: Any,
+    ) -> Optional[T]:
+        objs = self.filter(matcher=matcher, **kwargs)
+        if len(objs) > 1:
+            raise Exception("Multiple objects returned")
+        elif len(objs) == 0:
+            if default == no_arg:
+                raise Exception("No objects found")
+            return default
+        return objs[0]

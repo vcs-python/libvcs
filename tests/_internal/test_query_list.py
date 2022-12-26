@@ -257,3 +257,28 @@ def test_filter(
             assert qs.filter(filter_expr) == expected_result
     else:
         assert qs.filter() == expected_result
+
+    if (
+        isinstance(expected_result, list)
+        and len(expected_result) > 0
+        and not isinstance(expected_result[0], dict)
+    ):
+        if len(expected_result) == 1:
+            if isinstance(filter_expr, dict):
+                assert qs.get(**filter_expr) == expected_result[0]
+            else:
+                assert qs.get(filter_expr) == expected_result[0]
+        elif len(expected_result) > 1:
+            with pytest.raises(Exception) as e:
+                if isinstance(filter_expr, dict):
+                    assert qs.get(**filter_expr) == expected_result
+                else:
+                    assert qs.get(filter_expr) == expected_result
+                assert e.match("Multiple objects returned")
+        elif len(expected_result) == 0:
+            with pytest.raises(Exception) as e:
+                if isinstance(filter_expr, dict):
+                    assert qs.get(**filter_expr) == expected_result
+                else:
+                    assert qs.get(filter_expr) == expected_result
+            assert e.match("No objects found")
