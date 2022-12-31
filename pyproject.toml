@@ -73,7 +73,7 @@ sphinx-inline-tabs = "*"
 sphinxext-opengraph = "*"
 sphinx-copybutton = "*"
 sphinxext-rediraffe = "*"
-myst_parser = "*"
+myst_parser = ">=0.18.1"
 
 ### Testing ###
 gp-libs = "~0.0.1-alpha.17"
