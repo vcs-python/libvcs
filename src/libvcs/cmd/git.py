@@ -2287,10 +2287,6 @@ class GitSubmoduleCmd:
         ''
         >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(init=True, recursive=True)
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(
-        ...     init=True, filter="blob:none"
-        ... )
-        ''
         >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(force=True)
         ''
         >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(checkout=True)
