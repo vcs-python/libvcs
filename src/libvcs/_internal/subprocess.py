@@ -42,27 +42,39 @@ import dataclasses
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
-from typing import IO, Any, Callable, Literal, Optional, TypeVar, Union, overload
-
-from typing_extensions import TypeAlias
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
+)
 
 from libvcs._internal.types import StrOrBytesPath
 
 from .dataclasses import SkipDefaultFieldsReprMixin
 
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 if sys.platform == "win32":
-    _ENV: TypeAlias = Mapping[str, str]
+    _ENV: "TypeAlias" = Mapping[str, str]
 else:
-    _ENV: TypeAlias = Union[
+    _ENV: "TypeAlias" = Union[
         Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath]
     ]
-_FILE: TypeAlias = Union[None, int, IO[Any]]
-_TXT: TypeAlias = Union[bytes, str]
+_FILE: "TypeAlias" = Union[None, int, IO[Any]]
+_TXT: "TypeAlias" = Union[bytes, str]
 #: Command
-_CMD: TypeAlias = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD: "TypeAlias" = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 @dataclasses.dataclass(repr=False)
