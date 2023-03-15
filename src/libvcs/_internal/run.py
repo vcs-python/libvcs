@@ -14,8 +14,6 @@ import sys
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Optional, Protocol, Union
 
-from typing_extensions import TypeAlias
-
 from libvcs._internal.types import StrOrBytesPath
 
 from .. import exc
@@ -37,6 +35,7 @@ def console_to_str(s: bytes) -> str:
 
 if TYPE_CHECKING:
     _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
+    from typing_extensions import TypeAlias
 else:
     _LoggerAdapter = logging.LoggerAdapter
 
@@ -87,14 +86,14 @@ class ProgressCallbackProtocol(Protocol):
 
 
 if sys.platform == "win32":
-    _ENV: TypeAlias = Mapping[str, str]
+    _ENV: "TypeAlias" = Mapping[str, str]
 else:
-    _ENV: TypeAlias = Union[
+    _ENV: "TypeAlias" = Union[
         Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath]
     ]
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
-_FILE: TypeAlias = Optional[Union[int, IO[Any]]]
+_FILE: "TypeAlias" = Optional[Union[int, IO[Any]]]
 
 
 def run(
