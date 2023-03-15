@@ -15,6 +15,12 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+## libvcs 0.21.1 (2023-03-15)
+
+### Fixes
+
+- Remove more `typing_extensions` from runtime (#437 didn't get them all)
+
 ## libvcs 0.21.0 (2023-03-15)
 
 ### New
