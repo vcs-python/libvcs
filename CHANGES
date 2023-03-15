@@ -22,6 +22,11 @@ $ pip install --user --upgrade --pre libvcs
   - Raises error if no items found (unless `default=` keyword argument passed)
   - Raises error if multipe items found
 
+### Bug fixes
+
+- Remove required dependency of typing-extensions (#437)
+- Ignore a single line of mypy check in dataclasses for now (#437)
+
 ## libvcs 0.20.0 (2022-10-31)
 
 ### What's new
