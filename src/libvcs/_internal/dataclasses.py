@@ -76,7 +76,7 @@ class SkipDefaultFieldsReprMixin:
         """Omit default fields in object representation."""
         nodef_f_vals = (
             (f.name, attrgetter(f.name)(self))
-            for f in dataclasses.fields(self)
+            for f in dataclasses.fields(self)  # type:ignore
             if attrgetter(f.name)(self) != f.default
         )
 
