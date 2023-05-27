@@ -63,7 +63,7 @@ Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 python = "^3.9"
 typing-extensions = { version = "*", python = '3.10' }
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 ### Docs ###
 sphinx = "*"
 furo = "*"
@@ -87,17 +87,8 @@ codecov = "*"
 coverage = "*"
 pytest-cov = "*"
 
-### Format ###
-black = "*"
-isort = "*"
-
 ### Lint ###
-flake8 = [
-  { version = "*", python = "^3.7" },
-  { version = ">=5", python = "^3.8" },
-]
-flake8-bugbear = "*"
-flake8-comprehensions = "*"
+ruff = "^0.0.270"
 mypy = "*"
 types-docutils = "*"
 
@@ -122,11 +113,8 @@ test = [
   "pytest-watcher",
 ]
 coverage = ["codecov", "coverage", "pytest-cov"]
-format = ["black", "isort"]
 lint = [
-  "flake8",
-  "flake8-bugbear",
-  "flake8-comprehensions",
+  "ruff",
   "mypy",
   "types-docutils",
 ]
