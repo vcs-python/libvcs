@@ -15,6 +15,14 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+_Maintenance only, no bug fixes, or new features_
+
+### Development
+
+- Add back `black` for formatting
+
+  This is still necessary to accompany `ruff`, until it replaces black.
+
 ## libvcs 0.22.0 (2023-05-27)
 
 _Maintenance only, no bug fixes, or new features_
