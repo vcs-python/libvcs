@@ -17,7 +17,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ## libvcs 0.22.0 (2023-05-27)
 
-_Maintenance only, no bug fixes or features_
+_Maintenance only, no bug fixes, or new features_
 
 ### Internal improvements
 
@@ -141,7 +141,7 @@ Git, SVN, and Mercurial have moved to `libvcs.cmd`
 
 ## libvcs 0.18.1 (2022-10-23)
 
-_Maintenance only release, no bug fixes or features_
+_Maintenance only release, no bug fixes, or new features_
 
 - Documentation improvements
 - Development package updates
