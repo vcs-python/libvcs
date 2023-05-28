@@ -89,7 +89,7 @@ pytest-cov = "*"
 
 ### Lint ###
 black = "*"
-ruff = "^0.0.270"
+ruff = "*"
 mypy = "*"
 types-docutils = "*"
 
