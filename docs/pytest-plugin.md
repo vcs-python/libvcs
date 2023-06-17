@@ -89,5 +89,4 @@ View libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/test
     :private-members:
     :show-inheritance:
     :member-order: bysource
-`
 ```
