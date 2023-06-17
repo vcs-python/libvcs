@@ -34,7 +34,7 @@ The pytest plugin will automatically be detected via pytest, and the fixtures wi
 `pytest-vcs` works through providing {ref}`pytest fixtures <pytest:fixtures-api>` - so read up on
 those!
 
-The plugin's fixtures guarantee a fresh git repository very test.
+The plugin's fixtures guarantee a fresh git repository every test.
 
 (recommended-fixtures)=
 
