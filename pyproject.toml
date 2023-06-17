@@ -135,7 +135,6 @@ files = [
 branch = true
 parallel = true
 omit = [
-  "*/_compat.py",
   "docs/conf.py",
 ]
 
