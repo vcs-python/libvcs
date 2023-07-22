@@ -1,8 +1,8 @@
-# flake8: NOQA E501
+# flake8: NOQA: E501
 import inspect
 import sys
-from os.path import dirname, relpath
-from pathlib import Path
+from os.path import relpath
+import pathlib
 import typing as t
 
 import libvcs
@@ -13,7 +13,7 @@ if t.TYPE_CHECKING:
 
 
 # Get the project root dir, which is the parent dir of this
-doc_path = Path(__file__).parent
+doc_path = pathlib.Path(__file__).parent
 project_root = doc_path.parent
 src_root = project_root / "src"
 
@@ -22,7 +22,7 @@ sys.path.insert(0, str(doc_path / "_ext"))
 
 # package data
 about: dict[str, str] = {}
-with open(src_root / "libvcs" / "__about__.py") as fp:
+with (src_root / "libvcs" / "__about__.py").open() as fp:
     exec(fp.read(), about)
 
 extensions = [
@@ -140,13 +140,13 @@ copybutton_remove_prompts = True
 rediraffe_redirects = "redirects.txt"
 rediraffe_branch = "master~1"
 
-htmlhelp_basename = "%sdoc" % about["__title__"]
+htmlhelp_basename = f"{about['__title__']}doc"
 
 latex_documents = [
     (
         "index",
-        "{}.tex".format(about["__package_name__"]),
-        "{} Documentation".format(about["__title__"]),
+        f"{about['__package_name__']}.tex",
+        f"{about['__title__']} Documentation",
         about["__author__"],
         "manual",
     )
@@ -156,7 +156,7 @@ man_pages = [
     (
         "index",
         about["__package_name__"],
-        "{} Documentation".format(about["__title__"]),
+        f"{about['__title__']} Documentation",
         about["__author__"],
         1,
     )
@@ -165,8 +165,8 @@ man_pages = [
 texinfo_documents = [
     (
         "index",
-        "{}".format(about["__package_name__"]),
-        "{} Documentation".format(about["__title__"]),
+        about["__package_name__"],
+        f"{about['__title__']} Documentation",
         about["__author__"],
         about["__package_name__"],
         about["__description__"],
@@ -238,7 +238,7 @@ def linkcode_resolve(
     else:
         linespec = ""
 
-    fn = relpath(fn, start=dirname(libvcs.__file__))
+    fn = relpath(fn, start=pathlib.Path(libvcs.__file__).parent)
 
     if "dev" in about["__version__"]:
         return "{}/blob/master/{}/{}/{}{}".format(
@@ -262,7 +262,7 @@ def linkcode_resolve(
 def remove_tabs_js(app: "Sphinx", exc: Exception) -> None:
     # Fix for sphinx-inline-tabs#18
     if app.builder.format == "html" and not exc:
-        tabs_js = Path(app.builder.outdir) / "_static" / "tabs.js"
+        tabs_js = pathlib.Path(app.builder.outdir) / "_static" / "tabs.js"
         tabs_js.unlink(missing_ok=True)
 
 
