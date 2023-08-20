@@ -1,12 +1,11 @@
 # flake8: NOQA: E501
 import inspect
-import sys
-from os.path import relpath
 import pathlib
+import sys
 import typing as t
+from os.path import relpath
 
 import libvcs
-
 
 if t.TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -183,9 +182,7 @@ intersphinx_mapping = {
 }
 
 
-def linkcode_resolve(
-    domain: str, info: dict[str, str]
-) -> t.Union[None, str]:  # NOQA: C901
+def linkcode_resolve(domain: str, info: dict[str, str]) -> t.Union[None, str]:
     """
     Determine the URL corresponding to Python object
 
@@ -233,10 +230,7 @@ def linkcode_resolve(
     except Exception:
         lineno = None
 
-    if lineno:
-        linespec = "#L%d-L%d" % (lineno, lineno + len(source) - 1)
-    else:
-        linespec = ""
+    linespec = "#L%d-L%d" % (lineno, lineno + len(source) - 1) if lineno else ""
 
     fn = relpath(fn, start=pathlib.Path(libvcs.__file__).parent)
 

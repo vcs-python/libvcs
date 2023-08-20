@@ -7,8 +7,8 @@ from .base import URLProtocol
 if t.TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
-    ParserLazyMap: TypeAlias = t.Dict[str, t.Union[t.Type[URLProtocol], str]]
-    ParserMap: TypeAlias = t.Dict[str, t.Type[URLProtocol]]
+    ParserLazyMap: TypeAlias = dict[str, t.Union[type[URLProtocol], str]]
+    ParserMap: TypeAlias = dict[str, type[URLProtocol]]
 
 DEFAULT_PARSERS: "ParserLazyMap" = {
     "git": "libvcs.url.git.GitURL",
@@ -38,8 +38,8 @@ class VCSRegistry:
 
     def match(
         self, url: str, is_explicit: t.Optional[bool] = None
-    ) -> t.List["ParserMatch"]:
-        matches: t.List[ParserMatch] = []
+    ) -> list["ParserMatch"]:
+        matches: list[ParserMatch] = []
         for vcs, parser in self.parser_map.items():
             if parser.is_valid(url=url, is_explicit=is_explicit):
                 matches.append(ParserMatch(vcs=vcs, match=parser(url)))

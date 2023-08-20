@@ -141,7 +141,7 @@ Refs (via pip.pypa.io)::
 Notes
 -----
 - https://pip.pypa.io/en/stable/topics/vcs-support/
-"""  # NOQA: E501
+"""
 
 
 @dataclasses.dataclass(repr=False)
@@ -213,7 +213,7 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
             if match is None:
                 continue
             groups = match.groupdict()
-            setattr(self, "rule", rule.label)
+            self.rule = rule.label
             for k, v in groups.items():
                 setattr(self, k, v)
 

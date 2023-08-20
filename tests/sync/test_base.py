@@ -16,7 +16,7 @@ def test_repr() -> None:
     str_repo = str(repo)
     assert "GitSync" in str_repo
     assert "hello" in str_repo
-    assert "<GitSync hello>" == str_repo
+    assert str_repo == "<GitSync hello>"
 
 
 def test_repr_base() -> None:
@@ -25,7 +25,7 @@ def test_repr_base() -> None:
     str_repo = str(repo)
     assert "Sync" in str_repo
     assert "hello" in str_repo
-    assert "<BaseSync hello>" == str_repo
+    assert str_repo == "<BaseSync hello>"
 
 
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path) -> None:
@@ -64,7 +64,7 @@ def test_progress_callback(
             )
 
     r = Project(
-        url=f"file://{str(git_remote_repo)}",
+        url=f"file://{git_remote_repo!s}",
         dir=str(tmp_path),
         progress_callback=progress_cb,
     )

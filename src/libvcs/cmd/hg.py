@@ -145,10 +145,7 @@ class Hg:
         "Mercurial Distributed SCM..."
         """
 
-        if isinstance(args, Sequence):
-            cli_args = ["hg", *args]
-        else:
-            cli_args = ["hg", args]
+        cli_args = ["hg", *args] if isinstance(args, Sequence) else ["hg", args]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.dir

@@ -7,7 +7,7 @@
    - [`HgSync.convert_pip_url`](libvcs.hg.convert_pip_url)
    - [`HgSync.get_url`](libvcs.hg.HgSync.get_url)
    - [`HgSync.get_revision`](libvcs.hg.HgSync.get_revision)
-"""  # NOQA E5
+"""  # E5
 import logging
 import pathlib
 from typing import Any

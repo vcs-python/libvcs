@@ -183,8 +183,7 @@ class BaseSync:
 
         if not self.dir.exists():
             self.log.debug(
-                "Project directory for %s does not exist @ %s"
-                % (self.repo_name, self.dir)
+                f"Project directory for {self.repo_name} does not exist @ {self.dir}"
             )
             self.dir.mkdir(parents=True)
 

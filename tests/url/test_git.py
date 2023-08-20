@@ -100,7 +100,6 @@ class GitURLKwargsFixture(typing.NamedTuple):
 
 #
 #
-# Extensibility: pip(1)
 # w/ VCS prefixes, e.g. git+https, git+ssh, git+file
 # https://pip.pypa.io/en/stable/topics/vcs-support/
 #

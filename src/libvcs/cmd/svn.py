@@ -8,7 +8,7 @@
 """
 import pathlib
 from collections.abc import Sequence
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
@@ -116,10 +116,7 @@ class Svn:
         "usage: svn <subcommand> [options] [args]..."
         """
 
-        if isinstance(args, Sequence):
-            cli_args = ["svn", *args]
-        else:
-            cli_args = ["svn", args]
+        cli_args = ["svn", *args] if isinstance(args, Sequence) else ["svn", args]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.dir
@@ -571,7 +568,7 @@ class Svn:
         self,
         target: Optional[StrPath] = None,
         targets: Optional[Union[list[StrPath], StrPath]] = None,
-        changelist: Optional[List[str]] = None,
+        changelist: Optional[list[str]] = None,
         revision: Optional[str] = None,
         depth: DepthLiteral = None,
         incremental: Optional[bool] = None,
@@ -1101,7 +1098,7 @@ class Svn:
     def update(
         self,
         accept: Optional[str] = None,
-        changelist: Optional[List[str]] = None,
+        changelist: Optional[list[str]] = None,
         diff3_cmd: Optional[str] = None,
         editor_cmd: Optional[str] = None,
         force: Optional[bool] = None,

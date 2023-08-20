@@ -16,7 +16,7 @@
    correct and robust. Visit the `project tracker <https://github.com/vcs-python/libvcs>`_
    and give us a wave. This API won't be stabilized until we're confident Subversion is
    covered accurately and can handle all-terrain scenarios.
-"""  # NOQA: E5
+"""
 
 import dataclasses
 import re
@@ -139,7 +139,7 @@ Notes
 -----
 
 - https://pip.pypa.io/en/stable/topics/vcs-support/
-"""  # NOQA: E501
+"""
 
 
 @dataclasses.dataclass(repr=False)
@@ -184,7 +184,6 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     path: str = dataclasses.field(default="")
 
     #
-    # commit-ish: ref
     #
     ref: Optional[str] = None
 
@@ -198,7 +197,7 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
             if match is None:
                 continue
             groups = match.groupdict()
-            setattr(self, "rule", rule.label)
+            self.rule = rule.label
             for k, v in groups.items():
                 setattr(self, k, v)
 

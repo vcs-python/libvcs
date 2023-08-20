@@ -159,9 +159,10 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         url = url.replace("ssh://", "")
     elif "github.com:" in pip_url:
         raise exc.LibVCSException(
-            "Repo %s is malformatted, please use the convention %s for "
-            "ssh / private GitHub repositories."
-            % (pip_url, "git+https://github.com/username/repo.git")
+            "Repo {} is malformatted, please use the convention {} for "
+            "ssh / private GitHub repositories.".format(
+                pip_url, "git+https://github.com/username/repo.git"
+            )
         )
     else:
         url, rev = base_convert_pip_url(pip_url)
@@ -292,7 +293,6 @@ class GitSync(BaseSync):
         remotes = self._remotes
         if isinstance(remotes, dict):
             for remote_name, git_remote_repo in remotes.items():
-
                 existing_remote = self.remote(remote_name)
                 if isinstance(git_remote_repo, GitRemote):
                     if (
@@ -306,17 +306,16 @@ class GitSync(BaseSync):
                         )
                         # refresh if we're setting it, so push can be checked
                         existing_remote = self.remote(remote_name)
-                    if git_remote_repo.push_url:
-                        if (
-                            not existing_remote
-                            or existing_remote.push_url != git_remote_repo.push_url
-                        ):
-                            self.set_remote(
-                                name=remote_name,
-                                url=git_remote_repo.push_url,
-                                push=True,
-                                overwrite=overwrite,
-                            )
+                    if git_remote_repo.push_url and (
+                        not existing_remote
+                        or existing_remote.push_url != git_remote_repo.push_url
+                    ):
+                        self.set_remote(
+                            name=remote_name,
+                            url=git_remote_repo.push_url,
+                            push=True,
+                            overwrite=overwrite,
+                        )
                 else:
                     if (
                         not existing_remote
@@ -335,7 +334,6 @@ class GitSync(BaseSync):
         url = self.url
 
         self.log.info("Cloning.")
-        # todo: log_in_real_time
         self.cmd.clone(
             url=url,
             progress=True,
@@ -373,10 +371,7 @@ class GitSync(BaseSync):
         if not git_tag:
             self.log.debug("No git revision set, defaulting to origin/master")
             symref = self.cmd.symbolic_ref(name="HEAD", short=True)
-            if symref:
-                git_tag = symref.rstrip()
-            else:
-                git_tag = "origin/master"
+            git_tag = symref.rstrip() if symref else "origin/master"
         self.log.debug("git_tag: %s" % git_tag)
 
         self.log.info("Updating to '%s'." % git_tag)

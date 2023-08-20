@@ -11,7 +11,7 @@
 
     - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
-"""  # NOQA: E5
+"""
 import logging
 import os
 import pathlib
@@ -110,7 +110,7 @@ class SvnSync(BaseSync):
         # Note: taken from setuptools.command.egg_info
         revision = 0
 
-        for base, dirs, files in os.walk(location):
+        for base, dirs, _files in os.walk(location):
             if ".svn" not in dirs:
                 dirs[:] = []
                 continue  # no sense walking uncontrolled subdirs
@@ -177,7 +177,6 @@ class SvnSync(BaseSync):
             revs = [int(m.group(1)) for m in _svn_rev_re.finditer(data)] + [0]
         else:
             try:
-                # subversion >= 1.7
                 # Note that using get_remote_call_options is not necessary here
                 # because `svn info` is being run against a local directory.
                 # We don't need to worry about making sure interactive mode
@@ -193,9 +192,6 @@ class SvnSync(BaseSync):
             except Exception:
                 url, revs = None, []
 
-        if revs:
-            rev = max(revs)
-        else:
-            rev = 0
+        rev = max(revs) if revs else 0
 
         return url, rev

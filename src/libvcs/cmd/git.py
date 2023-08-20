@@ -168,10 +168,7 @@ class Git:
         "usage: git [...--version] [...--help] [-C <path>]..."
         """
 
-        if isinstance(args, Sequence):
-            cli_args = ["git", *args]
-        else:
-            cli_args = ["git", args]
+        cli_args = ["git", *args] if isinstance(args, Sequence) else ["git", args]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.dir
@@ -1963,9 +1960,8 @@ class Git:
             (max_age, "--max-age"),
             (min_age, "--min-age"),
         ]:
-            if datetime_kwarg is not None:
-                if isinstance(datetime, str):
-                    local_flags.extend([datetime_shell_flag, datetime_kwarg])
+            if datetime_kwarg is not None and isinstance(datetime, str):
+                local_flags.extend([datetime_shell_flag, datetime_kwarg])
 
         for int_flag, int_shell_flag in [
             (max_count, "--max-count"),
@@ -2257,7 +2253,7 @@ class GitSubmoduleCmd:
 
         return self.run(
             "init",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2320,7 +2316,7 @@ class GitSubmoduleCmd:
 
         return self.run(
             "update",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2442,7 +2438,7 @@ class GitRemoteCmd:
                 local_flags.append("--mirror")
         return self.run(
             "add",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2540,7 +2536,7 @@ class GitRemoteCmd:
 
         return self.run(
             "show",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2573,7 +2569,7 @@ class GitRemoteCmd:
 
         return self.run(
             "prune",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2612,7 +2608,7 @@ class GitRemoteCmd:
 
         return self.run(
             "get-url",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2678,7 +2674,7 @@ class GitRemoteCmd:
 
         return self.run(
             "set-url",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2823,7 +2819,7 @@ class GitStashCmd:
 
         return self.run(
             "push",
-            local_flags=local_flags + ["--"] + required_flags,
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
