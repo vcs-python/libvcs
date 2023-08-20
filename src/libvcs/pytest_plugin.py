@@ -210,11 +210,14 @@ class CreateProjectCallbackFixtureProtocol(Protocol):
         ...
 
 
+DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
+
+
 def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    init_cmd_args: InitCmdArgs = ["--bare"],
+    init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
@@ -238,7 +241,7 @@ def create_git_remote_repo(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-        init_cmd_args: InitCmdArgs = ["--bare"],
+        init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     ) -> pathlib.Path:
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,
