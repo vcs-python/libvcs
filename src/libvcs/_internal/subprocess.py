@@ -434,7 +434,8 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         output = subprocess.check_output(input=input, **params)
         if isinstance(output, (bytes, str)):
             return output
-        raise Exception(f"output is not str or bytes: {output}")
+
+        raise SubprocessCheckOutputError(output=output)
 
     @overload
     def run(

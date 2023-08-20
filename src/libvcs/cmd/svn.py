@@ -819,7 +819,7 @@ class Svn:
         elif isinstance(value_path, pathlib.Path):
             local_flags.extend(["--file", str(pathlib.Path(value_path).absolute())])
         else:
-            raise ValueError("Must enter a value or value_path")
+            raise SvnPropsetValueOrValuePathRequired()
 
         if path is not None:
             if isinstance(path, (str, pathlib.Path)):

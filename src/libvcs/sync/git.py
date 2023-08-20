@@ -140,7 +140,7 @@ class GitStatus:
         matches = pattern.search(value)
 
         if matches is None:
-            raise Exception("Could not find match")
+            raise GitStatusParsingException(git_status_output=value)
         return cls(**matches.groupdict())
 
 
@@ -272,7 +272,7 @@ class GitSync(BaseSync):
             else next(iter(self._remotes.items()))[1]
         )
         if origin is None:
-            raise Exception("Missing origin")
+            raise GitRemoteOriginMissing(remotes=list(self._remotes.keys()))
         self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
@@ -382,7 +382,7 @@ class GitSync(BaseSync):
                 commit="HEAD", max_count=1, check_returncode=True
             )
         except exc.CommandError:
-            self.log.error("Failed to get the hash for HEAD")
+            self.log.exception("Failed to get the hash for HEAD")
             return
 
         self.log.debug("head_sha: %s" % head_sha)
@@ -398,7 +398,7 @@ class GitSync(BaseSync):
         # we must strip the remote from the tag.
         git_remote_name = self.get_current_remote_name()
 
-        if "refs/remotes/%s" % git_tag in show_ref_output:
+        if f"refs/remotes/{git_tag}" in show_ref_output:
             m = re.match(
                 r"^[0-9a-f]{40} refs/remotes/"
                 r"(?P<git_remote_name>[^/]+)/"
@@ -407,7 +407,7 @@ class GitSync(BaseSync):
                 re.MULTILINE,
             )
             if m is None:
-                raise exc.CommandError("Could not fetch remote names")
+                raise GitRemoteRefNotFound(git_tag=git_tag, ref_output=show_ref_output)
             git_remote_name = m.group("git_remote_name")
             git_tag = m.group("git_tag")
         self.log.debug("git_remote_name: %s" % git_remote_name)
@@ -436,7 +436,7 @@ class GitSync(BaseSync):
         try:
             process = self.cmd.fetch(log_in_real_time=True, check_returncode=True)
         except exc.CommandError:
-            self.log.error("Failed to fetch repository '%s'" % url)
+            self.log.exception("Failed to fetch repository '%s'" % url)
             return
 
         if is_remote_ref:
@@ -444,7 +444,7 @@ class GitSync(BaseSync):
             try:
                 process = self.cmd.status(porcelain=True, untracked_files="no")
             except exc.CommandError:
-                self.log.error("Failed to get the status")
+                self.log.exception("Failed to get the status")
                 return
             need_stash = len(process) > 0
 
@@ -456,13 +456,13 @@ class GitSync(BaseSync):
                 try:
                     process = self.cmd.stash.save(message=git_stash_save_options)
                 except exc.CommandError:
-                    self.log.error("Failed to stash changes")
+                    self.log.exception("Failed to stash changes")
 
             # Checkout the remote branch
             try:
                 process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
-                self.log.error("Failed to checkout tag: '%s'" % git_tag)
+                self.log.exception("Failed to checkout tag: '%s'" % git_tag)
                 return
 
             # Rebase changes from the remote branch
@@ -470,14 +470,14 @@ class GitSync(BaseSync):
                 process = self.cmd.rebase(upstream=git_remote_name + "/" + git_tag)
             except exc.CommandError as e:
                 if any(msg in str(e) for msg in ["invalid_upstream", "Aborting"]):
-                    self.log.error(e)
+                    self.log.exception("Invalid upstream remote. Rebase aborted.")
                 else:
                     # Rebase failed: Restore previous state.
                     self.cmd.rebase(abort=True)
                     if need_stash:
                         self.cmd.stash.pop(index=True, quiet=True)
 
-                    self.log.error(
+                    self.log.exception(
                         "\nFailed to rebase in: '%s'.\n"
                         "You will have to resolve the conflicts manually" % self.dir
                     )
@@ -495,10 +495,10 @@ class GitSync(BaseSync):
                         # Stash pop failed: Restore previous state.
                         self.cmd.reset(pathspec=head_sha, hard=True, quiet=True)
                         self.cmd.stash.pop(index=True, quiet=True)
-                        self.log.error(
-                            "\nFailed to rebase in: '%s'.\n"
-                            "You will have to resolve the "
-                            "conflicts manually" % self.dir
+                        self.log.exception(
+                            f"\nFailed to rebase in: '{self.dir}'.\n"
+                            + "You will have to resolve the "
+                            + "conflicts manually"
                         )
                         return
 
@@ -506,7 +506,7 @@ class GitSync(BaseSync):
             try:
                 process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
-                self.log.error("Failed to checkout tag: '%s'" % git_tag)
+                self.log.exception(f"Failed to checkout tag: '{git_tag}'")
                 return
 
         self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)
@@ -586,7 +586,7 @@ class GitSync(BaseSync):
 
         remote = self.remote(name=name)
         if remote is None:
-            raise Exception("Remote {name} not found after setting")
+            raise GitRemoteSetError(remote_name=name)
         return remote
 
     @staticmethod
@@ -673,7 +673,7 @@ branch_behind='0'\
 
         if match.branch_upstream is None:  # no upstream set
             if match.branch_head is None:
-                raise Exception("No branch found for git repository")
+                raise GitNoBranchFound()
             return match.branch_head
         if match.branch_head is None:
             return match.branch_upstream

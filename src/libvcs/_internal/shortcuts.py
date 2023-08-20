@@ -105,9 +105,9 @@ def create_project(
         vcs_matches = url_tools.registry.match(url=url, is_explicit=True)
 
         if len(vcs_matches) == 0:
-            raise LibVCSException(f"No vcs found for {url}")
+            raise VCSNoMatchFoundForUrl(url=url)
         if len(vcs_matches) > 1:
-            raise LibVCSException(f"No exact matches for {url}")
+            raise VCSMultipleMatchFoundForUrl(url=url)
 
         assert vcs_matches[0].vcs is not None
 
@@ -117,7 +117,7 @@ def create_project(
         if is_vcs(vcs_matches[0].vcs):
             vcs = vcs_matches[0].vcs
         else:
-            raise InvalidVCS(f"{url} does not have supported vcs: {vcs}")
+            raise VCSNotSupported(url=url, vcs=vcs_matches[0].vcs)
 
     if vcs == "git":
         return GitSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)

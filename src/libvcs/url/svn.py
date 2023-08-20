@@ -201,7 +201,7 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
             for k, v in groups.items():
                 setattr(self, k, v)
 
-            for k, v in rule.defaults.items():
+            for k in rule.defaults:
                 if getattr(self, k, None) is None:
                     setattr(self, k, rule.defaults[k])
 

@@ -1,3 +1,4 @@
+# ruff: noqa: TRY003
 """tests for libvcs exceptions."""
 import pytest
 

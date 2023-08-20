@@ -1,5 +1,4 @@
 """tests for libvcs svn repos."""
-import os
 import pathlib
 import shutil
 
@@ -26,7 +25,7 @@ def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None
     assert svn_repo.get_revision() == 0
     assert svn_repo.get_revision_file("./") == 0
 
-    assert os.path.exists(tmp_path / repo_name)
+    assert (tmp_path / repo_name).exists()
 
 
 def test_repo_svn_remote_checkout(

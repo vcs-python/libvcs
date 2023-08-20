@@ -1,6 +1,5 @@
 """Tests for libvcs git repos."""
 import datetime
-import os
 import pathlib
 import random
 import shutil
@@ -107,7 +106,7 @@ def test_repo_git_obtain_full(
     test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote_repo)
 
     assert git_repo.get_revision() == test_repo_revision
-    assert os.path.exists(tmp_path / "myrepo")
+    assert (tmp_path / "myrepo").exists()
 
 
 @pytest.mark.parametrize(
