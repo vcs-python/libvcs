@@ -10,6 +10,7 @@ import pathlib
 from collections.abc import Sequence
 from typing import Any, List, Literal, Optional, Union
 
+from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
@@ -17,6 +18,11 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 DepthLiteral = Union[Literal["infinity", "empty", "files", "immediates"], None]
 RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
+
+
+class SvnPropsetValueOrValuePathRequired(exc.LibVCSException):
+    def __init__(self, *args: object):
+        return super().__init__("Must enter a value or value_path")
 
 
 class Svn:
