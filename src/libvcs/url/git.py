@@ -190,7 +190,7 @@ Notes
 -----
 
 - https://pip.pypa.io/en/stable/topics/vcs-support/
-"""  # NOQA: E501
+"""
 
 NPM_DEFAULT_RULES: list[Rule] = []
 """NPM-style git URLs.
@@ -270,26 +270,25 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
     def __post_init__(self) -> None:
         url = self.url
-        sorted_maps = {
-            k: v
-            for k, v in sorted(
+        sorted_maps = dict(
+            sorted(
                 self.rule_map._rule_map.items(),
                 key=lambda item: item[1].weight,
                 reverse=True,
             )
-        }
+        )
 
         for rule in sorted_maps.values():
             match = re.match(rule.pattern, url)
             if match is None:
                 continue
             groups = match.groupdict()
-            setattr(self, "rule", rule.label)
+            self.rule = rule.label
             for k, v in groups.items():
                 if v is not None:
                     setattr(self, k, v)
 
-            for k, v in rule.defaults.items():
+            for k in rule.defaults:
                 if getattr(self, k, None) is None:
                     setattr(self, k, rule.defaults[k])
             break

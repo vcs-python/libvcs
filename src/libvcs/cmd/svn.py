@@ -8,8 +8,9 @@
 """
 import pathlib
 from collections.abc import Sequence
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
+from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
@@ -17,6 +18,11 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 DepthLiteral = Union[Literal["infinity", "empty", "files", "immediates"], None]
 RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
+
+
+class SvnPropsetValueOrValuePathRequired(exc.LibVCSException):
+    def __init__(self, *args: object):
+        return super().__init__("Must enter a value or value_path")
 
 
 class Svn:
@@ -110,10 +116,7 @@ class Svn:
         "usage: svn <subcommand> [options] [args]..."
         """
 
-        if isinstance(args, Sequence):
-            cli_args = ["svn", *args]
-        else:
-            cli_args = ["svn", args]
+        cli_args = ["svn", *args] if isinstance(args, Sequence) else ["svn", args]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.dir
@@ -565,7 +568,7 @@ class Svn:
         self,
         target: Optional[StrPath] = None,
         targets: Optional[Union[list[StrPath], StrPath]] = None,
-        changelist: Optional[List[str]] = None,
+        changelist: Optional[list[str]] = None,
         revision: Optional[str] = None,
         depth: DepthLiteral = None,
         incremental: Optional[bool] = None,
@@ -816,7 +819,7 @@ class Svn:
         elif isinstance(value_path, pathlib.Path):
             local_flags.extend(["--file", str(pathlib.Path(value_path).absolute())])
         else:
-            raise ValueError("Must enter a value or value_path")
+            raise SvnPropsetValueOrValuePathRequired()
 
         if path is not None:
             if isinstance(path, (str, pathlib.Path)):
@@ -1095,7 +1098,7 @@ class Svn:
     def update(
         self,
         accept: Optional[str] = None,
-        changelist: Optional[List[str]] = None,
+        changelist: Optional[list[str]] = None,
         diff3_cmd: Optional[str] = None,
         editor_cmd: Optional[str] = None,
         force: Optional[bool] = None,

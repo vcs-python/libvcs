@@ -11,7 +11,7 @@
 
     - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
-"""  # NOQA: E5
+"""
 import logging
 import os
 import pathlib
@@ -24,6 +24,11 @@ from libvcs.cmd.svn import Svn
 from .base import BaseSync
 
 logger = logging.getLogger(__name__)
+
+
+class SvnUrlRevFormattingError(ValueError):
+    def __init__(self, data: str, *args: object):
+        return super().__init__(f"Badly formatted data: {data!r}")
 
 
 class SvnSync(BaseSync):
@@ -104,19 +109,19 @@ class SvnSync(BaseSync):
         if not location:
             location = self.url
 
-        if os.path.exists(location) and not os.path.isdir(location):
+        if pathlib.Path(location).exists() and not pathlib.Path(location).is_dir():
             return self.get_revision_file(location)
 
         # Note: taken from setuptools.command.egg_info
         revision = 0
 
-        for base, dirs, files in os.walk(location):
+        for base, dirs, _files in os.walk(location):
             if ".svn" not in dirs:
                 dirs[:] = []
                 continue  # no sense walking uncontrolled subdirs
             dirs.remove(".svn")
-            entries_fn = os.path.join(base, ".svn", "entries")
-            if not os.path.exists(entries_fn):
+            entries_fn = pathlib.Path(base) / ".svn" / "entries"
+            if not entries_fn.exists():
                 # FIXME: should we warn?
                 continue
 
@@ -156,9 +161,9 @@ class SvnSync(BaseSync):
         _svn_info_xml_rev_re = re.compile(r'\s*revision="(\d+)"')
         _svn_info_xml_url_re = re.compile(r"<url>(.*)</url>")
 
-        entries_path = os.path.join(location, ".svn", "entries")
-        if os.path.exists(entries_path):
-            with open(entries_path) as f:
+        entries_path = pathlib.Path(location) / ".svn" / "entries"
+        if entries_path.exists():
+            with entries_path.open() as f:
                 data = f.read()
         else:  # subversion >= 1.7 does not have the 'entries' file
             data = ""
@@ -172,12 +177,11 @@ class SvnSync(BaseSync):
         elif data.startswith("<?xml"):
             match = _svn_xml_url_re.search(data)
             if not match:
-                raise ValueError(f"Badly formatted data: {data!r}")
+                raise SvnUrlRevFormattingError(data=data)
             url = match.group(1)  # get repository URL
             revs = [int(m.group(1)) for m in _svn_rev_re.finditer(data)] + [0]
         else:
             try:
-                # subversion >= 1.7
                 # Note that using get_remote_call_options is not necessary here
                 # because `svn info` is being run against a local directory.
                 # We don't need to worry about making sure interactive mode
@@ -193,9 +197,6 @@ class SvnSync(BaseSync):
             except Exception:
                 url, revs = None, []
 
-        if revs:
-            rev = max(revs)
-        else:
-            rev = 0
+        rev = max(revs) if revs else 0
 
         return url, rev

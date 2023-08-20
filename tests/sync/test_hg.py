@@ -4,6 +4,7 @@ import shutil
 
 import pytest
 
+from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 
@@ -52,7 +53,7 @@ def test_vulnerability_2022_03_12_command_injection(
     mercurial_repo = create_project(
         url="--config=alias.clone=!touch ./HELLO", vcs="hg", dir="./"
     )
-    with pytest.raises(Exception):
+    with pytest.raises(exc.CommandError):
         mercurial_repo.update_repo()
 
     assert not pathlib.Path(

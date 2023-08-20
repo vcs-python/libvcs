@@ -7,14 +7,29 @@ This is an internal API not covered by versioning policy.
 import typing as t
 from typing import Union
 
-from libvcs import GitSync, HgSync, SvnSync
+from libvcs import GitSync, HgSync, SvnSync, exc
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath, VCSLiteral
-from libvcs.exc import InvalidVCS, LibVCSException
+from libvcs.exc import InvalidVCS
 from libvcs.url import registry as url_tools
 
 if t.TYPE_CHECKING:
     from typing_extensions import TypeGuard
+
+
+class VCSNoMatchFoundForUrl(exc.LibVCSException):
+    def __init__(self, url: str, *args: object):
+        return super().__init__(f"No VCS found for url: {url}")
+
+
+class VCSMultipleMatchFoundForUrl(exc.LibVCSException):
+    def __init__(self, url: str, *args: object):
+        return super().__init__(f"Multiple VCS found for url: {url}")
+
+
+class VCSNotSupported(exc.LibVCSException):
+    def __init__(self, url: str, vcs: str, *args: object):
+        return super().__init__(f"VCS '{vcs}' not supported, based on URL: {url}")
 
 
 @t.overload
@@ -90,9 +105,9 @@ def create_project(
         vcs_matches = url_tools.registry.match(url=url, is_explicit=True)
 
         if len(vcs_matches) == 0:
-            raise LibVCSException(f"No vcs found for {url}")
+            raise VCSNoMatchFoundForUrl(url=url)
         if len(vcs_matches) > 1:
-            raise LibVCSException(f"No exact matches for {url}")
+            raise VCSMultipleMatchFoundForUrl(url=url)
 
         assert vcs_matches[0].vcs is not None
 
@@ -102,7 +117,7 @@ def create_project(
         if is_vcs(vcs_matches[0].vcs):
             vcs = vcs_matches[0].vcs
         else:
-            raise InvalidVCS(f"{url} does not have supported vcs: {vcs}")
+            raise VCSNotSupported(url=url, vcs=vcs_matches[0].vcs)
 
     if vcs == "git":
         return GitSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)

@@ -18,7 +18,7 @@ if t.TYPE_CHECKING:
 
 class DetectVCSFixture(t.NamedTuple):
     url: str
-    expected_matches_lazy: t.List["DetectVCSFixtureExpectedMatch"]
+    expected_matches_lazy: list["DetectVCSFixtureExpectedMatch"]
     is_explicit: bool
 
 
@@ -79,7 +79,7 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
 )
 def test_registry(
     url: str,
-    expected_matches_lazy: t.List["DetectVCSFixtureExpectedMatch"],
+    expected_matches_lazy: list["DetectVCSFixtureExpectedMatch"],
     is_explicit: bool,
 ) -> None:
     assert url
@@ -88,8 +88,8 @@ def test_registry(
     matches = registry.registry.match(url, is_explicit=is_explicit)
 
     # Just add water
-    expected_matches: t.List["DetectVCSFixtureExpectedMatch"] = []
-    for idx, expected_match in enumerate(expected_matches_lazy):
+    expected_matches: list["DetectVCSFixtureExpectedMatch"] = []
+    for _idx, expected_match in enumerate(expected_matches_lazy):
         if callable(expected_match):
             assert callable(expected_match)
             expected_matches.append(expected_match(url))

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 import pytest
 
+from libvcs import exc
 from libvcs._internal.run import run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
@@ -16,6 +17,14 @@ from libvcs.sync.svn import SvnSync
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
+
+
+class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
+    def __init__(self, attempts: int, *args: object):
+        return super().__init__(
+            f"Could not find unused repo destination (attempts: {attempts})"
+        )
+
 
 skip_if_git_missing = pytest.mark.skipif(
     not shutil.which("git"), reason="git is not available"
@@ -173,9 +182,7 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
     attempts = 1
     while True:
         if attempts > max_retries:
-            raise Exception(
-                f"Could not find unused repo destination (attempts: {attempts})"
-            )
+            raise MaxUniqueRepoAttemptsExceeded(attempts=attempts)
         remote_repo_name: str = next(namer)
         suggestion = remote_repos_path / remote_repo_name
         if suggestion.exists():
@@ -203,11 +210,14 @@ class CreateProjectCallbackFixtureProtocol(Protocol):
         ...
 
 
+DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
+
+
 def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
     remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-    init_cmd_args: InitCmdArgs = ["--bare"],
+    init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
@@ -231,7 +241,7 @@ def create_git_remote_repo(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
         remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
-        init_cmd_args: InitCmdArgs = ["--bare"],
+        init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     ) -> pathlib.Path:
         return _create_git_remote_repo(
             remote_repos_path=remote_repos_path,

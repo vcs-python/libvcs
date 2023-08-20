@@ -1,6 +1,5 @@
 """Tests for libvcs git repos."""
 import datetime
-import os
 import pathlib
 import random
 import shutil
@@ -8,7 +7,6 @@ import textwrap
 import typing as t
 
 import pytest
-
 from pytest_mock import MockerFixture
 
 from libvcs import exc
@@ -108,7 +106,7 @@ def test_repo_git_obtain_full(
     test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote_repo)
 
     assert git_repo.get_revision() == test_repo_revision
-    assert os.path.exists(tmp_path / "myrepo")
+    assert (tmp_path / "myrepo").exists()
 
 
 @pytest.mark.parametrize(
@@ -560,7 +558,7 @@ def test_git_get_url_and_rev_from_pip_url() -> None:
     pip_url = "git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git"
 
     url, rev = git_convert_pip_url(pip_url)
-    assert "ssh://git@bitbucket.example.com:7999/PROJ/repo.git" == url
+    assert url == "ssh://git@bitbucket.example.com:7999/PROJ/repo.git"
     assert rev is None
 
     pip_url = "{}@{}".format(
@@ -568,14 +566,14 @@ def test_git_get_url_and_rev_from_pip_url() -> None:
         "eucalyptus",
     )
     url, rev = git_convert_pip_url(pip_url)
-    assert "ssh://git@bitbucket.example.com:7999/PROJ/repo.git" == url
+    assert url == "ssh://git@bitbucket.example.com:7999/PROJ/repo.git"
     assert rev == "eucalyptus"
 
     # the git manual refers to this as "scp-like syntax"
     # https://git-scm.com/docs/git-clone
     pip_url = "{}@{}".format("git+user@hostname:user/repo.git", "eucalyptus")
     url, rev = git_convert_pip_url(pip_url)
-    assert "user@hostname:user/repo.git" == url
+    assert url == "user@hostname:user/repo.git"
     assert rev == "eucalyptus"
 
 
@@ -617,9 +615,9 @@ def test_remotes_preserves_git_ssh(
     git_repo.obtain()
     git_repo.set_remote(name=remote_name, url=remote_url)
 
-    assert GitRemote(remote_name, remote_url, remote_url) in [
-        r for r in git_repo.remotes().values()
-    ]
+    assert GitRemote(remote_name, remote_url, remote_url) in list(
+        git_repo.remotes().values()
+    )
 
 
 @pytest.mark.parametrize(

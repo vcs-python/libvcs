@@ -34,6 +34,36 @@ from .. import exc
 logger = logging.getLogger(__name__)
 
 
+class GitStatusParsingException(exc.LibVCSException):
+    def __init__(self, git_status_output: str, *args: object):
+        return super().__init__(
+            "Could not find match for git-status(1)" + f"Output: {git_status_output}"
+        )
+
+
+class GitRemoteOriginMissing(exc.LibVCSException):
+    def __init__(self, remotes: list[str], *args: object):
+        return super().__init__(f"Missing origin. Remotes: {', '.join(remotes)}")
+
+
+class GitRemoteSetError(exc.LibVCSException):
+    def __init__(self, remote_name: str):
+        return super().__init__(f"Remote {remote_name} not found after setting")
+
+
+class GitNoBranchFound(exc.LibVCSException):
+    def __init__(self, *args: object):
+        return super().__init__("No branch found for git repository")
+
+
+class GitRemoteRefNotFound(exc.CommandError):
+    def __init__(self, git_tag: str, ref_output: str, *args: object):
+        return super().__init__(
+            f"Could not fetch remote in refs/remotes/{git_tag}:"
+            + f"Output: {ref_output}"
+        )
+
+
 @dataclasses.dataclass
 class GitRemote:
     """Structure containing git working copy information."""
@@ -110,7 +140,7 @@ class GitStatus:
         matches = pattern.search(value)
 
         if matches is None:
-            raise Exception("Could not find match")
+            raise GitStatusParsingException(git_status_output=value)
         return cls(**matches.groupdict())
 
 
@@ -129,9 +159,10 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         url = url.replace("ssh://", "")
     elif "github.com:" in pip_url:
         raise exc.LibVCSException(
-            "Repo %s is malformatted, please use the convention %s for "
-            "ssh / private GitHub repositories."
-            % (pip_url, "git+https://github.com/username/repo.git")
+            "Repo {} is malformatted, please use the convention {} for "
+            "ssh / private GitHub repositories.".format(
+                pip_url, "git+https://github.com/username/repo.git"
+            )
         )
     else:
         url, rev = base_convert_pip_url(pip_url)
@@ -241,7 +272,7 @@ class GitSync(BaseSync):
             else next(iter(self._remotes.items()))[1]
         )
         if origin is None:
-            raise Exception("Missing origin")
+            raise GitRemoteOriginMissing(remotes=list(self._remotes.keys()))
         self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
@@ -262,7 +293,6 @@ class GitSync(BaseSync):
         remotes = self._remotes
         if isinstance(remotes, dict):
             for remote_name, git_remote_repo in remotes.items():
-
                 existing_remote = self.remote(remote_name)
                 if isinstance(git_remote_repo, GitRemote):
                     if (
@@ -276,17 +306,16 @@ class GitSync(BaseSync):
                         )
                         # refresh if we're setting it, so push can be checked
                         existing_remote = self.remote(remote_name)
-                    if git_remote_repo.push_url:
-                        if (
-                            not existing_remote
-                            or existing_remote.push_url != git_remote_repo.push_url
-                        ):
-                            self.set_remote(
-                                name=remote_name,
-                                url=git_remote_repo.push_url,
-                                push=True,
-                                overwrite=overwrite,
-                            )
+                    if git_remote_repo.push_url and (
+                        not existing_remote
+                        or existing_remote.push_url != git_remote_repo.push_url
+                    ):
+                        self.set_remote(
+                            name=remote_name,
+                            url=git_remote_repo.push_url,
+                            push=True,
+                            overwrite=overwrite,
+                        )
                 else:
                     if (
                         not existing_remote
@@ -305,7 +334,6 @@ class GitSync(BaseSync):
         url = self.url
 
         self.log.info("Cloning.")
-        # todo: log_in_real_time
         self.cmd.clone(
             url=url,
             progress=True,
@@ -343,10 +371,7 @@ class GitSync(BaseSync):
         if not git_tag:
             self.log.debug("No git revision set, defaulting to origin/master")
             symref = self.cmd.symbolic_ref(name="HEAD", short=True)
-            if symref:
-                git_tag = symref.rstrip()
-            else:
-                git_tag = "origin/master"
+            git_tag = symref.rstrip() if symref else "origin/master"
         self.log.debug("git_tag: %s" % git_tag)
 
         self.log.info("Updating to '%s'." % git_tag)
@@ -357,7 +382,7 @@ class GitSync(BaseSync):
                 commit="HEAD", max_count=1, check_returncode=True
             )
         except exc.CommandError:
-            self.log.error("Failed to get the hash for HEAD")
+            self.log.exception("Failed to get the hash for HEAD")
             return
 
         self.log.debug("head_sha: %s" % head_sha)
@@ -373,7 +398,7 @@ class GitSync(BaseSync):
         # we must strip the remote from the tag.
         git_remote_name = self.get_current_remote_name()
 
-        if "refs/remotes/%s" % git_tag in show_ref_output:
+        if f"refs/remotes/{git_tag}" in show_ref_output:
             m = re.match(
                 r"^[0-9a-f]{40} refs/remotes/"
                 r"(?P<git_remote_name>[^/]+)/"
@@ -382,7 +407,7 @@ class GitSync(BaseSync):
                 re.MULTILINE,
             )
             if m is None:
-                raise exc.CommandError("Could not fetch remote names")
+                raise GitRemoteRefNotFound(git_tag=git_tag, ref_output=show_ref_output)
             git_remote_name = m.group("git_remote_name")
             git_tag = m.group("git_tag")
         self.log.debug("git_remote_name: %s" % git_remote_name)
@@ -411,7 +436,7 @@ class GitSync(BaseSync):
         try:
             process = self.cmd.fetch(log_in_real_time=True, check_returncode=True)
         except exc.CommandError:
-            self.log.error("Failed to fetch repository '%s'" % url)
+            self.log.exception("Failed to fetch repository '%s'" % url)
             return
 
         if is_remote_ref:
@@ -419,7 +444,7 @@ class GitSync(BaseSync):
             try:
                 process = self.cmd.status(porcelain=True, untracked_files="no")
             except exc.CommandError:
-                self.log.error("Failed to get the status")
+                self.log.exception("Failed to get the status")
                 return
             need_stash = len(process) > 0
 
@@ -431,13 +456,13 @@ class GitSync(BaseSync):
                 try:
                     process = self.cmd.stash.save(message=git_stash_save_options)
                 except exc.CommandError:
-                    self.log.error("Failed to stash changes")
+                    self.log.exception("Failed to stash changes")
 
             # Checkout the remote branch
             try:
                 process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
-                self.log.error("Failed to checkout tag: '%s'" % git_tag)
+                self.log.exception("Failed to checkout tag: '%s'" % git_tag)
                 return
 
             # Rebase changes from the remote branch
@@ -445,14 +470,14 @@ class GitSync(BaseSync):
                 process = self.cmd.rebase(upstream=git_remote_name + "/" + git_tag)
             except exc.CommandError as e:
                 if any(msg in str(e) for msg in ["invalid_upstream", "Aborting"]):
-                    self.log.error(e)
+                    self.log.exception("Invalid upstream remote. Rebase aborted.")
                 else:
                     # Rebase failed: Restore previous state.
                     self.cmd.rebase(abort=True)
                     if need_stash:
                         self.cmd.stash.pop(index=True, quiet=True)
 
-                    self.log.error(
+                    self.log.exception(
                         "\nFailed to rebase in: '%s'.\n"
                         "You will have to resolve the conflicts manually" % self.dir
                     )
@@ -470,10 +495,10 @@ class GitSync(BaseSync):
                         # Stash pop failed: Restore previous state.
                         self.cmd.reset(pathspec=head_sha, hard=True, quiet=True)
                         self.cmd.stash.pop(index=True, quiet=True)
-                        self.log.error(
-                            "\nFailed to rebase in: '%s'.\n"
-                            "You will have to resolve the "
-                            "conflicts manually" % self.dir
+                        self.log.exception(
+                            f"\nFailed to rebase in: '{self.dir}'.\n"
+                            + "You will have to resolve the "
+                            + "conflicts manually"
                         )
                         return
 
@@ -481,7 +506,7 @@ class GitSync(BaseSync):
             try:
                 process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
-                self.log.error("Failed to checkout tag: '%s'" % git_tag)
+                self.log.exception(f"Failed to checkout tag: '{git_tag}'")
                 return
 
         self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)
@@ -561,7 +586,7 @@ class GitSync(BaseSync):
 
         remote = self.remote(name=name)
         if remote is None:
-            raise Exception("Remote {name} not found after setting")
+            raise GitRemoteSetError(remote_name=name)
         return remote
 
     @staticmethod
@@ -648,7 +673,7 @@ branch_behind='0'\
 
         if match.branch_upstream is None:  # no upstream set
             if match.branch_head is None:
-                raise Exception("No branch found for git repository")
+                raise GitNoBranchFound()
             return match.branch_head
         if match.branch_head is None:
             return match.branch_upstream

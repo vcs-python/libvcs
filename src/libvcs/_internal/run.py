@@ -123,7 +123,6 @@ def run(
     extra_groups: Optional[Iterable[Union[str, int]]] = None,
     umask: int = -1,
     # Not until sys.version_info >= (3, 10)
-    # pipesize: int = -1,
     # custom
     log_in_real_time: bool = False,
     check_returncode: bool = True,
@@ -205,8 +204,6 @@ def run(
     while code is None:
         code = proc.poll()
 
-        # output = console_to_str(proc.stdout.readline())
-        # all_output.append(output)
         if callback and callable(callback) and proc.stderr is not None:
             line = console_to_str(proc.stderr.read(128))
             if line:
