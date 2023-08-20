@@ -7,14 +7,29 @@ This is an internal API not covered by versioning policy.
 import typing as t
 from typing import Union
 
-from libvcs import GitSync, HgSync, SvnSync
+from libvcs import GitSync, HgSync, SvnSync, exc
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath, VCSLiteral
-from libvcs.exc import InvalidVCS, LibVCSException
+from libvcs.exc import InvalidVCS
 from libvcs.url import registry as url_tools
 
 if t.TYPE_CHECKING:
     from typing_extensions import TypeGuard
+
+
+class VCSNoMatchFoundForUrl(exc.LibVCSException):
+    def __init__(self, url: str, *args: object):
+        return super().__init__(f"No VCS found for url: {url}")
+
+
+class VCSMultipleMatchFoundForUrl(exc.LibVCSException):
+    def __init__(self, url: str, *args: object):
+        return super().__init__(f"Multiple VCS found for url: {url}")
+
+
+class VCSNotSupported(exc.LibVCSException):
+    def __init__(self, url: str, vcs: str, *args: object):
+        return super().__init__(f"VCS '{vcs}' not supported, based on URL: {url}")
 
 
 @t.overload
