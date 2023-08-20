@@ -84,11 +84,11 @@ def keygetter(
                 dct = dct[sub_field]
             elif hasattr(dct, sub_field):
                 dct = getattr(dct, sub_field)
-        return dct
     except Exception as e:
         traceback.print_stack()
         print(f"Above error was {e}")
-    return None
+        return None
+    return dct
 
 
 def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any]:
@@ -117,7 +117,8 @@ def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any
     """
     try:
         if isinstance(path, str) and isinstance(lookup, str) and path.endswith(lookup):
-            if field_name := path.rsplit(lookup)[0]:
+            field_name = path.rsplit(lookup)[0]
+            if field_name is not None:
                 return keygetter(obj, field_name)
     except Exception:
         traceback.print_stack()
@@ -296,6 +297,16 @@ LOOKUP_NAME_MAP: Mapping[str, LookupProtocol] = {
 }
 
 
+class PKRequiredException(Exception):
+    def __init__(self, *args: object):
+        return super().__init__("items() require a pk_key exists")
+
+
+class OpNotFound(ValueError):
+    def __init__(self, op: str, *args: object):
+        return super().__init__(f"{op} not in LOOKUP_NAME_MAP")
+
+
 class QueryList(list[T]):
     """Filter list of object/dictionaries. For small, local datasets.
 
@@ -450,7 +461,7 @@ class QueryList(list[T]):
 
     def items(self) -> list[T]:
         if self.pk_key is None:
-            raise Exception("items() require a pk_key exists")
+            raise PKRequiredException()
         return [(getattr(item, self.pk_key), item) for item in self]
 
     def __eq__(
@@ -492,7 +503,7 @@ class QueryList(list[T]):
                     lhs, op = path.rsplit("__", 1)
 
                     if op not in LOOKUP_NAME_MAP:
-                        raise ValueError(f"{op} not in LOOKUP_NAME_MAP")
+                        raise OpNotFound(op=op)
                 except ValueError:
                     lhs = path
                     op = "exact"
