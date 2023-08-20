@@ -99,7 +99,7 @@ class GitURLKwargsFixture(typing.NamedTuple):
 
 
 #
-#
+# Extensibility patterns, via pip:
 # w/ VCS prefixes, e.g. git+https, git+ssh, git+file
 # https://pip.pypa.io/en/stable/topics/vcs-support/
 #

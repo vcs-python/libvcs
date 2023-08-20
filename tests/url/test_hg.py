@@ -65,7 +65,7 @@ class HgURLKwargsFixture(typing.NamedTuple):
 
 
 #
-#
+# Extensibility patterns, via pip:
 # w/ VCS prefixes, e.g. hg+https, hg+ssh, hg+file
 # https://pip.pypa.io/en/stable/topics/vcs-support/
 #

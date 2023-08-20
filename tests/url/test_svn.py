@@ -88,7 +88,7 @@ class SvnURLKwargsFixture(typing.NamedTuple):
 
 
 #
-#
+# Extensibility patterns, via pip:
 # w/ VCS prefixes, e.g. svn+https, svn+ssh, svn+file
 # https://pip.pypa.io/en/stable/topics/vcs-support/
 #

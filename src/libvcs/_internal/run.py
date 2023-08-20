@@ -122,8 +122,6 @@ def run(
     group: Optional[Union[str, int]] = None,
     extra_groups: Optional[Iterable[Union[str, int]]] = None,
     umask: int = -1,
-    # Not until sys.version_info >= (3, 10)
-    # custom
     log_in_real_time: bool = False,
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
@@ -163,6 +161,10 @@ def run(
                 sys.stdout.write(output)
                 sys.stdout.flush()
             run(['git', 'pull'], callback=progress_cb)
+
+    Upcoming changes
+    ----------------
+    When minimum python >= 3.10, `pipesize: int = -1` will be added after `umask`.
     """
     proc = subprocess.Popen(
         args,
