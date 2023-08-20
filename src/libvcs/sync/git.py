@@ -34,6 +34,36 @@ from .. import exc
 logger = logging.getLogger(__name__)
 
 
+class GitStatusParsingException(exc.LibVCSException):
+    def __init__(self, git_status_output: str, *args: object):
+        return super().__init__(
+            "Could not find match for git-status(1)" + f"Output: {git_status_output}"
+        )
+
+
+class GitRemoteOriginMissing(exc.LibVCSException):
+    def __init__(self, remotes: list[str], *args: object):
+        return super().__init__(f"Missing origin. Remotes: {', '.join(remotes)}")
+
+
+class GitRemoteSetError(exc.LibVCSException):
+    def __init__(self, remote_name: str):
+        return super().__init__(f"Remote {remote_name} not found after setting")
+
+
+class GitNoBranchFound(exc.LibVCSException):
+    def __init__(self, *args: object):
+        return super().__init__("No branch found for git repository")
+
+
+class GitRemoteRefNotFound(exc.CommandError):
+    def __init__(self, git_tag: str, ref_output: str, *args: object):
+        return super().__init__(
+            f"Could not fetch remote in refs/remotes/{git_tag}:"
+            + f"Output: {ref_output}"
+        )
+
+
 @dataclasses.dataclass
 class GitRemote:
     """Structure containing git working copy information."""
