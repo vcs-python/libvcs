@@ -52,7 +52,7 @@ These are fixtures are automatically used when the plugin is enabled and `pytest
   - `.gitconfig`, via {func}`gitconfig`:
   - `.hgrc`, via {func}`hgconfig`:
 
-  These are set to ensure you can correctly clone and create repositories withou. without extra
+  These are set to ensure you can correctly clone and create repositories without. without extra
   warnings.
 
 ## Bootstrapping pytest in your `conftest.py`

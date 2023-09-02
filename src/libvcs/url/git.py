@@ -467,7 +467,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         **Explicit VCS detection**
 
         Pip-style URLs are prefixed with the VCS name in front, so its rule_map can
-        unambigously narrow the type of VCS:
+        unambiguously narrow the type of VCS:
 
         >>> GitPipURL.is_valid(
         ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
@@ -525,7 +525,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         **Explicit VCS detection**
 
         Pip-style URLs are prefixed with the VCS name in front, so its rule_map can
-        unambigously narrow the type of VCS:
+        unambiguously narrow the type of VCS:
 
         >>> GitURL.is_valid(
         ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
