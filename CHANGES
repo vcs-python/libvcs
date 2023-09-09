@@ -67,6 +67,7 @@ _Maintenance only, no bug fixes, or new features_
   formatting can be done almost instantly.
 
   This change replaces black, isort, flake8 and flake8 plugins.
+
 - poetry: 1.4.0 -> 1.5.0
 
   See also: https://github.com/python-poetry/poetry/releases/tag/1.5.0
@@ -441,8 +442,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
 
     [python/cpython@ead169d]
 
-[python/cpython@ead169d]:
-  https://github.com/python/cpython/commit/ead169d3114ed0f1041b5b59ca20293449608c50
+[python/cpython@ead169d]: https://github.com/python/cpython/commit/ead169d3114ed0f1041b5b59ca20293449608c50
 
 [^python:bugs:8657]: <https://bugs.python.org/issue8657>
 
