@@ -20,6 +20,7 @@ $ pip install --user --upgrade --pre libvcs
 - ruff: Remove ERA / `eradicate` plugin
 
   This rule had too many false positives to trust. Other ruff rules have been beneficial.
+- query_list: Refactor to use access {mod}`typing` via namespace as `t` (#439)
 
 ## libvcs 0.23.0 (2023-08-20)
 
