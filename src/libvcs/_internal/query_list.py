@@ -6,11 +6,10 @@ This is an internal API not covered by versioning policy.
 """
 import re
 import traceback
+import typing as t
 from collections.abc import Mapping, Sequence
-from re import Pattern
-from typing import Any, Callable, Optional, Protocol, TypeVar, Union
 
-T = TypeVar("T", Any, Any)
+T = t.TypeVar("T", t.Any, t.Any)
 no_arg = object()
 
 
@@ -23,9 +22,9 @@ class ObjectDoesNotExist(Exception):
 
 
 def keygetter(
-    obj: Mapping[str, Any],
+    obj: Mapping[str, t.Any],
     path: str,
-) -> Union[None, Any, str, list[str], Mapping[str, str]]:
+) -> t.Union[None, t.Any, str, list[str], Mapping[str, str]]:
     """Fetch values in objects and keys, supported nested data.
 
     **With dictionaries**:
@@ -91,7 +90,7 @@ def keygetter(
     return dct
 
 
-def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any]:
+def parse_lookup(obj: Mapping[str, t.Any], path: str, lookup: str) -> t.Optional[t.Any]:
     """Check if field lookup key, e.g. "my__path__contains" has comparator, return val.
 
     If comparator not used or value not found, return None.
@@ -125,28 +124,28 @@ def parse_lookup(obj: Mapping[str, Any], path: str, lookup: str) -> Optional[Any
     return None
 
 
-class LookupProtocol(Protocol):
+class LookupProtocol(t.Protocol):
     """Protocol for :class:`QueryList` filtering operators."""
 
     def __call__(
         self,
-        data: Union[str, list[str], Mapping[str, str]],
-        rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+        data: t.Union[str, list[str], Mapping[str, str]],
+        rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
     ) -> bool:
         """Callback for :class:`QueryList` filtering operators."""
         ...
 
 
 def lookup_exact(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     return rhs == data
 
 
 def lookup_iexact(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, str):
         return False
@@ -155,8 +154,8 @@ def lookup_iexact(
 
 
 def lookup_contains(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, (str, Mapping, list)):
         return False
@@ -165,8 +164,8 @@ def lookup_contains(
 
 
 def lookup_icontains(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, (str, Mapping, list)):
         return False
@@ -180,8 +179,8 @@ def lookup_icontains(
 
 
 def lookup_startswith(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, str):
         return False
@@ -190,8 +189,8 @@ def lookup_startswith(
 
 
 def lookup_istartswith(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, str):
         return False
@@ -200,8 +199,8 @@ def lookup_istartswith(
 
 
 def lookup_endswith(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, str):
         return False
@@ -210,8 +209,8 @@ def lookup_endswith(
 
 
 def lookup_iendswith(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if not isinstance(rhs, str) or not isinstance(data, str):
         return False
@@ -219,8 +218,8 @@ def lookup_iendswith(
 
 
 def lookup_in(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if isinstance(rhs, list):
         return data in rhs
@@ -244,8 +243,8 @@ def lookup_in(
 
 
 def lookup_nin(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if isinstance(rhs, list):
         return data not in rhs
@@ -269,8 +268,8 @@ def lookup_nin(
 
 
 def lookup_regex(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if isinstance(data, (str, bytes, re.Pattern)) and isinstance(rhs, (str, bytes)):
         return bool(re.search(rhs, data))
@@ -278,8 +277,8 @@ def lookup_regex(
 
 
 def lookup_iregex(
-    data: Union[str, list[str], Mapping[str, str]],
-    rhs: Union[str, list[str], Mapping[str, str], Pattern[str]],
+    data: t.Union[str, list[str], Mapping[str, str]],
+    rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
 ) -> bool:
     if isinstance(data, (str, bytes, re.Pattern)) and isinstance(rhs, (str, bytes)):
         return bool(re.search(rhs, data, re.IGNORECASE))
@@ -463,7 +462,7 @@ class QueryList(list[T]):
     """
 
     data: Sequence[T]
-    pk_key: Optional[str]
+    pk_key: t.Optional[str]
 
     def items(self) -> list[T]:
         if self.pk_key is None:
@@ -495,9 +494,11 @@ class QueryList(list[T]):
         return False
 
     def filter(
-        self, matcher: Optional[Union[Callable[[T], bool], T]] = None, **kwargs: Any
+        self,
+        matcher: t.Optional[t.Union[t.Callable[[T], bool], T]] = None,
+        **kwargs: t.Any,
     ) -> "QueryList[T]":
-        def filter_lookup(obj: Any) -> bool:
+        def filter_lookup(obj: t.Any) -> bool:
             for path, v in kwargs.items():
                 try:
                     lhs, op = path.rsplit("__", 1)
@@ -521,7 +522,7 @@ class QueryList(list[T]):
             _filter = matcher
         elif matcher is not None:
 
-            def val_match(obj: Union[str, list[Any]]) -> bool:
+            def val_match(obj: t.Union[str, list[t.Any]]) -> bool:
                 if isinstance(matcher, list):
                     return obj in matcher
                 else:
@@ -535,10 +536,10 @@ class QueryList(list[T]):
 
     def get(
         self,
-        matcher: Optional[Union[Callable[[T], bool], T]] = None,
-        default: Optional[Any] = no_arg,
-        **kwargs: Any,
-    ) -> Optional[T]:
+        matcher: t.Optional[t.Union[t.Callable[[T], bool], T]] = None,
+        default: t.Optional[t.Any] = no_arg,
+        **kwargs: t.Any,
+    ) -> t.Optional[T]:
         objs = self.filter(matcher=matcher, **kwargs)
         if len(objs) > 1:
             raise MultipleObjectsReturned()
