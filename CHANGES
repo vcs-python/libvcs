@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Packaging
+
+- Move pytest configuration to `pyproject.toml` (#441)
+
 ### Development
 
 - ruff: Remove ERA / `eradicate` plugin
