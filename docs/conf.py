@@ -138,40 +138,6 @@ copybutton_remove_prompts = True
 rediraffe_redirects = "redirects.txt"
 rediraffe_branch = "master~1"
 
-htmlhelp_basename = f"{about['__title__']}doc"
-
-latex_documents = [
-    (
-        "index",
-        f"{about['__package_name__']}.tex",
-        f"{about['__title__']} Documentation",
-        about["__author__"],
-        "manual",
-    )
-]
-
-man_pages = [
-    (
-        "index",
-        about["__package_name__"],
-        f"{about['__title__']} Documentation",
-        about["__author__"],
-        1,
-    )
-]
-
-texinfo_documents = [
-    (
-        "index",
-        about["__package_name__"],
-        f"{about['__title__']} Documentation",
-        about["__author__"],
-        about["__package_name__"],
-        about["__description__"],
-        "Miscellaneous",
-    )
-]
-
 intersphinx_mapping = {
     "py": ("https://docs.python.org/3", None),
     "pip": ("https://pip.pypa.io/en/latest/", None),
