@@ -238,10 +238,8 @@ in {mod}`urlparse` (undocumented).
     - `mozilla:central` -> `https://hg.mozilla.org/mozilla-central/`
 
 [kde's git docs]: https://community.kde.org/Infrastructure/Git#Pushing
-[`url.<base>.insteadof`]:
-  https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtinsteadOf
-[`url.<base>.pushinsteadof`]:
-  https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtpushInsteadOf
+[`url.<base>.insteadof`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtinsteadOf
+[`url.<base>.pushinsteadof`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtpushInsteadOf
 
 From there, `GitURL` can be used downstream directly by other projects.
 

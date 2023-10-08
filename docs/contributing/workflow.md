@@ -172,7 +172,6 @@ $ make watch_mypy
 requires [`entr(1)`].
 ````
 
-
 ### mypy
 
 [mypy] is used for static type checking.
