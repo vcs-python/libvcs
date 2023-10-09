@@ -133,11 +133,11 @@ ValueError: mutable default <class 'libvcs.url.base.RuleMap'> for field rule_map
 
 ## libvcs 0.19.1 (2022-10-23)
 
-#### Tests
+### Tests
 
 - Sync, git: Update pytest fixtures, via #432
 
-#### Documentation
+### Documentation
 
 - CLI, git: Split subcommands into separate pages (remote, stash, submodule), via #432
 
@@ -341,7 +341,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
 
 ### Documentation
 
-- Render changelog in [`linkify_issues`] (~~#396~~, #403)
+- Render changelog in [`linkify_issues`] (#396, #403)
 - Fix Table of contents rendering with sphinx autodoc with [`sphinx_toctree_autodoc_fix`] (#403)
 - Deprecate `sphinx-autoapi`, per above fixing the table of contents issue (#403)
 
