@@ -131,8 +131,7 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
         description="AWS CodeCommit-style git URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCHEME}
-        ://
+        codecommit://
         {RE_PATH}
         {RE_SUFFIX}?
         {RE_PIP_REV}?
@@ -146,7 +145,7 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
         description="AWS CodeCommit-style git ssh/scp URL",
         pattern=re.compile(
             rf"""
-        {RE_PIP_SCP_SCHEME}
+        codecommit://
         {SCP_REGEX}?
         {RE_SUFFIX}?
         {RE_PIP_REV}?
@@ -161,7 +160,7 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
         description="AWS CodeCommit-style git+file:// URL",
         pattern=re.compile(
             rf"""
-        (?P<scheme>git\+file)://
+        (?P<scheme>codecommit)://
         (?P<path>[^@]*)
         {RE_PIP_REV}?
         """,
