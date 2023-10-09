@@ -125,9 +125,9 @@ RE_PIP_REV = r"""
     (@(?P<rev>.*))
 """
 
-CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
+AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
     Rule(
-        label="code-commit-url",
+        label="aws-code-commit-url",
         description="AWS CodeCommit-style git URL",
         pattern=re.compile(
             rf"""
@@ -142,7 +142,7 @@ CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
         is_explicit=True,
     ),
     Rule(
-        label="code-commit-scp-url",
+        label="aws-code-commit-scp-url",
         description="AWS CodeCommit-style git ssh/scp URL",
         pattern=re.compile(
             rf"""
@@ -157,7 +157,7 @@ CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
     ),
     # file://, RTC 8089, File:// https://datatracker.ietf.org/doc/html/rfc8089
     Rule(
-        label="code-commit-file-url",
+        label="aws-code-commit-file-url",
         description="AWS CodeCommit-style git+file:// URL",
         pattern=re.compile(
             rf"""
@@ -438,13 +438,13 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class GitCodeCommitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class GitAWSCodeCommitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     """Supports AWS CodeCommit git URLs."""
 
     # commit-ish (rev): tag, branch, ref
     rev: Optional[str] = None
 
-    rule_map = RuleMap(_rule_map={m.label: m for m in CODE_COMMIT_DEFAULT_RULES})
+    rule_map = RuleMap(_rule_map={m.label: m for m in AWS_CODE_COMMIT_DEFAULT_RULES})
 
     def to_url(self) -> str:
         """Exports a code commit-compliant URL.
@@ -452,19 +452,19 @@ class GitCodeCommitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         Examples
         --------
 
-        >>> git_url = GitCodeCommitURL(
+        >>> git_url = GitAWSCodeCommitURL(
         ...     url='git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
         ... )
 
         >>> git_url
-        GitCodeCommitURL(url=git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git,
+        GitAWSCodeCommitURL(url=git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git,
                 scheme=git+ssh,
                 user=git,
                 hostname=bitbucket.example.com,
                 port=7999,
                 path=PROJ/repo,
                 suffix=.git,
-                rule=code-commit-url)
+                rule=aws-code-commit-url)
 
         >>> git_url.path = 'libvcs/vcspull'
 
@@ -473,17 +473,17 @@ class GitCodeCommitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         It also accepts revisions, e.g. branch, tag, ref:
 
-        >>> git_url = GitCodeCommitURL(
+        >>> git_url = GitAWSCodeCommitURL(
         ...     url='git+https://github.com/vcs-python/libvcs.git@v0.10.0'
         ... )
 
         >>> git_url
-        GitCodeCommitURL(url=git+https://github.com/vcs-python/libvcs.git@v0.10.0,
+        GitAWSCodeCommitURL(url=git+https://github.com/vcs-python/libvcs.git@v0.10.0,
                 scheme=git+https,
                 hostname=github.com,
                 path=vcs-python/libvcs,
                 suffix=.git,
-                rule=code-commit-url,
+                rule=aws-code-commit-url,
                 rev=v0.10.0)
 
         >>> git_url.path = 'libvcs/vcspull'
@@ -507,21 +507,21 @@ class GitCodeCommitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Will **not** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
 
-        >>> GitCodeCommitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        >>> GitAWSCodeCommitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
         False
 
-        >>> GitCodeCommitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        >>> GitAWSCodeCommitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
         False
 
         AWS CodeCommit-style URLs:
 
-        >>> GitCodeCommitURL.is_valid(url='git+https://github.com/vcs-python/libvcs.git')
+        >>> GitAWSCodeCommitURL.is_valid(url='git+https://github.com/vcs-python/libvcs.git')
         True
 
-        >>> GitCodeCommitURL.is_valid(url='git+ssh://git@github.com:vcs-python/libvcs.git')
+        >>> GitAWSCodeCommitURL.is_valid(url='git+ssh://git@github.com:vcs-python/libvcs.git')
         True
 
-        >>> GitCodeCommitURL.is_valid(url='notaurl')
+        >>> GitAWSCodeCommitURL.is_valid(url='notaurl')
         False
 
         **Explicit VCS detection**
@@ -529,7 +529,7 @@ class GitCodeCommitURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         AWS CodeCommit-style URLs are prefixed with the VCS name in front, so its
         `rule_map` can unambiguously narrow the type of VCS:
 
-        >>> GitCodeCommitURL.is_valid(
+        >>> GitAWSCodeCommitURL.is_valid(
         ...     url='git+ssh://git@github.com:vcs-python/libvcs.git', is_explicit=True
         ... )
         True
@@ -637,7 +637,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
 @dataclasses.dataclass(repr=False)
 class GitURL(
-    GitCodeCommitURL, GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin
+    GitAWSCodeCommitURL, GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin
 ):
     """Batteries included URL Parser. Supports git(1) and pip URLs.
 
