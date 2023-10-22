@@ -15,6 +15,11 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Bug fixes
+
+- Git Remote URLs: Fix bug that would cause git remotes with `@` to be chopped off after the
+  protocol (#446, fixes #431)
+
 ### Packaging
 
 - Move pytest configuration to `pyproject.toml` (#441)
