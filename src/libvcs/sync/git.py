@@ -605,9 +605,6 @@ class GitSync(BaseSync):
         if "+" in url:
             url = url.split("+", 1)[1]
         scheme, netloc, path, query, frag = urlparse.urlsplit(url)
-        rev = None
-        if "@" in path:
-            path, rev = path.rsplit("@", 1)
         url = urlparse.urlunsplit((scheme, netloc, path, query, ""))
         if url.startswith("ssh://git@github.com/"):
             url = url.replace("ssh://", "git+ssh://")
