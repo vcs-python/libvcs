@@ -29,7 +29,7 @@ jobs:
           cache: 'poetry'
 
       - name: Install dependencies
-        run: poetry install -E "docs test coverage lint"
+        run: poetry install --with=docs,test,coverage,lint
 
       - name: Lint with ruff
         run: poetry run ruff .

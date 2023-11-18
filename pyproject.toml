@@ -63,7 +63,7 @@ Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 python = "^3.9"
 typing-extensions = { version = "*", python = '3.10' }
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.docs.dependencies]
 ### Docs ###
 sphinx = "*"
 furo = "*"
@@ -75,6 +75,7 @@ sphinx-copybutton = "*"
 sphinxext-rediraffe = "*"
 myst_parser = ">=0.18.1"
 
+[tool.poetry.group.test.dependencies]
 ### Testing ###
 gp-libs = "~0.0.1-alpha.17"
 pytest = "*"
@@ -82,42 +83,20 @@ pytest-rerunfailures = "*"
 pytest-mock = "*"
 pytest-watcher = "*"
 
+[tool.poetry.group.coverage.dependencies]
 ### Coverage ###
 codecov = "*"
 coverage = "*"
 pytest-cov = "*"
 
+[tool.poetry.group.lint.dependencies]
 ### Lint ###
 ruff = "*"
 mypy = "*"
-types-docutils = "*"
 
-[tool.poetry.extras]
-docs = [
-  "gp-libs",
-  "sphinx",
-  "sphinx-autodoc-typehints",
-  "sphinx-autobuild",
-  "sphinx-copybutton",
-  "sphinxext-opengraph",
-  "sphinx-inline-tabs",
-  "sphinxext-rediraffe",
-  "myst_parser",
-  "furo",
-]
-test = [
-  "gp-libs",
-  "pytest",
-  "pytest-rerunfailures",
-  "pytest-mock",
-  "pytest-watcher",
-]
-coverage = ["codecov", "coverage", "pytest-cov"]
-lint = [
-  "ruff",
-  "mypy",
-  "types-docutils",
-]
+[tool.poetry.group.typings.dependencies]
+### Typings ###
+types-docutils = "*"
 
 [tool.poetry.plugins.pytest11]
 libvcs = "libvcs.pytest_plugin"
