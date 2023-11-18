@@ -25,7 +25,7 @@ if not shutil.which("git"):
 
 
 ProjectTestFactory = t.Callable[..., GitSync]
-ProjectTestFactoryLazyKwargs = t.Callable[..., dict[str,str]]
+ProjectTestFactoryLazyKwargs = t.Callable[..., dict[str, str]]
 ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
 
 
