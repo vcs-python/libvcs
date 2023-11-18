@@ -88,7 +88,6 @@ coverage = "*"
 pytest-cov = "*"
 
 ### Lint ###
-black = "*"
 ruff = "*"
 mypy = "*"
 types-docutils = "*"
@@ -115,7 +114,6 @@ test = [
 ]
 coverage = ["codecov", "coverage", "pytest-cov"]
 lint = [
-  "black",
   "ruff",
   "mypy",
   "types-docutils",
