@@ -69,6 +69,7 @@ typing-extensions = { version = "*", python = '3.10' }
 ### Docs ###
 sphinx = "*"
 furo = "*"
+gp-libs = "*"
 sphinx-autobuild = "*"
 sphinx-autodoc-typehints = "*"
 sphinx-inline-tabs = "*"
