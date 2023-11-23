@@ -79,7 +79,7 @@ myst_parser = ">=0.18.1"
 
 [tool.poetry.group.test.dependencies]
 ### Testing ###
-gp-libs = "~0.0.1-alpha.17"
+gp-libs = "*"
 pytest = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
