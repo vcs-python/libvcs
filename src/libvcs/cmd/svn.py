@@ -115,7 +115,6 @@ class Svn:
         >>> svn.run(['help'])
         "usage: svn <subcommand> [options] [args]..."
         """
-
         cli_args = ["svn", *args] if isinstance(args, Sequence) else ["svn", args]
 
         if "cwd" not in kwargs:

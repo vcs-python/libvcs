@@ -157,7 +157,6 @@ class BaseSync:
         str
             combined stdout/stderr in a big string, newlines retained
         """
-
         if cwd is None:
             cwd = getattr(self, "dir", None)
 

@@ -56,7 +56,7 @@ def test_repo_git_obtain_initial_commit_repo(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
-    """initial commit repos return 'initial'.
+    """Initial commit repos return 'initial'.
 
     note: this behaviors differently from git(1)'s use of the word "bare".
     running `git rev-parse --is-bare-repository` would return false.

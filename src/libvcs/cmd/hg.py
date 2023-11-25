@@ -144,7 +144,6 @@ class Hg:
         >>> hg.run(['help'])
         "Mercurial Distributed SCM..."
         """
-
         cli_args = ["hg", *args] if isinstance(args, Sequence) else ["hg", args]
 
         if "cwd" not in kwargs:

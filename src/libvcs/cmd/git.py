@@ -167,7 +167,6 @@ class Git:
         >>> git.run(['help'])
         "usage: git [...--version] [...--help] [-C <path>]..."
         """
-
         cli_args = ["git", *args] if isinstance(args, Sequence) else ["git", args]
 
         if "cwd" not in kwargs:
@@ -2236,7 +2235,7 @@ class GitSubmoduleCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git submodule init
+        """Git submodule init
 
         Examples
         --------
@@ -2273,7 +2272,7 @@ class GitSubmoduleCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """git submodule update
+        """Git submodule update
 
         Examples
         --------
@@ -2417,7 +2416,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote add
+        """Git remote add
 
         Examples
         --------
@@ -2453,7 +2452,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote rename
+        """Git remote rename
 
         Examples
         --------
@@ -2486,7 +2485,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote remove
+        """Git remote remove
 
         Examples
         --------
@@ -2515,7 +2514,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote show
+        """Git remote show
 
         Examples
         --------
@@ -2550,7 +2549,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote prune
+        """Git remote prune
 
         Examples
         --------
@@ -2584,7 +2583,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote get-url
+        """Git remote get-url
 
         Examples
         --------
@@ -2626,7 +2625,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git remote set-url
+        """Git remote set-url
 
         Examples
         --------
@@ -2768,7 +2767,7 @@ class GitStashCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """git stash list
+        """Git stash list
 
         Examples
         --------
@@ -2792,7 +2791,7 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """git stash update
+        """Git stash update
 
         TODO: Fill-in
 
@@ -2835,7 +2834,7 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """git stash pop
+        """Git stash pop
 
         Examples
         --------
@@ -2887,7 +2886,7 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """git stash save
+        """Git stash save
 
         Examples
         --------

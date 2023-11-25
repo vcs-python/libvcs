@@ -227,7 +227,6 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> HgBaseURL.is_valid(
         ...     url='https://hg.mozilla.org/mozilla-central'
         ... )
@@ -252,7 +251,6 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> hg_url = HgBaseURL(url='https://hg.mozilla.org/mozilla-central')
 
         >>> hg_url
@@ -350,7 +348,6 @@ class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> HgPipURL.is_valid(
         ...     url='hg+https://hg.mozilla.org/mozilla-central'
         ... )
@@ -369,7 +366,6 @@ class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> hg_url = HgPipURL(url='hg+https://hg.mozilla.org/mozilla-central')
 
         >>> hg_url
@@ -434,7 +430,6 @@ class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         **Will** match normal ``hg(1)`` URLs, use :meth:`HgURL.is_valid` for that.
 
         >>> HgURL.is_valid(url='https://hg.mozilla.org/mozilla-central/mozilla-central')
@@ -519,7 +514,6 @@ class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         SSH style URL:
 
         >>> hg_url = HgURL(url='hg@hg.mozilla.org:mozilla-central/browser')
@@ -560,9 +554,8 @@ class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         >>> hg_url.to_url()
         'hg+ssh://localhost/mozilla-central/image'
 
-        See also
+        See Also
         --------
-
         :meth:`HgBaseURL.to_url`, :meth:`HgPipURL.to_url`
         """
         return super().to_url()

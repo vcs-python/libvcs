@@ -191,7 +191,6 @@ class GitSync(BaseSync):
 
         Examples
         --------
-
         .. code-block:: python
 
             import os
@@ -546,7 +545,6 @@ class GitSync(BaseSync):
         -------
         Remote name and url in tuple form
         """
-
         try:
             ret = self.cmd.remote.show(
                 name=name, no_query_remotes=True, log_in_real_time=True
@@ -576,7 +574,6 @@ class GitSync(BaseSync):
         url : str
             defines the remote URL
         """
-
         url = self.chomp_protocol(url)
 
         if self.remote(name) and overwrite:

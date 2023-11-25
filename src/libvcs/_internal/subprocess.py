@@ -8,7 +8,6 @@ This is an internal API not covered by versioning policy.
 
 Examples
 --------
-
 - :class:`~SubprocessCommand`: Wraps :class:`subprocess.Popen` and
   :func:`subprocess.run` in a :func:`~dataclasses.dataclass`.
 
