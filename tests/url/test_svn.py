@@ -130,7 +130,7 @@ def test_svn_url_extension_pip(
     svn_url_kwargs: SvnURLKwargs,
     svn_repo: SvnSync,
 ) -> None:
-    """Test SVN URL external extension from pip."""
+    """Test SvnURL external extension from pip."""
 
     class SvnURLWithPip(SvnURL):
         rule_map = RuleMap(
