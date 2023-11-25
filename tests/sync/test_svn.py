@@ -1,4 +1,4 @@
-"""tests for libvcs svn repos."""
+"""Tests for libvcs svn repos."""
 import pathlib
 import shutil
 
@@ -11,7 +11,8 @@ if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
 
 
-def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None:
+def test_svn_sync(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None:
+    """Tests for SvnSync."""
     repo_name = "my_svn_project"
 
     svn_repo = SvnSync(
@@ -33,6 +34,7 @@ def test_repo_svn_remote_checkout(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
+    """Tests for SvnSync with remote checkout."""
     svn_server = create_svn_remote_repo()
     svn_repo_checkout_dir = projects_path / "my_svn_checkout"
     svn_repo = SvnSync(dir=svn_repo_checkout_dir, url=f"file://{svn_server!s}")
