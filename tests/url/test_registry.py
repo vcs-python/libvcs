@@ -1,3 +1,4 @@
+"""Tests for URL Registry."""
 import typing as t
 
 import pytest
@@ -17,6 +18,8 @@ if t.TYPE_CHECKING:
 
 
 class DetectVCSFixture(t.NamedTuple):
+    """Test VCS Detection fixture."""
+
     url: str
     expected_matches_lazy: list["DetectVCSFixtureExpectedMatch"]
     is_explicit: bool
@@ -82,6 +85,7 @@ def test_registry(
     expected_matches_lazy: list["DetectVCSFixtureExpectedMatch"],
     is_explicit: bool,
 ) -> None:
+    """Test URL detection registry."""
     assert url
     assert registry.registry
 
