@@ -18,7 +18,7 @@ Examples
   ...    ['echo', 'hi'],
   ...    capture_output=True, universal_newlines=True
   ... ).stdout
-  'hi\\n'
+  'hi\n'
 
   With this:
 
@@ -26,7 +26,7 @@ Examples
   >>> cmd.args
   ['echo', 'hi']
   >>> cmd.run(capture_output=True, universal_newlines=True).stdout
-  'hi\\n'
+  'hi\n'
 
   Tweak params before invocation:
 
@@ -35,7 +35,7 @@ Examples
   >>> cmd.args
   ['echo', 'hello']
   >>> cmd.run(capture_output=True, universal_newlines=True).stdout
-  'hello\\n'
+  'hello\n'
 """
 import dataclasses
 import subprocess
