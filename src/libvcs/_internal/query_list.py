@@ -14,7 +14,7 @@ no_arg = object()
 
 
 class MultipleObjectsReturned(Exception):
-    """The requested object does not exist"""
+    """The requested object does not exist."""
 
 
 class ObjectDoesNotExist(Exception):

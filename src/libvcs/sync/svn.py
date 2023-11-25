@@ -104,7 +104,7 @@ class SvnSync(BaseSync):
         return int(dict(info_list)["Revision"])
 
     def get_revision(self, location: Optional[str] = None) -> int:
-        """Return maximum revision for all files under a given location"""
+        """Return maximum revision for all files under a given location."""
         if not location:
             location = self.url
 

@@ -181,7 +181,7 @@ def test_hg_to_url(
     hg_url: HgURL,
     hg_repo: HgSync,
 ) -> None:
-    """Test HgURL.to_url()"""
+    """Test HgURL.to_url()."""
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
 
     assert hg_url.to_url() == expected

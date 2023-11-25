@@ -2235,7 +2235,7 @@ class GitSubmoduleCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git submodule init
+        """Git submodule init.
 
         Examples
         --------
@@ -2272,7 +2272,7 @@ class GitSubmoduleCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Git submodule update
+        """Git submodule update.
 
         Examples
         --------
@@ -2416,7 +2416,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote add
+        """Git remote add.
 
         Examples
         --------
@@ -2452,7 +2452,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote rename
+        """Git remote rename.
 
         Examples
         --------
@@ -2485,7 +2485,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote remove
+        """Git remote remove.
 
         Examples
         --------
@@ -2514,7 +2514,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote show
+        """Git remote show.
 
         Examples
         --------
@@ -2549,7 +2549,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote prune
+        """Git remote prune.
 
         Examples
         --------
@@ -2583,7 +2583,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote get-url
+        """Git remote get-url.
 
         Examples
         --------
@@ -2625,7 +2625,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git remote set-url
+        """Git remote set-url.
 
         Examples
         --------
@@ -2767,7 +2767,7 @@ class GitStashCmd:
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
     ) -> str:
-        """Git stash list
+        """Git stash list.
 
         Examples
         --------
@@ -2791,7 +2791,7 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Git stash update
+        """Git stash update.
 
         TODO: Fill-in
 
@@ -2834,7 +2834,7 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Git stash pop
+        """Git stash pop.
 
         Examples
         --------
@@ -2886,7 +2886,7 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Git stash save
+        """Git stash save.
 
         Examples
         --------

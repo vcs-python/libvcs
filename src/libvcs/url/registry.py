@@ -25,7 +25,7 @@ class ParserMatch(t.NamedTuple):
 
 
 class VCSRegistry:
-    """Index of parsers"""
+    """Index of parsers."""
 
     parser_map: t.ClassVar["ParserMap"] = {}
 

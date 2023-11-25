@@ -88,7 +88,7 @@ class GitStatus:
 
     @classmethod
     def from_stdout(cls, value: str) -> "GitStatus":
-        """Returns ``git status -sb --porcelain=2`` extracted to a dict
+        """Returns ``git status -sb --porcelain=2`` extracted to a dict.
 
         Returns
         -------
@@ -588,7 +588,7 @@ class GitSync(BaseSync):
 
     @staticmethod
     def chomp_protocol(url: str) -> str:
-        """Return clean VCS url from RFC-style url
+        """Return clean VCS url from RFC-style url.
 
         Parameters
         ----------
@@ -612,7 +612,7 @@ class GitSync(BaseSync):
         return url
 
     def get_git_version(self) -> str:
-        """Return current version of git binary
+        """Return current version of git binary.
 
         Returns
         -------

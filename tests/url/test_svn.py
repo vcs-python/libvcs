@@ -201,7 +201,7 @@ def test_svn_to_url(
     svn_url: SvnURL,
     svn_repo: SvnSync,
 ) -> None:
-    """Test SvnURL.to_url()"""
+    """Test SvnURL.to_url()."""
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
     assert svn_url.to_url() == expected

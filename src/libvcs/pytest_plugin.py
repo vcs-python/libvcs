@@ -281,7 +281,7 @@ def _create_svn_remote_repo(
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
-    """Create a test SVN repo to for checkout / commit purposes"""
+    """Create a test SVN repo to for checkout / commit purposes."""
     if init_cmd_args is None:
         init_cmd_args = []
 
@@ -358,7 +358,7 @@ def _create_hg_remote_repo(
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
-    """Create a test hg repo to for checkout / commit purposes"""
+    """Create a test hg repo to for checkout / commit purposes."""
     if init_cmd_args is None:
         init_cmd_args = []
 

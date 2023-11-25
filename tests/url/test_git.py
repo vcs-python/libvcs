@@ -213,7 +213,7 @@ def test_git_to_url(
     git_url: GitURL,
     git_repo: GitSync,
 ) -> None:
-    """Test GitURL.to_url()"""
+    """Test GitURL.to_url()."""
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
     assert git_url.to_url() == expected

@@ -1,4 +1,4 @@
-"""Invocable :mod:`subprocess` wrapper.
+r"""Invocable :mod:`subprocess` wrapper.
 
 Defer running a subprocess, such as by handing to an executor.
 

@@ -42,14 +42,14 @@ class Rule(SkipDefaultFieldsReprMixin):
 
 @dataclasses.dataclass(repr=False)
 class RuleMap(SkipDefaultFieldsReprMixin):
-    """Pattern matching and parsing capabilities for URL parsers, e.g. GitURL"""
+    """Pattern matching and parsing capabilities for URL parsers, e.g. GitURL."""
 
     _rule_map: dict[str, Rule] = dataclasses.field(default_factory=dict)
 
     def register(self, cls: Rule) -> None:
         r"""
 
-        .. currentmodule:: libvcs.url.git
+        .. currentmodule:: libvcs.url.git.
 
         >>> from dataclasses import dataclass
         >>> from libvcs.url.git import GitURL, GitBaseURL

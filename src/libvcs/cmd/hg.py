@@ -262,7 +262,7 @@ class Hg:
         *args: object,
         **kwargs: object,
     ) -> str:
-        """Update working directory
+        """Update working directory.
 
         Wraps `hg update <https://www.mercurial-scm.org/doc/hg.1.html#update>`_.
 
@@ -294,7 +294,7 @@ class Hg:
         *args: object,
         **kwargs: object,
     ) -> str:
-        """Update working directory
+        """Update working directory.
 
         Wraps `hg update <https://www.mercurial-scm.org/doc/hg.1.html#pull>`_.
 

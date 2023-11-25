@@ -33,7 +33,7 @@ def idfn(val: Any) -> str:
     ids=idfn,
 )
 def test_init(args: list[Any], kwargs: dict[str, Any], expected_result: Any) -> None:
-    """Test SubprocessCommand via list + kwargs, assert attributes"""
+    """Test SubprocessCommand via list + kwargs, assert attributes."""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
 
@@ -60,7 +60,7 @@ FIXTURES = [
 def test_init_and_Popen(
     args: list[Any], kwargs: dict[str, Any], expected_result: Any
 ) -> None:
-    """Test SubprocessCommand with Popen"""
+    """Test SubprocessCommand with Popen."""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
 
@@ -81,7 +81,7 @@ def test_init_and_Popen(
 def test_init_and_Popen_run(
     args: list[Any], kwargs: dict[str, Any], expected_result: Any
 ) -> None:
-    """Test SubprocessCommand with run"""
+    """Test SubprocessCommand with run."""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
 
@@ -101,7 +101,7 @@ def test_init_and_Popen_run(
 def test_init_and_check_call(
     args: list[Any], kwargs: dict[str, Any], expected_result: Any
 ) -> None:
-    """Test SubprocessCommand with Popen.check_call"""
+    """Test SubprocessCommand with Popen.check_call."""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
 
@@ -119,7 +119,7 @@ def test_init_and_check_call(
 def test_init_and_check_output(
     args: list[Any], kwargs: dict[str, Any], expected_result: Any
 ) -> None:
-    """Test SubprocessCommand with Popen.check_output"""
+    """Test SubprocessCommand with Popen.check_output."""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
 

@@ -1,5 +1,5 @@
 """
-.. admonition:: Busman's holiday?
+.. admonition:: Busman's holiday?.
 
    We need to fill these SVN commands and their tests to exquisite perfection, like the
    artisans in those Michelin-star videos on YouTube. We welcome your contributions,
