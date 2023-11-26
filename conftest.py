@@ -20,6 +20,7 @@ def add_doctest_fixtures(
     request: pytest.FixtureRequest,
     doctest_namespace: dict[str, t.Any],
 ) -> None:
+    """Configure doctest fixtures for pytest-doctest."""
     from _pytest.doctest import DoctestItem
 
     if isinstance(request._pyfuncitem, DoctestItem):
@@ -28,14 +29,16 @@ def add_doctest_fixtures(
 
 
 @pytest.fixture(autouse=True)
+def cwd_default(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> None:
+    """Configure current directory for pytest tests."""
+    monkeypatch.chdir(tmp_path)
+
+
+@pytest.fixture(autouse=True)
 def setup(
     request: pytest.FixtureRequest,
     gitconfig: pathlib.Path,
     set_home: pathlib.Path,
 ) -> None:
+    """Configure test fixtures for pytest."""
     pass
-
-
-@pytest.fixture(autouse=True)
-def cwd_default(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> None:
-    monkeypatch.chdir(tmp_path)
