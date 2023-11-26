@@ -7,7 +7,7 @@ class LibVCSException(Exception):
 
 
 class CommandError(LibVCSException):
-    """This exception is raised on non-zero return codes."""
+    """Raised on non-zero return codes."""
 
     def __init__(
         self,
@@ -23,6 +23,7 @@ class CommandError(LibVCSException):
             self.cmd = cmd
 
     def __str__(self) -> str:
+        """Return command output."""
         message = self.message.format(returncode=self.returncode, cmd=self.cmd)
         if len(self.output.strip()):
             message += "\n%s" % self.output
