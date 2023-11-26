@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### CI
+
+- Move CodeQL from advanced configuration file to GitHub's default
+
 ## libvcs 0.26.0 (2023-11-26)
 
 ### Breaking changes
