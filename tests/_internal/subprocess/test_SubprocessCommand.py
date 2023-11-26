@@ -1,3 +1,4 @@
+"""Tests for SubprocessCommand."""
 import pathlib
 import subprocess
 from typing import Any
@@ -8,6 +9,7 @@ from libvcs._internal.subprocess import SubprocessCommand
 
 
 def idfn(val: Any) -> str:
+    """Test ID naming function for SubprocessCommand py.test parametrize."""
     if isinstance(val, list):
         if len(val):
             return str(val[0])
@@ -145,6 +147,7 @@ def test_run(
     kwargs: dict[str, Any],
     run_kwargs: dict[str, Any],
 ) -> None:
+    """Test SubprocessCommand.run()."""
     kwargs["cwd"] = tmp_path
     cmd = SubprocessCommand(*args, **kwargs)
     response = cmd.run(**run_kwargs)
