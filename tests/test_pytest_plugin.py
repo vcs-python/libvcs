@@ -4,12 +4,12 @@ import textwrap
 
 import pytest
 
-from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
 def test_create_git_remote_repo(
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -21,7 +21,7 @@ def test_create_git_remote_repo(
 
 @pytest.mark.skipif(not shutil.which("svn"), reason="svn is not available")
 def test_create_svn_remote_repo(
-    create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -69,10 +69,10 @@ def setup(
 import pathlib
 
 from libvcs.sync.git import GitSync
-from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 def test_repo_git_remote_checkout(
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:

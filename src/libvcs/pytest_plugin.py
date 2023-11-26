@@ -194,17 +194,17 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
 InitCmdArgs: "TypeAlias" = Optional[list[str]]
 
 
-class CreateProjectCallbackProtocol(Protocol):
+class CreateRepoPostInitFn(Protocol):
     def __call__(self, remote_repo_path: pathlib.Path) -> None:
         ...
 
 
-class CreateProjectCallbackFixtureProtocol(Protocol):
+class CreateRepoPytestFixtureFn(Protocol):
     def __call__(
         self,
         remote_repos_path: pathlib.Path = ...,
         remote_repo_name: Optional[str] = ...,
-        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = ...,
+        remote_repo_post_init: Optional[CreateRepoPostInitFn] = ...,
         init_cmd_args: InitCmdArgs = ...,
     ) -> pathlib.Path:
         ...
@@ -216,7 +216,7 @@ DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
 def _create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
 ) -> pathlib.Path:
     if init_cmd_args is None:
@@ -234,13 +234,13 @@ def _create_git_remote_repo(
 @skip_if_git_missing
 def create_git_remote_repo(
     remote_repos_path: pathlib.Path,
-) -> CreateProjectCallbackFixtureProtocol:
-    """Factory. Create git remote repo to for clone / push purposes"""
+) -> CreateRepoPytestFixtureFn:
+    """Factory. Create git remote repo to for clone / push purposes."""
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     ) -> pathlib.Path:
         return _create_git_remote_repo(
@@ -278,7 +278,7 @@ def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
 def _create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
     """Create a test SVN repo to for checkout / commit purposes"""
@@ -318,13 +318,13 @@ def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
 @skip_if_svn_missing
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
-) -> CreateProjectCallbackFixtureProtocol:
+) -> CreateRepoPytestFixtureFn:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
         return _create_svn_remote_repo(
@@ -355,7 +355,7 @@ def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
 def _create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
     """Create a test hg repo to for checkout / commit purposes"""
@@ -384,13 +384,13 @@ def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     hgconfig: pathlib.Path,
     set_home: pathlib.Path,
-) -> CreateProjectCallbackFixtureProtocol:
+) -> CreateRepoPytestFixtureFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
         remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateProjectCallbackProtocol] = None,
+        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
         return _create_hg_remote_repo(
@@ -465,9 +465,9 @@ def add_doctest_fixtures(
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
     gitconfig: pathlib.Path,
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
-    create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
-    create_hg_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_hg_remote_repo: CreateRepoPytestFixtureFn,
     git_repo: pathlib.Path,
 ) -> None:
     from _pytest.doctest import DoctestItem

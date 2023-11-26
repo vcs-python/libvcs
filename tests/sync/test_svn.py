@@ -4,7 +4,7 @@ import shutil
 
 import pytest
 
-from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.svn import SvnSync
 
 if not shutil.which("svn"):
@@ -29,7 +29,7 @@ def test_repo_svn(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None
 
 
 def test_repo_svn_remote_checkout(
-    create_svn_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
