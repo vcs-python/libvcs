@@ -1,3 +1,4 @@
+"""Run hg commands directly against a local git repo."""
 import datetime
 import pathlib
 import shlex
@@ -11,6 +12,8 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class Git:
+    """Run commands directly on a git repository."""
+
     progress_callback: Optional[ProgressCallbackProtocol] = None
 
     # Sub-commands
@@ -71,6 +74,7 @@ class Git:
         self.stash = GitStashCmd(dir=self.dir, cmd=self)
 
     def __repr__(self) -> str:
+        """Representation of Git repo command object."""
         return f"<Git dir={self.dir}>"
 
     def run(
@@ -104,7 +108,8 @@ class Git:
         log_in_real_time: bool = False,
         **kwargs: Any,
     ) -> str:
-        """
+        """Run a command for this git repository.
+
         Passing None to a subcommand option, the flag won't be passed unless otherwise
         stated.
 
@@ -1314,8 +1319,9 @@ class Git:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Switches branches or checks out files. Wraps
-        `git checkout <https://git-scm.com/docs/git-checkout>`_ (`git co`).
+        """Switch branches or checks out files.
+
+        Wraps `git checkout <https://git-scm.com/docs/git-checkout>`_ (`git co`).
 
         Parameters
         ----------
@@ -1438,8 +1444,9 @@ class Git:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Status of working tree. Wraps
-        `git status <https://git-scm.com/docs/git-status>`_.
+        """Return status of working tree.
+
+        Wraps `git status <https://git-scm.com/docs/git-status>`_.
 
         `git ls-files` has similar params (e.g. `z`)
 
@@ -1587,7 +1594,6 @@ class Git:
     ) -> str:
         """Get and set repo configuration.
 
-        Status of working tree. Wraps
         `git config <https://git-scm.com/docs/git-config>`_.
 
         Parameters
@@ -2038,8 +2044,9 @@ class Git:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """symbolic-ref. Wraps `git symbolic-ref
-        <https://git-scm.com/docs/symbolic-ref>`_.
+        """Return symbolic-ref.
+
+        Wraps `git symbolic-ref <https://git-scm.com/docs/symbolic-ref>`_.
 
         Examples
         --------
@@ -2162,6 +2169,8 @@ GitSubmoduleCmdCommandLiteral = Literal[
 
 
 class GitSubmoduleCmd:
+    """Run submodule commands in a git repository."""
+
     def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-submodule(1).
 
@@ -2191,6 +2200,7 @@ class GitSubmoduleCmd:
         self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
 
     def __repr__(self) -> str:
+        """Representation of a git submodule command object."""
         return f"<GitSubmoduleCmd dir={self.dir}>"
 
     def run(
@@ -2205,7 +2215,9 @@ class GitSubmoduleCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+        """Run a command against a git submodule.
+
+        Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
 
         Examples
         --------
@@ -2339,6 +2351,8 @@ GitRemoteCommandLiteral = Literal[
 
 
 class GitRemoteCmd:
+    """Run commands directly for a git remote on a git repository."""
+
     def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
         r"""Lite, typed, pythonic wrapper for git-remote(1).
 
@@ -2368,6 +2382,7 @@ class GitRemoteCmd:
         self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
 
     def __repr__(self) -> str:
+        """Representation of a git remote for a git repository."""
         return f"<GitRemoteCmd dir={self.dir}>"
 
     def run(
@@ -2381,7 +2396,9 @@ class GitRemoteCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        r"""Wraps `git remote <https://git-scm.com/docs/git-remote>`_.
+        r"""Run command against a git remote.
+
+        Wraps `git remote <https://git-scm.com/docs/git-remote>`_.
 
         Examples
         --------
@@ -2695,6 +2712,8 @@ GitStashCommandLiteral = Literal[
 
 
 class GitStashCmd:
+    """Run commands directly against a git stash storage for a git repo."""
+
     def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-stash(1).
 
@@ -2724,6 +2743,7 @@ class GitStashCmd:
         self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
 
     def __repr__(self) -> str:
+        """Representation of git stash storage command object."""
         return f"<GitStashCmd dir={self.dir}>"
 
     def run(
@@ -2738,7 +2758,9 @@ class GitStashCmd:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
+        """Run a command against a git repository's stash storage.
+
+        Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
 
         Examples
         --------
