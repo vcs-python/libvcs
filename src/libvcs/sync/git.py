@@ -1,4 +1,4 @@
-"""Git Repo object for libvcs.
+"""Tool to manage a local git clone from an external git repository.
 
 .. todo::
 
@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class GitStatusParsingException(exc.LibVCSException):
+    """Raised when git status output is not in the expected format."""
+
     def __init__(self, git_status_output: str, *args: object):
         return super().__init__(
             "Could not find match for git-status(1)" + f"Output: {git_status_output}"
@@ -42,21 +44,29 @@ class GitStatusParsingException(exc.LibVCSException):
 
 
 class GitRemoteOriginMissing(exc.LibVCSException):
+    """Raised when git origin remote was not found."""
+
     def __init__(self, remotes: list[str], *args: object):
         return super().__init__(f"Missing origin. Remotes: {', '.join(remotes)}")
 
 
 class GitRemoteSetError(exc.LibVCSException):
+    """Raised when a git remote could not be set."""
+
     def __init__(self, remote_name: str):
         return super().__init__(f"Remote {remote_name} not found after setting")
 
 
 class GitNoBranchFound(exc.LibVCSException):
+    """Raised with git branch could not be found."""
+
     def __init__(self, *args: object):
         return super().__init__("No branch found for git repository")
 
 
 class GitRemoteRefNotFound(exc.CommandError):
+    """Raised when a git remote ref (tag, branch) could not be found."""
+
     def __init__(self, git_tag: str, ref_output: str, *args: object):
         return super().__init__(
             f"Could not fetch remote in refs/remotes/{git_tag}:"
@@ -79,6 +89,8 @@ GitRemotesArgs = Union[None, GitSyncRemoteDict, dict[str, str]]
 
 @dataclasses.dataclass
 class GitStatus:
+    """Git status information."""
+
     branch_oid: Optional[str] = None
     branch_head: Optional[str] = None
     branch_upstream: Optional[str] = None
@@ -88,7 +100,7 @@ class GitStatus:
 
     @classmethod
     def from_stdout(cls, value: str) -> "GitStatus":
-        """Returns ``git status -sb --porcelain=2`` extracted to a dict.
+        """Return ``git status -sb --porcelain=2`` extracted to a dict.
 
         Returns
         -------
@@ -145,7 +157,8 @@ class GitStatus:
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
-    """
+    """Convert pip-style URL to a VCSLocation.
+
     Prefixes stub URLs like 'user@hostname:user/repo.git' with 'ssh://'.
     That's required because although they use SSH they sometimes doesn't
     work with a ssh:// scheme (e.g. Github). But we need a scheme for
@@ -171,6 +184,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
 
 
 class GitSync(BaseSync):
+    """Tool to manage a local git clone from an external git repository."""
+
     bin_name = "git"
     schemes = ("git+http", "git+https", "git+file")
     cmd: Git
@@ -179,7 +194,7 @@ class GitSync(BaseSync):
     def __init__(
         self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs: Any
     ) -> None:
-        """A git repository.
+        """Local git repository.
 
         Parameters
         ----------
@@ -276,6 +291,7 @@ class GitSync(BaseSync):
 
     @classmethod
     def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "GitSync":
+        """Clone a git repository from a pip-style URL."""
         url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, **kwargs)
 
@@ -289,6 +305,7 @@ class GitSync(BaseSync):
             return "initial"
 
     def set_remotes(self, overwrite: bool = False) -> None:
+        """Apply remotes in local repository to match GitSync's configuration."""
         remotes = self._remotes
         if isinstance(remotes, dict):
             for remote_name, git_remote_repo in remotes.items():
@@ -354,6 +371,7 @@ class GitSync(BaseSync):
         self.set_remotes(overwrite=True)
 
     def update_repo(self, set_remotes: bool = False, *args: Any, **kwargs: Any) -> None:
+        """Pull latest changes from git remote."""
         self.ensure_dir()
 
         if not pathlib.Path(self.dir / ".git").is_dir():
