@@ -1,4 +1,5 @@
-"""
+"""Run svn (subversion) commands directly against SVN working copy.
+
 .. admonition:: Busman's holiday?.
 
    We need to fill these SVN commands and their tests to exquisite perfection, like the
@@ -20,12 +21,16 @@ DepthLiteral = Union[Literal["infinity", "empty", "files", "immediates"], None]
 RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
-class SvnPropsetValueOrValuePathRequired(exc.LibVCSException):
+class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
+    """Raised when required parameters are not passed."""
+
     def __init__(self, *args: object):
         return super().__init__("Must enter a value or value_path")
 
 
 class Svn:
+    """Run commands directly against SVN working copy."""
+
     progress_callback: Optional[ProgressCallbackProtocol] = None
 
     def __init__(
@@ -56,6 +61,7 @@ class Svn:
         self.progress_callback = progress_callback
 
     def __repr__(self) -> str:
+        """Representation of an SVN command object."""
         return f"<Svn dir={self.dir}>"
 
     def run(
@@ -75,7 +81,8 @@ class Svn:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Run a command for this SVN working copy.
+
         Passing None to a subcommand option, the flag won't be passed unless otherwise
         stated.
 
@@ -229,7 +236,8 @@ class Svn:
         no_auto_props: Optional[bool] = None,
         parents: Optional[bool] = None,
     ) -> str:
-        """
+        """Stage an unversioned file to be pushed to repository next commit.
+
         Passing None means the flag won't be passed unless otherwise stated.
 
         Wraps `svn add
@@ -289,7 +297,8 @@ class Svn:
         show_passwords: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Manage stored authentication credentials.
+
         Wraps `svn auth
         <https://subversion.apache.org/faq.html#plaintext-passwords>`_.
 
@@ -327,7 +336,8 @@ class Svn:
         extensions: Optional[str] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Show authorship for file line-by-line.
+
         Wraps `svn blame
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.blame.html>`_.
 
@@ -386,36 +396,30 @@ class Svn:
         return self.run(["blame", *local_flags])
 
     def cat(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Output contents of files from working copy or repository URLs.
+
         Wraps `svn cat
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.cat.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["cat", *local_flags])
 
     def changelist(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Connect or disconnect files with a changelist.
+
         Wraps `svn changelist
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.changelist.html>`_ (cl).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["changelist", *local_flags])
 
     def cleanup(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Recursively clean up working copy of locks. Unblocks operations.
+
         Wraps `svn cleanup
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.cleanup.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
@@ -436,7 +440,8 @@ class Svn:
         include_externals: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Push changes from working copy to SVN repo.
+
         Wraps `svn commit
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.commit.html>`_ (ci).
 
@@ -489,75 +494,63 @@ class Svn:
         return self.run(["commit", *local_flags])
 
     def copy(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Copy file or dir in this SVN working copy or repo.
+
         Wraps `svn copy
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.copy.html>`_ (cp).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["copy", *local_flags])
 
     def delete(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Remove file from this SVN working copy or repo.
+
         Wraps `svn delete
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.delete.html>`_ (del, remove,
         rm).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["delete", *local_flags])
 
     def diff(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Return diff of two files or revisions.
+
         Wraps `svn diff
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.delete.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["diff", *local_flags])
 
     def export(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Export clean directory tree of working directory.
+
         Wraps `svn export
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.export.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["export", *local_flags])
 
     def help(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """SVN Help command.
+
         Wraps `svn help
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.help.html>`_ (?, h).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["help", *local_flags])
 
     def import_(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Import local directory into repository.
+
         Wraps `svn import
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.import.html>`_.
 
         Due to python limitation, .import isn't possible.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
@@ -576,12 +569,11 @@ class Svn:
         *args: Any,
         **kwargs: Any,
     ) -> str:
-        """
+        """Return info about this SVN repository.
+
         Wraps `svn info
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.info.html>`_.
 
-        Parameters
-        ----------
         targets : pathlib.Path
             `--targets ARG`: contents of file ARG as additional args
         xml : bool
@@ -619,12 +611,10 @@ class Svn:
         return self.run(["info", *local_flags])
 
     def _list(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """List files in SVN repository (without downloading them).
+
         Wraps `svn list
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.list.html>`_ (ls).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
@@ -636,7 +626,8 @@ class Svn:
         force: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Lock path or URLs for working copy or repository.
+
         Wraps `svn lock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.lock.html>`_.
 
@@ -662,109 +653,91 @@ class Svn:
         return self.run(["lock", *local_flags])
 
     def log(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Show logs from repository.
+
         Wraps `svn log
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.log.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["log", *local_flags])
 
     def merge(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Apply diffs between two places to SVN working copy.
+
         Wraps `svn merge
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.merge.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["merge", *local_flags])
 
     def mkdir(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Create directory in SVN working copy.
+
         Wraps `svn mkdir
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.mkdir.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["mkdir", *local_flags])
 
     def move(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Move a file in SVN working copy.
+
         Wraps `svn move
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.mkdir.html>`_ (mv, rename,
         ren).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["move", *local_flags])
 
     def patch(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Apply a patch to SVN working copy.
+
         Wraps `svn patch
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.patch.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["patch", *local_flags])
 
     def propdel(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Remove a property for this SVN working copy.
+
         Wraps `svn propdel
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propdel.html>`_ (pdel, pd).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["propdel", *local_flags])
 
     def propedit(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Change a property for this SVN working copy.
+
         Wraps `svn propedit
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propedit.html>`_ (pedit, pe).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["propedit", *local_flags])
 
     def propget(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Return a property for this SVN working copy.
+
         Wraps `svn propget
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propget.html>`_ (pget, pg).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
         return self.run(["propget", *local_flags])
 
     def proplist(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Return list of properties for this SVN working copy.
+
         Wraps `svn proplist
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.proplist.html>`_ (plist, pl).
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
@@ -780,7 +753,10 @@ class Svn:
         *args: Any,
         **kwargs: Any,
     ) -> str:
-        """
+        """Set property for this SVN working copy or a remote revision.
+
+        Note: Setting remote properties via --revprop does not work yet.
+
         Wraps `svn propset
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.propset.html>`_ (pset, ps).
 
@@ -817,7 +793,8 @@ class Svn:
         return self.run(["propset", *local_flags])
 
     def relocate(self, *, to_path: StrPath, **kwargs: Any) -> str:
-        """
+        """Set the SVN repository URL for this working copy.
+
         Wraps `svn relocate
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.relocate.html>`_.
 
@@ -853,7 +830,8 @@ class Svn:
         *args: Any,
         **kwargs: Any,
     ) -> str:
-        """
+        """Resolve conflicts with this SVN working copy.
+
         Wraps `svn resolve
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.resolve.html>`_.
 
@@ -894,7 +872,8 @@ class Svn:
         force: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Resolve this working copy's conflicted state.
+
         Wraps `svn resolved
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.resolved.html>`_.
 
@@ -942,7 +921,8 @@ class Svn:
         force: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Revert any changes to this SVN working copy.
+
         Wraps `svn revert
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.revert.html>`_.
 
@@ -989,7 +969,8 @@ class Svn:
         return self.run(["revert", *local_flags])
 
     def status(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Return status of this SVN working copy.
+
         Wraps `svn status
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.status.html>`_ (stat, st).
 
@@ -1013,7 +994,8 @@ class Svn:
         ignore_ancestry: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Switch working copy to a different SVN repo URL.
+
         Wraps `svn switch
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.switch.html>`_ (sw).
 
@@ -1055,7 +1037,8 @@ class Svn:
         force: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Unlock path or URL reserved by another user.
+
         Wraps `svn unlock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.unlock.html>`_.
 
@@ -1097,7 +1080,8 @@ class Svn:
         *args: Any,
         **kwargs: Any,
     ) -> str:
-        """
+        """Fetch latest changes to working copy.
+
         Wraps `svn update
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.update.html>`_ (up).
 
@@ -1133,12 +1117,10 @@ class Svn:
         return self.run(["update", *local_flags])
 
     def upgrade(self, *args: Any, **kwargs: Any) -> str:
-        """
+        """Upgrade working copy's metadata storage format.
+
         Wraps `svn upgrade
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.upgrade.html>`_.
-
-        Parameters
-        ----------
         """
         local_flags: list[str] = [*args]
 
