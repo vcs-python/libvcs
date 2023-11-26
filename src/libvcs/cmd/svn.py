@@ -686,18 +686,6 @@ class Svn:
 
         return self.run(["merge", *local_flags])
 
-    def mergelist(self, *args: Any, **kwargs: Any) -> str:
-        """
-        Wraps `svn mergelist
-        <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.mergelist.html>`_.
-
-        Parameters
-        ----------
-        """
-        local_flags: list[str] = [*args]
-
-        return self.run(["mergelist", *local_flags])
-
     def mkdir(self, *args: Any, **kwargs: Any) -> str:
         """
         Wraps `svn mkdir

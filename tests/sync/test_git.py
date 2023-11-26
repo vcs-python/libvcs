@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
-from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.git import (
     GitRemote,
     GitStatus,
@@ -169,7 +169,7 @@ def test_repo_update_handle_cases(
 )
 def test_repo_update_stash_cases(
     tmp_path: pathlib.Path,
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
     mocker: MockerFixture,
     has_untracked_files: bool,
     needs_stash: bool,
@@ -531,7 +531,7 @@ def test_remotes_update_repo(
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
     lazy_remote_dict: ProjectTestFactoryRemoteLazyExpected,
     lazy_remote_expected: ProjectTestFactoryRemoteLazyExpected,
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
 ) -> None:
     repo_name = "myrepo"
     remote_name = "myremote"
@@ -887,7 +887,7 @@ def test_GitRemote__from_stdout_c(fixture: str, expected_result: GitStatus) -> N
 
 
 def test_repo_git_remote_checkout(
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:

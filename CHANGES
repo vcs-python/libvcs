@@ -15,6 +15,26 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Breaking changes
+
+- Rename pytest plugin protocol typings (#450):
+
+  - `CreateProjectCallbackProtocol` -> `CreateRepoPostInitFn`
+  - `CreateProjectCallbackFixtureProtocol` -> `CreateRepoPytestFixtureFn`
+
+### Bug fixes
+
+- Remove unused command: `Svn.mergelist` (#450)
+- Fix `Git.config` docstring (#450)
+
+### Development
+
+- Add test for direct usage of `HgSync` (#450)
+- pytest-watcher, Add configuration (#450): 
+
+  - Run initially by default
+  - Skip post-save files from vim
+
 ## libvcs 0.25.1 (2023-11-23)
 
 ### Packaging
