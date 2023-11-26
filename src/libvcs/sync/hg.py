@@ -1,4 +1,4 @@
-"""Mercurial Repo object for libvcs.
+"""Tool to manage a local hg (Mercurial) working copy from a repository.
 
 .. todo::
 
@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class HgSync(BaseSync):
+    """Tool to manage a local hg (Mercurial) repository cloned from a remote one."""
+
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
     cmd: Hg
@@ -32,7 +34,7 @@ class HgSync(BaseSync):
         dir: StrPath,
         **kwargs: Any,
     ) -> None:
-        """A hg repository.
+        """Local Mercurial repository.
 
         Parameters
         ----------
@@ -44,6 +46,7 @@ class HgSync(BaseSync):
         self.cmd = Hg(dir=dir, progress_callback=self.progress_callback)
 
     def obtain(self, *args: Any, **kwargs: Any) -> None:
+        """Clone and update a Mercurial repository to this location."""
         self.cmd.clone(
             no_update=True,
             quiet=True,
@@ -55,9 +58,11 @@ class HgSync(BaseSync):
         )
 
     def get_revision(self) -> str:
+        """Get latest revision of this mercurial repository."""
         return self.run(["parents", "--template={rev}"])
 
     def update_repo(self, *args: Any, **kwargs: Any) -> None:
+        """Pull changes from remote Mercurial repository into this one."""
         if not pathlib.Path(self.dir / ".hg").exists():
             self.obtain()
             self.update_repo()
