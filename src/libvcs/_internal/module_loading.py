@@ -56,7 +56,7 @@ class ImportStringError(ImportError):
 
 
 def import_string(import_name: str, silent: bool = False) -> t.Any:
-    """Imports an object based on a string.
+    """Import an object based on a string.
 
     This is useful if you want to use import paths as endpoints or
     something similar.  An import path can  be specified either in dotted
