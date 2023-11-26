@@ -81,7 +81,7 @@ class ProgressCallbackProtocol(Protocol):
     """Callback to report subprocess communication."""
 
     def __call__(self, output: AnyStr, timestamp: datetime.datetime) -> None:
-        """Callback signature for subprocess communication."""
+        """Process progress for subprocess communication."""
         ...
 
 
@@ -126,7 +126,9 @@ def run(
     check_returncode: bool = True,
     callback: Optional[ProgressCallbackProtocol] = None,
 ) -> str:
-    """Run 'args' in a shell and return the combined contents of stdout and
+    """Run a command.
+
+    Run 'args' in a shell and return the combined contents of stdout and
     stderr (Blocking). Throws an exception if the command exits non-zero.
 
     Keyword arguments are passthrough to :class:`subprocess.Popen`.
