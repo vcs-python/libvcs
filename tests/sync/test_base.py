@@ -10,7 +10,8 @@ from libvcs._internal.shortcuts import create_project
 from libvcs.sync.base import BaseSync, convert_pip_url
 
 
-def test_repr() -> None:
+def test_repr_via_create_project() -> None:
+    """Test BaseSync repr, via create_project()."""
     repo = create_project(url="file://path/to/myrepo", dir="/hello/", vcs="git")
 
     str_repo = str(repo)
@@ -20,6 +21,7 @@ def test_repr() -> None:
 
 
 def test_repr_base() -> None:
+    """Test BaseSync constructor and repr."""
     repo = BaseSync(url="file://path/to/myrepo", dir="/hello/")
 
     str_repo = str(repo)
@@ -29,6 +31,7 @@ def test_repr_base() -> None:
 
 
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path) -> None:
+    """Test BaseDir.ensure_dir()."""
     projects_path = tmp_path / "projects_path"  # doesn't exist yet
     dir = projects_path / "myrepo"
     repo = BaseSync(url="file://path/to/myrepo", dir=dir)
@@ -38,6 +41,7 @@ def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path) -> None:
 
 
 def test_convert_pip_url() -> None:
+    """Test convert_pip_url()."""
     url, rev = convert_pip_url(pip_url="git+file://path/to/myrepo@therev")
 
     assert url, rev == "therev"
@@ -49,6 +53,8 @@ def test_progress_callback(
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
 ) -> None:
+    """Test GitSync with progress callback."""
+
     def progress_cb(output: AnyStr, timestamp: datetime.datetime) -> None:
         sys.stdout.write(str(output))
         sys.stdout.flush()
