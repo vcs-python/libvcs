@@ -7,16 +7,42 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.sync.hg import HgSync
 
 if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 
-def test_repo_mercurial(
+def test_hg_sync(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
     hg_remote_repo: pathlib.Path,
 ) -> None:
+    """Test HgSync."""
+    repo_name = "my_mercurial_project"
+
+    mercurial_repo = HgSync(
+        url=f"file://{hg_remote_repo}",
+        dir=projects_path / repo_name,
+    )
+
+    run(["hg", "init", mercurial_repo.repo_name], cwd=tmp_path)
+
+    mercurial_repo.update_repo()
+
+    test_repo_revision = run(
+        ["hg", "parents", "--template={rev}"], cwd=projects_path / repo_name
+    )
+
+    assert mercurial_repo.get_revision() == test_repo_revision
+
+
+def test_repo_mercurial_via_create_project(
+    tmp_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    hg_remote_repo: pathlib.Path,
+) -> None:
+    """Test HgSync via create_project()."""
     repo_name = "my_mercurial_project"
 
     mercurial_repo = create_project(
