@@ -1,4 +1,5 @@
-"""
+"""Run hg (Mercurial) commands directly against a local mercurial repo.
+
 .. Note::
 
    At a Mercurial shop? Can you help us jimmy this module into the next `Sunbeam toaster
@@ -19,6 +20,8 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class HgColorType(enum.Enum):
+    """CLI Color enum for Mercurial."""
+
     boolean = "boolean"
     always = "always"
     auto = "auto"
@@ -27,6 +30,8 @@ class HgColorType(enum.Enum):
 
 
 class HgPagerType(enum.Enum):
+    """CLI Pagination enum for Mercurial."""
+
     boolean = "boolean"
     always = "always"
     auto = "auto"
@@ -34,6 +39,8 @@ class HgPagerType(enum.Enum):
 
 
 class Hg:
+    """Run commands directly on a Mercurial repository."""
+
     progress_callback: Optional[ProgressCallbackProtocol] = None
 
     def __init__(
@@ -64,6 +71,7 @@ class Hg:
         self.progress_callback = progress_callback
 
     def __repr__(self) -> str:
+        """Representation of Mercurial Repo command object."""
         return f"<Hg dir={self.dir}>"
 
     def run(
@@ -89,7 +97,8 @@ class Hg:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """
+        """Run a command for this Mercurial repository.
+
         Passing None to a subcommand option, the flag won't be passed unless otherwise
         stated.
 
