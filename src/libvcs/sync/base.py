@@ -1,4 +1,4 @@
-"""Base class for VCS Project plugins."""
+"""Foundational tools to set up a VCS manager in libvcs.sync."""
 import logging
 import pathlib
 from collections.abc import Sequence
@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class VCSLocation(NamedTuple):
+    """Generic VCS Location (URL and optional revision)."""
+
     url: str
     rev: Optional[str]
 
@@ -53,7 +55,8 @@ class BaseSync:
         progress_callback: Optional[ProgressCallbackProtocol] = None,
         **kwargs: Any,
     ) -> None:
-        r"""
+        r"""Initialize a tool to manage a local VCS Checkout, Clone, Copy, or Work tree.
+
         Parameters
         ----------
         progress_callback : func
@@ -120,10 +123,12 @@ class BaseSync:
 
     @property
     def repo_name(self) -> str:
+        """Return the short name of a repo checkout."""
         return self.dir.stem
 
     @classmethod
     def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseSync":
+        """Create synchronization object from pip-style URL."""
         url, rev = convert_pip_url(pip_url)
         self = cls(url=url, rev=rev, **kwargs)
 
@@ -192,10 +197,13 @@ class BaseSync:
         return True
 
     def update_repo(self, *args: Any, **kwargs: Any) -> None:
+        """Pull latest changes to here from remote repository."""
         raise NotImplementedError
 
     def obtain(self, *args: Any, **kwargs: Any) -> None:
+        """Checkout initial VCS repository or working copy from remote repository."""
         raise NotImplementedError
 
     def __repr__(self) -> str:
+        """Representation of a VCS management object."""
         return f"<{self.__class__.__name__} {self.repo_name}>"
