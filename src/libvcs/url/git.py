@@ -1,6 +1,6 @@
-"""This module is an all-in-one parser and validator for Git URLs.
+"""Detect, parse, and validate git URLs.
 
-- Detection: :meth:`GitURL.is_valid()`
+- Detect: :meth:`GitURL.is_valid()`
 - Parse:
 
   compare to :class:`urllib.parse.ParseResult`
@@ -269,6 +269,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
+        """Initialize GitURL params into attributes."""
         url = self.url
         sorted_maps = dict(
             sorted(
@@ -385,7 +386,7 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     def to_url(self) -> str:
-        """Exports a pip-compliant URL.
+        """Export a pip-compliant URL.
 
         Examples
         --------
