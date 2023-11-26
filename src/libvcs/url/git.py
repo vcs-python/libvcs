@@ -1,6 +1,6 @@
-"""This module is an all-in-one parser and validator for Git URLs.
+"""Detect, parse, and validate git URLs.
 
-- Detection: :meth:`GitURL.is_valid()`
+- Detect: :meth:`GitURL.is_valid()`
 - Parse:
 
   compare to :class:`urllib.parse.ParseResult`
@@ -269,6 +269,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
+        """Initialize GitURL params into attributes."""
         url = self.url
         sorted_maps = dict(
             sorted(
@@ -299,7 +300,6 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> GitBaseURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
         True
 
@@ -335,7 +335,6 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> git_url = GitBaseURL(url='git@github.com:vcs-python/libvcs.git')
 
         >>> git_url
@@ -387,11 +386,10 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     def to_url(self) -> str:
-        """Exports a pip-compliant URL.
+        """Export a pip-compliant URL.
 
         Examples
         --------
-
         >>> git_url = GitPipURL(
         ...     url='git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git'
         ... )
@@ -444,7 +442,6 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         Will **not** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
 
         >>> GitPipURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
@@ -502,7 +499,6 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         **Will** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
 
         >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
@@ -588,7 +584,6 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         SSH style URL:
 
         >>> git_url = GitURL(url='git@github.com:vcs-python/libvcs')
@@ -623,9 +618,8 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         >>> git_url.to_url()
         'git+ssh://gitlab.com/vcs-python/libvcs'
 
-        See also
+        See Also
         --------
-
         :meth:`GitBaseURL.to_url`, :meth:`GitPipURL.to_url`
         """
         return super().to_url()

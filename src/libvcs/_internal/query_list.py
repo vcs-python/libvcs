@@ -14,7 +14,7 @@ no_arg = object()
 
 
 class MultipleObjectsReturned(Exception):
-    """The requested object does not exist"""
+    """The requested object does not exist."""
 
 
 class ObjectDoesNotExist(Exception):
@@ -132,7 +132,7 @@ class LookupProtocol(t.Protocol):
         data: t.Union[str, list[str], Mapping[str, str]],
         rhs: t.Union[str, list[str], Mapping[str, str], re.Pattern[str]],
     ) -> bool:
-        """Callback for :class:`QueryList` filtering operators."""
+        """Return callback for :class:`QueryList` filtering operators."""
         ...
 
 

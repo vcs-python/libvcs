@@ -1,3 +1,4 @@
+"""Tests for GitURL."""
 import typing
 
 import pytest
@@ -8,6 +9,8 @@ from libvcs.url.git import DEFAULT_RULES, PIP_DEFAULT_RULES, GitBaseURL, GitURL
 
 
 class GitURLFixture(typing.NamedTuple):
+    """Test fixture for GitURL."""
+
     url: str
     is_valid: bool
     git_url: GitURL
@@ -81,6 +84,7 @@ def test_git_url(
     git_url: GitURL,
     git_repo: GitSync,
 ) -> None:
+    """Tests for GitURL."""
     url = url.format(local_repo=git_repo.dir)
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
@@ -89,10 +93,14 @@ def test_git_url(
 
 
 class GitURLKwargs(typing.TypedDict):
+    """GitURL with keyword arguments."""
+
     url: str
 
 
 class GitURLKwargsFixture(typing.NamedTuple):
+    """Test fixture for GitURL with keyword arguments."""
+
     url: str
     is_valid: bool
     git_url_kwargs: GitURLKwargs
@@ -139,6 +147,8 @@ def test_git_url_extension_pip(
     git_url_kwargs: GitURLKwargs,
     git_repo: GitSync,
 ) -> None:
+    """Test GitURL external extension from pip."""
+
     class GitURLWithPip(GitBaseURL):
         rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
@@ -159,6 +169,8 @@ def test_git_url_extension_pip(
 
 
 class ToURLFixture(typing.NamedTuple):
+    """Test fixture for GitURL.to_url()."""
+
     git_url: GitURL
     expected: str
 
@@ -213,13 +225,15 @@ def test_git_to_url(
     git_url: GitURL,
     git_repo: GitSync,
 ) -> None:
-    """Test GitURL.to_url()"""
+    """Test GitURL.to_url()."""
     git_url.url = git_url.url.format(local_repo=git_repo.dir)
 
     assert git_url.to_url() == expected
 
 
 class RevFixture(typing.NamedTuple):
+    """Test fixture for GitURL with revisions."""
+
     git_url_kwargs: GitURLKwargs
     expected: typing.Optional[str]
     # Expected revision / branch / tag
@@ -252,6 +266,8 @@ def test_git_revs(
     expected: str,
     git_url_kwargs: GitURLKwargs,
 ) -> None:
+    """Tests for GitURL with revisions."""
+
     class GitURLWithPip(GitURL):
         rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}

@@ -1,3 +1,4 @@
+"""Tests for libvcs pytest plugin."""
 import pathlib
 import shutil
 import textwrap
@@ -13,6 +14,7 @@ def test_create_git_remote_repo(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
+    """Tests for create_git_remote_repo pytest fixture."""
     git_remote_1 = create_git_remote_repo()
     git_remote_2 = create_git_remote_repo()
 
@@ -25,6 +27,7 @@ def test_create_svn_remote_repo(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
+    """Tests for create_svn_remote_repo pytest fixture."""
     svn_remote_1 = create_svn_remote_repo()
     svn_remote_2 = create_svn_remote_repo()
 
@@ -35,6 +38,7 @@ def test_plugin(
     pytester: pytest.Pytester,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Tests for libvcs pytest plugin at large."""
     # Initialize variables
     pytester.plugins = ["pytest_plugin"]
     pytester.makefile(

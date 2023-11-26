@@ -1,3 +1,4 @@
+"""Tests for SVNUrl."""
 import typing
 
 import pytest
@@ -8,6 +9,8 @@ from libvcs.url.svn import DEFAULT_RULES, PIP_DEFAULT_RULES, SvnBaseURL, SvnURL
 
 
 class SvnURLFixture(typing.NamedTuple):
+    """Test fixture for SvnURL."""
+
     url: str
     is_valid: bool
     svn_url: SvnURL
@@ -70,6 +73,7 @@ def test_svn_url(
     svn_url: SvnURL,
     svn_repo: SvnSync,
 ) -> None:
+    """Test SvnURL."""
     url = url.format(local_repo=svn_repo.dir)
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
@@ -78,10 +82,14 @@ def test_svn_url(
 
 
 class SvnURLKwargs(typing.TypedDict):
+    """SvnURL dictionary with keyword arguments."""
+
     url: str
 
 
 class SvnURLKwargsFixture(typing.NamedTuple):
+    """Test fixture for SvnURL with keyword arguments."""
+
     url: str
     is_valid: bool
     svn_url_kwargs: SvnURLKwargs
@@ -122,6 +130,8 @@ def test_svn_url_extension_pip(
     svn_url_kwargs: SvnURLKwargs,
     svn_repo: SvnSync,
 ) -> None:
+    """Test SvnURL external extension from pip."""
+
     class SvnURLWithPip(SvnURL):
         rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
@@ -145,6 +155,8 @@ def test_svn_url_extension_pip(
 
 
 class ToURLFixture(typing.NamedTuple):
+    """Test fixture for SVN URL conversion."""
+
     svn_url: SvnURL
     expected: str
 
@@ -201,7 +213,7 @@ def test_svn_to_url(
     svn_url: SvnURL,
     svn_repo: SvnSync,
 ) -> None:
-    """Test SvnURL.to_url()"""
+    """Test SvnURL.to_url()."""
     svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
 
     assert svn_url.to_url() == expected

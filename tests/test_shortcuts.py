@@ -1,3 +1,4 @@
+"""Tests for libvcs.shortcuts."""
 import pathlib
 from typing import Literal, Optional, TypedDict, TypeVar, Union
 
@@ -11,6 +12,8 @@ from libvcs.exc import InvalidVCS
 
 
 class CreateProjectKwargsDict(TypedDict, total=False):
+    """Test fixtures for create_project()."""
+
     url: str
     dir: StrPath
     vcs: Literal["git"]
@@ -51,6 +54,7 @@ def test_create_project(
     repo_class: type[Union[SvnSync, GitSync, HgSync]],
     raises_exception: Union[None, Union[type[E], tuple[type[E], ...]]],
 ) -> None:
+    """Tests for create_project()."""
     # add parent_dir via fixture
     repo_dict["dir"] = tmp_path / "repo_name"
 

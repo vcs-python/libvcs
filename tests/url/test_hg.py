@@ -1,3 +1,4 @@
+"""Tests for mercurial URL module."""
 import typing
 
 import pytest
@@ -8,6 +9,8 @@ from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgBaseURL, HgURL
 
 
 class HgURLFixture(typing.NamedTuple):
+    """Test fixture for HgURL."""
+
     url: str
     is_valid: bool
     hg_url: HgURL
@@ -47,6 +50,7 @@ def test_hg_url(
     hg_url: HgURL,
     hg_repo: HgSync,
 ) -> None:
+    """Test HgURL."""
     url = url.format(local_repo=hg_repo.dir)
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
 
@@ -55,10 +59,14 @@ def test_hg_url(
 
 
 class HgURLKwargs(typing.TypedDict):
+    """HgURL with keyword arguments."""
+
     url: str
 
 
 class HgURLKwargsFixture(typing.NamedTuple):
+    """Test fixture for HgURL w/ extra keyword arguments."""
+
     url: str
     is_valid: bool
     hg_url_kwargs: HgURLKwargs
@@ -105,6 +113,8 @@ def test_hg_url_extension_pip(
     hg_url_kwargs: HgURLKwargs,
     hg_repo: HgSync,
 ) -> None:
+    """Tests for HgURL with pip rules."""
+
     class HgURLWithPip(HgURL):
         rule_map = RuleMap(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
@@ -125,6 +135,8 @@ def test_hg_url_extension_pip(
 
 
 class ToURLFixture(typing.NamedTuple):
+    """Test fixture for HgURL.to_url()."""
+
     hg_url: HgURL
     expected: str
 
@@ -181,7 +193,7 @@ def test_hg_to_url(
     hg_url: HgURL,
     hg_repo: HgSync,
 ) -> None:
-    """Test HgURL.to_url()"""
+    """Test HgURL.to_url()."""
     hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
 
     assert hg_url.to_url() == expected

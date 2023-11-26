@@ -1,4 +1,4 @@
-"""Invocable :mod:`subprocess` wrapper.
+r"""Invocable :mod:`subprocess` wrapper.
 
 Defer running a subprocess, such as by handing to an executor.
 
@@ -8,7 +8,6 @@ This is an internal API not covered by versioning policy.
 
 Examples
 --------
-
 - :class:`~SubprocessCommand`: Wraps :class:`subprocess.Popen` and
   :func:`subprocess.run` in a :func:`~dataclasses.dataclass`.
 
@@ -19,7 +18,7 @@ Examples
   ...    ['echo', 'hi'],
   ...    capture_output=True, universal_newlines=True
   ... ).stdout
-  'hi\\n'
+  'hi\n'
 
   With this:
 
@@ -27,7 +26,7 @@ Examples
   >>> cmd.args
   ['echo', 'hi']
   >>> cmd.run(capture_output=True, universal_newlines=True).stdout
-  'hi\\n'
+  'hi\n'
 
   Tweak params before invocation:
 
@@ -36,7 +35,7 @@ Examples
   >>> cmd.args
   ['echo', 'hello']
   >>> cmd.run(capture_output=True, universal_newlines=True).stdout
-  'hello\\n'
+  'hello\n'
 """
 import dataclasses
 import subprocess

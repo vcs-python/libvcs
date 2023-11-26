@@ -1,4 +1,4 @@
-"""Tests for libvcs git repos."""
+"""Tests for libvcs GitSync."""
 import datetime
 import pathlib
 import random
@@ -56,7 +56,7 @@ def test_repo_git_obtain_initial_commit_repo(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
-    """initial commit repos return 'initial'.
+    """Initial commit repos return 'initial'.
 
     note: this behaviors differently from git(1)'s use of the word "bare".
     running `git rev-parse --is-bare-repository` would return false.
@@ -100,6 +100,7 @@ def test_repo_git_obtain_full(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
+    """Test GitSync.obtain()."""
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
 
@@ -138,6 +139,7 @@ def test_repo_update_handle_cases(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
+    """Test GitSync.update_repo() edgecases."""
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
 
@@ -175,6 +177,7 @@ def test_repo_update_stash_cases(
     needs_stash: bool,
     has_remote_changes: bool,
 ) -> None:
+    """Test GitSync.update_repo() stash cases."""
     git_remote_repo = create_git_remote_repo()
 
     git_repo: GitSync = GitSync(
@@ -247,6 +250,8 @@ def test_progress_callback(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
+    """Test GitSync with progress callback."""
+
     def progress_callback_spy(output: str, timestamp: datetime.datetime) -> None:
         assert isinstance(output, str)
         assert isinstance(timestamp, datetime.datetime)
@@ -417,6 +422,7 @@ def test_remotes(
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
     lazy_remote_expected: ProjectTestFactoryRemoteLazyExpected,
 ) -> None:
+    """Tests GitSync Remotes."""
     repo_name = "myrepo"
     remote_name = "myremote"
     remote_url = "https://localhost/my/git/repo.git"
@@ -533,6 +539,7 @@ def test_remotes_update_repo(
     lazy_remote_expected: ProjectTestFactoryRemoteLazyExpected,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
 ) -> None:
+    """Tests GitSync with updated remotes."""
     repo_name = "myrepo"
     remote_name = "myremote"
     remote_url = "https://localhost/my/git/repo.git"
@@ -555,6 +562,7 @@ def test_remotes_update_repo(
 
 
 def test_git_get_url_and_rev_from_pip_url() -> None:
+    """Test GitSync via pip URL."""
     pip_url = "git+ssh://git@bitbucket.example.com:7999/PROJ/repo.git"
 
     url, rev = git_convert_pip_url(pip_url)
@@ -605,6 +613,7 @@ def test_remotes_preserves_git_ssh(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
+    """Test GitSync preserves Git SSH."""
     # Regression test for #14
     repo_name = "myexamplegit"
     dir = projects_path / repo_name
@@ -647,6 +656,7 @@ def test_private_ssh_format(
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
+    """Test GitSync with private ssh repo format."""
     with pytest.raises(exc.LibVCSException) as excinfo:
         create_project(
             url=git_convert_pip_url(
@@ -658,7 +668,8 @@ def test_private_ssh_format(
         excinfo.match(r".*is a malformed.*")
 
 
-def test_ls_remotes(git_repo: GitSync) -> None:
+def test_git_sync_remotes(git_repo: GitSync) -> None:
+    """Test GitSync.remotes()."""
     remotes = git_repo.remotes()
 
     assert "origin" in remotes
@@ -668,10 +679,6 @@ def test_ls_remotes(git_repo: GitSync) -> None:
     assert git_repo.remotes()["origin"].name == "origin"
 
 
-def test_get_remotes(git_repo: GitSync) -> None:
-    assert "origin" in git_repo.remotes()
-
-
 @pytest.mark.parametrize(
     "repo_name,new_repo_url",
     [
@@ -679,6 +686,7 @@ def test_get_remotes(git_repo: GitSync) -> None:
     ],
 )
 def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> None:
+    """Test GitSync.set_remote()."""
     mynewremote = git_repo.set_remote(name=repo_name, url="file:///")
 
     assert "file:///" in mynewremote.fetch_url, "set_remote returns remote"
@@ -710,12 +718,14 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
 
 
 def test_get_git_version(git_repo: GitSync) -> None:
+    """Test get_git_version()."""
     expected_version = git_repo.run(["--version"]).replace("git version ", "")
     assert git_repo.get_git_version()
     assert expected_version == git_repo.get_git_version()
 
 
 def test_get_current_remote_name(git_repo: GitSync) -> None:
+    """Test retrieval of current remote."""
     assert git_repo.get_current_remote_name() == "origin"
 
     new_branch = "another-branch-with-no-upstream"
@@ -750,6 +760,7 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
 
 
 def test_GitRemote_from_stdout() -> None:
+    """Test GitStatus.from_stdout()."""
     FIXTURE_A = textwrap.dedent(
         """
         # branch.oid d4ccd4d6af04b53949f89fbf0cdae13719dc5a08
@@ -766,6 +777,8 @@ def test_GitRemote_from_stdout() -> None:
 
 
 class GitBranchComplexResult(t.TypedDict):
+    """Test fixture for GitBranch."""
+
     branch_oid: str
     branch_head: str
     branch_upstream: str
@@ -822,10 +835,13 @@ class GitBranchComplexResult(t.TypedDict):
     ],
 )
 def test_GitRemote__from_stdout_b(fixture: str, expected_result: GitStatus) -> None:
+    """Test GitStatus.from_stdout()."""
     assert GitStatus.from_stdout(textwrap.dedent(fixture)) == expected_result
 
 
 class GitBranchResult(t.TypedDict):
+    """Test dictionary for GitStatus branch result."""
+
     branch_ab: str
     branch_ahead: str
     branch_behind: str
@@ -883,6 +899,7 @@ class GitBranchResult(t.TypedDict):
     ],
 )
 def test_GitRemote__from_stdout_c(fixture: str, expected_result: GitStatus) -> None:
+    """Test for GitStatus.from_stdout()."""
     assert expected_result == GitStatus.from_stdout(textwrap.dedent(fixture))
 
 
@@ -891,6 +908,7 @@ def test_repo_git_remote_checkout(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
+    """Tests for create_git_remote_repo w/ remote checkout."""
     git_server = create_git_remote_repo()
     git_repo_checkout_dir = projects_path / "my_git_checkout"
     git_repo = GitSync(dir=git_repo_checkout_dir, url=git_server.as_uri())

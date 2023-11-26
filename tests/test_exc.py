@@ -6,6 +6,7 @@ from libvcs import exc
 
 
 def test_command_error() -> None:
+    """Test CommandError exception."""
     command = None
     with pytest.raises(exc.CommandError) as e:
         returncode = 0

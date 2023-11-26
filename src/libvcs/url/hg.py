@@ -1,6 +1,6 @@
-"""This module is an all-in-one parser and validator for Mercurial URLs.
+"""Detect, parse, and validate hg (Mercurial) URLs.
 
-- Detection: :meth:`HgURL.is_valid()`
+- Detect: :meth:`HgURL.is_valid()`
 - Parse: :class:`HgURL`
 
   compare to :class:`urllib.parse.ParseResult`
@@ -11,10 +11,10 @@
 
 .. Note::
 
-   Do you use Mercurial at your job or project? This module welcomes a champion /
-   maintainer to assure support is top-tier. Stop by the `project tracker
-   <https://github.com/vcs-python/libvcs>`_ to make yourself known. We won't stabilize
-   any APIs until we're satisfied support is "by the book" and is bullet proofed.
+   Use Mercurial at your job or project? This module welcomes a champion / maintainer to
+   assure support is top-tier. Stop by the `project tracker
+   <https://github.com/vcs-python/libvcs>`_ and make yourself known. We won't stabilize
+   any APIs until we're satisfied support is up to snuff and is bullet proofed.
 """
 
 import dataclasses
@@ -207,6 +207,7 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
+        """Initialize GitURL params into attributes."""
         url = self.url
         for rule in self.rule_map.values():
             match = re.match(rule.pattern, url)
@@ -227,7 +228,6 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> HgBaseURL.is_valid(
         ...     url='https://hg.mozilla.org/mozilla-central'
         ... )
@@ -252,7 +252,6 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> hg_url = HgBaseURL(url='https://hg.mozilla.org/mozilla-central')
 
         >>> hg_url
@@ -350,7 +349,6 @@ class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> HgPipURL.is_valid(
         ...     url='hg+https://hg.mozilla.org/mozilla-central'
         ... )
@@ -369,7 +367,6 @@ class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> hg_url = HgPipURL(url='hg+https://hg.mozilla.org/mozilla-central')
 
         >>> hg_url
@@ -434,7 +431,6 @@ class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         **Will** match normal ``hg(1)`` URLs, use :meth:`HgURL.is_valid` for that.
 
         >>> HgURL.is_valid(url='https://hg.mozilla.org/mozilla-central/mozilla-central')
@@ -519,7 +515,6 @@ class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         SSH style URL:
 
         >>> hg_url = HgURL(url='hg@hg.mozilla.org:mozilla-central/browser')
@@ -560,9 +555,8 @@ class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         >>> hg_url.to_url()
         'hg+ssh://localhost/mozilla-central/image'
 
-        See also
+        See Also
         --------
-
         :meth:`HgBaseURL.to_url`, :meth:`HgPipURL.to_url`
         """
         return super().to_url()

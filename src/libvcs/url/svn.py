@@ -1,6 +1,6 @@
-"""This module is an all-in-one parser and validator for Subversion URLs.
+"""Detect, parse, and validate SVN (Subversion) URLs.
 
-- Detection: :meth:`SvnURL.is_valid()`
+- Detect: :meth:`SvnURL.is_valid()`
 - Parse: :class:`SvnURL`
 
   compare to :class:`urllib.parse.ParseResult`
@@ -191,6 +191,7 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
+        """Initialize SvnURL params into attributes."""
         url = self.url
         for rule in self.rule_map.values():
             match = re.match(rule.pattern, url)
@@ -211,7 +212,6 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> SvnBaseURL.is_valid(
         ...     url='svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository'
         ... )
@@ -233,7 +233,6 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> svn_url = SvnBaseURL(
         ...     url='svn+ssh://my-username@my-server/vcs-python/libvcs'
         ... )
@@ -292,7 +291,6 @@ class SvnPipURL(SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> SvnPipURL.is_valid(
         ...     url='svn+https://svn.project.org/project-central'
         ... )
@@ -311,7 +309,6 @@ class SvnPipURL(SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         >>> svn_url = SvnPipURL(url='svn+https://svn.project.org/project-central')
 
         >>> svn_url
@@ -365,7 +362,6 @@ class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         **Will** match normal ``svn(1)`` URLs, use :meth:`SvnURL.is_valid` for that.
 
         >>> SvnURL.is_valid(
@@ -451,7 +447,6 @@ class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
         Examples
         --------
-
         SSH style URL:
 
         >>> svn_url = SvnURL(url='svn@svn.project.org:project-central/browser')
@@ -492,9 +487,8 @@ class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
         >>> svn_url.to_url()
         'svn+ssh://localhost/project-central/image'
 
-        See also
+        See Also
         --------
-
         :meth:`SvnBaseURL.to_url`, :meth:`SvnPipURL.to_url`
         """
         return super().to_url()

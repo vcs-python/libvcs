@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Subversion object for libvcs.
+"""Tool to manage a local SVN (Subversion) working copy from a repository.
 
 .. todo::
 
@@ -27,11 +27,15 @@ logger = logging.getLogger(__name__)
 
 
 class SvnUrlRevFormattingError(ValueError):
+    """Raised when SVN Revision output is not in the expected format."""
+
     def __init__(self, data: str, *args: object):
         return super().__init__(f"Badly formatted data: {data!r}")
 
 
 class SvnSync(BaseSync):
+    """Tool to manage a local SVN (Subversion) working copy from a SVN repository."""
+
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
     cmd: Svn
@@ -43,7 +47,7 @@ class SvnSync(BaseSync):
         dir: StrPath,
         **kwargs: Any,
     ) -> None:
-        """A svn repository.
+        """Working copy of a SVN repository.
 
         Parameters
         ----------
@@ -78,6 +82,7 @@ class SvnSync(BaseSync):
         return args
 
     def obtain(self, quiet: Optional[bool] = None, *args: Any, **kwargs: Any) -> None:
+        """Check out a working copy from a SVN repository."""
         url, rev = self.url, self.rev
 
         if rev is not None:
@@ -104,8 +109,7 @@ class SvnSync(BaseSync):
         return int(dict(info_list)["Revision"])
 
     def get_revision(self, location: Optional[str] = None) -> int:
-        """Return maximum revision for all files under a given location"""
-
+        """Return maximum revision for all files under a given location."""
         if not location:
             location = self.url
 
@@ -139,6 +143,7 @@ class SvnSync(BaseSync):
     def update_repo(
         self, dest: Optional[str] = None, *args: Any, **kwargs: Any
     ) -> None:
+        """Fetch changes from SVN repository to local working copy."""
         self.ensure_dir()
         if pathlib.Path(self.dir / ".svn").exists():
             self.cmd.checkout(

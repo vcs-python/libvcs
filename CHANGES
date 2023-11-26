@@ -29,11 +29,16 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
+- ci: Add pydocstyle rule to ruff (#449)
 - Add test for direct usage of `HgSync` (#450)
 - pytest-watcher, Add configuration (#450): 
 
   - Run initially by default
   - Skip post-save files from vim
+
+### Documentation
+
+- Add docstrings to functions, methods, classes, and packages (#449)
 
 ## libvcs 0.25.1 (2023-11-23)
 
