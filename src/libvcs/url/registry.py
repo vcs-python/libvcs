@@ -1,3 +1,4 @@
+"""Registry of VCS URL Parsers for libvcs."""
 import typing as t
 
 from libvcs._internal.module_loading import import_string
@@ -18,6 +19,8 @@ DEFAULT_PARSERS: "ParserLazyMap" = {
 
 
 class ParserMatch(t.NamedTuple):
+    """Match or hit that suggests or identifies a VCS by URL Pattern."""
+
     vcs: str
     """VCS system matched"""
     match: URLProtocol
@@ -39,6 +42,7 @@ class VCSRegistry:
     def match(
         self, url: str, is_explicit: t.Optional[bool] = None
     ) -> list["ParserMatch"]:
+        """Return a list of potential VCS' identified for a given URL."""
         matches: list[ParserMatch] = []
         for vcs, parser in self.parser_map.items():
             if parser.is_valid(url=url, is_explicit=is_explicit):
