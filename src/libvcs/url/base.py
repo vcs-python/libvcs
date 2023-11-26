@@ -1,3 +1,4 @@
+"""Foundational tools to detect, parse, and validate VCS URLs."""
 import dataclasses
 from collections.abc import Iterator
 from re import Pattern
@@ -16,10 +17,12 @@ class URLProtocol(Protocol):
         ...
 
     def to_url(self) -> str:
+        """Output to a command friendly URL for VCS."""
         ...
 
     @classmethod
     def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Return True if URL is valid for this parser."""
         ...
 
 
@@ -207,13 +210,16 @@ class RuleMap(SkipDefaultFieldsReprMixin):
             self._rule_map[cls.label] = cls
 
     def unregister(self, label: str) -> None:
+        """Remove a URL rule."""
         if label in self._rule_map:
             del self._rule_map[label]
 
     def __iter__(self) -> Iterator[str]:
+        """Iterate over map of URL rules."""
         return self._rule_map.__iter__()
 
     def values(
         self,  # https://github.com/python/typing/discussions/1033
     ) -> "dict_values[str, Rule]":
+        """Return list of URL rules."""
         return self._rule_map.values()
