@@ -1586,10 +1586,10 @@ class Git:
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
-        """Status of working tree. Wraps
-        `git status <https://git-scm.com/docs/git-status>`_.
+        """Get and set repo configuration.
 
-        `git ls-files` has similar params (e.g. `z`)
+        Status of working tree. Wraps
+        `git config <https://git-scm.com/docs/git-config>`_.
 
         Parameters
         ----------
