@@ -50,9 +50,9 @@ class RuleMap(SkipDefaultFieldsReprMixin):
     _rule_map: dict[str, Rule] = dataclasses.field(default_factory=dict)
 
     def register(self, cls: Rule) -> None:
-        r"""
+        r"""Add a new URL rule.
 
-        .. currentmodule:: libvcs.url.git.
+        .. currentmodule:: libvcs.url.git
 
         >>> from dataclasses import dataclass
         >>> from libvcs.url.git import GitURL, GitBaseURL
