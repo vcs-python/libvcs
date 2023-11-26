@@ -1,6 +1,6 @@
-"""This module is an all-in-one parser and validator for Subversion URLs.
+"""Detect, parse, and validate SVN (Subversion) URLs.
 
-- Detection: :meth:`SvnURL.is_valid()`
+- Detect: :meth:`SvnURL.is_valid()`
 - Parse: :class:`SvnURL`
 
   compare to :class:`urllib.parse.ParseResult`
@@ -191,6 +191,7 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
+        """Initialize SvnURL params into attributes."""
         url = self.url
         for rule in self.rule_map.values():
             match = re.match(rule.pattern, url)
