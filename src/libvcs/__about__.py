@@ -1,3 +1,4 @@
+"""Metadata package for libvcs."""
 __title__ = "libvcs"
 __package_name__ = "libvcs"
 __description__ = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
