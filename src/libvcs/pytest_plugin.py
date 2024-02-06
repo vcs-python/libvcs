@@ -30,13 +30,16 @@ class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
 
 
 skip_if_git_missing = pytest.mark.skipif(
-    not shutil.which("git"), reason="git is not available",
+    not shutil.which("git"),
+    reason="git is not available",
 )
 skip_if_svn_missing = pytest.mark.skipif(
-    not shutil.which("svn"), reason="svn is not available",
+    not shutil.which("svn"),
+    reason="svn is not available",
 )
 skip_if_hg_missing = pytest.mark.skipif(
-    not shutil.which("hg"), reason="hg is not available",
+    not shutil.which("hg"),
+    reason="hg is not available",
 )
 
 
@@ -44,7 +47,8 @@ class RandomStrSequence:
     """Create a random string sequence."""
 
     def __init__(
-        self, characters: str = "abcdefghijklmnopqrstuvwxyz0123456789_",
+        self,
+        characters: str = "abcdefghijklmnopqrstuvwxyz0123456789_",
     ) -> None:
         self.characters: str = characters
 
@@ -163,7 +167,8 @@ def hgconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
 
 @pytest.fixture(scope="function")
 def projects_path(
-    user_path: pathlib.Path, request: pytest.FixtureRequest,
+    user_path: pathlib.Path,
+    request: pytest.FixtureRequest,
 ) -> pathlib.Path:
     """User's local checkouts and clones. Emphemeral directory."""
     dir = user_path / "projects"
@@ -178,7 +183,8 @@ def projects_path(
 
 @pytest.fixture(scope="function")
 def remote_repos_path(
-    user_path: pathlib.Path, request: pytest.FixtureRequest,
+    user_path: pathlib.Path,
+    request: pytest.FixtureRequest,
 ) -> pathlib.Path:
     """System's remote (file-based) repos to clone andpush to. Emphemeral directory."""
     dir = user_path / "remote_repos"
@@ -431,7 +437,8 @@ def create_hg_remote_repo(
 @pytest.fixture
 @skip_if_hg_missing
 def hg_remote_repo(
-    remote_repos_path: pathlib.Path, hgconfig: pathlib.Path,
+    remote_repos_path: pathlib.Path,
+    hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
     return _create_hg_remote_repo(

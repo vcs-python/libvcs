@@ -209,7 +209,8 @@ def test_repo_update_stash_cases(
     if needs_stash:
         some_stashed_file = git_repo.dir / "some_stashed_file"
         some_stashed_file.write_text(
-            f"some content: {random.random()}", encoding="utf-8",
+            f"some content: {random.random()}",
+            encoding="utf-8",
         )
         git_repo.run(["add", some_stashed_file])
 
@@ -257,7 +258,8 @@ def test_progress_callback(
         assert isinstance(timestamp, datetime.datetime)
 
     progress_callback = mocker.Mock(
-        name="progress_callback_stub", side_effect=progress_callback_spy,
+        name="progress_callback_stub",
+        side_effect=progress_callback_spy,
     )
 
     # create a new repo with the repo as a remote
@@ -692,7 +694,8 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
     assert "file:///" in mynewremote.fetch_url, "set_remote returns remote"
 
     assert isinstance(
-        git_repo.remote(name=repo_name), GitRemote,
+        git_repo.remote(name=repo_name),
+        GitRemote,
     ), "remote() returns GitRemote"
     remote = git_repo.remote(name=repo_name)
     assert remote is not None, "Remote should exist"

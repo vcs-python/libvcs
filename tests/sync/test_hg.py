@@ -31,7 +31,8 @@ def test_hg_sync(
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=projects_path / repo_name,
+        ["hg", "parents", "--template={rev}"],
+        cwd=projects_path / repo_name,
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
@@ -56,7 +57,8 @@ def test_repo_mercurial_via_create_project(
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=projects_path / repo_name,
+        ["hg", "parents", "--template={rev}"],
+        cwd=projects_path / repo_name,
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
@@ -77,7 +79,9 @@ def test_vulnerability_2022_03_12_command_injection(
     random_dir.mkdir()
     monkeypatch.chdir(str(random_dir))
     mercurial_repo = create_project(
-        url="--config=alias.clone=!touch ./HELLO", vcs="hg", dir="./",
+        url="--config=alias.clone=!touch ./HELLO",
+        vcs="hg",
+        dir="./",
     )
     with pytest.raises(exc.CommandError):
         mercurial_repo.update_repo()

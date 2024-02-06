@@ -13,7 +13,8 @@ if t.TYPE_CHECKING:
 
     ParserMatchLazy: TypeAlias = t.Callable[[str], registry.ParserMatch]
     DetectVCSFixtureExpectedMatch: TypeAlias = t.Union[
-        registry.ParserMatch, ParserMatchLazy,
+        registry.ParserMatch,
+        ParserMatchLazy,
     ]
 
 

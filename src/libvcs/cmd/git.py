@@ -733,7 +733,8 @@ class Git:
             local_flags.append("--quit")
 
         return self.run(
-            ["rebase", *local_flags, *required_flags], check_returncode=check_returncode,
+            ["rebase", *local_flags, *required_flags],
+            check_returncode=check_returncode,
         )
 
     def pull(

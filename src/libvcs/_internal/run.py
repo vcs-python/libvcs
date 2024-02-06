@@ -65,7 +65,9 @@ class CmdLoggingAdapter(_LoggerAdapter):
         logging.LoggerAdapter.__init__(self, *args, **kwargs)
 
     def process(
-        self, msg: str, kwargs: MutableMapping[str, Any],
+        self,
+        msg: str,
+        kwargs: MutableMapping[str, Any],
     ) -> tuple[Any, MutableMapping[str, Any]]:
         """Add additional context information for loggers."""
         prefixed_dict = {}
@@ -89,7 +91,8 @@ if sys.platform == "win32":
     _ENV: "TypeAlias" = Mapping[str, str]
 else:
     _ENV: "TypeAlias" = Union[
-        Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath],
+        Mapping[bytes, StrOrBytesPath],
+        Mapping[str, StrOrBytesPath],
     ]
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]

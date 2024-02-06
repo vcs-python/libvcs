@@ -60,7 +60,9 @@ FIXTURES = [
     ids=idfn,
 )
 def test_init_and_Popen(
-    args: list[Any], kwargs: dict[str, Any], expected_result: Any,
+    args: list[Any],
+    kwargs: dict[str, Any],
+    expected_result: Any,
 ) -> None:
     """Test SubprocessCommand with Popen."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -81,7 +83,9 @@ def test_init_and_Popen(
     ids=idfn,
 )
 def test_init_and_Popen_run(
-    args: list[Any], kwargs: dict[str, Any], expected_result: Any,
+    args: list[Any],
+    kwargs: dict[str, Any],
+    expected_result: Any,
 ) -> None:
     """Test SubprocessCommand with run."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -101,7 +105,9 @@ def test_init_and_Popen_run(
     ids=idfn,
 )
 def test_init_and_check_call(
-    args: list[Any], kwargs: dict[str, Any], expected_result: Any,
+    args: list[Any],
+    kwargs: dict[str, Any],
+    expected_result: Any,
 ) -> None:
     """Test SubprocessCommand with Popen.check_call."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -119,7 +125,9 @@ def test_init_and_check_call(
     FIXTURES,
 )
 def test_init_and_check_output(
-    args: list[Any], kwargs: dict[str, Any], expected_result: Any,
+    args: list[Any],
+    kwargs: dict[str, Any],
+    expected_result: Any,
 ) -> None:
     """Test SubprocessCommand with Popen.check_output."""
     cmd = SubprocessCommand(*args, **kwargs)

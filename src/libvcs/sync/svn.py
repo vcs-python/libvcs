@@ -141,7 +141,10 @@ class SvnSync(BaseSync):
         return revision
 
     def update_repo(
-        self, dest: Optional[str] = None, *args: Any, **kwargs: Any,
+        self,
+        dest: Optional[str] = None,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Fetch changes from SVN repository to local working copy."""
         self.ensure_dir()
@@ -193,7 +196,8 @@ class SvnSync(BaseSync):
                 # is being used to prompt for passwords, because passwords
                 # are only potentially needed for remote server requests.
                 xml = Svn(dir=pathlib.Path(location).parent).info(
-                    target=pathlib.Path(location), xml=True,
+                    target=pathlib.Path(location),
+                    xml=True,
                 )
                 match = _svn_info_xml_url_re.search(xml)
                 assert match is not None

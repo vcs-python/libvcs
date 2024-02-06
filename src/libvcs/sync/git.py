@@ -174,7 +174,8 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         raise exc.LibVCSException(
             "Repo {} is malformatted, please use the convention {} for "
             "ssh / private GitHub repositories.".format(
-                pip_url, "git+https://github.com/username/repo.git",
+                pip_url,
+                "git+https://github.com/username/repo.git",
             ),
         )
     else:
@@ -192,7 +193,12 @@ class GitSync(BaseSync):
     _remotes: GitSyncRemoteDict
 
     def __init__(
-        self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs: Any,
+        self,
+        *,
+        url: str,
+        dir: StrPath,
+        remotes: GitRemotesArgs = None,
+        **kwargs: Any,
     ) -> None:
         """Local git repository.
 
@@ -396,7 +402,9 @@ class GitSync(BaseSync):
         # Get head sha
         try:
             head_sha = self.cmd.rev_list(
-                commit="HEAD", max_count=1, check_returncode=True,
+                commit="HEAD",
+                max_count=1,
+                check_returncode=True,
             )
         except exc.CommandError:
             self.log.exception("Failed to get the hash for HEAD")
@@ -565,14 +573,18 @@ class GitSync(BaseSync):
         """
         try:
             ret = self.cmd.remote.show(
-                name=name, no_query_remotes=True, log_in_real_time=True,
+                name=name,
+                no_query_remotes=True,
+                log_in_real_time=True,
             )
             lines = ret.split("\n")
             remote_fetch_url = lines[1].replace("Fetch URL: ", "").strip()
             remote_push_url = lines[2].replace("Push  URL: ", "").strip()
             if remote_fetch_url != name and remote_push_url != name:
                 return GitRemote(
-                    name=name, fetch_url=remote_fetch_url, push_url=remote_push_url,
+                    name=name,
+                    fetch_url=remote_fetch_url,
+                    push_url=remote_push_url,
                 )
             else:
                 return None
@@ -580,7 +592,11 @@ class GitSync(BaseSync):
             return None
 
     def set_remote(
-        self, name: str, url: str, push: bool = False, overwrite: bool = False,
+        self,
+        name: str,
+        url: str,
+        push: bool = False,
+        overwrite: bool = False,
     ) -> GitRemote:
         """Set remote with name and URL like git remote add.
 

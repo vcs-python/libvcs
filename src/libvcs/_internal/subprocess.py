@@ -73,7 +73,8 @@ if sys.platform == "win32":
     _ENV: "TypeAlias" = Mapping[str, str]
 else:
     _ENV: "TypeAlias" = Union[
-        Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath],
+        Mapping[bytes, StrOrBytesPath],
+        Mapping[str, StrOrBytesPath],
     ]
 _FILE: "TypeAlias" = Union[None, int, IO[Any]]
 _TXT: "TypeAlias" = Union[bytes, str]

@@ -118,7 +118,10 @@ class BaseSync:
 
         #: Logging attribute
         self.log: CmdLoggingAdapter = CmdLoggingAdapter(
-            bin_name=self.bin_name, keyword=self.repo_name, logger=logger, extra={},
+            bin_name=self.bin_name,
+            keyword=self.repo_name,
+            logger=logger,
+            extra={},
         )
 
     @property
