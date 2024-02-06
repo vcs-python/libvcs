@@ -83,7 +83,7 @@ class Git:
         *,
         # Print-and-exit flags
         version: Optional[bool] = None,
-        help: Optional[bool] = None,
+        _help: Optional[bool] = None,
         html_path: Optional[bool] = None,
         man_path: Optional[bool] = None,
         info_path: Optional[bool] = None,
@@ -155,7 +155,7 @@ class Git:
             ``--man-path``
         info_path : bool
             ``--info-path``
-        help : bool
+        _help : bool
             ``-h / --help``
         pager : bool
             ``-p --pager``
@@ -182,7 +182,7 @@ class Git:
         #
         if version is True:
             cli_args.append("--version")
-        if help is True:
+        if _help is True:
             cli_args.append("--help")
         if html_path is True:
             cli_args.append("--html-path")
@@ -259,7 +259,7 @@ class Git:
         jobs: Optional[str] = None,
         force: Optional[bool] = None,
         local: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         no_hardlinks: Optional[bool] = None,
         hardlinks: Optional[bool] = None,
         shared: Optional[bool] = None,
@@ -313,8 +313,8 @@ class Git:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
             local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", str(depth)])
         if branch is not None:
@@ -398,7 +398,7 @@ class Git:
         ] = None,
         submodule_prefix: Optional[StrOrBytesPath] = None,
         #
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         force: Optional[bool] = None,
         keep: Optional[bool] = None,
         multiple: Optional[bool] = None,
@@ -456,8 +456,8 @@ class Git:
 
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if branch is not None:
@@ -486,7 +486,7 @@ class Git:
             local_flags.append("--progress")
         if verbose:
             local_flags.append("--verbose")
-        if all:
+        if _all:
             local_flags.append("--all")
         if atomic:
             local_flags.append("--atomic")
@@ -576,7 +576,7 @@ class Git:
         keep_base: Optional[bool] = None,
         strategy: Optional[Union[str, bool]] = None,
         strategy_option: Optional[str] = None,
-        exec: Optional[str] = None,
+        _exec: Optional[str] = None,
         gpg_sign: Optional[Union[str, bool]] = None,
         no_gpg_sign: Optional[bool] = None,
         empty: Optional[Union[str, Literal["drop", "keep", "ask"]]] = None,
@@ -591,7 +591,7 @@ class Git:
         skip: Optional[bool] = None,
         show_current_patch: Optional[bool] = None,
         abort: Optional[bool] = None,
-        quit: Optional[bool] = None,
+        _quit: Optional[bool] = None,
         # libvcs special behavior
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
@@ -633,8 +633,8 @@ class Git:
         if context:
             local_flags.extend(["--C", str(context)])
 
-        if exec:
-            local_flags.extend(["--exec", shlex.quote(exec)])
+        if _exec:
+            local_flags.extend(["--exec", shlex.quote(_exec)])
         if reschedule_failed_exec:
             local_flags.append("--reschedule-failed-exec")
         if no_reschedule_failed_exec:
@@ -729,7 +729,7 @@ class Git:
             local_flags.append("--edit-todo")
         if show_current_patch:
             local_flags.append("--show-current-patch")
-        if quit:
+        if _quit:
             local_flags.append("--quit")
 
         return self.run(
@@ -800,7 +800,7 @@ class Git:
         #
         fetch: Optional[bool] = None,
         no_fetch: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         force: Optional[bool] = None,
         keep: Optional[bool] = None,
         multiple: Optional[bool] = None,
@@ -939,8 +939,8 @@ class Git:
         #
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if branch is not None:
@@ -969,7 +969,7 @@ class Git:
             local_flags.append("--progress")
         if verbose:
             local_flags.append("--verbose")
-        if all:
+        if _all:
             local_flags.append("--all")
         if atomic:
             local_flags.append("--atomic")
@@ -1107,7 +1107,7 @@ class Git:
     def help(
         self,
         *,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         verbose: Optional[bool] = None,
         no_external_commands: Optional[bool] = None,
         no_aliases: Optional[bool] = None,
@@ -1124,7 +1124,7 @@ class Git:
 
         Parameters
         ----------
-        all : bool
+        _all : bool
             Prints everything.
 
         no_external_commands : bool
@@ -1158,7 +1158,7 @@ class Git:
         >>> git.help()
         "usage: git [...--version] [...--help] [-C <path>]..."
 
-        >>> git.help(all=True)
+        >>> git.help(_all=True)
         "See 'git help <command>' to read about a specific subcommand..."
 
         >>> git.help(info=True)
@@ -1171,7 +1171,7 @@ class Git:
 
         if verbose is True:
             local_flags.append("--verbose")
-        if all is True:
+        if _all is True:
             local_flags.append("--all")
         if no_external_commands is True:
             local_flags.append("--no-external-commands")
@@ -1865,7 +1865,7 @@ class Git:
         first_parent: Optional[bool] = None,
         exclude_first_parent_only: Optional[bool] = None,
         _not: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         branches: Optional[Union[str, bool]] = None,
         tags: Optional[Union[str, bool]] = None,
         remotes: Optional[Union[str, bool]] = None,
@@ -1923,7 +1923,7 @@ class Git:
         >>> git.rev_list(commit="HEAD", path=".", max_count=1, header=True)
         ''
 
-        >>> git.rev_list(commit="origin..HEAD", max_count=1, all=True, header=True)
+        >>> git.rev_list(commit="origin..HEAD", max_count=1, _all=True, header=True)
         ''
 
         >>> git.rev_list(commit="origin..HEAD", max_count=1, header=True)
@@ -2086,7 +2086,7 @@ class Git:
         head: Optional[bool] = None,
         dereference: Optional[bool] = None,
         tags: Optional[bool] = None,
-        hash: Optional[Union[str, bool]] = None,
+        _hash: Optional[Union[str, bool]] = None,
         abbrev: Optional[Union[str, bool]] = None,
         # libvcs special behavior
         check_returncode: Optional[bool] = None,
@@ -2126,7 +2126,7 @@ class Git:
                 pattern_flags.extend(pattern)
 
         for kwarg, kwarg_shell_flag in [
-            (hash, "--hash"),
+            (_hash, "--hash"),
             (abbrev, "--abbrev"),
         ]:
             if kwarg is not None:
@@ -2323,8 +2323,8 @@ class GitSubmoduleCmd:
             local_flags.append("--rebase")
         elif merge is True:
             local_flags.append("--merge")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
 
         return self.run(
             "update",
@@ -2596,7 +2596,7 @@ class GitRemoteCmd:
         *,
         name: str,
         push: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
@@ -2612,7 +2612,7 @@ class GitRemoteCmd:
         >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', push=True)
         'file:///...'
 
-        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', all=True)
+        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', _all=True)
         'file:///...'
         """
         local_flags: list[str] = []
@@ -2620,7 +2620,7 @@ class GitRemoteCmd:
 
         if push:
             local_flags.append("--push")
-        if all:
+        if _all:
             local_flags.append("--all")
 
         return self.run(
@@ -2902,7 +2902,7 @@ class GitStashCmd:
         keep_index: Optional[int] = None,
         patch: Optional[bool] = None,
         include_untracked: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         quiet: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -2922,7 +2922,7 @@ class GitStashCmd:
         local_flags: list[str] = []
         stash_flags: list[str] = []
 
-        if all is True:
+        if _all is True:
             local_flags.append("--all")
         if staged is True:
             local_flags.append("--staged")
