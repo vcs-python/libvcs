@@ -604,7 +604,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
 
     Before: `project.parent_dir`
 
-    After: `project.parent.dir`.
+    After: `project.parent.path`.
 
   - `repo_name` switched from attribute to property
 
@@ -722,13 +722,13 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
   `libvcs.sync.{module}.{Module}Project`
 - `repo_dir` param is renamed to `dir`:
 
-  Before: `GitSync(url='...', repo_dir='...')`
+  Before: `GitSync(url='...', repo_path='...')`
 
-  After: `GitSync(url='...', dir='...')`
+  After: `GitSync(url='...', path='...')`
 
   #324
 
-- `dir` to `pathlib`, `BaseSync.path` -> `BaseSync.dir`
+- `dir` to `pathlib`, `BaseSync.path` -> `BaseSync.path`
 - Logging functions moved to {attr}`libvcs.sync.base.BaseSync.log` (#322)
 - Rename `ProjectLoggingAdapter` to `CmdLoggingAdapter`
 - `CmdLoggingAdapter`: Rename `repo_name` param to `keyword`
@@ -768,7 +768,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
   ```python
   repo = GitSync(
       url="https://github.com/vcs-python/libvcs",
-      repo_dir=checkout,
+      repo_path=checkout,
       remotes={
           'gitlab': 'https://gitlab.com/vcs-python/libvcs',
       }
@@ -778,7 +778,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
   ```python
   repo = GitSync(
       url="https://github.com/vcs-python/libvcs",
-      repo_dir=checkout,
+      repo_path=checkout,
       remotes={
           'gitlab': {
               'fetch_url': 'https://gitlab.com/vcs-python/libvcs',

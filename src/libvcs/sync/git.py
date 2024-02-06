@@ -196,7 +196,7 @@ class GitSync(BaseSync):
         self,
         *,
         url: str,
-        dir: StrPath,
+        path: StrPath,
         remotes: GitRemotesArgs = None,
         **kwargs: Any,
     ) -> None:
@@ -221,7 +221,7 @@ class GitSync(BaseSync):
 
             repo = GitSync(
                url="https://github.com/vcs-python/libvcs",
-               dir=checkout,
+               path=checkout,
                remotes={
                    'gitlab': 'https://gitlab.com/vcs-python/libvcs'
                }
@@ -236,7 +236,7 @@ class GitSync(BaseSync):
 
             repo = GitSync(
                url="https://github.com/vcs-python/libvcs",
-               dir=checkout,
+               path=checkout,
                remotes={
                    'gitlab': {
                        'fetch_url': 'https://gitlab.com/vcs-python/libvcs',
@@ -282,9 +282,9 @@ class GitSync(BaseSync):
                 fetch_url=url,
                 push_url=url,
             )
-        super().__init__(url=url, dir=dir, **kwargs)
+        super().__init__(url=url, path=path, **kwargs)
 
-        self.cmd = Git(dir=dir, progress_callback=self.progress_callback)
+        self.cmd = Git(path=path, progress_callback=self.progress_callback)
 
         origin = (
             self._remotes.get("origin")
@@ -380,7 +380,7 @@ class GitSync(BaseSync):
         """Pull latest changes from git remote."""
         self.ensure_dir()
 
-        if not pathlib.Path(self.dir / ".git").is_dir():
+        if not pathlib.Path(self.path / ".git").is_dir():
             self.obtain()
             self.update_repo(set_remotes=set_remotes)
             return
@@ -504,7 +504,7 @@ class GitSync(BaseSync):
 
                     self.log.exception(
                         "\nFailed to rebase in: '%s'.\n"
-                        "You will have to resolve the conflicts manually" % self.dir,
+                        "You will have to resolve the conflicts manually" % self.path,
                     )
                     return
 
@@ -521,7 +521,7 @@ class GitSync(BaseSync):
                         self.cmd.reset(pathspec=head_sha, hard=True, quiet=True)
                         self.cmd.stash.pop(index=True, quiet=True)
                         self.log.exception(
-                            f"\nFailed to rebase in: '{self.dir}'.\n"
+                            f"\nFailed to rebase in: '{self.path}'.\n"
                             + "You will have to resolve the "
                             + "conflicts manually",
                         )
@@ -673,7 +673,7 @@ class GitSync(BaseSync):
         --------
         >>> git_repo = GitSync(
         ...     url=f'file://{create_git_remote_repo()}',
-        ...     dir=tmp_path
+        ...     path=tmp_path
         ... )
         >>> git_repo.obtain()
         >>> git_repo.status()

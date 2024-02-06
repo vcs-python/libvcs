@@ -15,7 +15,7 @@ class CreateProjectKwargsDict(TypedDict, total=False):
     """Test fixtures for create_project()."""
 
     url: str
-    dir: StrPath
+    path: StrPath
     vcs: Literal["git"]
     progress_callback: Optional[ProgressCallbackProtocol]
 
@@ -56,7 +56,7 @@ def test_create_project(
 ) -> None:
     """Tests for create_project()."""
     # add parent_dir via fixture
-    repo_dict["dir"] = tmp_path / "repo_name"
+    repo_dict["path"] = tmp_path / "repo_name"
 
     if raises_exception is not None:
         with pytest.raises(raises_exception):

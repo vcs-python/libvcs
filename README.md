@@ -83,7 +83,7 @@ Simple [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrapper
 import pathlib
 from libvcs.cmd.git import Git
 
-git = Git(dir=pathlib.Path.cwd() / 'my_git_repo')
+git = Git(path=pathlib.Path.cwd() / 'my_git_repo')
 git.clone(url='https://github.com/vcs-python/libvcs.git')
 ```
 
@@ -98,7 +98,7 @@ from libvcs.sync.git import GitSync
 
 repo = GitSync(
    url="https://github.com/vcs-python/libvcs",
-   dir=pathlib.Path().cwd() / "my_repo",
+   path=pathlib.Path().cwd() / "my_repo",
    remotes={
        'gitlab': 'https://gitlab.com/vcs-python/libvcs'
    }
@@ -136,7 +136,7 @@ def test_repo_git_remote_checkout(
 ) -> None:
     git_server = create_git_remote_repo()
     git_repo_checkout_dir = projects_path / "my_git_checkout"
-    git_repo = GitSync(dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
+    git_repo = GitSync(path=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
 
     git_repo.obtain()
     git_repo.update_repo()

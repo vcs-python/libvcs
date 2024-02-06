@@ -171,14 +171,14 @@ def projects_path(
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
     """User's local checkouts and clones. Emphemeral directory."""
-    dir = user_path / "projects"
-    dir.mkdir(exist_ok=True)
+    path = user_path / "projects"
+    path.mkdir(exist_ok=True)
 
     def clean() -> None:
-        shutil.rmtree(dir)
+        shutil.rmtree(path)
 
     request.addfinalizer(clean)
-    return dir
+    return path
 
 
 @pytest.fixture(scope="function")
@@ -187,14 +187,14 @@ def remote_repos_path(
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
     """System's remote (file-based) repos to clone andpush to. Emphemeral directory."""
-    dir = user_path / "remote_repos"
-    dir.mkdir(exist_ok=True)
+    path = user_path / "remote_repos"
+    path.mkdir(exist_ok=True)
 
     def clean() -> None:
-        shutil.rmtree(dir)
+        shutil.rmtree(path)
 
     request.addfinalizer(clean)
-    return dir
+    return path
 
 
 def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> str:
@@ -453,7 +453,7 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitS
     """Pre-made git clone of remote repo checked out to user's projects dir."""
     git_repo = GitSync(
         url=f"file://{git_remote_repo}",
-        dir=str(projects_path / "git_repo"),
+        path=str(projects_path / "git_repo"),
         remotes={
             "origin": GitRemote(
                 name="origin",
@@ -471,7 +471,7 @@ def hg_repo(projects_path: pathlib.Path, hg_remote_repo: pathlib.Path) -> HgSync
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
     hg_repo = HgSync(
         url=f"file://{hg_remote_repo}",
-        dir=str(projects_path / "hg_repo"),
+        path=str(projects_path / "hg_repo"),
     )
     hg_repo.obtain()
     return hg_repo
@@ -482,7 +482,7 @@ def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnS
     """Pre-made svn clone of remote repo checked out to user's projects dir."""
     svn_repo = SvnSync(
         url=f"file://{svn_remote_repo}",
-        dir=str(projects_path / "svn_repo"),
+        path=str(projects_path / "svn_repo"),
     )
     svn_repo.obtain()
     return svn_repo

@@ -51,8 +51,8 @@ def test_hg_url(
     hg_repo: HgSync,
 ) -> None:
     """Test HgURL."""
-    url = url.format(local_repo=hg_repo.dir)
-    hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
+    url = url.format(local_repo=hg_repo.path)
+    hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
     assert HgURL.is_valid(url) == is_valid, f"{url} compatibility should be {is_valid}"
     assert HgURL(url) == hg_url
@@ -120,10 +120,10 @@ def test_hg_url_extension_pip(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
-    hg_url_kwargs["url"] = hg_url_kwargs["url"].format(local_repo=hg_repo.dir)
-    url = url.format(local_repo=hg_repo.dir)
+    hg_url_kwargs["url"] = hg_url_kwargs["url"].format(local_repo=hg_repo.path)
+    url = url.format(local_repo=hg_repo.path)
     hg_url = HgURLWithPip(**hg_url_kwargs)
-    hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
+    hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
     assert (
         HgBaseURL.is_valid(url) != is_valid
@@ -194,6 +194,6 @@ def test_hg_to_url(
     hg_repo: HgSync,
 ) -> None:
     """Test HgURL.to_url()."""
-    hg_url.url = hg_url.url.format(local_repo=hg_repo.dir)
+    hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
     assert hg_url.to_url() == expected

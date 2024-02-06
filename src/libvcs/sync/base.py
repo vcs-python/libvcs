@@ -51,7 +51,7 @@ class BaseSync:
         self,
         *,
         url: str,
-        dir: StrPath,
+        path: StrPath,
         progress_callback: Optional[ProgressCallbackProtocol] = None,
         **kwargs: Any,
     ) -> None:
@@ -73,12 +73,12 @@ class BaseSync:
             ...     def obtain(self, *args, **kwargs):
             ...         self.ensure_dir()
             ...         self.run(
-            ...             ['clone', '--progress', self.url, self.dir],
+            ...             ['clone', '--progress', self.url, self.path],
             ...             log_in_real_time=True
             ...         )
             >>> r = Project(
             ...     url=f'file://{create_git_remote_repo()}',
-            ...     dir=str(tmp_path),
+            ...     path=str(tmp_path),
             ...     progress_callback=progress_cb
             ... )
             >>> r.obtain()
@@ -90,8 +90,8 @@ class BaseSync:
             ...
             Receiving objects: ...% (...)...
             ...
-            >>> assert r.dir.exists()
-            >>> assert pathlib.Path(r.dir / '.git').exists()
+            >>> assert r.path.exists()
+            >>> assert pathlib.Path(r.path / '.git').exists()
         """
         self.url = url
 
@@ -99,11 +99,11 @@ class BaseSync:
         self.progress_callback = progress_callback
 
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
         if "rev" in kwargs:
             self.rev = kwargs["rev"]
@@ -127,7 +127,7 @@ class BaseSync:
     @property
     def repo_name(self) -> str:
         """Return the short name of a repo checkout."""
-        return self.dir.stem
+        return self.path.stem
 
     @classmethod
     def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseSync":
@@ -149,12 +149,12 @@ class BaseSync:
         """Return combined stderr/stdout from a command.
 
         This method will also prefix the VCS command bin_name. By default runs
-        using the cwd `libvcs.sync.base.BaseSync.dir` of the repo.
+        using the cwd `libvcs.sync.base.BaseSync.path` of the repo.
 
         Parameters
         ----------
         cwd : str
-            dir command is run from, defaults to `libvcs.sync.base.BaseSync.dir`.
+            dir command is run from, defaults to `libvcs.sync.base.BaseSync.path`.
 
         check_returncode : bool
             Indicate whether a :exc:`~exc.CommandError` should be raised if return code
@@ -166,7 +166,7 @@ class BaseSync:
             combined stdout/stderr in a big string, newlines retained
         """
         if cwd is None:
-            cwd = getattr(self, "dir", None)
+            cwd = getattr(self, "path", None)
 
         if isinstance(cmd, Sequence):
             cmd = [self.bin_name, *cmd]
@@ -185,17 +185,17 @@ class BaseSync:
 
     def ensure_dir(self, *args: Any, **kwargs: Any) -> bool:
         """Assure destination path exists. If not, create directories."""
-        if self.dir.exists():
+        if self.path.exists():
             return True
 
-        if not self.dir.parent.exists():
-            self.dir.parent.mkdir(parents=True)
+        if not self.path.parent.exists():
+            self.path.parent.mkdir(parents=True)
 
-        if not self.dir.exists():
+        if not self.path.exists():
             self.log.debug(
-                f"Project directory for {self.repo_name} does not exist @ {self.dir}",
+                f"Project directory for {self.repo_name} does not exist @ {self.path}",
             )
-            self.dir.mkdir(parents=True)
+            self.path.mkdir(parents=True)
 
         return True
 

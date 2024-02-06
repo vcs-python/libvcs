@@ -37,7 +37,7 @@ ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
             GitSync,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": bare_dir.as_uri(),
-                "dir": tmp_path / "obtaining a bare repo",
+                "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
         ],
@@ -45,7 +45,7 @@ ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
             create_project,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": f"git+{bare_dir.as_uri()}",
-                "dir": tmp_path / "obtaining a bare repo",
+                "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
         ],
@@ -80,7 +80,7 @@ def test_repo_git_obtain_initial_commit_repo(
             GitSync,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": tmp_path / "myrepo",
+                "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
         ],
@@ -88,7 +88,7 @@ def test_repo_git_obtain_initial_commit_repo(
             create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
-                "dir": tmp_path / "myrepo",
+                "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
         ],
@@ -118,7 +118,7 @@ def test_repo_git_obtain_full(
             GitSync,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": tmp_path / "myrepo",
+                "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
         ],
@@ -126,7 +126,7 @@ def test_repo_git_obtain_full(
             create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
-                "dir": tmp_path / "myrepo",
+                "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
         ],
@@ -182,20 +182,20 @@ def test_repo_update_stash_cases(
 
     git_repo: GitSync = GitSync(
         url=git_remote_repo.as_uri(),
-        dir=tmp_path / "myrepo",
+        path=tmp_path / "myrepo",
         vcs="git",
     )
     git_repo.obtain()  # clone initial repo
 
     # Make an initial commit so we can reset
-    initial_file = git_repo.dir / "initial_file"
+    initial_file = git_repo.path / "initial_file"
     initial_file.write_text(f"some content: {random.random()}", encoding="utf-8")
     git_repo.run(["add", str(initial_file)])
     git_repo.run(["commit", "-m", "a commit"])
     git_repo.run(["push"])
 
     if has_remote_changes:
-        some_file = git_repo.dir / "some_file"
+        some_file = git_repo.path / "some_file"
         some_file.write_text(f"some content: {random.random()}", encoding="utf-8")
         git_repo.run(["add", some_file])
         git_repo.run(["commit", "-m", "a commit"])
@@ -203,11 +203,11 @@ def test_repo_update_stash_cases(
         git_repo.run(["reset", "--hard", "HEAD^"])
 
     if has_untracked_files:
-        some_file = git_repo.dir / "some_file"
+        some_file = git_repo.path / "some_file"
         some_file.write_text(f"some content: {random.random()}", encoding="utf-8")
 
     if needs_stash:
-        some_stashed_file = git_repo.dir / "some_stashed_file"
+        some_stashed_file = git_repo.path / "some_stashed_file"
         some_stashed_file.write_text(
             f"some content: {random.random()}",
             encoding="utf-8",
@@ -228,7 +228,7 @@ def test_repo_update_stash_cases(
             GitSync,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": tmp_path / "myrepo",
+                "path": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
                 "vcs": "git",
             },
@@ -237,7 +237,7 @@ def test_repo_update_stash_cases(
             create_project,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
-                "dir": tmp_path / "myrepo",
+                "path": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
                 "vcs": "git",
             },
@@ -277,7 +277,7 @@ def test_progress_callback(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
@@ -291,7 +291,7 @@ def test_progress_callback(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {"origin": git_remote_repo.as_uri()},
             },
             lambda git_remote_repo, **kwargs: {
@@ -306,7 +306,7 @@ def test_progress_callback(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {
                     "origin": git_remote_repo.as_uri(),
                     "second_remote": git_remote_repo.as_uri(),
@@ -329,7 +329,7 @@ def test_progress_callback(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {
                     "second_remote": git_remote_repo.as_uri(),
                 },
@@ -351,7 +351,7 @@ def test_progress_callback(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {
                     "origin": GitRemote(
                         name="origin",
@@ -382,7 +382,7 @@ def test_progress_callback(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "vcs": "git",
                 "remotes": {
                     "second_remote": GitRemote(
@@ -404,7 +404,7 @@ def test_progress_callback(
             create_project,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "vcs": "git",
             },
             lambda git_remote_repo, **kwargs: {
@@ -452,7 +452,7 @@ def test_remotes(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {
                     "origin": git_remote_repo.as_uri(),
                 },
@@ -483,7 +483,7 @@ def test_remotes(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {
                     "origin": git_remote_repo.as_uri(),
                     # accepts short-hand form since it's inputted in the constructor
@@ -508,7 +508,7 @@ def test_remotes(
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": projects_path / repo_name,
+                "path": projects_path / repo_name,
                 "remotes": {
                     "origin": git_remote_repo.as_uri(),
                 },
@@ -593,17 +593,17 @@ def test_git_get_url_and_rev_from_pip_url() -> None:
     [
         [
             GitSync,
-            lambda git_remote_repo, dir, **kwargs: {
+            lambda git_remote_repo, path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
-                "dir": dir,
+                "path": path,
                 "vcs": "git",
             },
         ],
         [
             create_project,
-            lambda git_remote_repo, dir, **kwargs: {
+            lambda git_remote_repo, path, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
-                "dir": dir,
+                "path": path,
                 "vcs": "git",
             },
         ],
@@ -618,7 +618,7 @@ def test_remotes_preserves_git_ssh(
     """Test GitSync preserves Git SSH."""
     # Regression test for #14
     repo_name = "myexamplegit"
-    dir = projects_path / repo_name
+    path = projects_path / repo_name
     remote_name = "myremote"
     remote_url = "git+ssh://git@github.com/tony/AlgoXY.git"
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
@@ -639,7 +639,7 @@ def test_remotes_preserves_git_ssh(
             GitSync,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": bare_dir.as_uri(),
-                "dir": tmp_path / "obtaining a bare repo",
+                "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
         ],
@@ -647,7 +647,7 @@ def test_remotes_preserves_git_ssh(
             create_project,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": f"git+{bare_dir.as_uri()}",
-                "dir": tmp_path / "obtaining a bare repo",
+                "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
         ],
@@ -664,7 +664,7 @@ def test_private_ssh_format(
             url=git_convert_pip_url(
                 "git+ssh://github.com:/tmp/omg/private_ssh_repo",
             ).url,
-            dir=tmp_path,
+            path=tmp_path,
             vcs="git",
         )
         excinfo.match(r".*is a malformed.*")
@@ -738,7 +738,9 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
     ), "branch w/o upstream should return branch only"
 
     new_remote_name = "new_remote_name"
-    git_repo.set_remote(name=new_remote_name, url=git_repo.dir.as_uri(), overwrite=True)
+    git_repo.set_remote(
+        name=new_remote_name, url=git_repo.path.as_uri(), overwrite=True
+    )
     git_repo.run(["fetch", new_remote_name])
     git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])
     assert (
@@ -914,7 +916,7 @@ def test_repo_git_remote_checkout(
     """Tests for create_git_remote_repo w/ remote checkout."""
     git_server = create_git_remote_repo()
     git_repo_checkout_dir = projects_path / "my_git_checkout"
-    git_repo = GitSync(dir=git_repo_checkout_dir, url=git_server.as_uri())
+    git_repo = GitSync(path=git_repo_checkout_dir, url=git_server.as_uri())
 
     git_repo.obtain()
     git_repo.update_repo()

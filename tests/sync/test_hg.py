@@ -23,7 +23,7 @@ def test_hg_sync(
 
     mercurial_repo = HgSync(
         url=f"file://{hg_remote_repo}",
-        dir=projects_path / repo_name,
+        path=projects_path / repo_name,
     )
 
     run(["hg", "init", mercurial_repo.repo_name], cwd=tmp_path)
@@ -48,7 +48,7 @@ def test_repo_mercurial_via_create_project(
 
     mercurial_repo = create_project(
         url=f"file://{hg_remote_repo}",
-        dir=projects_path / repo_name,
+        path=projects_path / repo_name,
         vcs="hg",
     )
 
@@ -81,7 +81,7 @@ def test_vulnerability_2022_03_12_command_injection(
     mercurial_repo = create_project(
         url="--config=alias.clone=!touch ./HELLO",
         vcs="hg",
-        dir="./",
+        path="./",
     )
     with pytest.raises(exc.CommandError):
         mercurial_repo.update_repo()

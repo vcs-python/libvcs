@@ -46,33 +46,33 @@ class Hg:
     def __init__(
         self,
         *,
-        dir: StrPath,
+        path: StrPath,
         progress_callback: Optional[ProgressCallbackProtocol] = None,
     ) -> None:
         """Lite, typed, pythonic wrapper for hg(1).
 
         Parameters
         ----------
-        dir :
+        path :
             Operates as PATH in the corresponding hg subcommand.
 
         Examples
         --------
-        >>> Hg(dir=tmp_path)
-        <Hg dir=...>
+        >>> Hg(path=tmp_path)
+        <Hg path=...>
         """
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
         self.progress_callback = progress_callback
 
     def __repr__(self) -> str:
         """Representation of Mercurial Repo command object."""
-        return f"<Hg dir={self.dir}>"
+        return f"<Hg path={self.path}>"
 
     def run(
         self,
@@ -149,14 +149,14 @@ class Hg:
 
         Examples
         --------
-        >>> hg = Hg(dir=tmp_path)
+        >>> hg = Hg(path=tmp_path)
         >>> hg.run(['help'])
         "Mercurial Distributed SCM..."
         """
         cli_args = ["hg", *args] if isinstance(args, Sequence) else ["hg", args]
 
         if "cwd" not in kwargs:
-            kwargs["cwd"] = self.dir
+            kwargs["cwd"] = self.path
 
         if repository is not None:
             cli_args.extend(["--repository", repository])
@@ -219,20 +219,20 @@ class Hg:
         Parameters
         ----------
         make_parents : bool, default: ``True``
-            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+            Creates checkout directory (`:attr:`self.path`) if it doesn't already exist.
         check_returncode : bool, default: ``None``
             Passthrough to :meth:`Hg.run`
 
         Examples
         --------
-        >>> hg = Hg(dir=tmp_path)
+        >>> hg = Hg(path=tmp_path)
         >>> hg_remote_repo = create_hg_remote_repo()
         >>> hg.clone(url=f'file://{hg_remote_repo}')
         'updating to branch default...1 files updated, 0 files merged, ...'
-        >>> hg.dir.exists()
+        >>> hg.path.exists()
         True
         """
-        required_flags: list[str] = [url, str(self.dir)]
+        required_flags: list[str] = [url, str(self.path)]
         local_flags: list[str] = []
 
         if ssh is not None:
@@ -255,8 +255,8 @@ class Hg:
             local_flags.append("--quiet")
 
         # libvcs special behavior
-        if make_parents and not self.dir.exists():
-            self.dir.mkdir(parents=True)
+        if make_parents and not self.path.exists():
+            self.path.mkdir(parents=True)
         return self.run(
             ["clone", *local_flags, "--", *required_flags],
             check_returncode=check_returncode,
@@ -277,7 +277,7 @@ class Hg:
 
         Examples
         --------
-        >>> hg = Hg(dir=tmp_path)
+        >>> hg = Hg(path=tmp_path)
         >>> hg_remote_repo = create_hg_remote_repo()
         >>> hg.clone(url=f'file://{hg_remote_repo}')
         'updating to branch default...1 files updated, 0 files merged, ...'
@@ -309,7 +309,7 @@ class Hg:
 
         Examples
         --------
-        >>> hg = Hg(dir=tmp_path)
+        >>> hg = Hg(path=tmp_path)
         >>> hg_remote_repo = create_hg_remote_repo()
         >>> hg.clone(url=f'file://{hg_remote_repo}')
         'updating to branch default...1 files updated, 0 files merged, ...'
