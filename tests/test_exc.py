@@ -11,7 +11,8 @@ def test_command_error() -> None:
     with pytest.raises(exc.CommandError) as e:
         returncode = 0
         command = ["command", "arg"]
-        raise exc.CommandError("this is output", returncode, command)
+        msg = "this is output"
+        raise exc.CommandError(msg, returncode, command)
 
     assert command is not None
 
@@ -19,7 +20,8 @@ def test_command_error() -> None:
     assert (
         str(e.value)
         == exc.CommandError.message.format(
-            returncode=e.value.returncode, cmd=e.value.cmd
+            returncode=e.value.returncode,
+            cmd=e.value.cmd,
         )
         + "\n%s" % e.value.output
     )
@@ -27,17 +29,20 @@ def test_command_error() -> None:
     with pytest.raises(exc.CommandError) as e:
         returncode = 0
         command = ["command", "arg"]
-        raise exc.CommandError("", returncode, command)
+        msg = ""
+        raise exc.CommandError(msg, returncode, command)
     assert e.value.cmd == " ".join(command)
     assert str(e.value) == exc.CommandError.message.format(
-        returncode=e.value.returncode, cmd=e.value.cmd
+        returncode=e.value.returncode,
+        cmd=e.value.cmd,
     )
 
     command_2 = None
 
     with pytest.raises(exc.CommandError) as e:
         command_2 = "command arg"
-        raise exc.CommandError("this is output", 0, command_2)
+        msg = "this is output"
+        raise exc.CommandError(msg, 0, command_2)
 
     assert command_2 is not None
     assert e.value.cmd == command_2

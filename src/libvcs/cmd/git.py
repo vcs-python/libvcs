@@ -24,21 +24,21 @@ class Git:
     def __init__(
         self,
         *,
-        dir: StrPath,
+        path: StrPath,
         progress_callback: Optional[ProgressCallbackProtocol] = None,
     ) -> None:
         r"""Lite, typed, pythonic wrapper for git(1).
 
         Parameters
         ----------
-        dir :
+        path :
             Operates as PATH in the corresponding git subcommand.
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
         >>> git
-        <Git dir=...>
+        <Git path=...>
 
         Subcommands:
 
@@ -60,22 +60,22 @@ class Git:
         ''
         """
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
         self.progress_callback = progress_callback
 
         # Initial git-submodule
-        self.submodule = GitSubmoduleCmd(dir=self.dir, cmd=self)
-        self.remote = GitRemoteCmd(dir=self.dir, cmd=self)
-        self.stash = GitStashCmd(dir=self.dir, cmd=self)
+        self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
+        self.remote = GitRemoteCmd(path=self.path, cmd=self)
+        self.stash = GitStashCmd(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
-        return f"<Git dir={self.dir}>"
+        return f"<Git path={self.path}>"
 
     def run(
         self,
@@ -83,7 +83,7 @@ class Git:
         *,
         # Print-and-exit flags
         version: Optional[bool] = None,
-        help: Optional[bool] = None,
+        _help: Optional[bool] = None,
         html_path: Optional[bool] = None,
         man_path: Optional[bool] = None,
         info_path: Optional[bool] = None,
@@ -155,7 +155,7 @@ class Git:
             ``--man-path``
         info_path : bool
             ``--info-path``
-        help : bool
+        _help : bool
             ``-h / --help``
         pager : bool
             ``-p --pager``
@@ -168,21 +168,21 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=tmp_path)
+        >>> git = Git(path=tmp_path)
         >>> git.run(['help'])
         "usage: git [...--version] [...--help] [-C <path>]..."
         """
         cli_args = ["git", *args] if isinstance(args, Sequence) else ["git", args]
 
         if "cwd" not in kwargs:
-            kwargs["cwd"] = self.dir
+            kwargs["cwd"] = self.path
 
         #
         # Print-and-exit
         #
         if version is True:
             cli_args.append("--version")
-        if help is True:
+        if _help is True:
             cli_args.append("--help")
         if html_path is True:
             cli_args.append("--html-path")
@@ -259,7 +259,7 @@ class Git:
         jobs: Optional[str] = None,
         force: Optional[bool] = None,
         local: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         no_hardlinks: Optional[bool] = None,
         hardlinks: Optional[bool] = None,
         shared: Optional[bool] = None,
@@ -295,26 +295,26 @@ class Git:
         force : bool, optional
             force operation to run
         make_parents : bool, default: ``True``
-            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+            Creates checkout directory (`:attr:`self.path`) if it doesn't already exist.
 
         Examples
         --------
-        >>> git = Git(dir=tmp_path)
+        >>> git = Git(path=tmp_path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.clone(url=f'file://{git_remote_repo}')
         ''
-        >>> git.dir.exists()
+        >>> git.path.exists()
         True
         """
-        required_flags: list[str] = [url, str(self.dir)]
+        required_flags: list[str] = [url, str(self.path)]
         local_flags: list[str] = []
 
         if template is not None:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
             local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", str(depth)])
         if branch is not None:
@@ -367,8 +367,8 @@ class Git:
             local_flags.append("--no-remote-submodules")
 
         # libvcs special behavior
-        if make_parents and not self.dir.exists():
-            self.dir.mkdir(parents=True)
+        if make_parents and not self.path.exists():
+            self.path.mkdir(parents=True)
         return self.run(
             ["clone", *local_flags, "--", *required_flags],
             config=config,
@@ -398,7 +398,7 @@ class Git:
         ] = None,
         submodule_prefix: Optional[StrOrBytesPath] = None,
         #
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         force: Optional[bool] = None,
         keep: Optional[bool] = None,
         multiple: Optional[bool] = None,
@@ -438,15 +438,15 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.fetch()
         ''
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.fetch(reftag=f'file://{git_remote_repo}')
         ''
-        >>> git.dir.exists()
+        >>> git.path.exists()
         True
         """
         required_flags: list[str] = []
@@ -456,8 +456,8 @@ class Git:
 
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if branch is not None:
@@ -486,7 +486,7 @@ class Git:
             local_flags.append("--progress")
         if verbose:
             local_flags.append("--verbose")
-        if all:
+        if _all:
             local_flags.append("--all")
         if atomic:
             local_flags.append("--atomic")
@@ -576,7 +576,7 @@ class Git:
         keep_base: Optional[bool] = None,
         strategy: Optional[Union[str, bool]] = None,
         strategy_option: Optional[str] = None,
-        exec: Optional[str] = None,
+        _exec: Optional[str] = None,
         gpg_sign: Optional[Union[str, bool]] = None,
         no_gpg_sign: Optional[bool] = None,
         empty: Optional[Union[str, Literal["drop", "keep", "ask"]]] = None,
@@ -591,7 +591,7 @@ class Git:
         skip: Optional[bool] = None,
         show_current_patch: Optional[bool] = None,
         abort: Optional[bool] = None,
-        quit: Optional[bool] = None,
+        _quit: Optional[bool] = None,
         # libvcs special behavior
         check_returncode: Optional[bool] = None,
         **kwargs: Any,
@@ -607,18 +607,18 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase()
         'Current branch master is up to date.'
 
         Declare upstream:
 
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase(upstream='origin')
         'Current branch master is up to date.'
-        >>> git.dir.exists()
+        >>> git.path.exists()
         True
         """
         required_flags: list[str] = []
@@ -633,8 +633,8 @@ class Git:
         if context:
             local_flags.extend(["--C", str(context)])
 
-        if exec:
-            local_flags.extend(["--exec", shlex.quote(exec)])
+        if _exec:
+            local_flags.extend(["--exec", shlex.quote(_exec)])
         if reschedule_failed_exec:
             local_flags.append("--reschedule-failed-exec")
         if no_reschedule_failed_exec:
@@ -729,11 +729,12 @@ class Git:
             local_flags.append("--edit-todo")
         if show_current_patch:
             local_flags.append("--show-current-patch")
-        if quit:
+        if _quit:
             local_flags.append("--quit")
 
         return self.run(
-            ["rebase", *local_flags, *required_flags], check_returncode=check_returncode
+            ["rebase", *local_flags, *required_flags],
+            check_returncode=check_returncode,
         )
 
     def pull(
@@ -799,7 +800,7 @@ class Git:
         #
         fetch: Optional[bool] = None,
         no_fetch: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         force: Optional[bool] = None,
         keep: Optional[bool] = None,
         multiple: Optional[bool] = None,
@@ -840,20 +841,20 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull()
         'Already up to date.'
 
         Fetch via ref:
 
-        >>> git = Git(dir=tmp_path)
+        >>> git = Git(path=tmp_path)
         >>> git.run(['init'])
         'Initialized ...'
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull(reftag=f'file://{git_remote_repo}')
         ''
-        >>> git.dir.exists()
+        >>> git.path.exists()
         True
         """
         required_flags: list[str] = []
@@ -938,8 +939,8 @@ class Git:
         #
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if branch is not None:
@@ -968,7 +969,7 @@ class Git:
             local_flags.append("--progress")
         if verbose:
             local_flags.append("--verbose")
-        if all:
+        if _all:
             local_flags.append("--all")
         if atomic:
             local_flags.append("--atomic")
@@ -1051,7 +1052,7 @@ class Git:
         --------
         >>> new_repo = tmp_path / 'example'
         >>> new_repo.mkdir()
-        >>> git = Git(dir=new_repo)
+        >>> git = Git(path=new_repo)
         >>> git.init()
         'Initialized empty Git repository in ...'
         >>> pathlib.Path(new_repo / 'test').write_text('foo', 'utf-8')
@@ -1063,7 +1064,7 @@ class Git:
 
         >>> new_repo = tmp_path / 'example1'
         >>> new_repo.mkdir()
-        >>> git = Git(dir=new_repo)
+        >>> git = Git(path=new_repo)
         >>> git.init(bare=True)
         'Initialized empty Git repository in ...'
         >>> pathlib.Path(new_repo / 'HEAD').exists()
@@ -1071,14 +1072,14 @@ class Git:
 
         Existing repo:
 
-        >>> git = Git(dir=new_repo)
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=new_repo)
+        >>> git = Git(path=git_local_clone.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.init()
         'Reinitialized existing Git repository in ...'
 
         """
-        required_flags: list[str] = [str(self.dir)]
+        required_flags: list[str] = [str(self.path)]
         local_flags: list[str] = []
 
         if template is not None:
@@ -1106,7 +1107,7 @@ class Git:
     def help(
         self,
         *,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         verbose: Optional[bool] = None,
         no_external_commands: Optional[bool] = None,
         no_aliases: Optional[bool] = None,
@@ -1123,7 +1124,7 @@ class Git:
 
         Parameters
         ----------
-        all : bool
+        _all : bool
             Prints everything.
 
         no_external_commands : bool
@@ -1152,12 +1153,12 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=tmp_path)
+        >>> git = Git(path=tmp_path)
 
         >>> git.help()
         "usage: git [...--version] [...--help] [-C <path>]..."
 
-        >>> git.help(all=True)
+        >>> git.help(_all=True)
         "See 'git help <command>' to read about a specific subcommand..."
 
         >>> git.help(info=True)
@@ -1170,7 +1171,7 @@ class Git:
 
         if verbose is True:
             local_flags.append("--verbose")
-        if all is True:
+        if _all is True:
             local_flags.append("--all")
         if no_external_commands is True:
             local_flags.append("--no-external-commands")
@@ -1229,7 +1230,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.reset()
         ''
@@ -1354,7 +1355,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.checkout()
         "Your branch is up to date with 'origin/master'."
@@ -1472,12 +1473,12 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.status()
         "On branch master..."
 
-        >>> pathlib.Path(git_local_clone.dir / 'new_file.txt').touch()
+        >>> pathlib.Path(git_local_clone.path / 'new_file.txt').touch()
 
         >>> git.status(porcelain=True)
         '?? new_file.txt'
@@ -1488,7 +1489,7 @@ class Git:
         >>> git.status(porcelain='2')
         '? new_file.txt'
 
-        >>> git.status(C=git_local_clone.dir / '.git', porcelain='2')
+        >>> git.status(C=git_local_clone.path / '.git', porcelain='2')
         '? new_file.txt'
 
         >>> git.status(porcelain=True, untracked_files="no")
@@ -1630,7 +1631,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.config()
         'usage: git config ...'
@@ -1753,7 +1754,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.version()
         'git version ...'
@@ -1789,7 +1790,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.rev_parse()
         ''
@@ -1864,7 +1865,7 @@ class Git:
         first_parent: Optional[bool] = None,
         exclude_first_parent_only: Optional[bool] = None,
         _not: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         branches: Optional[Union[str, bool]] = None,
         tags: Optional[Union[str, bool]] = None,
         remotes: Optional[Union[str, bool]] = None,
@@ -1908,7 +1909,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.rev_list(commit="HEAD")
         '...'
@@ -1922,7 +1923,7 @@ class Git:
         >>> git.rev_list(commit="HEAD", path=".", max_count=1, header=True)
         ''
 
-        >>> git.rev_list(commit="origin..HEAD", max_count=1, all=True, header=True)
+        >>> git.rev_list(commit="origin..HEAD", max_count=1, _all=True, header=True)
         ''
 
         >>> git.rev_list(commit="origin..HEAD", max_count=1, header=True)
@@ -2050,7 +2051,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.symbolic_ref(name="test")
         'fatal: ref test is not a symbolic ref'
@@ -2085,7 +2086,7 @@ class Git:
         head: Optional[bool] = None,
         dereference: Optional[bool] = None,
         tags: Optional[bool] = None,
-        hash: Optional[Union[str, bool]] = None,
+        _hash: Optional[Union[str, bool]] = None,
         abbrev: Optional[Union[str, bool]] = None,
         # libvcs special behavior
         check_returncode: Optional[bool] = None,
@@ -2095,7 +2096,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(dir=git_local_clone.dir)
+        >>> git = Git(path=git_local_clone.path)
 
         >>> git.show_ref()
         '...'
@@ -2125,7 +2126,7 @@ class Git:
                 pattern_flags.extend(pattern)
 
         for kwarg, kwarg_shell_flag in [
-            (hash, "--hash"),
+            (_hash, "--hash"),
             (abbrev, "--abbrev"),
         ]:
             if kwarg is not None:
@@ -2171,37 +2172,37 @@ GitSubmoduleCmdCommandLiteral = Literal[
 class GitSubmoduleCmd:
     """Run submodule commands in a git repository."""
 
-    def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
+    def __init__(self, *, path: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-submodule(1).
 
         Parameters
         ----------
-        dir :
+        path :
             Operates as PATH in the corresponding git subcommand.
 
         Examples
         --------
-        >>> GitSubmoduleCmd(dir=tmp_path)
-        <GitSubmoduleCmd dir=...>
+        >>> GitSubmoduleCmd(path=tmp_path)
+        <GitSubmoduleCmd path=...>
 
-        >>> GitSubmoduleCmd(dir=tmp_path).run(quiet=True)
+        >>> GitSubmoduleCmd(path=tmp_path).run(quiet=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).run(quiet=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).run(quiet=True)
         ''
         """
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
-        self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
 
     def __repr__(self) -> str:
         """Representation of a git submodule command object."""
-        return f"<GitSubmoduleCmd dir={self.dir}>"
+        return f"<GitSubmoduleCmd path={self.path}>"
 
     def run(
         self,
@@ -2221,7 +2222,7 @@ class GitSubmoduleCmd:
 
         Examples
         --------
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).run()
+        >>> GitSubmoduleCmd(path=git_local_clone.path).run()
         ''
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2251,7 +2252,7 @@ class GitSubmoduleCmd:
 
         Examples
         --------
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).init()
+        >>> GitSubmoduleCmd(path=git_local_clone.path).init()
         ''
         """
         local_flags: list[str] = []
@@ -2288,19 +2289,19 @@ class GitSubmoduleCmd:
 
         Examples
         --------
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update()
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update()
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(init=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update(init=True)
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(init=True, recursive=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update(init=True, recursive=True)
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(force=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update(force=True)
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(checkout=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update(checkout=True)
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(rebase=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update(rebase=True)
         ''
-        >>> GitSubmoduleCmd(dir=git_local_clone.dir).update(merge=True)
+        >>> GitSubmoduleCmd(path=git_local_clone.path).update(merge=True)
         ''
         """
         local_flags: list[str] = []
@@ -2322,8 +2323,8 @@ class GitSubmoduleCmd:
             local_flags.append("--rebase")
         elif merge is True:
             local_flags.append("--merge")
-        if (filter := kwargs.pop("filter", None)) is not None:
-            local_flags.append(f"--filter={filter}")
+        if (_filter := kwargs.pop("_filter", None)) is not None:
+            local_flags.append(f"--filter={_filter}")
 
         return self.run(
             "update",
@@ -2353,37 +2354,37 @@ GitRemoteCommandLiteral = Literal[
 class GitRemoteCmd:
     """Run commands directly for a git remote on a git repository."""
 
-    def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
+    def __init__(self, *, path: StrPath, cmd: Optional[Git] = None) -> None:
         r"""Lite, typed, pythonic wrapper for git-remote(1).
 
         Parameters
         ----------
-        dir :
+        path :
             Operates as PATH in the corresponding git subcommand.
 
         Examples
         --------
-        >>> GitRemoteCmd(dir=tmp_path)
-        <GitRemoteCmd dir=...>
+        >>> GitRemoteCmd(path=tmp_path)
+        <GitRemoteCmd path=...>
 
-        >>> GitRemoteCmd(dir=tmp_path).run(verbose=True)
+        >>> GitRemoteCmd(path=tmp_path).run(verbose=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitRemoteCmd(dir=git_local_clone.dir).run(verbose=True)
+        >>> GitRemoteCmd(path=git_local_clone.path).run(verbose=True)
         'origin\tfile:///...'
         """
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
-        self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
 
     def __repr__(self) -> str:
         """Representation of a git remote for a git repository."""
-        return f"<GitRemoteCmd dir={self.dir}>"
+        return f"<GitRemoteCmd path={self.path}>"
 
     def run(
         self,
@@ -2402,9 +2403,9 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(dir=git_local_clone.dir).run()
+        >>> GitRemoteCmd(path=git_local_clone.path).run()
         'origin'
-        >>> GitRemoteCmd(dir=git_local_clone.dir).run(verbose=True)
+        >>> GitRemoteCmd(path=git_local_clone.path).run(verbose=True)
         'origin\tfile:///...'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2438,7 +2439,7 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(dir=git_local_clone.dir).add(
+        >>> GitRemoteCmd(path=git_local_clone.path).add(
         ...     name='my_remote', url=f'file://{git_remote_repo}'
         ... )
         ''
@@ -2474,9 +2475,9 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(dir=git_local_clone.dir).rename(old='origin', new='new_name')
+        >>> GitRemoteCmd(path=git_local_clone.path).rename(old='origin', new='new_name')
         ''
-        >>> GitRemoteCmd(dir=git_local_clone.dir).run()
+        >>> GitRemoteCmd(path=git_local_clone.path).run()
         'new_name'
         """
         local_flags: list[str] = []
@@ -2506,9 +2507,9 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(dir=git_local_clone.dir).remove(name='origin')
+        >>> GitRemoteCmd(path=git_local_clone.path).remove(name='origin')
         ''
-        >>> GitRemoteCmd(dir=git_local_clone.dir).run()
+        >>> GitRemoteCmd(path=git_local_clone.path).run()
         ''
         """
         local_flags: list[str] = []
@@ -2535,7 +2536,7 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(dir=git_local_clone.dir).show()
+        >>> GitRemoteCmd(path=git_local_clone.path).show()
         'origin'
         """
         local_flags: list[str] = []
@@ -2571,10 +2572,10 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(dir=git_local_clone.dir).prune(name='origin')
+        >>> GitRemoteCmd(path=git_local_clone.path).prune(name='origin')
         ''
 
-        >>> GitRemoteCmd(dir=git_local_clone.dir).prune(name='origin', dry_run=True)
+        >>> GitRemoteCmd(path=git_local_clone.path).prune(name='origin', dry_run=True)
         ''
         """
         local_flags: list[str] = []
@@ -2595,7 +2596,7 @@ class GitRemoteCmd:
         *,
         name: str,
         push: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: Optional[bool] = None,
@@ -2605,13 +2606,13 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin')
+        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin')
         'file:///...'
 
-        >>> GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin', push=True)
+        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', push=True)
         'file:///...'
 
-        >>> GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin', all=True)
+        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', _all=True)
         'file:///...'
         """
         local_flags: list[str] = []
@@ -2619,7 +2620,7 @@ class GitRemoteCmd:
 
         if push:
             local_flags.append("--push")
-        if all:
+        if _all:
             local_flags.append("--all")
 
         return self.run(
@@ -2647,28 +2648,28 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
         ...     name='origin',
         ...     url='http://localhost'
         ... )
         ''
 
-        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
         ...     name='origin',
         ...     url='http://localhost',
         ...     push=True
         ... )
         ''
 
-        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
         ...     name='origin',
         ...     url='http://localhost',
         ...     add=True
         ... )
         ''
 
-        >>> current_url = GitRemoteCmd(dir=git_local_clone.dir).get_url(name='origin')
-        >>> GitRemoteCmd(dir=git_local_clone.dir).set_url(
+        >>> current_url = GitRemoteCmd(path=git_local_clone.path).get_url(name='origin')
+        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
         ...     name='origin',
         ...     url=current_url,
         ...     delete=True
@@ -2714,37 +2715,37 @@ GitStashCommandLiteral = Literal[
 class GitStashCmd:
     """Run commands directly against a git stash storage for a git repo."""
 
-    def __init__(self, *, dir: StrPath, cmd: Optional[Git] = None) -> None:
+    def __init__(self, *, path: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-stash(1).
 
         Parameters
         ----------
-        dir :
+        path :
             Operates as PATH in the corresponding git subcommand.
 
         Examples
         --------
-        >>> GitStashCmd(dir=tmp_path)
-        <GitStashCmd dir=...>
+        >>> GitStashCmd(path=tmp_path)
+        <GitStashCmd path=...>
 
-        >>> GitStashCmd(dir=tmp_path).run(quiet=True)
+        >>> GitStashCmd(path=tmp_path).run(quiet=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).run(quiet=True)
+        >>> GitStashCmd(path=git_local_clone.path).run(quiet=True)
         ''
         """
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
-        self.cmd = cmd if isinstance(cmd, Git) else Git(dir=self.dir)
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
 
     def __repr__(self) -> str:
         """Representation of git stash storage command object."""
-        return f"<GitStashCmd dir={self.dir}>"
+        return f"<GitStashCmd path={self.path}>"
 
     def run(
         self,
@@ -2764,7 +2765,7 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(dir=git_local_clone.dir).run()
+        >>> GitStashCmd(path=git_local_clone.path).run()
         'No local changes to save'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2793,7 +2794,7 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(dir=git_local_clone.dir)._list()
+        >>> GitStashCmd(path=git_local_clone.path)._list()
         ''
         """
         return self.run(
@@ -2819,10 +2820,10 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(dir=git_local_clone.dir).push()
+        >>> GitStashCmd(path=git_local_clone.path).push()
         'No local changes to save'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).push(path='.')
+        >>> GitStashCmd(path=git_local_clone.path).push(path='.')
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -2860,19 +2861,19 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(dir=git_local_clone.dir).pop()
+        >>> GitStashCmd(path=git_local_clone.path).pop()
         'No stash entries found.'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).pop(stash=0)
+        >>> GitStashCmd(path=git_local_clone.path).pop(stash=0)
         'error: refs/stash@{0} is not a valid reference'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).pop(stash=1, index=True)
+        >>> GitStashCmd(path=git_local_clone.path).pop(stash=1, index=True)
         'error: refs/stash@{1} is not a valid reference'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).pop(stash=1, quiet=True)
+        >>> GitStashCmd(path=git_local_clone.path).pop(stash=1, quiet=True)
         'error: refs/stash@{1} is not a valid reference'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).push(path='.')
+        >>> GitStashCmd(path=git_local_clone.path).push(path='.')
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -2901,7 +2902,7 @@ class GitStashCmd:
         keep_index: Optional[int] = None,
         patch: Optional[bool] = None,
         include_untracked: Optional[bool] = None,
-        all: Optional[bool] = None,
+        _all: Optional[bool] = None,
         quiet: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -2912,16 +2913,16 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(dir=git_local_clone.dir).save()
+        >>> GitStashCmd(path=git_local_clone.path).save()
         'No local changes to save'
 
-        >>> GitStashCmd(dir=git_local_clone.dir).save(message="Message")
+        >>> GitStashCmd(path=git_local_clone.path).save(message="Message")
         'No local changes to save'
         """
         local_flags: list[str] = []
         stash_flags: list[str] = []
 
-        if all is True:
+        if _all is True:
             local_flags.append("--all")
         if staged is True:
             local_flags.append("--staged")

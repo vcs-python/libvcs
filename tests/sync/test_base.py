@@ -12,7 +12,7 @@ from libvcs.sync.base import BaseSync, convert_pip_url
 
 def test_repr_via_create_project() -> None:
     """Test BaseSync repr, via create_project()."""
-    repo = create_project(url="file://path/to/myrepo", dir="/hello/", vcs="git")
+    repo = create_project(url="file://path/to/myrepo", path="/hello/", vcs="git")
 
     str_repo = str(repo)
     assert "GitSync" in str_repo
@@ -22,7 +22,7 @@ def test_repr_via_create_project() -> None:
 
 def test_repr_base() -> None:
     """Test BaseSync constructor and repr."""
-    repo = BaseSync(url="file://path/to/myrepo", dir="/hello/")
+    repo = BaseSync(url="file://path/to/myrepo", path="/hello/")
 
     str_repo = str(repo)
     assert "Sync" in str_repo
@@ -33,8 +33,8 @@ def test_repr_base() -> None:
 def test_ensure_dir_creates_parent_if_not_exist(tmp_path: pathlib.Path) -> None:
     """Test BaseDir.ensure_dir()."""
     projects_path = tmp_path / "projects_path"  # doesn't exist yet
-    dir = projects_path / "myrepo"
-    repo = BaseSync(url="file://path/to/myrepo", dir=dir)
+    path = projects_path / "myrepo"
+    repo = BaseSync(url="file://path/to/myrepo", path=path)
 
     repo.ensure_dir()
     assert projects_path.is_dir()
@@ -65,13 +65,13 @@ def test_progress_callback(
         def obtain(self, *args: list[str], **kwargs: dict[str, str]) -> None:
             self.ensure_dir()
             self.run(
-                ["clone", "--progress", self.url, pathlib.Path(self.dir)],
+                ["clone", "--progress", self.url, pathlib.Path(self.path)],
                 log_in_real_time=True,
             )
 
     r = Project(
         url=f"file://{git_remote_repo!s}",
-        dir=str(tmp_path),
+        path=str(tmp_path),
         progress_callback=progress_cb,
     )
     r.obtain()

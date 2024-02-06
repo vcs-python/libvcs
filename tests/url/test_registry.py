@@ -13,7 +13,8 @@ if t.TYPE_CHECKING:
 
     ParserMatchLazy: TypeAlias = t.Callable[[str], registry.ParserMatch]
     DetectVCSFixtureExpectedMatch: TypeAlias = t.Union[
-        registry.ParserMatch, ParserMatchLazy
+        registry.ParserMatch,
+        ParserMatchLazy,
     ]
 
 
@@ -30,7 +31,7 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
         DetectVCSFixture(
             url=url,
             expected_matches_lazy=[
-                lambda url: registry.ParserMatch(vcs="git", match=GitURL(url))
+                lambda url: registry.ParserMatch(vcs="git", match=GitURL(url)),
             ],
             is_explicit=True,
         )
@@ -49,7 +50,7 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
         DetectVCSFixture(
             url=url,
             expected_matches_lazy=[
-                lambda url: registry.ParserMatch(vcs="hg", match=HgURL(url))
+                lambda url: registry.ParserMatch(vcs="hg", match=HgURL(url)),
             ],
             is_explicit=True,
         )
@@ -63,7 +64,7 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
         DetectVCSFixture(
             url=url,
             expected_matches_lazy=[
-                lambda url: registry.ParserMatch(vcs="svn", match=SvnURL(url))
+                lambda url: registry.ParserMatch(vcs="svn", match=SvnURL(url)),
             ],
             is_explicit=True,
         )

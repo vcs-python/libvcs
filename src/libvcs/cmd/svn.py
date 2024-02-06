@@ -36,33 +36,33 @@ class Svn:
     def __init__(
         self,
         *,
-        dir: StrPath,
+        path: StrPath,
         progress_callback: Optional[ProgressCallbackProtocol] = None,
     ) -> None:
         """Lite, typed, pythonic wrapper for svn(1).
 
         Parameters
         ----------
-        dir :
+        path :
             Operates as PATH in the corresponding svn subcommand.
 
         Examples
         --------
-        >>> Svn(dir=tmp_path)
-        <Svn dir=...>
+        >>> Svn(path=tmp_path)
+        <Svn path=...>
         """
         #: Directory to check out
-        self.dir: pathlib.Path
-        if isinstance(dir, pathlib.Path):
-            self.dir = dir
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
         else:
-            self.dir = pathlib.Path(dir)
+            self.path = pathlib.Path(path)
 
         self.progress_callback = progress_callback
 
     def __repr__(self) -> str:
         """Representation of an SVN command object."""
-        return f"<Svn dir={self.dir}>"
+        return f"<Svn path={self.path}>"
 
     def run(
         self,
@@ -112,20 +112,20 @@ class Svn:
         cwd : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             Defaults to :attr:`~.cwd`
         make_parents : bool, default: ``True``
-            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+            Creates checkout directory (`:attr:`self.path`) if it doesn't already exist.
         check_returncode : bool, default: ``None``
             Passthrough to :meth:`Svn.run`
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.run(['help'])
         "usage: svn <subcommand> [options] [args]..."
         """
         cli_args = ["svn", *args] if isinstance(args, Sequence) else ["svn", args]
 
         if "cwd" not in kwargs:
-            kwargs["cwd"] = self.dir
+            kwargs["cwd"] = self.path
 
         if no_auth_cache is True:
             cli_args.append("--no-auth-cache")
@@ -186,20 +186,20 @@ class Svn:
         depth :
             Sparse checkout support, Optional
         make_parents : bool, default: ``True``
-            Creates checkout directory (`:attr:`self.dir`) if it doesn't already exist.
+            Creates checkout directory (`:attr:`self.path`) if it doesn't already exist.
         check_returncode : bool, default: True
             Passthrough to :meth:`Svn.run`
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn_remote_repo = create_svn_remote_repo()
         >>> svn.checkout(url=f'file://{svn_remote_repo}')
         '...Checked out revision ...'
         >>> svn.checkout(url=f'file://{svn_remote_repo}', revision=10)
         'svn: E160006: No such revision 10...'
         """
-        local_flags: list[str] = [url, str(self.dir)]
+        local_flags: list[str] = [url, str(self.path)]
 
         if revision is not None:
             local_flags.extend(["--revision", str(revision)])
@@ -211,8 +211,8 @@ class Svn:
             local_flags.append("--ignore-externals")
 
         # libvcs special behavior
-        if make_parents and not self.dir.exists():
-            self.dir.mkdir(parents=True)
+        if make_parents and not self.path.exists():
+            self.path.mkdir(parents=True)
 
         return self.run(
             ["checkout", *local_flags],
@@ -262,7 +262,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...'
         >>> new_file = tmp_path / 'new.txt'
@@ -311,7 +311,7 @@ class Svn:
 
         Examples
         --------
-        >>> Svn(dir=tmp_path).auth()
+        >>> Svn(path=tmp_path).auth()
         "Credentials cache in '...' is empty"
         """
         local_flags: list[str] = []
@@ -362,7 +362,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> repo = create_svn_remote_repo()
         >>> svn.checkout(url=f'file://{repo}')
         '...Checked out revision ...'
@@ -460,7 +460,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...'
         >>> new_file = tmp_path / 'new.txt'
@@ -633,7 +633,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.lock(targets='samplepickle')
@@ -769,7 +769,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.propset(name="my_prop", value="value", path=".")
@@ -800,7 +800,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path / 'initial_place')
+        >>> svn = Svn(path=tmp_path / 'initial_place')
         >>> repo_path = create_svn_remote_repo()
         >>> svn.checkout(url=repo_path.as_uri())
         '...Checked out revision ...'
@@ -837,7 +837,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.resolve(path='.')
@@ -879,7 +879,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.resolved(path='.')
@@ -928,7 +928,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> new_file = tmp_path / 'new.txt'
@@ -976,7 +976,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.status()
@@ -1001,7 +1001,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path / 'initial_place')
+        >>> svn = Svn(path=tmp_path / 'initial_place')
         >>> repo_path = create_svn_remote_repo()
         >>> svn.checkout(url=(repo_path / 'sampledir').as_uri())
         '...Checked out revision ...'
@@ -1044,7 +1044,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.lock(targets='samplepickle')
@@ -1087,7 +1087,7 @@ class Svn:
 
         Examples
         --------
-        >>> svn = Svn(dir=tmp_path)
+        >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
         >>> svn.update()

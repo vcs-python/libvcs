@@ -31,7 +31,7 @@ class HgSync(BaseSync):
         self,
         *,
         url: str,
-        dir: StrPath,
+        path: StrPath,
         **kwargs: Any,
     ) -> None:
         """Local Mercurial repository.
@@ -41,9 +41,9 @@ class HgSync(BaseSync):
         url : str
             URL in subversion repository
         """
-        super().__init__(url=url, dir=dir, **kwargs)
+        super().__init__(url=url, path=path, **kwargs)
 
-        self.cmd = Hg(dir=dir, progress_callback=self.progress_callback)
+        self.cmd = Hg(path=path, progress_callback=self.progress_callback)
 
     def obtain(self, *args: Any, **kwargs: Any) -> None:
         """Clone and update a Mercurial repository to this location."""
@@ -63,7 +63,7 @@ class HgSync(BaseSync):
 
     def update_repo(self, *args: Any, **kwargs: Any) -> None:
         """Pull changes from remote Mercurial repository into this one."""
-        if not pathlib.Path(self.dir / ".hg").exists():
+        if not pathlib.Path(self.path / ".hg").exists():
             self.obtain()
             self.update_repo()
         else:

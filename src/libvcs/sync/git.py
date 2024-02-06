@@ -39,7 +39,7 @@ class GitStatusParsingException(exc.LibVCSException):
 
     def __init__(self, git_status_output: str, *args: object):
         return super().__init__(
-            "Could not find match for git-status(1)" + f"Output: {git_status_output}"
+            "Could not find match for git-status(1)" + f"Output: {git_status_output}",
         )
 
 
@@ -70,7 +70,7 @@ class GitRemoteRefNotFound(exc.CommandError):
     def __init__(self, git_tag: str, ref_output: str, *args: object):
         return super().__init__(
             f"Could not fetch remote in refs/remotes/{git_tag}:"
-            + f"Output: {ref_output}"
+            + f"Output: {ref_output}",
         )
 
 
@@ -171,11 +171,15 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
         url, rev = base_convert_pip_url(pip_url)
         url = url.replace("ssh://", "")
     elif "github.com:" in pip_url:
-        raise exc.LibVCSException(
+        msg = (
             "Repo {} is malformatted, please use the convention {} for "
             "ssh / private GitHub repositories.".format(
-                pip_url, "git+https://github.com/username/repo.git"
+                pip_url,
+                "git+https://github.com/username/repo.git",
             )
+        )
+        raise exc.LibVCSException(
+            msg,
         )
     else:
         url, rev = base_convert_pip_url(pip_url)
@@ -192,7 +196,12 @@ class GitSync(BaseSync):
     _remotes: GitSyncRemoteDict
 
     def __init__(
-        self, *, url: str, dir: StrPath, remotes: GitRemotesArgs = None, **kwargs: Any
+        self,
+        *,
+        url: str,
+        path: StrPath,
+        remotes: GitRemotesArgs = None,
+        **kwargs: Any,
     ) -> None:
         """Local git repository.
 
@@ -215,7 +224,7 @@ class GitSync(BaseSync):
 
             repo = GitSync(
                url="https://github.com/vcs-python/libvcs",
-               dir=checkout,
+               path=checkout,
                remotes={
                    'gitlab': 'https://gitlab.com/vcs-python/libvcs'
                }
@@ -230,7 +239,7 @@ class GitSync(BaseSync):
 
             repo = GitSync(
                url="https://github.com/vcs-python/libvcs",
-               dir=checkout,
+               path=checkout,
                remotes={
                    'gitlab': {
                        'fetch_url': 'https://gitlab.com/vcs-python/libvcs',
@@ -248,7 +257,7 @@ class GitSync(BaseSync):
 
         if remotes is None:
             self._remotes: GitSyncRemoteDict = {
-                "origin": GitRemote(name="origin", fetch_url=url, push_url=url)
+                "origin": GitRemote(name="origin", fetch_url=url, push_url=url),
             }
         elif isinstance(remotes, dict):
             self._remotes = {}
@@ -265,7 +274,7 @@ class GitSync(BaseSync):
                             "fetch_url": remote_url["fetch_url"],
                             "push_url": remote_url["push_url"],
                             "name": remote_name,
-                        }
+                        },
                     )
                 elif isinstance(remote_url, GitRemote):
                     self._remotes[remote_name] = remote_url
@@ -276,9 +285,9 @@ class GitSync(BaseSync):
                 fetch_url=url,
                 push_url=url,
             )
-        super().__init__(url=url, dir=dir, **kwargs)
+        super().__init__(url=url, path=path, **kwargs)
 
-        self.cmd = Git(dir=dir, progress_callback=self.progress_callback)
+        self.cmd = Git(path=path, progress_callback=self.progress_callback)
 
         origin = (
             self._remotes.get("origin")
@@ -374,7 +383,7 @@ class GitSync(BaseSync):
         """Pull latest changes from git remote."""
         self.ensure_dir()
 
-        if not pathlib.Path(self.dir / ".git").is_dir():
+        if not pathlib.Path(self.path / ".git").is_dir():
             self.obtain()
             self.update_repo(set_remotes=set_remotes)
             return
@@ -396,7 +405,9 @@ class GitSync(BaseSync):
         # Get head sha
         try:
             head_sha = self.cmd.rev_list(
-                commit="HEAD", max_count=1, check_returncode=True
+                commit="HEAD",
+                max_count=1,
+                check_returncode=True,
             )
         except exc.CommandError:
             self.log.exception("Failed to get the hash for HEAD")
@@ -496,7 +507,7 @@ class GitSync(BaseSync):
 
                     self.log.exception(
                         "\nFailed to rebase in: '%s'.\n"
-                        "You will have to resolve the conflicts manually" % self.dir
+                        "You will have to resolve the conflicts manually" % self.path,
                     )
                     return
 
@@ -513,9 +524,9 @@ class GitSync(BaseSync):
                         self.cmd.reset(pathspec=head_sha, hard=True, quiet=True)
                         self.cmd.stash.pop(index=True, quiet=True)
                         self.log.exception(
-                            f"\nFailed to rebase in: '{self.dir}'.\n"
+                            f"\nFailed to rebase in: '{self.path}'.\n"
                             + "You will have to resolve the "
-                            + "conflicts manually"
+                            + "conflicts manually",
                         )
                         return
 
@@ -565,14 +576,18 @@ class GitSync(BaseSync):
         """
         try:
             ret = self.cmd.remote.show(
-                name=name, no_query_remotes=True, log_in_real_time=True
+                name=name,
+                no_query_remotes=True,
+                log_in_real_time=True,
             )
             lines = ret.split("\n")
             remote_fetch_url = lines[1].replace("Fetch URL: ", "").strip()
             remote_push_url = lines[2].replace("Push  URL: ", "").strip()
             if remote_fetch_url != name and remote_push_url != name:
                 return GitRemote(
-                    name=name, fetch_url=remote_fetch_url, push_url=remote_push_url
+                    name=name,
+                    fetch_url=remote_fetch_url,
+                    push_url=remote_push_url,
                 )
             else:
                 return None
@@ -580,7 +595,11 @@ class GitSync(BaseSync):
             return None
 
     def set_remote(
-        self, name: str, url: str, push: bool = False, overwrite: bool = False
+        self,
+        name: str,
+        url: str,
+        push: bool = False,
+        overwrite: bool = False,
     ) -> GitRemote:
         """Set remote with name and URL like git remote add.
 
@@ -657,7 +676,7 @@ class GitSync(BaseSync):
         --------
         >>> git_repo = GitSync(
         ...     url=f'file://{create_git_remote_repo()}',
-        ...     dir=tmp_path
+        ...     path=tmp_path
         ... )
         >>> git_repo.obtain()
         >>> git_repo.status()
@@ -670,7 +689,7 @@ branch_behind='0'\
 )
         """
         return GitStatus.from_stdout(
-            self.cmd.status(short=True, branch=True, porcelain="2")
+            self.cmd.status(short=True, branch=True, porcelain="2"),
         )
 
     def get_current_remote_name(self) -> str:

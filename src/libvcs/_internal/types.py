@@ -16,7 +16,10 @@ StrPath: "TypeAlias" = Union[str, PathLike[str]]  # stable
 """:class:`os.PathLike` or :class:`str`"""
 
 StrOrBytesPath: "TypeAlias" = Union[
-    str, bytes, PathLike[str], PathLike[bytes]  # stable
+    str,
+    bytes,
+    PathLike[str],
+    PathLike[bytes],  # stable
 ]
 """:class:`os.PathLike`, :class:`str` or :term:`bytes-like object`"""
 

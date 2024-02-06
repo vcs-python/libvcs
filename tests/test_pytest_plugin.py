@@ -47,7 +47,7 @@ def test_plugin(
             """
 [pytest]
 addopts=-vv
-        """.strip()
+        """.strip(),
         ),
     )
     pytester.makeconftest(
@@ -63,8 +63,8 @@ def setup(
     set_home: pathlib.Path,
 ) -> None:
     pass
-    """
-        )
+    """,
+        ),
     )
     tests_path = pytester.path / "tests"
     files = {
@@ -82,7 +82,7 @@ def test_repo_git_remote_checkout(
 ) -> None:
     git_server = create_git_remote_repo()
     git_repo_checkout_dir = projects_path / "my_git_checkout"
-    git_repo = GitSync(dir=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
+    git_repo = GitSync(path=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
 
     git_repo.obtain()
     git_repo.update_repo()
@@ -91,8 +91,8 @@ def test_repo_git_remote_checkout(
 
     assert git_repo_checkout_dir.exists()
     assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
-        """
-        )
+        """,
+        ),
     }
     first_test_key = next(iter(files.keys()))
     first_test_filename = str(tests_path / first_test_key)

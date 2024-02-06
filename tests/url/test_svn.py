@@ -74,8 +74,8 @@ def test_svn_url(
     svn_repo: SvnSync,
 ) -> None:
     """Test SvnURL."""
-    url = url.format(local_repo=svn_repo.dir)
-    svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
+    url = url.format(local_repo=svn_repo.path)
+    svn_url.url = svn_url.url.format(local_repo=svn_repo.path)
 
     assert SvnURL.is_valid(url) == is_valid, f"{url} compatibility should be {is_valid}"
     assert SvnURL(url) == svn_url
@@ -134,13 +134,13 @@ def test_svn_url_extension_pip(
 
     class SvnURLWithPip(SvnURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
-    svn_url_kwargs["url"] = svn_url_kwargs["url"].format(local_repo=svn_repo.dir)
-    url = url.format(local_repo=svn_repo.dir)
+    svn_url_kwargs["url"] = svn_url_kwargs["url"].format(local_repo=svn_repo.path)
+    url = url.format(local_repo=svn_repo.path)
     svn_url = SvnURLWithPip(**svn_url_kwargs)
-    svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
+    svn_url.url = svn_url.url.format(local_repo=svn_repo.path)
 
     assert (
         SvnBaseURL.is_valid(url) != is_valid
@@ -214,6 +214,6 @@ def test_svn_to_url(
     svn_repo: SvnSync,
 ) -> None:
     """Test SvnURL.to_url()."""
-    svn_url.url = svn_url.url.format(local_repo=svn_repo.dir)
+    svn_url.url = svn_url.url.format(local_repo=svn_repo.path)
 
     assert svn_url.to_url() == expected

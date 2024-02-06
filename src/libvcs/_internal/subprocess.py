@@ -1,3 +1,4 @@
+# ruff: NOQA: A002
 r"""Invocable :mod:`subprocess` wrapper.
 
 Defer running a subprocess, such as by handing to an executor.
@@ -73,7 +74,8 @@ if sys.platform == "win32":
     _ENV: "TypeAlias" = Mapping[str, str]
 else:
     _ENV: "TypeAlias" = Union[
-        Mapping[bytes, StrOrBytesPath], Mapping[str, StrOrBytesPath]
+        Mapping[bytes, StrOrBytesPath],
+        Mapping[str, StrOrBytesPath],
     ]
 _FILE: "TypeAlias" = Union[None, int, IO[Any]]
 _TXT: "TypeAlias" = Union[bytes, str]

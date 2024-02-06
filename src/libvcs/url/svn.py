@@ -353,7 +353,7 @@ class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     """
 
     rule_map = RuleMap(
-        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
     )
 
     @classmethod

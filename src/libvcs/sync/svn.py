@@ -44,7 +44,7 @@ class SvnSync(BaseSync):
         self,
         *,
         url: str,
-        dir: StrPath,
+        path: StrPath,
         **kwargs: Any,
     ) -> None:
         """Working copy of a SVN repository.
@@ -70,9 +70,9 @@ class SvnSync(BaseSync):
 
         self.rev = kwargs.get("rev")
 
-        super().__init__(url=url, dir=dir, **kwargs)
+        super().__init__(url=url, path=path, **kwargs)
 
-        self.cmd = Svn(dir=dir, progress_callback=self.progress_callback)
+        self.cmd = Svn(path=path, progress_callback=self.progress_callback)
 
     def _user_pw_args(self) -> list[Any]:
         args = []
@@ -141,11 +141,14 @@ class SvnSync(BaseSync):
         return revision
 
     def update_repo(
-        self, dest: Optional[str] = None, *args: Any, **kwargs: Any
+        self,
+        dest: Optional[str] = None,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Fetch changes from SVN repository to local working copy."""
         self.ensure_dir()
-        if pathlib.Path(self.dir / ".svn").exists():
+        if pathlib.Path(self.path / ".svn").exists():
             self.cmd.checkout(
                 url=self.url,
                 username=self.username,
@@ -192,8 +195,9 @@ class SvnSync(BaseSync):
                 # We don't need to worry about making sure interactive mode
                 # is being used to prompt for passwords, because passwords
                 # are only potentially needed for remote server requests.
-                xml = Svn(dir=pathlib.Path(location).parent).info(
-                    target=pathlib.Path(location), xml=True
+                xml = Svn(path=pathlib.Path(location).parent).info(
+                    target=pathlib.Path(location),
+                    xml=True,
                 )
                 match = _svn_info_xml_url_re.search(xml)
                 assert match is not None

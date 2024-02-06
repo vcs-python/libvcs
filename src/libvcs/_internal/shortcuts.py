@@ -36,7 +36,7 @@ class VCSNotSupported(exc.LibVCSException):
 def create_project(
     *,
     url: str,
-    dir: StrPath,
+    path: StrPath,
     vcs: t.Literal["git"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any],
@@ -48,7 +48,7 @@ def create_project(
 def create_project(
     *,
     url: str,
-    dir: StrPath,
+    path: StrPath,
     vcs: t.Literal["svn"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any],
@@ -60,7 +60,7 @@ def create_project(
 def create_project(
     *,
     url: str,
-    dir: StrPath,
+    path: StrPath,
     vcs: t.Literal["hg"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = ...,
     **kwargs: dict[t.Any, t.Any],
@@ -71,7 +71,7 @@ def create_project(
 def create_project(
     *,
     url: str,
-    dir: StrPath,
+    path: StrPath,
     vcs: t.Optional[VCSLiteral] = None,
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any],
@@ -84,7 +84,7 @@ def create_project(
     >>> r = create_project(
     ...     url=f'file://{create_git_remote_repo()}',
     ...     vcs='git',
-    ...     dir=tmp_path
+    ...     path=tmp_path
     ... )
 
     >>> isinstance(r, GitSync)
@@ -95,7 +95,7 @@ def create_project(
     >>> r = create_project(
     ...     # Note the git+ before the URL
     ...     url=f'git+file://{create_git_remote_repo()}',
-    ...     dir=tmp_path
+    ...     path=tmp_path
     ... )
 
     >>> isinstance(r, GitSync)
@@ -120,10 +120,14 @@ def create_project(
             raise VCSNotSupported(url=url, vcs=vcs_matches[0].vcs)
 
     if vcs == "git":
-        return GitSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)
+        return GitSync(
+            url=url, path=path, progress_callback=progress_callback, **kwargs
+        )
     elif vcs == "hg":
-        return HgSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)
+        return HgSync(url=url, path=path, progress_callback=progress_callback, **kwargs)
     elif vcs == "svn":
-        return SvnSync(url=url, dir=dir, progress_callback=progress_callback, **kwargs)
+        return SvnSync(
+            url=url, path=path, progress_callback=progress_callback, **kwargs
+        )
     else:
         raise InvalidVCS("VCS %s is not a valid VCS" % vcs)

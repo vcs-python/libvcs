@@ -276,7 +276,7 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
                 self.rule_map._rule_map.items(),
                 key=lambda item: item[1].weight,
                 reverse=True,
-            )
+            ),
         )
 
         for rule in sorted_maps.values():
@@ -490,7 +490,7 @@ class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
     """
 
     rule_map = RuleMap(
-        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
     )
 
     @classmethod

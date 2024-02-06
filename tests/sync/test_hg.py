@@ -23,7 +23,7 @@ def test_hg_sync(
 
     mercurial_repo = HgSync(
         url=f"file://{hg_remote_repo}",
-        dir=projects_path / repo_name,
+        path=projects_path / repo_name,
     )
 
     run(["hg", "init", mercurial_repo.repo_name], cwd=tmp_path)
@@ -31,7 +31,8 @@ def test_hg_sync(
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=projects_path / repo_name
+        ["hg", "parents", "--template={rev}"],
+        cwd=projects_path / repo_name,
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
@@ -47,7 +48,7 @@ def test_repo_mercurial_via_create_project(
 
     mercurial_repo = create_project(
         url=f"file://{hg_remote_repo}",
-        dir=projects_path / repo_name,
+        path=projects_path / repo_name,
         vcs="hg",
     )
 
@@ -56,7 +57,8 @@ def test_repo_mercurial_via_create_project(
     mercurial_repo.update_repo()
 
     test_repo_revision = run(
-        ["hg", "parents", "--template={rev}"], cwd=projects_path / repo_name
+        ["hg", "parents", "--template={rev}"],
+        cwd=projects_path / repo_name,
     )
 
     assert mercurial_repo.get_revision() == test_repo_revision
@@ -77,11 +79,13 @@ def test_vulnerability_2022_03_12_command_injection(
     random_dir.mkdir()
     monkeypatch.chdir(str(random_dir))
     mercurial_repo = create_project(
-        url="--config=alias.clone=!touch ./HELLO", vcs="hg", dir="./"
+        url="--config=alias.clone=!touch ./HELLO",
+        vcs="hg",
+        path="./",
     )
     with pytest.raises(exc.CommandError):
         mercurial_repo.update_repo()
 
     assert not pathlib.Path(
-        random_dir / "HELLO"
+        random_dir / "HELLO",
     ).exists(), "Prevent command injection in hg aliases"

@@ -85,8 +85,8 @@ def test_git_url(
     git_repo: GitSync,
 ) -> None:
     """Tests for GitURL."""
-    url = url.format(local_repo=git_repo.dir)
-    git_url.url = git_url.url.format(local_repo=git_repo.dir)
+    url = url.format(local_repo=git_repo.path)
+    git_url.url = git_url.url.format(local_repo=git_repo.path)
 
     assert GitURL.is_valid(url) == is_valid, f"{url} compatibility should be {is_valid}"
     assert GitURL(url) == git_url
@@ -151,13 +151,13 @@ def test_git_url_extension_pip(
 
     class GitURLWithPip(GitBaseURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
-    git_url_kwargs["url"] = git_url_kwargs["url"].format(local_repo=git_repo.dir)
-    url = url.format(local_repo=git_repo.dir)
+    git_url_kwargs["url"] = git_url_kwargs["url"].format(local_repo=git_repo.path)
+    url = url.format(local_repo=git_repo.path)
     git_url = GitURLWithPip(**git_url_kwargs)
-    git_url.url = git_url.url.format(local_repo=git_repo.dir)
+    git_url.url = git_url.url.format(local_repo=git_repo.path)
 
     assert (
         GitBaseURL.is_valid(url) != is_valid
@@ -226,7 +226,7 @@ def test_git_to_url(
     git_repo: GitSync,
 ) -> None:
     """Test GitURL.to_url()."""
-    git_url.url = git_url.url.format(local_repo=git_repo.dir)
+    git_url.url = git_url.url.format(local_repo=git_repo.path)
 
     assert git_url.to_url() == expected
 
@@ -270,7 +270,7 @@ def test_git_revs(
 
     class GitURLWithPip(GitURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
     git_url = GitURLWithPip(**git_url_kwargs)
