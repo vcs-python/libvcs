@@ -81,7 +81,7 @@ class Hg:
         config: Optional[str] = None,
         repository: Optional[str] = None,
         quiet: Optional[bool] = None,
-        help: Optional[bool] = None,
+        _help: Optional[bool] = None,
         encoding: Optional[str] = None,
         encoding_mode: Optional[str] = None,
         verbose: Optional[bool] = None,
@@ -136,7 +136,7 @@ class Hg:
             ``--profile``
         version : bool
             ``--version``
-        help : bool
+        _help : bool
             ``-h / --help``
         hidden : bool
             ``--hidden``
@@ -182,7 +182,7 @@ class Hg:
             cli_args.append("--profile")
         if version is True:
             cli_args.append("--version")
-        if help is True:
+        if _help is True:
             cli_args.append("--help")
 
         if self.progress_callback is not None:
