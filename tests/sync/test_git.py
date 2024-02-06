@@ -652,7 +652,7 @@ def test_remotes_preserves_git_ssh(
     ],
 )
 def test_private_ssh_format(
-    tmpdir: pathlib.Path,
+    tmp_path: pathlib.Path,
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
 ) -> None:
@@ -662,7 +662,7 @@ def test_private_ssh_format(
             url=git_convert_pip_url(
                 "git+ssh://github.com:/tmp/omg/private_ssh_repo"
             ).url,
-            dir=tmpdir,
+            dir=tmp_path,
             vcs="git",
         )
         excinfo.match(r".*is a malformed.*")
