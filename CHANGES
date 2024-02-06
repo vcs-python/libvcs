@@ -21,18 +21,18 @@ $ pip install --user --upgrade --pre libvcs
 
   - Add flake8-commas (COM)
 
-	- https://docs.astral.sh/ruff/rules/#flake8-commas-com
-	- https://pypi.org/project/flake8-commas/
+    - https://docs.astral.sh/ruff/rules/#flake8-commas-com
+    - https://pypi.org/project/flake8-commas/
 
   - Add flake8-builtins (A)
 
-	- https://docs.astral.sh/ruff/rules/#flake8-builtins-a
-	- https://pypi.org/project/flake8-builtins/
+    - https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+    - https://pypi.org/project/flake8-builtins/
 
   - Add flake8-errmsg (EM)
 
-	- https://docs.astral.sh/ruff/rules/#flake8-errmsg-em
-	- https://pypi.org/project/flake8-errmsg/
+    - https://docs.astral.sh/ruff/rules/#flake8-errmsg-em
+    - https://pypi.org/project/flake8-errmsg/
 
 ### CI
 
@@ -56,7 +56,7 @@ $ pip install --user --upgrade --pre libvcs
 
 - ci: Add pydocstyle rule to ruff (#449)
 - Add test for direct usage of `HgSync` (#450)
-- pytest-watcher, Add configuration (#450): 
+- pytest-watcher, Add configuration (#450):
 
   - Run initially by default
   - Skip post-save files from vim
