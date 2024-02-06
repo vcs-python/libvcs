@@ -134,7 +134,7 @@ def test_svn_url_extension_pip(
 
     class SvnURLWithPip(SvnURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
     svn_url_kwargs["url"] = svn_url_kwargs["url"].format(local_repo=svn_repo.dir)

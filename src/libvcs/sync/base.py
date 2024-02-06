@@ -118,7 +118,7 @@ class BaseSync:
 
         #: Logging attribute
         self.log: CmdLoggingAdapter = CmdLoggingAdapter(
-            bin_name=self.bin_name, keyword=self.repo_name, logger=logger, extra={}
+            bin_name=self.bin_name, keyword=self.repo_name, logger=logger, extra={},
         )
 
     @property
@@ -190,7 +190,7 @@ class BaseSync:
 
         if not self.dir.exists():
             self.log.debug(
-                f"Project directory for {self.repo_name} does not exist @ {self.dir}"
+                f"Project directory for {self.repo_name} does not exist @ {self.dir}",
             )
             self.dir.mkdir(parents=True)
 

@@ -19,7 +19,7 @@ def test_command_error() -> None:
     assert (
         str(e.value)
         == exc.CommandError.message.format(
-            returncode=e.value.returncode, cmd=e.value.cmd
+            returncode=e.value.returncode, cmd=e.value.cmd,
         )
         + "\n%s" % e.value.output
     )
@@ -30,7 +30,7 @@ def test_command_error() -> None:
         raise exc.CommandError("", returncode, command)
     assert e.value.cmd == " ".join(command)
     assert str(e.value) == exc.CommandError.message.format(
-        returncode=e.value.returncode, cmd=e.value.cmd
+        returncode=e.value.returncode, cmd=e.value.cmd,
     )
 
     command_2 = None

@@ -40,7 +40,7 @@ class VCSRegistry:
             self.parser_map[k] = v
 
     def match(
-        self, url: str, is_explicit: t.Optional[bool] = None
+        self, url: str, is_explicit: t.Optional[bool] = None,
     ) -> list["ParserMatch"]:
         """Return a list of potential VCS' identified for a given URL."""
         matches: list[ParserMatch] = []

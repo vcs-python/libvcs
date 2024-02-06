@@ -117,7 +117,7 @@ def test_hg_url_extension_pip(
 
     class HgURLWithPip(HgURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
     hg_url_kwargs["url"] = hg_url_kwargs["url"].format(local_repo=hg_repo.dir)

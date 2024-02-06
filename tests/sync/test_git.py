@@ -209,7 +209,7 @@ def test_repo_update_stash_cases(
     if needs_stash:
         some_stashed_file = git_repo.dir / "some_stashed_file"
         some_stashed_file.write_text(
-            f"some content: {random.random()}", encoding="utf-8"
+            f"some content: {random.random()}", encoding="utf-8",
         )
         git_repo.run(["add", some_stashed_file])
 
@@ -257,7 +257,7 @@ def test_progress_callback(
         assert isinstance(timestamp, datetime.datetime)
 
     progress_callback = mocker.Mock(
-        name="progress_callback_stub", side_effect=progress_callback_spy
+        name="progress_callback_stub", side_effect=progress_callback_spy,
     )
 
     # create a new repo with the repo as a remote
@@ -461,8 +461,8 @@ def test_remotes(
                         "name": "second_remote",
                         "fetch_url": git_remote_repo.as_uri(),
                         "push_url": git_remote_repo.as_uri(),
-                    }
-                )
+                    },
+                ),
             },
             lambda git_remote_repo, **kwargs: {
                 "origin": GitRemote(
@@ -517,8 +517,8 @@ def test_remotes(
                         "name": "second_remote",
                         "fetch_url": f"{second_git_remote_repo!s}",
                         "push_url": f"{second_git_remote_repo!s}",
-                    }
-                )
+                    },
+                ),
             },
             lambda git_remote_repo, second_git_remote_repo, **kwargs: {
                 "origin": GitRemote(
@@ -625,7 +625,7 @@ def test_remotes_preserves_git_ssh(
     git_repo.set_remote(name=remote_name, url=remote_url)
 
     assert GitRemote(remote_name, remote_url, remote_url) in list(
-        git_repo.remotes().values()
+        git_repo.remotes().values(),
     )
 
 
@@ -660,7 +660,7 @@ def test_private_ssh_format(
     with pytest.raises(exc.LibVCSException) as excinfo:
         create_project(
             url=git_convert_pip_url(
-                "git+ssh://github.com:/tmp/omg/private_ssh_repo"
+                "git+ssh://github.com:/tmp/omg/private_ssh_repo",
             ).url,
             dir=tmp_path,
             vcs="git",
@@ -692,7 +692,7 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
     assert "file:///" in mynewremote.fetch_url, "set_remote returns remote"
 
     assert isinstance(
-        git_repo.remote(name=repo_name), GitRemote
+        git_repo.remote(name=repo_name), GitRemote,
     ), "remote() returns GitRemote"
     remote = git_repo.remote(name=repo_name)
     assert remote is not None, "Remote should exist"
@@ -766,13 +766,13 @@ def test_GitRemote_from_stdout() -> None:
         # branch.oid d4ccd4d6af04b53949f89fbf0cdae13719dc5a08
         # branch.head fix-current-remote-name
         1 .M N... 100644 100644 100644 91082f119279b6f105ee9a5ce7795b3bdbe2b0de 91082f119279b6f105ee9a5ce7795b3bdbe2b0de CHANGES
-    """  # NOQA: E501
+    """,  # NOQA: E501
     )
     assert GitStatus(
         **{
             "branch_oid": "d4ccd4d6af04b53949f89fbf0cdae13719dc5a08",
             "branch_head": "fix-current-remote-name",
-        }
+        },
     ) == GitStatus.from_stdout(FIXTURE_A)
 
 
@@ -807,7 +807,7 @@ class GitBranchComplexResult(t.TypedDict):
                     "branch_ab": "+0 -0",
                     "branch_ahead": "0",
                     "branch_behind": "0",
-                }
+                },
             ),
         ],
         [
@@ -829,7 +829,7 @@ class GitBranchComplexResult(t.TypedDict):
                     "branch_ab": "+0 -0",
                     "branch_ahead": "0",
                     "branch_behind": "0",
-                }
+                },
             ),
         ],
     ],
@@ -857,7 +857,7 @@ class GitBranchResult(t.TypedDict):
                     "branch_ab": "+1 -83",
                     "branch_ahead": "1",
                     "branch_behind": "83",
-                }
+                },
             ),
         ],
         [
@@ -869,7 +869,7 @@ class GitBranchResult(t.TypedDict):
                     "branch_ab": "+0 -0",
                     "branch_ahead": "0",
                     "branch_behind": "0",
-                }
+                },
             ),
         ],
         [
@@ -881,7 +881,7 @@ class GitBranchResult(t.TypedDict):
                     "branch_ab": "+1 -83",
                     "branch_ahead": "1",
                     "branch_behind": "83",
-                }
+                },
             ),
         ],
         [
@@ -893,7 +893,7 @@ class GitBranchResult(t.TypedDict):
                     "branch_ab": "+9999999 -9999999",
                     "branch_ahead": "9999999",
                     "branch_behind": "9999999",
-                }
+                },
             ),
         ],
     ],

@@ -151,7 +151,7 @@ def test_git_url_extension_pip(
 
     class GitURLWithPip(GitBaseURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
     git_url_kwargs["url"] = git_url_kwargs["url"].format(local_repo=git_repo.dir)
@@ -270,7 +270,7 @@ def test_git_revs(
 
     class GitURLWithPip(GitURL):
         rule_map = RuleMap(
-            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]}
+            _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
     git_url = GitURLWithPip(**git_url_kwargs)
