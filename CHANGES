@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Improvement
+
+- `QueryList` generic support improved (#453)
+
 ## libvcs 0.27.0 (2024-02-06)
 
 ### Development

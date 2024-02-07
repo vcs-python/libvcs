@@ -7,9 +7,9 @@ This is an internal API not covered by versioning policy.
 import re
 import traceback
 import typing as t
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
-T = t.TypeVar("T", t.Any, t.Any)
+T = t.TypeVar("T")
 no_arg = object()
 
 
@@ -312,7 +312,7 @@ class OpNotFound(ValueError):
         return super().__init__(f"{op} not in LOOKUP_NAME_MAP")
 
 
-class QueryList(list[T]):
+class QueryList(t.Generic[T], list[T]):
     """Filter list of object/dictionaries. For small, local datasets.
 
     *Experimental, unstable*.
@@ -464,7 +464,10 @@ class QueryList(list[T]):
     data: Sequence[T]
     pk_key: t.Optional[str]
 
-    def items(self) -> list[T]:
+    def __init__(self, items: t.Optional["Iterable[T]"] = None) -> None:
+        super().__init__(items if items is not None else [])
+
+    def items(self) -> list[tuple[str, T]]:
         if self.pk_key is None:
             raise PKRequiredException()
         return [(getattr(item, self.pk_key), item) for item in self]
@@ -522,7 +525,7 @@ class QueryList(list[T]):
             _filter = matcher
         elif matcher is not None:
 
-            def val_match(obj: t.Union[str, list[t.Any]]) -> bool:
+            def val_match(obj: t.Union[str, list[t.Any], T]) -> bool:
                 if isinstance(matcher, list):
                     return obj in matcher
                 else:
