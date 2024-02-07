@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import pytest
 
@@ -250,7 +250,7 @@ class Obj:
 )
 def test_filter(
     items: list[dict[str, Any]],
-    filter_expr: Optional[dict[str, Union[str, list[str]]]],
+    filter_expr: Optional[Union[Callable[[Any], bool], Any]],
     expected_result: Union[QueryList[Any], list[dict[str, Any]]],
 ) -> None:
     qs = QueryList(items)
