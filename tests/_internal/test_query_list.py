@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Callable, Optional, Union
+import typing as t
 
 import pytest
 
@@ -249,9 +249,9 @@ class Obj:
     ],
 )
 def test_filter(
-    items: list[dict[str, Any]],
-    filter_expr: Optional[Union[Callable[[Any], bool], Any]],
-    expected_result: Union[QueryList[Any], list[dict[str, Any]]],
+    items: list[dict[str, t.Any]],
+    filter_expr: t.Optional[t.Union[t.Callable[[t.Any], bool], t.Any]],
+    expected_result: t.Union[QueryList[t.Any], list[dict[str, t.Any]]],
 ) -> None:
     qs = QueryList(items)
     if filter_expr is not None:
