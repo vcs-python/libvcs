@@ -51,7 +51,11 @@ packages = [
   { include = "*", from = "src" },
 ]
 include = [
+  { path = "CHANGES", format = "sdist" },
+  { path = "MIGRATION", format = "sdist" },
+  { path = ".tmuxp.yaml", format = "sdist" },
   { path = "tests", format = "sdist" },
+  { path = "docs", format = "sdist" },
   { path = "conftest.py", format = "sdist" },
 ]
 
