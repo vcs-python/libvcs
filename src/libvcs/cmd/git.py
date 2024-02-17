@@ -1918,16 +1918,16 @@ class Git:
         '[master ...] Moo'
 
         >>> git.rev_list(commit="HEAD", max_count=1)
-        ''
+        '...'
 
         >>> git.rev_list(commit="HEAD", path=".", max_count=1, header=True)
-        ''
+        '...'
 
         >>> git.rev_list(commit="origin..HEAD", max_count=1, _all=True, header=True)
-        ''
+        '...'
 
         >>> git.rev_list(commit="origin..HEAD", max_count=1, header=True)
-        ''
+        '...'
         """
         required_flags: list[str] = []
         path_flags: list[str] = []
@@ -1976,7 +1976,7 @@ class Git:
             (max_parents, "--max-parents"),
         ]:
             if int_flag is not None:
-                local_flags.extend([int_shell_flag, str(int_shell_flag)])
+                local_flags.extend([int_shell_flag, str(int_flag)])
 
         for flag, shell_flag in [
             # Limiting output
