@@ -15,6 +15,12 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Fixes
+
+- `Git.rev_list`: Fix argument expansion (#455)
+
+  Resolves issue with _fatal: '--max-count': not an integer_.
+
 ### Testing
 
 - CI: Bump actions to Node 20 releases (#456)
