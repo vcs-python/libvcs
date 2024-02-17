@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Testing
+
+- CI: Bump actions to Node 20 releases (#456)
+
 ## libvcs 0.28.1 (2024-02-08)
 
 ### Packaging
