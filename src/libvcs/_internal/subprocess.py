@@ -38,6 +38,7 @@ Examples
   >>> cmd.run(capture_output=True, universal_newlines=True).stdout
   'hello\n'
 """
+
 import dataclasses
 import subprocess
 import sys
@@ -223,8 +224,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Optional[bool] = ...,
         encoding: str,
         errors: Optional[str] = ...,
-    ) -> subprocess.Popen[str]:
-        ...
+    ) -> subprocess.Popen[str]: ...
 
     @overload
     def Popen(
@@ -235,8 +235,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Optional[bool] = ...,
         encoding: Optional[str] = ...,
         errors: str,
-    ) -> subprocess.Popen[str]:
-        ...
+    ) -> subprocess.Popen[str]: ...
 
     @overload
     def Popen(
@@ -248,8 +247,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Optional[bool] = ...,
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
-    ) -> subprocess.Popen[str]:
-        ...
+    ) -> subprocess.Popen[str]: ...
 
     @overload
     def Popen(
@@ -260,8 +258,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Literal[True],
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
-    ) -> subprocess.Popen[str]:
-        ...
+    ) -> subprocess.Popen[str]: ...
 
     @overload
     def Popen(
@@ -272,8 +269,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         text: Literal[None, False] = ...,
         encoding: None = ...,
         errors: None = ...,
-    ) -> subprocess.Popen[bytes]:
-        ...
+    ) -> subprocess.Popen[bytes]: ...
 
     def Popen(
         self,
@@ -336,8 +332,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: Optional[str] = ...,
         text: Literal[True],
         **kwargs: Any,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def check_output(
@@ -349,8 +344,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: Optional[str] = ...,
         text: Optional[bool] = ...,
         **kwargs: Any,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def check_output(
@@ -362,8 +356,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: str,
         text: Optional[bool] = ...,
         **kwargs: Any,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def check_output(
@@ -375,8 +368,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: Optional[str] = ...,
         text: Optional[bool] = ...,
         **kwargs: Any,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def check_output(
@@ -388,8 +380,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: None = ...,
         text: Literal[None, False] = ...,
         **kwargs: Any,
-    ) -> bytes:
-        ...
+    ) -> bytes: ...
 
     def check_output(
         self,
@@ -449,8 +440,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: Optional[str] = ...,
         input: Optional[str] = ...,
         text: Literal[True],
-    ) -> subprocess.CompletedProcess[str]:
-        ...
+    ) -> subprocess.CompletedProcess[str]: ...
 
     @overload
     def run(
@@ -463,8 +453,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: Optional[str] = ...,
         input: Optional[str] = ...,
         text: Optional[bool] = ...,
-    ) -> subprocess.CompletedProcess[str]:
-        ...
+    ) -> subprocess.CompletedProcess[str]: ...
 
     @overload
     def run(
@@ -477,8 +466,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: str,
         input: Optional[str] = ...,
         text: Optional[bool] = ...,
-    ) -> subprocess.CompletedProcess[str]:
-        ...
+    ) -> subprocess.CompletedProcess[str]: ...
 
     @overload
     def run(
@@ -492,8 +480,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: Optional[str] = ...,
         input: Optional[str] = ...,
         text: Optional[bool] = ...,
-    ) -> subprocess.CompletedProcess[str]:
-        ...
+    ) -> subprocess.CompletedProcess[str]: ...
 
     @overload
     def run(
@@ -506,8 +493,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: None = ...,
         input: Optional[bytes] = ...,
         text: Literal[None, False] = ...,
-    ) -> subprocess.CompletedProcess[bytes]:
-        ...
+    ) -> subprocess.CompletedProcess[bytes]: ...
 
     def run(
         self,

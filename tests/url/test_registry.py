@@ -1,4 +1,5 @@
 """Tests for URL Registry."""
+
 import typing as t
 
 import pytest

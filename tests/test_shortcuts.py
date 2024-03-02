@@ -1,4 +1,5 @@
 """Tests for libvcs.shortcuts."""
+
 import pathlib
 from typing import Literal, Optional, TypedDict, TypeVar, Union
 

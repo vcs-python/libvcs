@@ -1,4 +1,5 @@
 """Tests for libvcs GitSync."""
+
 import datetime
 import pathlib
 import random

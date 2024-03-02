@@ -4,6 +4,7 @@ Note
 ----
 This is an internal API not covered by versioning policy.
 """
+
 import typing as t
 from typing import Union
 
@@ -40,8 +41,7 @@ def create_project(
     vcs: t.Literal["git"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any],
-) -> GitSync:
-    ...
+) -> GitSync: ...
 
 
 @t.overload
@@ -52,8 +52,7 @@ def create_project(
     vcs: t.Literal["svn"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = None,
     **kwargs: dict[t.Any, t.Any],
-) -> SvnSync:
-    ...
+) -> SvnSync: ...
 
 
 @t.overload
@@ -64,8 +63,7 @@ def create_project(
     vcs: t.Literal["hg"],
     progress_callback: t.Optional[ProgressCallbackProtocol] = ...,
     **kwargs: dict[t.Any, t.Any],
-) -> HgSync:
-    ...
+) -> HgSync: ...
 
 
 def create_project(

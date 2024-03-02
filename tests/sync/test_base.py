@@ -1,4 +1,5 @@
 """tests for libvcs.sync abstract base class."""
+
 import datetime
 import pathlib
 import sys

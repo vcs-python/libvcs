@@ -8,6 +8,7 @@
    Robert M. Pirsig's sense - *care*.  Connect with us `on the tracker
    <https://github.com/vcs-python/libvcs>`_. It's not too late to change the API.
 """
+
 import enum
 import pathlib
 from collections.abc import Sequence

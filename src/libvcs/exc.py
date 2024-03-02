@@ -1,4 +1,5 @@
 """Exceptions for libvcs."""
+
 from typing import Optional, Union
 
 

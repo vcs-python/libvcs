@@ -1,4 +1,5 @@
 """Constants for use by libvcs.sync."""
+
 from typing import Literal, Union
 
 from libvcs import GitSync, HgSync, SvnSync

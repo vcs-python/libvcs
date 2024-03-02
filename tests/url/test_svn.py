@@ -1,4 +1,5 @@
 """Tests for SVNUrl."""
+
 import typing
 
 import pytest

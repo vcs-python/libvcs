@@ -7,6 +7,7 @@
    providing you "color between the lines" and stick to the interface. `Get in
    <https://github.com/vcs-python/libvcs>`_, 'APIs unstable until we fit the spec.
 """
+
 import pathlib
 from collections.abc import Sequence
 from typing import Any, Literal, Optional, Union

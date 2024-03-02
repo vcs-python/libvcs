@@ -12,6 +12,7 @@
     - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
 """
+
 import logging
 import os
 import pathlib

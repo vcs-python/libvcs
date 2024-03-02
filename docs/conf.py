@@ -1,5 +1,6 @@
 # flake8: NOQA: E501
 """Sphinx configuration for libvcs."""
+
 import inspect
 import pathlib
 import sys

@@ -1,4 +1,5 @@
 """Registry of VCS URL Parsers for libvcs."""
+
 import typing as t
 
 from libvcs._internal.module_loading import import_string

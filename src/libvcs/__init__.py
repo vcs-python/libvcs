@@ -1,4 +1,5 @@
 """Project package for libvcs."""
+
 import logging
 
 from ._internal.run import CmdLoggingAdapter

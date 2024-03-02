@@ -1,4 +1,5 @@
 """Tests for mercurial URL module."""
+
 import typing
 
 import pytest
