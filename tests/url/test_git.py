@@ -1,4 +1,5 @@
 """Tests for GitURL."""
+
 import typing
 
 import pytest

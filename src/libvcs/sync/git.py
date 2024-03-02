@@ -14,6 +14,7 @@
     - [`GitSync.get_revision`](libvcs.git.GitProject.get_revision)
     - [`GitSync.get_git_version`](libvcs.git.GitProject.get_git_version)
 """  # NOQA: E501
+
 import dataclasses
 import logging
 import pathlib

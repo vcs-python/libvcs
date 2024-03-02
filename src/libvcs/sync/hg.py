@@ -8,6 +8,7 @@
    - [`HgSync.get_url`](libvcs.hg.HgSync.get_url)
    - [`HgSync.get_revision`](libvcs.hg.HgSync.get_revision)
 """  # E5
+
 import logging
 import pathlib
 from typing import Any

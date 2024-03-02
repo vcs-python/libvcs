@@ -1,4 +1,5 @@
 """Tests for SubprocessCommand."""
+
 import pathlib
 import subprocess
 from typing import Any

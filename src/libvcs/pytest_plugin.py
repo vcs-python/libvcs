@@ -1,4 +1,5 @@
 """pytest plugin for VCS Repository testing and management."""
+
 import functools
 import getpass
 import pathlib

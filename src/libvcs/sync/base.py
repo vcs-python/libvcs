@@ -1,4 +1,5 @@
 """Foundational tools to set up a VCS manager in libvcs.sync."""
+
 import logging
 import pathlib
 from collections.abc import Sequence

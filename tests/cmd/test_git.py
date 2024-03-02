@@ -1,4 +1,5 @@
 """Tests for libvcs.cmd.git."""
+
 import pathlib
 from typing import Any, Callable, Union
 

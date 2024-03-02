@@ -1,4 +1,5 @@
 """Tests for libvcs pytest plugin."""
+
 import pathlib
 import shutil
 import textwrap

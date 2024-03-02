@@ -6,6 +6,7 @@ Notes
 
 .. _typeshed's: https://github.com/python/typeshed/blob/5df8de7/stdlib/_typeshed/__init__.pyi#L115-L118
 """  # E501
+
 from os import PathLike
 from typing import TYPE_CHECKING, Literal, Union
 
