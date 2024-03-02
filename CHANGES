@@ -15,6 +15,14 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Development
+
+- ruff 0.2.2 -> 0.3.0 (#441)
+
+  Related formattings. Update CI to use `ruff check .` instead of `ruff .`.
+
+  See also: https://github.com/astral-sh/ruff/blob/v0.3.0/CHANGELOG.md
+
 ## libvcs 0.28.2 (2024-02-17)
 
 ### Fixes
