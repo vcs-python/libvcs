@@ -17,7 +17,7 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Development
 
-- ruff 0.2.2 -> 0.3.0 (#441)
+- ruff 0.2.2 -> 0.3.0 (#457)
 
   Related formattings. Update CI to use `ruff check .` instead of `ruff .`.
 
