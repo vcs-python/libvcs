@@ -25,7 +25,7 @@ RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
     """Raised when required parameters are not passed."""
 
-    def __init__(self, *args: object):
+    def __init__(self, *args: object) -> None:
         return super().__init__("Must enter a value or value_path")
 
 
@@ -783,7 +783,7 @@ class Svn:
         elif isinstance(value_path, pathlib.Path):
             local_flags.extend(["--file", str(pathlib.Path(value_path).absolute())])
         else:
-            raise SvnPropsetValueOrValuePathRequired()
+            raise SvnPropsetValueOrValuePathRequired
 
         if path is not None:
             if isinstance(path, (str, pathlib.Path)):

@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class SvnUrlRevFormattingError(ValueError):
     """Raised when SVN Revision output is not in the expected format."""
 
-    def __init__(self, data: str, *args: object):
+    def __init__(self, data: str, *args: object) -> None:
         return super().__init__(f"Badly formatted data: {data!r}")
 
 
@@ -104,7 +104,7 @@ class SvnSync(BaseSync):
         """Return revision for a file."""
         current_rev = self.cmd.info(location)
 
-        _INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.M)
+        _INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.MULTILINE)
 
         info_list = _INI_RE.findall(current_rev)
         return int(dict(info_list)["Revision"])
@@ -178,7 +178,7 @@ class SvnSync(BaseSync):
             data = ""
 
         url = None
-        if data.startswith("8") or data.startswith("9") or data.startswith("10"):
+        if data.startswith(("8", "9", "10")):
             entries = list(map(str.splitlines, data.split("\n\x0c\n")))
             del entries[0][0]  # get rid of the '8'
             url = entries[0][3]

@@ -65,7 +65,7 @@ TEST_FIXTURES: list[SvnURLFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,svn_url",
+    ("url", "is_valid", "svn_url"),
     TEST_FIXTURES,
 )
 def test_svn_url(
@@ -122,7 +122,7 @@ PIP_TEST_FIXTURES: list[SvnURLKwargsFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,svn_url_kwargs",
+    ("url", "is_valid", "svn_url_kwargs"),
     PIP_TEST_FIXTURES,
 )
 def test_svn_url_extension_pip(
@@ -163,17 +163,8 @@ class ToURLFixture(typing.NamedTuple):
 
 
 @pytest.mark.parametrize(
-    "svn_url,expected",
+    ("svn_url", "expected"),
     [
-        ToURLFixture(
-            expected="https://bitbucket.com/vcs-python/libvcs",
-            svn_url=SvnURL(
-                url="https://bitbucket.com/vcs-python/libvcs",
-                scheme="https",
-                hostname="bitbucket.com",
-                path="vcs-python/libvcs",
-            ),
-        ),
         ToURLFixture(
             expected="https://bitbucket.com/vcs-python/libvcs",
             svn_url=SvnURL(

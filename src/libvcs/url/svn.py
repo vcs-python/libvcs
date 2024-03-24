@@ -183,8 +183,6 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
     separator: str = dataclasses.field(default="/")
     path: str = dataclasses.field(default="")
 
-    #
-    #
     ref: Optional[str] = None
 
     rule: Optional[str] = None

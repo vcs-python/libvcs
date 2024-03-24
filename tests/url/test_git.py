@@ -76,7 +76,7 @@ TEST_FIXTURES: list[GitURLFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,git_url",
+    ("url", "is_valid", "git_url"),
     TEST_FIXTURES,
 )
 def test_git_url(
@@ -139,7 +139,7 @@ PIP_TEST_FIXTURES: list[GitURLKwargsFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,git_url_kwargs",
+    ("url", "is_valid", "git_url_kwargs"),
     PIP_TEST_FIXTURES,
 )
 def test_git_url_extension_pip(
@@ -177,7 +177,7 @@ class ToURLFixture(typing.NamedTuple):
 
 
 @pytest.mark.parametrize(
-    "git_url,expected",
+    ("git_url", "expected"),
     [
         ToURLFixture(
             expected="https://github.com/vcs-python/libvcs.git",
@@ -241,7 +241,7 @@ class RevFixture(typing.NamedTuple):
 
 
 @pytest.mark.parametrize(
-    "git_url_kwargs,expected",
+    ("git_url_kwargs", "expected"),
     [
         RevFixture(
             expected=None,

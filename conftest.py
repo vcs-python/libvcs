@@ -42,4 +42,3 @@ def setup(
     set_home: pathlib.Path,
 ) -> None:
     """Configure test fixtures for pytest."""
-    pass

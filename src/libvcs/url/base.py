@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class URLProtocol(Protocol):
     """Common interface for VCS URL Parsers."""
 
-    def __init__(self, url: str): ...
+    def __init__(self, url: str) -> None: ...
 
     def to_url(self) -> str:
         """Output to a command friendly URL for VCS."""

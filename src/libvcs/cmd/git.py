@@ -206,7 +206,7 @@ class Git:
             def stringify(v: Any) -> str:
                 if isinstance(v, bool):
                     return "true" if True else "false"
-                elif not isinstance(v, str):
+                if not isinstance(v, str):
                     return str(v)
                 return v
 
@@ -398,7 +398,6 @@ class Git:
             Union[bool, Literal["yes", "on-demand"]]
         ] = None,
         submodule_prefix: Optional[StrOrBytesPath] = None,
-        #
         _all: Optional[bool] = None,
         force: Optional[bool] = None,
         keep: Optional[bool] = None,
@@ -1821,9 +1820,8 @@ class Git:
         if parseopt is True:
             if args is not None:
                 local_flags.extend(["--", args])
-        else:
-            if args is not None:
-                local_flags.append(args)
+        elif args is not None:
+            local_flags.append(args)
 
         return self.run(
             ["rev-parse", *local_flags],

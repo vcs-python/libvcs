@@ -15,9 +15,8 @@ import sys
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Optional, Protocol, Union
 
+from libvcs import exc
 from libvcs._internal.types import StrOrBytesPath
-
-from .. import exc
 
 logger = logging.getLogger(__name__)
 
