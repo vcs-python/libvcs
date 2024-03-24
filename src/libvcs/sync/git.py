@@ -590,10 +590,9 @@ class GitSync(BaseSync):
                     fetch_url=remote_fetch_url,
                     push_url=remote_push_url,
                 )
-            else:
-                return None
         except exc.LibVCSException:
-            return None
+            pass
+        return None
 
     def set_remote(
         self,
