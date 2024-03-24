@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
     """Raised when exceeded threshold of attempts to find a unique repo destination."""
 
-    def __init__(self, attempts: int, *args: object):
+    def __init__(self, attempts: int, *args: object) -> None:
         """Raise LibVCSException exception with message including attempts tried."""
         return super().__init__(
             f"Could not find unused repo destination (attempts: {attempts})",
@@ -73,12 +73,10 @@ def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) 
         return True
     if not shutil.which("git") and "git" in str(collection_path):
         return True
-    if not shutil.which("hg") and any(
-        needle in str(collection_path) for needle in ["hg", "mercurial"]
-    ):
-        return True
-
-    return False
+    return bool(
+        not shutil.which("hg")
+        and any(needle in str(collection_path) for needle in ["hg", "mercurial"]),
+    )
 
 
 @pytest.fixture(scope="session")
@@ -101,7 +99,7 @@ def user_path(home_path: pathlib.Path, home_user_name: str) -> pathlib.Path:
     return p
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def set_home(
     monkeypatch: pytest.MonkeyPatch,
     user_path: pathlib.Path,
@@ -110,7 +108,7 @@ def set_home(
     monkeypatch.setenv("HOME", str(user_path))
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_git_missing
 def gitconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
@@ -145,7 +143,7 @@ def gitconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
     return gitconfig
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_hg_missing
 def hgconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
     """Return Mercurial configuration, pytest fixture."""
@@ -166,7 +164,7 @@ def hgconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
     return hgrc
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def projects_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
@@ -182,7 +180,7 @@ def projects_path(
     return path
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def remote_repos_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
@@ -257,7 +255,7 @@ def _create_git_remote_repo(
     return remote_repo_path
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_git_missing
 def create_git_remote_repo(
     remote_repos_path: pathlib.Path,
@@ -290,8 +288,7 @@ def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
     run(["git", "commit", "-m", "test file for dummyrepo"], cwd=remote_repo_path)
 
 
-@pytest.fixture
-@pytest.mark.usefixtures("gitconfig", "set_home")
+@pytest.fixture()
 @skip_if_git_missing
 def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made git repo w/ 1 commit, used as a file:// remote to clone and push to."""
@@ -343,7 +340,7 @@ def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_svn_missing
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
@@ -368,17 +365,15 @@ def create_svn_remote_repo(
     return fn
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_svn_missing
 def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
-    remote_repo_path = _create_svn_remote_repo(
+    return _create_svn_remote_repo(
         remote_repos_path=remote_repos_path,
         remote_repo_name="svn_server_dir",
         remote_repo_post_init=None,
     )
-
-    return remote_repo_path
 
 
 def _create_hg_remote_repo(
@@ -408,7 +403,7 @@ def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> No
     run(["hg", "commit", "-m", "test file for hg repo"], cwd=remote_repo_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_hg_missing
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
@@ -435,7 +430,7 @@ def create_hg_remote_repo(
     return fn
 
 
-@pytest.fixture
+@pytest.fixture()
 @skip_if_hg_missing
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
@@ -449,7 +444,7 @@ def hg_remote_repo(
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitSync:
     """Pre-made git clone of remote repo checked out to user's projects dir."""
     git_repo = GitSync(
@@ -467,7 +462,7 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitS
     return git_repo
 
 
-@pytest.fixture
+@pytest.fixture()
 def hg_repo(projects_path: pathlib.Path, hg_remote_repo: pathlib.Path) -> HgSync:
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
     hg_repo = HgSync(
@@ -478,7 +473,7 @@ def hg_repo(projects_path: pathlib.Path, hg_remote_repo: pathlib.Path) -> HgSync
     return hg_repo
 
 
-@pytest.fixture
+@pytest.fixture()
 def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnSync:
     """Pre-made svn clone of remote repo checked out to user's projects dir."""
     svn_repo = SvnSync(
@@ -489,7 +484,7 @@ def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnS
     return svn_repo
 
 
-@pytest.fixture
+@pytest.fixture()
 def add_doctest_fixtures(
     request: pytest.FixtureRequest,
     doctest_namespace: dict[str, Any],

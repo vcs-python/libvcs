@@ -95,7 +95,7 @@ def test_registry(
 
     # Just add water
     expected_matches: list["DetectVCSFixtureExpectedMatch"] = []
-    for _idx, expected_match in enumerate(expected_matches_lazy):
+    for expected_match in expected_matches_lazy:
         if callable(expected_match):
             assert callable(expected_match)
             expected_matches.append(expected_match(url))

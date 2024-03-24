@@ -67,7 +67,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 class SubprocessCheckOutputError(Exception):
-    def __init__(self, output: str, *args: object):
+    def __init__(self, output: str, *args: object) -> None:
         return super().__init__(f"output is not str or bytes: {output}")
 
 

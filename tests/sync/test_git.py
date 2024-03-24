@@ -32,24 +32,24 @@ ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    ("constructor", "lazy_constructor_options"),
     [
-        [
+        (
             GitSync,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": bare_dir.as_uri(),
                 "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": f"git+{bare_dir.as_uri()}",
                 "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
-        ],
+        ),
     ],
 )
 def test_repo_git_obtain_initial_commit_repo(
@@ -75,24 +75,24 @@ def test_repo_git_obtain_initial_commit_repo(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    ("constructor", "lazy_constructor_options"),
     [
-        [
+        (
             GitSync,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
                 "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
-        ],
+        ),
     ],
 )
 def test_repo_git_obtain_full(
@@ -113,24 +113,24 @@ def test_repo_git_obtain_full(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    ("constructor", "lazy_constructor_options"),
     [
-        [
+        (
             GitSync,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
                 "path": tmp_path / "myrepo",
                 "vcs": "git",
             },
-        ],
+        ),
     ],
 )
 def test_repo_update_handle_cases(
@@ -158,16 +158,16 @@ def test_repo_update_handle_cases(
 
 
 @pytest.mark.parametrize(
-    "has_untracked_files,needs_stash,has_remote_changes",
+    ("has_untracked_files", "needs_stash", "has_remote_changes"),
     [
-        [True, True, True],
-        [True, True, False],
-        [True, False, True],
-        [True, False, False],
-        [False, True, True],
-        [False, True, False],
-        [False, False, True],
-        [False, False, False],
+        (True, True, True),
+        (True, True, False),
+        (True, False, True),
+        (True, False, False),
+        (False, True, True),
+        (False, True, False),
+        (False, False, True),
+        (False, False, False),
     ],
 )
 def test_repo_update_stash_cases(
@@ -223,9 +223,9 @@ def test_repo_update_stash_cases(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    ("constructor", "lazy_constructor_options"),
     [
-        [
+        (
             GitSync,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -233,8 +233,8 @@ def test_repo_update_stash_cases(
                 "progress_callback": progress_callback,
                 "vcs": "git",
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda git_remote_repo, tmp_path, progress_callback, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
@@ -242,7 +242,7 @@ def test_repo_update_stash_cases(
                 "progress_callback": progress_callback,
                 "vcs": "git",
             },
-        ],
+        ),
     ],
 )
 def test_progress_callback(
@@ -272,9 +272,9 @@ def test_progress_callback(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options,lazy_remote_expected",
+    ("constructor", "lazy_constructor_options", "lazy_remote_expected"),
     [
-        [
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -287,8 +287,8 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -302,8 +302,8 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -325,8 +325,8 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -347,8 +347,8 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -378,8 +378,8 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -400,8 +400,8 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
@@ -415,7 +415,7 @@ def test_progress_callback(
                     push_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
+        ),
     ],
 )
 def test_remotes(
@@ -447,9 +447,14 @@ def test_remotes(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options,lazy_remote_dict,lazy_remote_expected",
+    (
+        "constructor",
+        "lazy_constructor_options",
+        "lazy_remote_dict",
+        "lazy_remote_expected",
+    ),
     [
-        [
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -460,11 +465,9 @@ def test_remotes(
             },
             lambda git_remote_repo, **kwargs: {
                 "second_remote": GitRemote(
-                    **{
-                        "name": "second_remote",
-                        "fetch_url": git_remote_repo.as_uri(),
-                        "push_url": git_remote_repo.as_uri(),
-                    },
+                    name="second_remote",
+                    fetch_url=git_remote_repo.as_uri(),
+                    push_url=git_remote_repo.as_uri(),
                 ),
             },
             lambda git_remote_repo, **kwargs: {
@@ -479,8 +482,8 @@ def test_remotes(
                     fetch_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -504,8 +507,8 @@ def test_remotes(
                     fetch_url=git_remote_repo.as_uri(),
                 ),
             },
-        ],
-        [
+        ),
+        (
             GitSync,
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
@@ -516,11 +519,9 @@ def test_remotes(
             },
             lambda git_remote_repo, second_git_remote_repo, **kwargs: {
                 "origin": GitRemote(
-                    **{
-                        "name": "second_remote",
-                        "fetch_url": f"{second_git_remote_repo!s}",
-                        "push_url": f"{second_git_remote_repo!s}",
-                    },
+                    name="second_remote",
+                    fetch_url=f"{second_git_remote_repo!s}",
+                    push_url=f"{second_git_remote_repo!s}",
                 ),
             },
             lambda git_remote_repo, second_git_remote_repo, **kwargs: {
@@ -530,7 +531,7 @@ def test_remotes(
                     push_url=f"{second_git_remote_repo!s}",
                 ),
             },
-        ],
+        ),
     ],
 )
 def test_remotes_update_repo(
@@ -590,24 +591,24 @@ def test_git_get_url_and_rev_from_pip_url() -> None:
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    ("constructor", "lazy_constructor_options"),
     [
-        [
+        (
             GitSync,
             lambda git_remote_repo, path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": path,
                 "vcs": "git",
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda git_remote_repo, path, **kwargs: {
                 "url": f"git+{git_remote_repo.as_uri()}",
                 "path": path,
                 "vcs": "git",
             },
-        ],
+        ),
     ],
 )
 def test_remotes_preserves_git_ssh(
@@ -634,24 +635,24 @@ def test_remotes_preserves_git_ssh(
 
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
-    "constructor,lazy_constructor_options",
+    ("constructor", "lazy_constructor_options"),
     [
-        [
+        (
             GitSync,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": bare_dir.as_uri(),
                 "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
-        ],
-        [
+        ),
+        (
             create_project,
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": f"git+{bare_dir.as_uri()}",
                 "path": tmp_path / "obtaining a bare repo",
                 "vcs": "git",
             },
-        ],
+        ),
     ],
 )
 def test_private_ssh_format(
@@ -683,9 +684,9 @@ def test_git_sync_remotes(git_repo: GitSync) -> None:
 
 
 @pytest.mark.parametrize(
-    "repo_name,new_repo_url",
+    ("repo_name", "new_repo_url"),
     [
-        ["myrepo", "file:///apples"],
+        ("myrepo", "file:///apples"),
     ],
 )
 def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> None:
@@ -740,7 +741,9 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
 
     new_remote_name = "new_remote_name"
     git_repo.set_remote(
-        name=new_remote_name, url=git_repo.path.as_uri(), overwrite=True
+        name=new_remote_name,
+        url=git_repo.path.as_uri(),
+        overwrite=True,
     )
     git_repo.run(["fetch", new_remote_name])
     git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])
@@ -775,10 +778,8 @@ def test_GitRemote_from_stdout() -> None:
     """,  # NOQA: E501
     )
     assert GitStatus(
-        **{
-            "branch_oid": "d4ccd4d6af04b53949f89fbf0cdae13719dc5a08",
-            "branch_head": "fix-current-remote-name",
-        },
+        branch_oid="d4ccd4d6af04b53949f89fbf0cdae13719dc5a08",
+        branch_head="fix-current-remote-name",
     ) == GitStatus.from_stdout(FIXTURE_A)
 
 
@@ -794,9 +795,9 @@ class GitBranchComplexResult(t.TypedDict):
 
 
 @pytest.mark.parametrize(
-    "fixture,expected_result",
+    ("fixture", "expected_result"),
     [
-        [
+        (
             """
         # branch.oid de6185fde0806e5c7754ca05676325a1ea4d6348
         # branch.head fix-current-remote-name
@@ -806,21 +807,19 @@ class GitBranchComplexResult(t.TypedDict):
         1 .M N... 100644 100644 100644 302ca2c18d4c295ce217bff5f93e1ba342dc6665 302ca2c18d4c295ce217bff5f93e1ba342dc6665 tests/test_git.py
     """,  # NOQA: E501
             GitStatus(
-                **{
-                    "branch_oid": "de6185fde0806e5c7754ca05676325a1ea4d6348",
-                    "branch_head": "fix-current-remote-name",
-                    "branch_upstream": "origin/fix-current-remote-name",
-                    "branch_ab": "+0 -0",
-                    "branch_ahead": "0",
-                    "branch_behind": "0",
-                },
+                branch_oid="de6185fde0806e5c7754ca05676325a1ea4d6348",
+                branch_head="fix-current-remote-name",
+                branch_upstream="origin/fix-current-remote-name",
+                branch_ab="+0 -0",
+                branch_ahead="0",
+                branch_behind="0",
             ),
-        ],
-        [
+        ),
+        (
             "# branch.upstream moo/origin/myslash/remote",
-            GitStatus(**{"branch_upstream": "moo/origin/myslash/remote"}),
-        ],
-        [
+            GitStatus(branch_upstream="moo/origin/myslash/remote"),
+        ),
+        (
             """
             # branch.oid c3c5323abc5dca78d9bdeba6c163c2a37b452e69
             # branch.head libvcs-0.4.0
@@ -828,16 +827,14 @@ class GitBranchComplexResult(t.TypedDict):
             # branch.ab +0 -0
             """,
             GitStatus(
-                **{
-                    "branch_oid": "c3c5323abc5dca78d9bdeba6c163c2a37b452e69",
-                    "branch_head": "libvcs-0.4.0",
-                    "branch_upstream": "origin/libvcs-0.4.0",
-                    "branch_ab": "+0 -0",
-                    "branch_ahead": "0",
-                    "branch_behind": "0",
-                },
+                branch_oid="c3c5323abc5dca78d9bdeba6c163c2a37b452e69",
+                branch_head="libvcs-0.4.0",
+                branch_upstream="origin/libvcs-0.4.0",
+                branch_ab="+0 -0",
+                branch_ahead="0",
+                branch_behind="0",
             ),
-        ],
+        ),
     ],
 )
 def test_GitRemote__from_stdout_b(fixture: str, expected_result: GitStatus) -> None:
@@ -854,54 +851,46 @@ class GitBranchResult(t.TypedDict):
 
 
 @pytest.mark.parametrize(
-    "fixture,expected_result",
+    ("fixture", "expected_result"),
     [
-        [
+        (
             "# branch.ab +1 -83",
             GitStatus(
-                **{
-                    "branch_ab": "+1 -83",
-                    "branch_ahead": "1",
-                    "branch_behind": "83",
-                },
+                branch_ab="+1 -83",
+                branch_ahead="1",
+                branch_behind="83",
             ),
-        ],
-        [
+        ),
+        (
             """
             # branch.ab +0 -0
             """,
             GitStatus(
-                **{
-                    "branch_ab": "+0 -0",
-                    "branch_ahead": "0",
-                    "branch_behind": "0",
-                },
+                branch_ab="+0 -0",
+                branch_ahead="0",
+                branch_behind="0",
             ),
-        ],
-        [
+        ),
+        (
             """
             # branch.ab +1 -83
             """,
             GitStatus(
-                **{
-                    "branch_ab": "+1 -83",
-                    "branch_ahead": "1",
-                    "branch_behind": "83",
-                },
+                branch_ab="+1 -83",
+                branch_ahead="1",
+                branch_behind="83",
             ),
-        ],
-        [
+        ),
+        (
             """
             # branch.ab +9999999 -9999999
             """,
             GitStatus(
-                **{
-                    "branch_ab": "+9999999 -9999999",
-                    "branch_ahead": "9999999",
-                    "branch_behind": "9999999",
-                },
+                branch_ab="+9999999 -9999999",
+                branch_ahead="9999999",
+                branch_behind="9999999",
             ),
-        ],
+        ),
     ],
 )
 def test_GitRemote__from_stdout_c(fixture: str, expected_result: GitStatus) -> None:

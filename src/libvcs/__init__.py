@@ -9,11 +9,11 @@ from .sync.hg import HgSync
 from .sync.svn import SvnSync
 
 __all__ = [
+    "BaseSync",
+    "CmdLoggingAdapter",
     "GitSync",
     "HgSync",
     "SvnSync",
-    "BaseSync",
-    "CmdLoggingAdapter",
 ]
 
 logger = logging.getLogger(__name__)

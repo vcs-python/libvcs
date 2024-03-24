@@ -28,7 +28,7 @@ def convert_pip_url(pip_url: str) -> VCSLocation:
     )
     assert "+" in pip_url, error_message % pip_url
     url = pip_url.split("+", 1)[1]
-    scheme, netloc, path, query, frag = urlparse.urlsplit(url)
+    scheme, netloc, path, query, _frag = urlparse.urlsplit(url)
     rev = None
     if "@" in path:
         path, rev = path.rsplit("@", 1)
@@ -134,9 +134,7 @@ class BaseSync:
     def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseSync":
         """Create synchronization object from pip-style URL."""
         url, rev = convert_pip_url(pip_url)
-        self = cls(url=url, rev=rev, **kwargs)
-
-        return self
+        return cls(url=url, rev=rev, **kwargs)
 
     def run(
         self,

@@ -22,6 +22,7 @@ import re
 from typing import Any, Optional, Union
 from urllib import parse as urlparse
 
+from libvcs import exc
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
 from libvcs.sync.base import (
@@ -30,15 +31,13 @@ from libvcs.sync.base import (
     convert_pip_url as base_convert_pip_url,
 )
 
-from .. import exc
-
 logger = logging.getLogger(__name__)
 
 
 class GitStatusParsingException(exc.LibVCSException):
     """Raised when git status output is not in the expected format."""
 
-    def __init__(self, git_status_output: str, *args: object):
+    def __init__(self, git_status_output: str, *args: object) -> None:
         return super().__init__(
             "Could not find match for git-status(1)" + f"Output: {git_status_output}",
         )
@@ -47,28 +46,28 @@ class GitStatusParsingException(exc.LibVCSException):
 class GitRemoteOriginMissing(exc.LibVCSException):
     """Raised when git origin remote was not found."""
 
-    def __init__(self, remotes: list[str], *args: object):
+    def __init__(self, remotes: list[str], *args: object) -> None:
         return super().__init__(f"Missing origin. Remotes: {', '.join(remotes)}")
 
 
 class GitRemoteSetError(exc.LibVCSException):
     """Raised when a git remote could not be set."""
 
-    def __init__(self, remote_name: str):
+    def __init__(self, remote_name: str) -> None:
         return super().__init__(f"Remote {remote_name} not found after setting")
 
 
 class GitNoBranchFound(exc.LibVCSException):
     """Raised with git branch could not be found."""
 
-    def __init__(self, *args: object):
+    def __init__(self, *args: object) -> None:
         return super().__init__("No branch found for git repository")
 
 
 class GitRemoteRefNotFound(exc.CommandError):
     """Raised when a git remote ref (tag, branch) could not be found."""
 
-    def __init__(self, git_tag: str, ref_output: str, *args: object):
+    def __init__(self, git_tag: str, ref_output: str, *args: object) -> None:
         return super().__init__(
             f"Could not fetch remote in refs/remotes/{git_tag}:"
             + f"Output: {ref_output}",
@@ -271,11 +270,9 @@ class GitSync(BaseSync):
                     )
                 elif isinstance(remote_url, dict):
                     self._remotes[remote_name] = GitRemote(
-                        **{
-                            "fetch_url": remote_url["fetch_url"],
-                            "push_url": remote_url["push_url"],
-                            "name": remote_name,
-                        },
+                        fetch_url=remote_url["fetch_url"],
+                        push_url=remote_url["push_url"],
+                        name=remote_name,
                     )
                 elif isinstance(remote_url, GitRemote):
                     self._remotes[remote_name] = remote_url
@@ -303,9 +300,7 @@ class GitSync(BaseSync):
     def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "GitSync":
         """Clone a git repository from a pip-style URL."""
         url, rev = convert_pip_url(pip_url)
-        self = cls(url=url, rev=rev, **kwargs)
-
-        return self
+        return cls(url=url, rev=rev, **kwargs)
 
     def get_revision(self) -> str:
         """Return current revision. Initial repositories return 'initial'."""
@@ -342,16 +337,15 @@ class GitSync(BaseSync):
                             push=True,
                             overwrite=overwrite,
                         )
-                else:
-                    if (
-                        not existing_remote
-                        or existing_remote.fetch_url != git_remote_repo.fetch_url
-                    ):
-                        self.set_remote(
-                            name=remote_name,
-                            url=git_remote_repo.fetch_url,
-                            overwrite=overwrite,
-                        )
+                elif (
+                    not existing_remote
+                    or existing_remote.fetch_url != git_remote_repo.fetch_url
+                ):
+                    self.set_remote(
+                        name=remote_name,
+                        url=git_remote_repo.fetch_url,
+                        overwrite=overwrite,
+                    )
 
     def obtain(self, *args: Any, **kwargs: Any) -> None:
         """Retrieve the repository, clone if doesn't exist."""
@@ -584,7 +578,7 @@ class GitSync(BaseSync):
             lines = ret.split("\n")
             remote_fetch_url = lines[1].replace("Fetch URL: ", "").strip()
             remote_push_url = lines[2].replace("Push  URL: ", "").strip()
-            if remote_fetch_url != name and remote_push_url != name:
+            if name not in {remote_fetch_url, remote_push_url}:
                 return GitRemote(
                     name=name,
                     fetch_url=remote_fetch_url,
@@ -638,7 +632,7 @@ class GitSync(BaseSync):
         """
         if "+" in url:
             url = url.split("+", 1)[1]
-        scheme, netloc, path, query, frag = urlparse.urlsplit(url)
+        scheme, netloc, path, query, _frag = urlparse.urlsplit(url)
         url = urlparse.urlunsplit((scheme, netloc, path, query, ""))
         if url.startswith("ssh://git@github.com/"):
             url = url.replace("ssh://", "git+ssh://")
@@ -704,7 +698,7 @@ branch_behind='0'\
 
         if match.branch_upstream is None:  # no upstream set
             if match.branch_head is None:
-                raise GitNoBranchFound()
+                raise GitNoBranchFound
             return match.branch_head
         if match.branch_head is None:
             return match.branch_upstream

@@ -33,7 +33,7 @@ class VCSRegistry:
 
     parser_map: t.ClassVar["ParserMap"] = {}
 
-    def __init__(self, parsers: "ParserLazyMap"):
+    def __init__(self, parsers: "ParserLazyMap") -> None:
         for k, v in parsers.items():
             if isinstance(v, str):
                 v = import_string(v)

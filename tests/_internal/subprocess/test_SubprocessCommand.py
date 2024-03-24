@@ -20,18 +20,18 @@ def idfn(val: Any) -> str:
 
 
 @pytest.mark.parametrize(
-    "args,kwargs,expected_result",
+    ("args", "kwargs", "expected_result"),
     [
-        [["ls"], {}, SubprocessCommand("ls")],
-        [[["ls", "-l"]], {}, SubprocessCommand(["ls", "-l"])],
-        [[], {"args": ["ls", "-l"]}, SubprocessCommand(["ls", "-l"])],
-        [["ls -l"], {"shell": True}, SubprocessCommand("ls -l", shell=True)],
-        [[], {"args": "ls -l", "shell": True}, SubprocessCommand("ls -l", shell=True)],
-        [
+        (["ls"], {}, SubprocessCommand("ls")),
+        ([["ls", "-l"]], {}, SubprocessCommand(["ls", "-l"])),
+        ([], {"args": ["ls", "-l"]}, SubprocessCommand(["ls", "-l"])),
+        (["ls -l"], {"shell": True}, SubprocessCommand("ls -l", shell=True)),
+        ([], {"args": "ls -l", "shell": True}, SubprocessCommand("ls -l", shell=True)),
+        (
             [],
             {"args": ["ls", "-l"], "shell": True},
             SubprocessCommand(["ls", "-l"], shell=True),
-        ],
+        ),
     ],
     ids=idfn,
 )
@@ -56,7 +56,7 @@ FIXTURES = [
 
 
 @pytest.mark.parametrize(
-    "args,kwargs,expected_result",
+    ("args", "kwargs", "expected_result"),
     FIXTURES,
     ids=idfn,
 )
@@ -79,7 +79,7 @@ def test_init_and_Popen(
 
 
 @pytest.mark.parametrize(
-    "args,kwargs,expected_result",
+    ("args", "kwargs", "expected_result"),
     FIXTURES,
     ids=idfn,
 )
@@ -96,12 +96,12 @@ def test_init_and_Popen_run(
     cmd_proc.communicate()
     assert cmd_proc.returncode == 0
 
-    proc = subprocess.run(*args, **kwargs)
+    proc = subprocess.run(*args, **kwargs, check=False)
     assert proc.returncode == 0
 
 
 @pytest.mark.parametrize(
-    "args,kwargs,expected_result",
+    ("args", "kwargs", "expected_result"),
     FIXTURES,
     ids=idfn,
 )
@@ -122,7 +122,7 @@ def test_init_and_check_call(
 
 
 @pytest.mark.parametrize(
-    "args,kwargs,expected_result",
+    ("args", "kwargs", "expected_result"),
     FIXTURES,
 )
 def test_init_and_check_output(
@@ -142,11 +142,11 @@ def test_init_and_check_output(
 
 
 @pytest.mark.parametrize(
-    "args,kwargs,run_kwargs",
+    ("args", "kwargs", "run_kwargs"),
     [
-        [["ls"], {}, {}],
-        [[["ls", "-l"]], {}, {}],
-        [[["ls", "-al"]], {}, {"stdout": subprocess.DEVNULL}],
+        (["ls"], {}, {}),
+        ([["ls", "-l"]], {}, {}),
+        ([["ls", "-al"]], {}, {"stdout": subprocess.DEVNULL}),
     ],
     ids=idfn,
 )

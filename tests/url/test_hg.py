@@ -42,7 +42,7 @@ TEST_FIXTURES: list[HgURLFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,hg_url",
+    ("url", "is_valid", "hg_url"),
     TEST_FIXTURES,
 )
 def test_hg_url(
@@ -105,7 +105,7 @@ PIP_TEST_FIXTURES: list[HgURLKwargsFixture] = [
 
 
 @pytest.mark.parametrize(
-    "url,is_valid,hg_url_kwargs",
+    ("url", "is_valid", "hg_url_kwargs"),
     PIP_TEST_FIXTURES,
 )
 def test_hg_url_extension_pip(
@@ -143,17 +143,8 @@ class ToURLFixture(typing.NamedTuple):
 
 
 @pytest.mark.parametrize(
-    "hg_url,expected",
+    ("hg_url", "expected"),
     [
-        ToURLFixture(
-            expected="https://bitbucket.com/vcs-python/libvcs",
-            hg_url=HgURL(
-                url="https://bitbucket.com/vcs-python/libvcs",
-                scheme="https",
-                hostname="bitbucket.com",
-                path="vcs-python/libvcs",
-            ),
-        ),
         ToURLFixture(
             expected="https://bitbucket.com/vcs-python/libvcs",
             hg_url=HgURL(

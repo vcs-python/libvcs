@@ -19,17 +19,17 @@ if t.TYPE_CHECKING:
 
 
 class VCSNoMatchFoundForUrl(exc.LibVCSException):
-    def __init__(self, url: str, *args: object):
+    def __init__(self, url: str, *args: object) -> None:
         return super().__init__(f"No VCS found for url: {url}")
 
 
 class VCSMultipleMatchFoundForUrl(exc.LibVCSException):
-    def __init__(self, url: str, *args: object):
+    def __init__(self, url: str, *args: object) -> None:
         return super().__init__(f"Multiple VCS found for url: {url}")
 
 
 class VCSNotSupported(exc.LibVCSException):
-    def __init__(self, url: str, vcs: str, *args: object):
+    def __init__(self, url: str, vcs: str, *args: object) -> None:
         return super().__init__(f"VCS '{vcs}' not supported, based on URL: {url}")
 
 
@@ -110,7 +110,7 @@ def create_project(
         assert vcs_matches[0].vcs is not None
 
         def is_vcs(val: t.Any) -> "TypeGuard[VCSLiteral]":
-            return isinstance(val, str) and val in ["git", "hg", "svn"]
+            return isinstance(val, str) and val in {"git", "hg", "svn"}
 
         if is_vcs(vcs_matches[0].vcs):
             vcs = vcs_matches[0].vcs
@@ -119,13 +119,18 @@ def create_project(
 
     if vcs == "git":
         return GitSync(
-            url=url, path=path, progress_callback=progress_callback, **kwargs
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            **kwargs,
         )
-    elif vcs == "hg":
+    if vcs == "hg":
         return HgSync(url=url, path=path, progress_callback=progress_callback, **kwargs)
-    elif vcs == "svn":
+    if vcs == "svn":
         return SvnSync(
-            url=url, path=path, progress_callback=progress_callback, **kwargs
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            **kwargs,
         )
-    else:
-        raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
+    raise InvalidVCS("VCS %s is not a valid VCS" % vcs)

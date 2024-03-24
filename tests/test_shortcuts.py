@@ -25,7 +25,7 @@ E = TypeVar("E", bound=BaseException)
 
 
 @pytest.mark.parametrize(
-    "repo_dict,repo_class,raises_exception",
+    ("repo_dict", "repo_class", "raises_exception"),
     [
         (
             {"url": "https://github.com/freebsd/freebsd.git", "vcs": "git"},

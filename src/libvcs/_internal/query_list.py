@@ -84,9 +84,8 @@ def keygetter(
                 dct = dct[sub_field]
             elif hasattr(dct, sub_field):
                 dct = getattr(dct, sub_field)
-    except Exception as e:
+    except Exception:
         traceback.print_stack()
-        print(f"Above error was {e}")
         return None
     return dct
 
@@ -304,12 +303,12 @@ LOOKUP_NAME_MAP: Mapping[str, LookupProtocol] = {
 
 
 class PKRequiredException(Exception):
-    def __init__(self, *args: object):
+    def __init__(self, *args: object) -> None:
         return super().__init__("items() require a pk_key exists")
 
 
 class OpNotFound(ValueError):
-    def __init__(self, op: str, *args: object):
+    def __init__(self, op: str, *args: object) -> None:
         return super().__init__(f"{op} not in LOOKUP_NAME_MAP")
 
 
@@ -470,7 +469,7 @@ class QueryList(t.Generic[T], list[T]):
 
     def items(self) -> list[tuple[str, T]]:
         if self.pk_key is None:
-            raise PKRequiredException()
+            raise PKRequiredException
         return [(getattr(item, self.pk_key), item) for item in self]
 
     def __eq__(
@@ -490,9 +489,8 @@ class QueryList(t.Generic[T], list[T]):
                         for key in a_keys:
                             if abs(a[key] - b[key]) > 1:
                                 return False
-                else:
-                    if a != b:
-                        return False
+                elif a != b:
+                    return False
 
             return True
         return False
@@ -529,8 +527,7 @@ class QueryList(t.Generic[T], list[T]):
             def val_match(obj: t.Union[str, list[t.Any], T]) -> bool:
                 if isinstance(matcher, list):
                     return obj in matcher
-                else:
-                    return bool(obj == matcher)
+                return bool(obj == matcher)
 
             _filter = val_match
         else:
@@ -546,9 +543,9 @@ class QueryList(t.Generic[T], list[T]):
     ) -> t.Optional[T]:
         objs = self.filter(matcher=matcher, **kwargs)
         if len(objs) > 1:
-            raise MultipleObjectsReturned()
-        elif len(objs) == 0:
+            raise MultipleObjectsReturned
+        if len(objs) == 0:
             if default == no_arg:
-                raise ObjectDoesNotExist()
+                raise ObjectDoesNotExist
             return default
         return objs[0]
