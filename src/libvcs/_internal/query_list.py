@@ -5,10 +5,13 @@ Note
 This is an internal API not covered by versioning policy.
 """
 
+import logging
 import re
 import traceback
 import typing as t
 from collections.abc import Iterable, Mapping, Sequence
+
+logger = logging.getLogger(__name__)
 
 T = t.TypeVar("T")
 no_arg = object()
@@ -84,8 +87,9 @@ def keygetter(
                 dct = dct[sub_field]
             elif hasattr(dct, sub_field):
                 dct = getattr(dct, sub_field)
-    except Exception:
+    except Exception as e:
         traceback.print_stack()
+        logger.debug(f"The above error was {e}")
         return None
     return dct
 
@@ -119,8 +123,9 @@ def parse_lookup(obj: Mapping[str, t.Any], path: str, lookup: str) -> t.Optional
             field_name = path.rsplit(lookup)[0]
             if field_name is not None:
                 return keygetter(obj, field_name)
-    except Exception:
+    except Exception as e:
         traceback.print_stack()
+        logger.debug(f"The above error was {e}")
     return None
 
 
