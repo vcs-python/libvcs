@@ -101,10 +101,6 @@ pytest-cov = "*"
 ruff = "*"
 mypy = "*"
 
-[tool.poetry.group.typings.dependencies]
-### Typings ###
-types-docutils = "*"
-
 [tool.poetry.plugins.pytest11]
 libvcs = "libvcs.pytest_plugin"
 
