@@ -19,6 +19,12 @@ $ pip install --user --upgrade --pre libvcs
 
 - Automatically linkify links that were previously only text.
 
+### Development
+
+- poetry: 1.8.1 -> 1.8.2
+
+  See also: https://github.com/python-poetry/poetry/blob/1.8.2/CHANGELOG.md
+
 ## libvcs 0.29.0 (2024-03-24)
 
 _Maintenance only, no bug fixes, or new features_
@@ -42,9 +48,10 @@ _Maintenance only, no bug fixes, or new features_
       origin/master
   ```
 
-- poetry: 1.7.1 -> 1.8.2
+- poetry: 1.7.1 -> 1.8.1
 
-  See also: https://github.com/python-poetry/poetry/blob/1.8.2/CHANGELOG.md
+  See also: https://github.com/python-poetry/poetry/blob/1.8.1/CHANGELOG.md
+
 - ruff 0.2.2 -> 0.3.0 (#457)
 
   Related formattings. Update CI to use `ruff check .` instead of `ruff .`.
