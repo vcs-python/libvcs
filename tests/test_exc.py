@@ -24,7 +24,7 @@ def test_command_error() -> None:
             returncode=e.value.returncode,
             cmd=e.value.cmd,
         )
-        + "\n%s" % e.value.output
+        + f"\n{e.value.output}"
     )
 
     with pytest.raises(exc.CommandError) as e:
