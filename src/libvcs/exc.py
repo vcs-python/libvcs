@@ -27,7 +27,7 @@ class CommandError(LibVCSException):
         """Return command output."""
         message = self.message.format(returncode=self.returncode, cmd=self.cmd)
         if len(self.output.strip()):
-            message += "\n%s" % self.output
+            message += f"\n{self.output}"
         return message
 
     message = "Command failed with code {returncode}: {cmd}"

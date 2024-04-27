@@ -133,4 +133,5 @@ def create_project(
             progress_callback=progress_callback,
             **kwargs,
         )
-    raise InvalidVCS("VCS %s is not a valid VCS" % vcs)
+    msg = f"VCS {vcs} is not a valid VCS"
+    raise InvalidVCS(msg)
