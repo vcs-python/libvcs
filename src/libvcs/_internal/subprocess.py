@@ -265,7 +265,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: Literal[False, None] = False,
+        universal_newlines: Optional[Literal[False]] = False,
         *,
         text: Literal[None, False] = ...,
         encoding: None = None,
@@ -374,7 +374,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def check_output(
         self,
-        universal_newlines: Literal[False, None],
+        universal_newlines: Optional[Literal[False]],
         *,
         input: Optional[Union[str, bytes]] = ...,
         encoding: None = None,
@@ -486,7 +486,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def run(
         self,
-        universal_newlines: Literal[False, None] = ...,
+        universal_newlines: Optional[Literal[False]] = ...,
         *,
         capture_output: bool = False,
         check: bool = False,
