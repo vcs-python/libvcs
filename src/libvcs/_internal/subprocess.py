@@ -219,7 +219,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         text: Optional[bool] = ...,
         encoding: str,
@@ -230,7 +230,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         text: Optional[bool] = ...,
         encoding: Optional[str] = ...,
@@ -253,7 +253,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         text: Literal[True],
         encoding: Optional[str] = ...,
@@ -264,7 +264,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: Literal[False] = ...,
+        universal_newlines: Literal[False, None] = ...,
         *,
         text: Literal[None, False] = ...,
         encoding: None = ...,
@@ -325,7 +325,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def check_output(
         self,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         input: Optional[Union[str, bytes]] = ...,
         encoding: Optional[str] = ...,
@@ -349,7 +349,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def check_output(
         self,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         input: Optional[Union[str, bytes]] = ...,
         encoding: Optional[str] = ...,
@@ -373,7 +373,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def check_output(
         self,
-        universal_newlines: Literal[False],
+        universal_newlines: Literal[False, None],
         *,
         input: Optional[Union[str, bytes]] = ...,
         encoding: None = ...,
@@ -432,7 +432,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def run(
         self,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         capture_output: bool = ...,
         check: bool = ...,
@@ -445,7 +445,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def run(
         self,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         capture_output: bool = ...,
         check: bool = ...,
@@ -458,7 +458,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def run(
         self,
-        universal_newlines: bool = ...,
+        universal_newlines: Optional[bool] = ...,
         *,
         capture_output: bool = ...,
         check: bool = ...,
@@ -485,7 +485,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     @overload
     def run(
         self,
-        universal_newlines: Literal[False] = ...,
+        universal_newlines: Literal[False, None] = ...,
         *,
         capture_output: bool = ...,
         check: bool = ...,
