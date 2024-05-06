@@ -435,11 +435,11 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         self,
         universal_newlines: Optional[bool] = ...,
         *,
-        capture_output: bool = ...,
-        check: bool = ...,
+        capture_output: bool = False,
+        check: bool = False,
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
-        input: Optional["_InputString"] = ...,
+        input: Optional["_InputString"] = None,
         text: Literal[True],
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -448,11 +448,11 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         self,
         universal_newlines: Optional[bool] = ...,
         *,
-        capture_output: bool = ...,
-        check: bool = ...,
+        capture_output: bool = False,
+        check: bool = False,
         encoding: str,
         errors: Optional[str] = ...,
-        input: Optional["_InputString"] = ...,
+        input: Optional["_InputString"] = None,
         text: Optional[bool] = ...,
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -461,11 +461,11 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         self,
         universal_newlines: Optional[bool] = ...,
         *,
-        capture_output: bool = ...,
-        check: bool = ...,
+        capture_output: bool = False,
+        check: bool = False,
         encoding: Optional[str] = ...,
         errors: str,
-        input: Optional["_InputString"] = ...,
+        input: Optional["_InputString"] = None,
         text: Optional[bool] = ...,
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -475,11 +475,11 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         *,
         universal_newlines: Literal[True],
         # where the *real* keyword only args start
-        capture_output: bool = ...,
-        check: bool = ...,
+        capture_output: bool = False,
+        check: bool = False,
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
-        input: Optional["_InputString"] = ...,
+        input: Optional["_InputString"] = None,
         text: Optional[bool] = ...,
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -488,11 +488,11 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         self,
         universal_newlines: Literal[False, None] = ...,
         *,
-        capture_output: bool = ...,
-        check: bool = ...,
+        capture_output: bool = False,
+        check: bool = False,
         encoding: None = ...,
         errors: None = ...,
-        input: Optional["ReadableBuffer"] = ...,
+        input: Optional["ReadableBuffer"] = None,
         text: Literal[None, False] = ...,
     ) -> subprocess.CompletedProcess[bytes]: ...
 
