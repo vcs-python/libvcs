@@ -60,6 +60,7 @@ from libvcs._internal.types import StrOrBytesPath
 from .dataclasses import SkipDefaultFieldsReprMixin
 
 if TYPE_CHECKING:
+    from _typeshed import ReadableBuffer
     from typing_extensions import TypeAlias
 
 
@@ -79,7 +80,7 @@ else:
         Mapping[str, StrOrBytesPath],
     ]
 _FILE: "TypeAlias" = Union[None, int, IO[Any]]
-_TXT: "TypeAlias" = Union[bytes, str]
+_InputString: "TypeAlias" = Union["ReadableBuffer", str]
 #: Command
 _CMD: "TypeAlias" = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
@@ -438,7 +439,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         check: bool = ...,
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
-        input: Optional[str] = ...,
+        input: Optional["_InputString"] = ...,
         text: Literal[True],
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -451,7 +452,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         check: bool = ...,
         encoding: str,
         errors: Optional[str] = ...,
-        input: Optional[str] = ...,
+        input: Optional["_InputString"] = ...,
         text: Optional[bool] = ...,
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -464,7 +465,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         check: bool = ...,
         encoding: Optional[str] = ...,
         errors: str,
-        input: Optional[str] = ...,
+        input: Optional["_InputString"] = ...,
         text: Optional[bool] = ...,
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -478,7 +479,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         check: bool = ...,
         encoding: Optional[str] = ...,
         errors: Optional[str] = ...,
-        input: Optional[str] = ...,
+        input: Optional["_InputString"] = ...,
         text: Optional[bool] = ...,
     ) -> subprocess.CompletedProcess[str]: ...
 
@@ -491,7 +492,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         check: bool = ...,
         encoding: None = ...,
         errors: None = ...,
-        input: Optional[bytes] = ...,
+        input: Optional["ReadableBuffer"] = ...,
         text: Literal[None, False] = ...,
     ) -> subprocess.CompletedProcess[bytes]: ...
 
@@ -503,7 +504,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         check: bool = False,
         encoding: Optional[str] = None,
         errors: Optional[str] = None,
-        input: Optional[Union[str, bytes]] = None,
+        input: Optional[Union["_InputString", "ReadableBuffer"]] = None,
         text: Optional[bool] = None,
         timeout: Optional[float] = None,
         **kwargs: Any,
