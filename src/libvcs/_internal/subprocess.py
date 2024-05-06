@@ -220,7 +220,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: Optional[bool] = ...,
+        universal_newlines: Optional[bool] = False,
         *,
         text: Optional[bool] = ...,
         encoding: str,
@@ -231,7 +231,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: Optional[bool] = ...,
+        universal_newlines: Optional[bool] = False,
         *,
         text: Optional[bool] = ...,
         encoding: Optional[str] = ...,
@@ -254,7 +254,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: Optional[bool] = ...,
+        universal_newlines: Optional[bool] = False,
         *,
         text: Literal[True],
         encoding: Optional[str] = ...,
@@ -265,11 +265,11 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     def Popen(
         self,
         args: Optional[_CMD] = ...,
-        universal_newlines: Literal[False, None] = ...,
+        universal_newlines: Literal[False, None] = False,
         *,
         text: Literal[None, False] = ...,
-        encoding: None = ...,
-        errors: None = ...,
+        encoding: None = None,
+        errors: None = None,
     ) -> subprocess.Popen[bytes]: ...
 
     def Popen(
@@ -377,8 +377,8 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         universal_newlines: Literal[False, None],
         *,
         input: Optional[Union[str, bytes]] = ...,
-        encoding: None = ...,
-        errors: None = ...,
+        encoding: None = None,
+        errors: None = None,
         text: Literal[None, False] = ...,
         **kwargs: Any,
     ) -> bytes: ...
@@ -490,8 +490,8 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         *,
         capture_output: bool = False,
         check: bool = False,
-        encoding: None = ...,
-        errors: None = ...,
+        encoding: None = None,
+        errors: None = None,
         input: Optional["ReadableBuffer"] = None,
         text: Literal[None, False] = ...,
     ) -> subprocess.CompletedProcess[bytes]: ...
