@@ -94,7 +94,7 @@ def test_registry(
     matches = registry.registry.match(url, is_explicit=is_explicit)
 
     # Just add water
-    expected_matches: list["DetectVCSFixtureExpectedMatch"] = []
+    expected_matches: list[DetectVCSFixtureExpectedMatch] = []
     for expected_match in expected_matches_lazy:
         if callable(expected_match):
             assert callable(expected_match)

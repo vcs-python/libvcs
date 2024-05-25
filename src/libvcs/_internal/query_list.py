@@ -317,7 +317,7 @@ class OpNotFound(ValueError):
         return super().__init__(f"{op} not in LOOKUP_NAME_MAP")
 
 
-class QueryList(t.Generic[T], list[T]):
+class QueryList(list[T], t.Generic[T]):
     """Filter list of object/dictionaries. For small, local datasets.
 
     *Experimental, unstable*.
