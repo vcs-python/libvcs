@@ -145,7 +145,10 @@ Notes
 
 
 @dataclasses.dataclass(repr=False)
-class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class HgBaseURL(
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Mercurial repository location. Parses URLs on initialization.
 
     Attributes
@@ -335,7 +338,11 @@ class HgBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class HgPipURL(
+    HgBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Supports pip hg URLs."""
 
     # commit-ish (rev): tag, branch, ref
@@ -407,7 +414,12 @@ class HgPipURL(HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class HgURL(HgPipURL, HgBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class HgURL(
+    HgPipURL,
+    HgBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Batteries included URL Parser. Supports hg(1) and pip URLs.
 
     **Ancestors (MRO)**

@@ -214,7 +214,10 @@ Notes
 
 
 @dataclasses.dataclass(repr=False)
-class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class GitBaseURL(
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Git repository location. Parses URLs on initialization.
 
     Examples
@@ -377,7 +380,11 @@ class GitBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class GitPipURL(
+    GitBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Supports pip git URLs."""
 
     # commit-ish (rev): tag, branch, ref
@@ -475,7 +482,12 @@ class GitPipURL(GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class GitURL(GitPipURL, GitBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class GitURL(
+    GitPipURL,
+    GitBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Batteries included URL Parser. Supports git(1) and pip URLs.
 
     **Ancestors (MRO)**

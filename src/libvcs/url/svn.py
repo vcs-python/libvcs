@@ -143,7 +143,10 @@ Notes
 
 
 @dataclasses.dataclass(repr=False)
-class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
+class SvnBaseURL(
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """SVN repository location. Parses URLs on initialization.
 
     Examples
@@ -275,7 +278,11 @@ class SvnBaseURL(URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class SvnPipURL(SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class SvnPipURL(
+    SvnBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Supports pip svn URLs."""
 
     # commit-ish (rev): tag, branch, ref
@@ -336,7 +343,12 @@ class SvnPipURL(SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
 
 
 @dataclasses.dataclass(repr=False)
-class SvnURL(SvnPipURL, SvnBaseURL, URLProtocol, SkipDefaultFieldsReprMixin):
+class SvnURL(
+    SvnPipURL,
+    SvnBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
     """Batteries included URL Parser. Supports svn(1) and pip URLs.
 
     **Ancestors (MRO)**
