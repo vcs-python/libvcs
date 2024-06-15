@@ -18,6 +18,8 @@ $ pip install --user --upgrade --pre libvcs
 ### Documentation
 
 - Automatically linkify links that were previously only text.
+- Fix docstrings in `query_list` for `MultipleObjectsReturned` and
+  `ObjectDoesNotExist`.
 
 ### Development
 
