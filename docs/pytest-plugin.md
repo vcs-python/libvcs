@@ -6,7 +6,7 @@ Create git, svn, and hg repos on the fly in [pytest].
 
 ```{seealso} Using libvcs?
 
-Do you want more flexbility? Correctness? Power? Defaults changed? [Connect with us] on the tracker, we want to know
+Do you want more flexibility? Correctness? Power? Defaults changed? [Connect with us] on the tracker, we want to know
 your case, we won't stabilize APIs until we're sure everything is by the book.
 
 [connect with us]: https://github.com/vcs-python/libvcs/discussions
@@ -40,7 +40,7 @@ The plugin's fixtures guarantee a fresh git repository every test.
 
 ## Recommended fixtures
 
-These are fixtures are automatically used when the plugin is enabled and `pytest` is ran.
+These fixtures are automatically used when the plugin is enabled and `pytest` is run.
 
 - Creating temporary, test directories for:
   - `/home/` ({func}`home_path`)
@@ -52,7 +52,7 @@ These are fixtures are automatically used when the plugin is enabled and `pytest
   - `.gitconfig`, via {func}`gitconfig`:
   - `.hgrc`, via {func}`hgconfig`:
 
-  These are set to ensure you can correctly clone and create repositories without. without extra
+  These are set to ensure you can correctly clone and create repositories without without extra
   warnings.
 
 ## Bootstrapping pytest in your `conftest.py`
