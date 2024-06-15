@@ -53,7 +53,7 @@ Rebuild docs and run server via one terminal: `make dev_docs` (requires above, a
 
 ### ruff
 
-The project uses [ruff] to handles formatting, sorting imports and linting.
+The project uses [ruff] to handle formatting, sorting imports and linting.
 
 ````{tab} Command
 
@@ -209,7 +209,7 @@ requires [`entr(1)`].
 
 ## Releasing
 
-Since this software used in production projects, we don't want to release breaking changes.
+Since this software is used in production projects, we don't want to release breaking changes.
 
 Choose what the next version is. Assuming it's version 0.9.0, it could be:
 
