@@ -23,12 +23,11 @@ import re
 from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
-from libvcs.url.git import RE_PIP_REV, SCP_REGEX
 
 from .base import Rule, RuleMap, URLProtocol
+from .constants import RE_PIP_REV, RE_SCP, RE_USER
 
 RE_PATH = r"""
-    ((?P<user>[^/:@]+)@)?
     (?P<hostname>([^/:@]+))
     (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
@@ -56,6 +55,7 @@ DEFAULT_RULES: list[Rule] = [
             rf"""
         ^{RE_SCHEME}
         ://
+        {RE_USER}
         {RE_PATH}
         {RE_PIP_REV}?
         """,
@@ -68,7 +68,8 @@ DEFAULT_RULES: list[Rule] = [
         pattern=re.compile(
             rf"""
         ^(?P<scheme>ssh)?
-        {SCP_REGEX}
+        {RE_USER}
+        {RE_SCP}
         {RE_PIP_REV}?
         """,
             re.VERBOSE,
@@ -101,6 +102,7 @@ PIP_DEFAULT_RULES: list[Rule] = [
             rf"""
         ^{RE_PIP_SCHEME}
         ://
+        {RE_USER}
         {RE_PATH}
         {RE_PIP_REV}?
         """,
