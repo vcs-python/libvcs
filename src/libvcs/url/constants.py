@@ -8,7 +8,7 @@ RE_USER = r"""
 # Credit, pip (license: MIT):
 # https://github.com/pypa/pip/blob/22.1.2/src/pip/_internal/vcs/git.py#L39-L52
 # We modified it to have groupings
-SCP_REGEX = r"""
+RE_SCP = r"""
     # Server, e.g. 'github.com'.
     (?P<hostname>([^/:]+))
     (?P<separator>:)

@@ -23,7 +23,7 @@ from typing import Optional
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
 from .base import Rule, RuleMap, URLProtocol
-from .constants import RE_USER, SCP_REGEX
+from .constants import RE_SCP, RE_USER
 
 RE_PATH = r"""
     (?P<hostname>([^/:]+))
@@ -70,7 +70,7 @@ DEFAULT_RULES: list[Rule] = [
             rf"""
         ^(?P<scheme>ssh)?
         {RE_USER}
-        {SCP_REGEX}
+        {RE_SCP}
         {RE_SUFFIX}?
         """,
             re.VERBOSE,
@@ -136,7 +136,7 @@ PIP_DEFAULT_RULES: list[Rule] = [
             rf"""
         {RE_PIP_SCP_SCHEME}
         {RE_USER}
-        {SCP_REGEX}?
+        {RE_SCP}?
         {RE_SUFFIX}?
         {RE_PIP_REV}?
         """,
