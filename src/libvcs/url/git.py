@@ -23,13 +23,12 @@ from typing import Optional
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
 from .base import Rule, RuleMap, URLProtocol
+from .constants import RE_USER
 
 # Credit, pip (license: MIT):
 # https://github.com/pypa/pip/blob/22.1.2/src/pip/_internal/vcs/git.py#L39-L52
 # We modified it to have groupings
 SCP_REGEX = r"""
-    # Optional user, e.g. 'git@'
-    ((?P<user>\w+)@)?
     # Server, e.g. 'github.com'.
     (?P<hostname>([^/:]+))
     (?P<separator>:)
@@ -40,7 +39,6 @@ SCP_REGEX = r"""
     """
 
 RE_PATH = r"""
-    ((?P<user>\w+)@)?
     (?P<hostname>([^/:]+))
     (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
@@ -69,6 +67,7 @@ DEFAULT_RULES: list[Rule] = [
             rf"""
         ^{RE_SCHEME}
         ://
+        {RE_USER}
         {RE_PATH}
         {RE_SUFFIX}?
         """,
@@ -83,6 +82,7 @@ DEFAULT_RULES: list[Rule] = [
         pattern=re.compile(
             rf"""
         ^(?P<scheme>ssh)?
+        {RE_USER}
         {SCP_REGEX}
         {RE_SUFFIX}?
         """,
@@ -125,7 +125,6 @@ RE_PIP_REV = r"""
     (@(?P<rev>.*))
 """
 
-
 PIP_DEFAULT_RULES: list[Rule] = [
     Rule(
         label="pip-url",
@@ -134,6 +133,7 @@ PIP_DEFAULT_RULES: list[Rule] = [
             rf"""
         {RE_PIP_SCHEME}
         ://
+        {RE_USER}
         {RE_PATH}
         {RE_SUFFIX}?
         {RE_PIP_REV}?
@@ -148,6 +148,7 @@ PIP_DEFAULT_RULES: list[Rule] = [
         pattern=re.compile(
             rf"""
         {RE_PIP_SCP_SCHEME}
+        {RE_USER}
         {SCP_REGEX}?
         {RE_SUFFIX}?
         {RE_PIP_REV}?
