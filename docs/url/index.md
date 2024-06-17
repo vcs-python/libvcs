@@ -269,4 +269,5 @@ svn
 hg
 base
 registry
+constants
 ```
