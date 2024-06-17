@@ -23,20 +23,7 @@ from typing import Optional
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
 from .base import Rule, RuleMap, URLProtocol
-from .constants import RE_USER
-
-# Credit, pip (license: MIT):
-# https://github.com/pypa/pip/blob/22.1.2/src/pip/_internal/vcs/git.py#L39-L52
-# We modified it to have groupings
-SCP_REGEX = r"""
-    # Server, e.g. 'github.com'.
-    (?P<hostname>([^/:]+))
-    (?P<separator>:)
-    # The server-side path. e.g. 'user/project.git'. Must start with an
-    # alphanumeric character so as not to be confusable with a Windows paths
-    # like 'C:/foo/bar' or 'C:\foo\bar'.
-    (?P<path>(\w[^:.]+))
-    """
+from .constants import RE_USER, SCP_REGEX
 
 RE_PATH = r"""
     (?P<hostname>([^/:]+))

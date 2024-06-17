@@ -22,10 +22,10 @@ import re
 from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
-from libvcs.url.git import RE_PIP_REV, RE_SUFFIX, SCP_REGEX
+from libvcs.url.git import RE_PIP_REV, RE_SUFFIX
 
 from .base import Rule, RuleMap, URLProtocol
-from .constants import RE_USER
+from .constants import RE_USER, SCP_REGEX
 
 RE_PATH = r"""
     (?P<hostname>([^/:]+))
