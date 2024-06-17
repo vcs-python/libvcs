@@ -23,7 +23,7 @@ from typing import Optional
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
 from .base import Rule, RuleMap, URLProtocol
-from .constants import RE_SCP, RE_USER
+from .constants import RE_PIP_REV, RE_SCP, RE_USER
 
 RE_PATH = r"""
     (?P<hostname>([^/:]+))
@@ -106,10 +106,6 @@ RE_PIP_SCP_SCHEME = r"""
         git\+file
       )
     )
-"""
-
-RE_PIP_REV = r"""
-    (@(?P<rev>.*))
 """
 
 PIP_DEFAULT_RULES: list[Rule] = [

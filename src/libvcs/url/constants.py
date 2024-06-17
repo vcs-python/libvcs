@@ -18,3 +18,11 @@ RE_SCP = r"""
     (?P<path>(\w[^:.]+))
 """
 """Regular expression for scp-style of git URLs."""
+
+#
+# Third-party URLs, e.g. npm, pip, etc.
+#
+RE_PIP_REV = r"""
+    (@(?P<rev>.*))
+"""
+"""Pip-style revision for branch or revision."""
