@@ -15,6 +15,16 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Breaking changes
+
+#### urls: Variable changes (#463)
+
+- `RE_PIP_REV` moved from `libvcs.url.git` to `libvcs.url.constants`.
+- Regex pattern for user (e.g. `git@`) decoupled to `RE_USER`.
+- `RE_PATH` and `SCP_REGEX` (now `RE_SCP`) no longer include user regex pattern
+  - Existing patterns now use `RE_USER` explicitly.
+- `REGEX_SCP` renamed to `RE_SCP` for consistency.
+
 ### Documentation
 
 - Automatically linkify links that were previously only text.
@@ -26,6 +36,7 @@ $ pip install --user --upgrade --pre libvcs
 - poetry: 1.8.1 -> 1.8.2
 
   See also: https://github.com/python-poetry/poetry/blob/1.8.2/CHANGELOG.md
+
 - Code quality: Use f-strings in more places (#460)
 
   via [ruff 0.4.2](https://github.com/astral-sh/ruff/blob/v0.4.2/CHANGELOG.md).
