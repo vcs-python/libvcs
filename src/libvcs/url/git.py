@@ -26,7 +26,7 @@ from .base import Rule, RuleMap, URLProtocol
 from .constants import RE_PIP_REV, RE_SCP, RE_USER
 
 RE_PATH = r"""
-    (?P<hostname>([^/:]+))
+    (?P<hostname>([^/:@]+))
     (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
     (?P<path>
