@@ -7,6 +7,7 @@ import pytest
 from libvcs.sync.git import GitSync
 from libvcs.url.base import RuleMap
 from libvcs.url.git import (
+    AWS_CODE_COMMIT_DEFAULT_RULES,
     DEFAULT_RULES,
     PIP_DEFAULT_RULES,
     GitBaseURL,
@@ -184,6 +185,86 @@ def test_git_url_extension_pip(
         GitURLWithPip.is_valid(url) == is_valid
     ), f"{url} compatibility should be {is_valid}"
     assert GitURLWithPip(url) == git_url
+
+
+#
+# Extensibility patterns, via AWS Code Commit:
+# w/ VCS prefixes, for example:
+# - https://git-codecommit
+# - ssh://git-codecommit
+# - codecommit::
+# - codecommit://
+#
+# https://docs.aws.amazon.com/codecommit/
+AWS_CODE_COMMIT_TEST_FIXTURES: list[GitURLKwargsFixture] = [
+    GitURLKwargsFixture(
+        url="https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
+        is_valid=True,
+        is_generic=True,
+        git_url_kwargs=GitURLKwargs(
+            url="https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
+        ),
+    ),
+    GitURLKwargsFixture(
+        url="ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
+        is_valid=True,
+        is_generic=False,
+        git_url_kwargs=GitURLKwargs(
+            url="ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
+        ),
+    ),
+    GitURLKwargsFixture(
+        url="codecommit://MyDemoRepo",
+        is_valid=True,
+        is_generic=False,
+        git_url_kwargs=GitURLKwargs(url="codecommit://MyDemoRepo"),
+    ),
+    GitURLKwargsFixture(
+        url="codecommit::ap-northeast-1://MyDemoRepo",
+        is_valid=True,
+        is_generic=False,
+        git_url_kwargs=GitURLKwargs(url="codecommit::ap-northeast-1://MyDemoRepo"),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    GitURLKwargsFixture._fields,
+    AWS_CODE_COMMIT_TEST_FIXTURES,
+)
+def test_git_url_extension_aws_code_commit(
+    url: str,
+    is_valid: bool,
+    is_generic: bool,
+    git_url_kwargs: GitURLKwargs,
+    git_repo: GitSync,
+) -> None:
+    """Test GitURL external extension from aws_code_commit."""
+
+    class GitURLWithAWSCodeCommit(GitBaseURL):
+        rule_map = RuleMap(
+            _rule_map={
+                m.label: m for m in [*DEFAULT_RULES, *AWS_CODE_COMMIT_DEFAULT_RULES]
+            },
+        )
+
+    git_url_kwargs["url"] = git_url_kwargs["url"].format(local_repo=git_repo.path)
+    url = url.format(local_repo=git_repo.path)
+    git_url = GitURLWithAWSCodeCommit(**git_url_kwargs)
+    git_url.url = git_url.url.format(local_repo=git_repo.path)
+
+    if is_generic:
+        assert (
+            GitBaseURL.is_valid(url) == is_valid
+        ), f"{url} compatibility should be {is_valid}"
+    else:
+        assert (
+            GitBaseURL.is_valid(url) != is_valid
+        ), f"{url} compatibility should work with core, expects {not is_valid}"
+    assert (
+        GitURLWithAWSCodeCommit.is_valid(url) == is_valid
+    ), f"{url} compatibility should be {is_valid}"
+    assert GitURLWithAWSCodeCommit(url) == git_url
 
 
 class ToURLFixture(typing.NamedTuple):
