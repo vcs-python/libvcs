@@ -26,7 +26,7 @@ from .base import Rule, RuleMap, URLProtocol
 from .constants import RE_PIP_REV, RE_SCP, RE_USER
 
 RE_PATH = r"""
-    (?P<hostname>([^/:]+))
+    (?P<hostname>([^/:@]+))
     (:(?P<port>\d{1,5}))?
     (?P<separator>[:,/])?
     (?P<path>
@@ -107,6 +107,95 @@ RE_PIP_SCP_SCHEME = r"""
       )
     )
 """
+
+AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
+    Rule(
+        label="aws-code-commit-https",
+        description="AWS CodeCommit HTTPS-style",
+        pattern=re.compile(
+            rf"""
+        https://git-codecommit\.
+        ((?P<region>[^/]+)\.)
+        # Server, e.g. 'github.com'.
+        (?P<hostname>([^/:]+))
+        (?P<separator>:)?
+        # The server-side path. e.g. 'user/project.git'. Must start with an
+        # alphanumeric character so as not to be confusable with a Windows paths
+        # like 'C:/foo/bar' or 'C:\foo\bar'.
+        (?P<path>(\w[^:.]+))?
+        {RE_PIP_REV}?
+        """,
+            re.VERBOSE,
+        ),
+        is_explicit=True,
+    ),
+    Rule(
+        label="aws-code-commit-ssh",
+        description="AWS CodeCommit SSH-style",
+        pattern=re.compile(
+            rf"""
+        ssh://git-codecommit\.
+        ((?P<region>[^/]+)\.)
+        # Server, e.g. 'github.com'.
+        (?P<hostname>([^/:]+))
+        (?P<separator>:)?
+        # The server-side path. e.g. 'user/project.git'. Must start with an
+        # alphanumeric character so as not to be confusable with a Windows paths
+        # like 'C:/foo/bar' or 'C:\foo\bar'.
+        (?P<path>(\w[^:.]+))?
+        {RE_PIP_REV}?
+        """,
+            re.VERBOSE,
+        ),
+        is_explicit=True,
+    ),
+    Rule(
+        label="aws-code-commit-https-grc",
+        description="AWS CodeCommit git repository",
+        pattern=re.compile(
+            rf"""
+            codecommit://
+            {RE_PATH}
+            {RE_PIP_REV}?
+            """,
+            re.VERBOSE,
+        ),
+        is_explicit=True,
+        weight=0,
+    ),
+    Rule(
+        label="aws-code-commit-https-grc-with-region",
+        description="AWS CodeCommit git repository with region",
+        pattern=re.compile(
+            rf"""
+            codecommit::
+            (?P<region>[^/]+)
+            ://
+            {RE_PATH}
+            {RE_PIP_REV}?
+            """,
+            re.VERBOSE,
+        ),
+        is_explicit=True,
+        weight=0,
+    ),
+]
+"""AWS CodeCommit-style git URLs.
+
+Examples of CodeCommit-style git URLs (via AWS)::
+
+    codecommit://MyDemoRepo
+    codecommit://`CodeCommitProfile`@MyDemoRepo
+    codecommit::ap-northeast-1://MyDemoRepo
+
+Notes
+-----
+
+- https://aws.amazon.com/codecommit/
+- https://docs.aws.amazon.com/codecommit/
+- https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-git-remote-codecommit.html#:~:text=For%20example%2C%20to%20clone%20a%20repository%20named
+"""
+
 
 PIP_DEFAULT_RULES: list[Rule] = [
     Rule(
@@ -361,6 +450,141 @@ class GitBaseURL(
             parts.append(self.suffix)
 
         return "".join(part for part in parts if isinstance(part, str))
+
+
+@dataclasses.dataclass(repr=False)
+class GitAWSCodeCommitURL(
+    GitBaseURL,
+    URLProtocol,
+    SkipDefaultFieldsReprMixin,
+):
+    """Supports AWS CodeCommit git URLs."""
+
+    # AWS CodeCommit Region
+    region: Optional[str] = None
+    # commit-ish (rev): tag, branch, ref
+    rev: Optional[str] = None
+
+    rule_map = RuleMap(_rule_map={m.label: m for m in AWS_CODE_COMMIT_DEFAULT_RULES})
+
+    def to_url(self) -> str:
+        """Export AWS CodeCommit-compliant URL.
+
+        Examples
+        --------
+        HTTPS (GRC, a.k.a. git-remote-codecommit) URL:
+
+        >>> git_url = GitAWSCodeCommitURL(
+        ...     url='codecommit://test'
+        ... )
+
+        >>> git_url
+        GitAWSCodeCommitURL(url=codecommit://test,
+                hostname=test,
+                rule=aws-code-commit-https-grc)
+
+        >>> git_url = GitAWSCodeCommitURL(
+        ...     url='codecommit::us-east-1://test'
+        ... )
+
+        >>> git_url
+        GitAWSCodeCommitURL(url=codecommit::us-east-1://test,
+                hostname=test,
+                rule=aws-code-commit-https-grc-with-region,
+                region=us-east-1)
+
+        >>> git_url.path = 'libvcs/vcspull'
+
+        >>> git_url.to_url()
+        'codecommit::us-east-1://libvcs/vcspull'
+
+        It also accepts revisions, e.g. branch, tag, ref:
+
+        >>> git_url = GitAWSCodeCommitURL(
+        ...     url='codecommit::us-east-1://test@v0.10.0'
+        ... )
+
+        >>> git_url
+        GitAWSCodeCommitURL(url=codecommit::us-east-1://test@v0.10.0,
+                hostname=test,
+                rule=aws-code-commit-https-grc-with-region,
+                region=us-east-1,
+                rev=v0.10.0)
+
+        >>> git_url.path = 'libvcs/vcspull'
+
+        >>> git_url.to_url()
+        'codecommit::us-east-1://libvcs/vcspull@v0.10.0'
+        """
+        url = super().to_url()
+
+        """Return an AWS CodeCommit-compatible URL."""
+
+        if isinstance(self.rule, str) and self.rule.startswith(
+            "aws-code-commit-https-grc",
+        ):
+            if self.region:
+                url = f"codecommit::{self.region}://{self.path}"
+            elif self.user:
+                url = f"codecommit://{self.user}@{self.path}"
+            else:
+                url = f"codecommit://{self.path}"
+
+        if self.rev:
+            url = f"{url}@{self.rev}"
+        return url
+
+    @classmethod
+    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+        """Whether URL is compatible with AWS CodeCommit Git's VCS URL pattern or not.
+
+        Examples
+        --------
+        Will **not** match normal ``git(1)`` URLs, use :meth:`GitURL.is_valid` for that.
+
+        >>> GitAWSCodeCommitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
+        False
+
+        >>> GitAWSCodeCommitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+        False
+
+        AWS CodeCommit HTTPS URL:
+
+        >>> GitAWSCodeCommitURL.is_valid(
+        ...     url='https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test',
+        ... )
+        True
+
+        AWS CodeCommit HTTPS (GRC) URLs:
+
+        >>> GitAWSCodeCommitURL.is_valid(url='codecommit::ap-northeast-1://MyDemoRepo')
+        True
+
+        >>> GitAWSCodeCommitURL.is_valid(url='codecommit://MyDemoRepo')
+        True
+
+        AWS CodeCommit SSH URL:
+
+        >>> GitAWSCodeCommitURL.is_valid(
+        ...     url='ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test',
+        ... )
+        True
+
+        >>> GitAWSCodeCommitURL.is_valid(url='notaurl')
+        False
+
+        **Explicit VCS detection**
+
+        AWS CodeCommit-style URLs are prefixed with the VCS name in front, so its
+        `rule_map` can unambiguously narrow the type of VCS:
+
+        >>> GitAWSCodeCommitURL.is_valid(
+        ...     url='ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test',
+        ...     is_explicit=True,
+        ... )
+        True
+        """
+        return super().is_valid(url=url, is_explicit=is_explicit)
 
 
 @dataclasses.dataclass(repr=False)

@@ -15,6 +15,20 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### New features
+
+### urls: AWS CodeCommit support (#443)
+
+- Support for [AWS CodeCommit] URL patterns. Examples:
+
+  - HTTPS: `https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test`
+  - SSH: `ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test`
+  - HTTPS (GRC):
+    - `codecommit::us-east-1://test`
+    - `codecommit://test`
+
+[AWS CodeCommit]: https://docs.aws.amazon.com/codecommit/
+
 ### Breaking changes
 
 #### urls: Variable changes (#463)
