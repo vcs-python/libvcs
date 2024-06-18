@@ -161,7 +161,6 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
             re.VERBOSE,
         ),
         is_explicit=True,
-        weight=0,
     ),
     Rule(
         label="aws-code-commit-https-grc-with-region",
@@ -177,7 +176,6 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
             re.VERBOSE,
         ),
         is_explicit=True,
-        weight=0,
     ),
 ]
 """AWS CodeCommit-style git URLs.
