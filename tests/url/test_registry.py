@@ -45,6 +45,10 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
             "git+ssh://git@github.com/tony/ScreenToGif.git",
             "git+https://github.com/nltk/nltk.git",
             "git+https://github.com/nltk/nltk",
+            "codecommit://MyDemoRepo",
+            "codecommit::ap-northeast-1://MyDemoRepo",
+            "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
+            "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
         ]
     ],
     *[
