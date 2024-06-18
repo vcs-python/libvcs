@@ -6,27 +6,28 @@ detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `sv
 
 ## Overview
 
-_Supports Python 3.9 and above_
+### Key Features
 
-Features for Git, Subversion, and Mercurial:
+- **URL Detection and Parsing**: Validate and parse Git, Mercurial, and Subversion URLs.
+- **Command Abstraction**: Interact with VCS systems through a Python API.
+- **Repository Synchronization**: Clone and update repositories locally via
+  Python API.
+- **py.test fixtures**: Create temporary local repositories and working copies for testing for unit tests.
 
-- **Detect and parse** VCS URLs
-- **Command** VCS via python API
-- **Sync** repos locally
-- **Test fixtures** for temporary local repos and working copies
+_Supports Python 3.9 and above, Git (including AWS CodeCommit), Subversion, and Mercurial._
 
-To **get started**, see the [quickstart](https://libvcs.git-pull.com/quickstart.html) for more.
+To **get started**, see the [quickstart guide](https://libvcs.git-pull.com/quickstart.html) for more information.
 
 ```console
 $ pip install --user libvcs
 ```
 
-## URL Parser
+## URL Detection and Parsing
 
-You can validate and parse Git, Mercurial, and Subversion URLs through
-[`libvcs.url`](https://libvcs.git-pull.com/url/index.html):
+Easily validate and parse VCS URLs using the
+[`libvcs.url`](https://libvcs.git-pull.com/url/index.html) module:
 
-Validate:
+### Validate URLs
 
 ```python
 >>> from libvcs.url.git import GitURL
@@ -35,7 +36,7 @@ Validate:
 True
 ```
 
-Parse and adjust a Git URL:
+### Parse and adjust Git URLs:
 
 ```python
 >>> from libvcs.url.git import GitURL
@@ -73,11 +74,11 @@ Switch repo libvcs -> vcspull:
 
 See more in the [parser document](https://libvcs.git-pull.com/parse/index.html).
 
-## Commands
+## Command Abstraction
 
-Simple [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrappers around `git(1)`,
-`hg(1)`, `svn(1)`. Here is [`Git`](https://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git) w/
-[`Git.clone`](http://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git.clone):
+Abstracts CLI commands for `git(1)`, `hg(1)`, `svn(1)` via a lightweight [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrapper.
+
+### Run Git Commands
 
 ```python
 import pathlib
@@ -87,10 +88,15 @@ git = Git(path=pathlib.Path.cwd() / 'my_git_repo')
 git.clone(url='https://github.com/vcs-python/libvcs.git')
 ```
 
-## Sync
+Above: [`libvcs.cmd.git.Git`](https://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git) using
+[`Git.clone()`](http://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git.clone).
 
-Create a [`GitSync`](https://libvcs.git-pull.com/projects/git.html#libvcs.sync.git.GitProject)
-object of the project to inspect / checkout / update:
+## Repository Synchronization
+
+Synchronize your repositories using the
+[`libvcs.sync`](https://libvcs.git-pull.com/sync/) module.
+
+### Clone and Update Repositories
 
 ```python
 import pathlib
@@ -112,25 +118,29 @@ repo = GitSync(
 u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 ```
 
-## Pytest plugin
+Above: [`libvcs.sync.git.GitSync`](https://libvcs.git-pull.com/projects/git.html#libvcs.sync.git.GitSync) repository
+object using
+[`GitSync.update_repo()`](https://libvcs.git-pull.com/sync/git.html#libvcs.sync.git.GitSync.update_repo)
+and
+[`GitSync.get_revision()`](https://libvcs.git-pull.com/sync/git.html#libvcs.sync.git.GitSync.get_revision).
 
-libvcs also provides a test rig for local repositories. It automatically can provide clean local
-repositories and working copies for git, svn, and mercurial. They are automatically cleaned up after
-each test.
+## Pytest plugin: Temporary VCS repositories for testing
 
-It works by bootstrapping a temporary `$HOME` environment in a
-[`TmpPathFactory`](https://docs.pytest.org/en/7.1.x/reference/reference.html#tmp-path-factory-factory-api)
-for automatic cleanup.
+libvcs [pytest plugin](https://libvcs.git-pull.com/pytest-plugin.html) provides [py.test fixtures] to swiftly create local VCS repositories and working repositories to test with. Repositories are automatically cleaned on test teardown.
+
+[py.test fixtures]: https://docs.pytest.org/en/8.2.x/explanation/fixtures.html
+
+### Use temporary, local VCS in py.test
 
 ```python
 import pathlib
 
-from libvcs.pytest_plugin import CreateProjectCallbackFixtureProtocol
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.git import GitSync
 
 
 def test_repo_git_remote_checkout(
-    create_git_remote_repo: CreateProjectCallbackFixtureProtocol,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -147,7 +157,9 @@ def test_repo_git_remote_checkout(
     assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
 ```
 
-Learn more on the docs at https://libvcs.git-pull.com/pytest-plugin.html
+Under the hood: fixtures bootstrap a temporary `$HOME` environment in a
+[`TmpPathFactory`](https://docs.pytest.org/en/7.1.x/reference/reference.html#tmp-path-factory-factory-api)
+for automatic cleanup and `pytest-xdist` compatibility..
 
 ## Donations
 
