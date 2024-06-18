@@ -15,7 +15,7 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-## libvcs 0.30.1 (unreleased)
+## libvcs 0.30.1 (2024-06-18)
 
 ### Bug Fixes
 
