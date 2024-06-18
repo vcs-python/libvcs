@@ -59,6 +59,15 @@ class Git:
 
         >>> git.submodule.init()
         ''
+
+        # Additional tests
+        >>> git.remote.remove(name='my_remote')
+        ''
+        >>> git.remote.show()
+        'origin'
+
+        >>> git.stash._list()
+        ''
         """
         #: Directory to check out
         self.path: pathlib.Path
