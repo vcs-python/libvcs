@@ -8,6 +8,7 @@ import shlex
 import typing as t
 from collections.abc import Sequence
 
+from libvcs._internal.query_list import QueryList
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
@@ -23,6 +24,7 @@ class Git:
     submodule: GitSubmoduleCmd
     remote: GitRemoteCmd
     stash: GitStashCmd
+    branch: GitBranchManager
 
     def __init__(
         self,
@@ -83,6 +85,7 @@ class Git:
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
         self.remote = GitRemoteCmd(path=self.path, cmd=self)
         self.stash = GitStashCmd(path=self.path, cmd=self)
+        self.branches = GitBranchManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -2950,3 +2953,315 @@ class GitStashCmd:
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
+
+
+GitBranchCommandLiteral = t.Literal[
+    # "create",  # checkout -b
+    # "checkout",  # checkout
+    "--list",
+    "move",  # branch -m, or branch -M with force
+    "copy",  # branch -c, or branch -C with force
+    "delete",  # branch -d, or branch -D /ith force
+    "set_upstream",
+    "unset_upstream",
+    "track",
+    "no_track",
+    "edit_description",
+]
+
+
+class GitBranchCmd:
+    """Run commands directly against a git branch for a git repo."""
+
+    branch_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        branch_name: str,
+        cmd: Git | None = None,
+    ) -> None:
+        """Lite, typed, pythonic wrapper for git-branch(1).
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        branch_name:
+            Name of branch.
+
+        Examples
+        --------
+        >>> GitBranchCmd(path=tmp_path, branch_name='master')
+        <GitBranchCmd path=... branch_name=master>
+
+        >>> GitBranchCmd(path=tmp_path, branch_name="master").run(quiet=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitBranchCmd(
+        ...     path=git_local_clone.path, branch_name="master").run(quiet=True)
+        '* master'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.branch_name = branch_name
+
+    def __repr__(self) -> str:
+        """Representation of git branch command object."""
+        return f"<GitBranchCmd path={self.path} branch_name={self.branch_name}>"
+
+    def run(
+        self,
+        command: GitBranchCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool | None = None,
+        cached: bool | None = None,  # Only when no command entered and status
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's branch.
+
+        Wraps `git branch <https://git-scm.com/docs/git-branch>`_.
+
+        Examples
+        --------
+        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').run()
+        '* master'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if cached is True:
+            local_flags.append("--cached")
+
+        return self.cmd.run(
+            ["branch", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def checkout(self) -> str:
+        """Git branch checkout.
+
+        Examples
+        --------
+        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').checkout()
+        "Your branch is up to date with 'origin/master'."
+        """
+        return self.cmd.run(
+            [
+                "checkout",
+                *[self.branch_name],
+            ],
+        )
+
+    def create(self) -> str:
+        """Create a git branch.
+
+        Examples
+        --------
+        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').create()
+        "fatal: a branch named 'master' already exists"
+        """
+        return self.cmd.run(
+            [
+                "checkout",
+                *["-b", self.branch_name],
+            ],
+            # Pass-through to run()
+            check_returncode=False,
+        )
+
+
+class GitBranchManager:
+    """Run commands directly related to git branches of a git repo."""
+
+    branch_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-branch(1), git-checkout(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=tmp_path)
+        <GitBranchManager path=...>
+
+        >>> GitBranchManager(path=tmp_path).run(quiet=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitBranchManager(
+        ...     path=git_local_clone.path).run(quiet=True)
+        '* master'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git branch manager object."""
+        return f"<GitBranchManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitBranchCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool | None = None,
+        cached: bool | None = None,  # Only when no command entered and status
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's branches.
+
+        Wraps `git branch <https://git-scm.com/docs/git-branch>`_.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=git_local_clone.path).run()
+        '* master'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        if quiet is True:
+            local_flags.append("--quiet")
+        if cached is True:
+            local_flags.append("--cached")
+
+        return self.cmd.run(
+            ["branch", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def checkout(self, *, branch: str) -> str:
+        """Git branch checkout.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=git_local_clone.path).checkout(branch='master')
+        "Your branch is up to date with 'origin/master'."
+        """
+        return self.cmd.run(
+            [
+                "checkout",
+                *[branch],
+            ],
+        )
+
+    def create(self, *, branch: str) -> str:
+        """Create a git branch.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=git_local_clone.path).create(branch='master')
+        "fatal: a branch named 'master' already exists"
+        """
+        return self.cmd.run(
+            [
+                "checkout",
+                *["-b", branch],
+            ],
+            # Pass-through to run()
+            check_returncode=False,
+        )
+
+    def _ls(self) -> list[str]:
+        """List branches.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=git_local_clone.path)._ls()
+        ['* master']
+        """
+        return self.run(
+            "--list",
+        ).splitlines()
+
+    def ls(self) -> QueryList[GitBranchCmd]:
+        """List branches.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=git_local_clone.path).ls()
+        [<GitBranchCmd path=... branch_name=master>]
+        """
+        return QueryList(
+            [
+                GitBranchCmd(path=self.path, branch_name=branch_name.lstrip("* "))
+                for branch_name in self._ls()
+            ],
+        )
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitBranchCmd | None:
+        """Get branch via filter lookup.
+
+        Examples
+        --------
+        >>> GitBranchManager(
+        ...     path=git_local_clone.path
+        ... ).get(branch_name='master')
+        <GitBranchCmd path=... branch_name=master>
+
+        >>> GitBranchManager(
+        ...     path=git_local_clone.path
+        ... ).get(branch_name='unknown')
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitBranchCmd]:
+        """Get branches via filter lookup.
+
+        Examples
+        --------
+        >>> GitBranchManager(
+        ...     path=git_local_clone.path
+        ... ).filter(branch_name__contains='master')
+        [<GitBranchCmd path=... branch_name=master>]
+
+        >>> GitBranchManager(
+        ...     path=git_local_clone.path
+        ... ).filter(branch_name__contains='unknown')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
