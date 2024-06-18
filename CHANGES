@@ -28,6 +28,10 @@ $ pip install --user --upgrade --pre libvcs
 - url(registry): Tests for `test_registry.py` detection of AWS CodeCommit URLs
   (#464)
 
+### Documentation
+
+- README: Overhaul and fixes
+
 ## libvcs 0.30.0 (2024-06-18)
 
 ### New features
