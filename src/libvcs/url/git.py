@@ -161,7 +161,6 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
             re.VERBOSE,
         ),
         is_explicit=True,
-        weight=0,
     ),
     Rule(
         label="aws-code-commit-https-grc-with-region",
@@ -177,7 +176,6 @@ AWS_CODE_COMMIT_DEFAULT_RULES: list[Rule] = [
             re.VERBOSE,
         ),
         is_explicit=True,
-        weight=0,
     ),
 ]
 """AWS CodeCommit-style git URLs.
@@ -691,6 +689,7 @@ class GitPipURL(
 
 @dataclasses.dataclass(repr=False)
 class GitURL(
+    GitAWSCodeCommitURL,
     GitPipURL,
     GitBaseURL,
     URLProtocol,
@@ -704,13 +703,23 @@ class GitURL(
     - :class:`GitPipURL`
 
       - :meth:`GitPipURL.to_url`
+    - :class:`GitAWSCodeCommitURL`
+
+      - :meth:`GitAWSCodeCommitURL.to_url`
     - :class:`GitBaseURL`
 
       - :meth:`GitBaseURL.to_url`
     """
 
     rule_map = RuleMap(
-        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
+        _rule_map={
+            m.label: m
+            for m in [
+                *DEFAULT_RULES,
+                *PIP_DEFAULT_RULES,
+                *AWS_CODE_COMMIT_DEFAULT_RULES,
+            ]
+        },
     )
 
     @classmethod
