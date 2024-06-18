@@ -24,6 +24,19 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+## libvcs 0.30.0 (2024-06-18)
+
+### URLs: Variable renamings and moves (#463)
+
+- `RE_PIP_REV` moved from `libvcs.url.git` to `libvcs.url.constants`.
+- `RE_PATH` has changed:
+
+  - The pattern for user matching (e.g., `git@`) has been extracted to `RE_USER`.
+  - `RE_PATH` and `SCP_REGEX` (now `RE_SCP`) no longer include user regex pattern
+  - Existing patterns now use `RE_USER` explicitly.
+
+- `REGEX_SCP` renamed to `RE_SCP` for consistency.
+
 ## libvcs 0.20.0 (2022-10-31)
 
 ### URLs: Mapping now class attributes (#433)
