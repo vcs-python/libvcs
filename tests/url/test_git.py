@@ -6,7 +6,12 @@ import pytest
 
 from libvcs.sync.git import GitSync
 from libvcs.url.base import RuleMap
-from libvcs.url.git import DEFAULT_RULES, PIP_DEFAULT_RULES, GitBaseURL, GitURL
+from libvcs.url.git import (
+    DEFAULT_RULES,
+    PIP_DEFAULT_RULES,
+    GitBaseURL,
+    GitURL,
+)
 
 
 class GitURLFixture(typing.NamedTuple):
@@ -104,6 +109,7 @@ class GitURLKwargsFixture(typing.NamedTuple):
 
     url: str
     is_valid: bool
+    is_generic: bool  # If git base URLs would be truthy
     git_url_kwargs: GitURLKwargs
 
 
@@ -117,34 +123,39 @@ PIP_TEST_FIXTURES: list[GitURLKwargsFixture] = [
     GitURLKwargsFixture(
         url="git+https://github.com/liuxinyu95/AlgoXY.git",
         is_valid=True,
+        is_generic=False,
         git_url_kwargs=GitURLKwargs(url="git+https://github.com/liuxinyu95/AlgoXY.git"),
     ),
     GitURLKwargsFixture(
         url="git+ssh://git@github.com:tony/AlgoXY.git",
         is_valid=True,
+        is_generic=False,
         git_url_kwargs=GitURLKwargs(url="git+ssh://git@github.com:tony/AlgoXY.git"),
     ),
     GitURLKwargsFixture(
         url="git+file://{local_repo}",
         is_valid=True,
+        is_generic=False,
         git_url_kwargs=GitURLKwargs(url="git+file://{local_repo}"),
     ),
     # Incompatible
     GitURLKwargsFixture(
         url="git+ssh://git@github.com/tony/AlgoXY.git",
         is_valid=True,
+        is_generic=False,
         git_url_kwargs=GitURLKwargs(url="git+ssh://git@github.com/tony/AlgoXY.git"),
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    ("url", "is_valid", "git_url_kwargs"),
+    GitURLKwargsFixture._fields,
     PIP_TEST_FIXTURES,
 )
 def test_git_url_extension_pip(
     url: str,
     is_valid: bool,
+    is_generic: bool,
     git_url_kwargs: GitURLKwargs,
     git_repo: GitSync,
 ) -> None:
@@ -160,9 +171,15 @@ def test_git_url_extension_pip(
     git_url = GitURLWithPip(**git_url_kwargs)
     git_url.url = git_url.url.format(local_repo=git_repo.path)
 
-    assert (
-        GitBaseURL.is_valid(url) != is_valid
-    ), f"{url} compatibility should work with core, expects {not is_valid}"
+    if is_generic:
+        assert (
+            GitBaseURL.is_valid(url) == is_valid
+        ), f"{url} compatibility should be {is_valid}"
+    else:
+        assert (
+            GitBaseURL.is_valid(url) != is_valid
+        ), f"{url} compatibility should work with core, expects {not is_valid}"
+
     assert (
         GitURLWithPip.is_valid(url) == is_valid
     ), f"{url} compatibility should be {is_valid}"
