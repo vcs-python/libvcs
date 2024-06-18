@@ -20,7 +20,7 @@ $ pip install --user --upgrade --pre libvcs
 #### urls: Variable changes (#463)
 
 - `RE_PIP_REV` moved from `libvcs.url.git` to `libvcs.url.constants`.
-- Regex pattern for user (e.g. `git@`) decoupled to `RE_USER`.
+- Regex pattern for user (e.g., `git@`) decoupled to `RE_USER`.
 - `RE_PATH` and `SCP_REGEX` (now `RE_SCP`) no longer include user regex pattern
   - Existing patterns now use `RE_USER` explicitly.
 - `REGEX_SCP` renamed to `RE_SCP` for consistency.
@@ -621,7 +621,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
 
   _Backport from 0.13.4_
 
-- {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.
+- {func}`~libvcs.shortcuts.create_project`: Add overloads that return the typed project (e.g.,
   {class}`~libvcs.sync.git.GitSync`)
 
   _Backport from 0.13.3_
@@ -663,7 +663,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
 
 ### Typings
 
-- `create_project()`: Add overloads that return the typed project (e.g.
+- `create_project()`: Add overloads that return the typed project (e.g.,
   {class}`~libvcs.sync.git.GitSync`)
 
 ## libvcs 0.13.2 (2022-06-12)
@@ -751,7 +751,7 @@ Temporarily add `Faker` as a dependency (due to pytest), track longterm fix on (
 
 ### Bug fixes
 
-- Fix argument input for commands, e.g. `git config --get color.diff` would not properly
+- Fix argument input for commands, for instance `git config --get color.diff` would not properly
   pass-through to subprocess. git: #360, svn and hg: #365
 
 ### Internals
@@ -998,7 +998,7 @@ releases. The API is subject to change significantly in pre-1.0 builds.
   - Move sphinx api format to Numpy-style
 
   - Move from reStructuredText to Markdown (via recommonmark). The master plan is to eliminate
-    docutils and sphinx as a bottleneck completely in favor of something else (e.g. gatsby with a
+    docutils and sphinx as a bottleneck completely in favor of something else (e.g., gatsby with a
     source that inspects our modules and can source intersphinx)
 
   - Move from RTD to GitHub Action, full support of poetry extras packages, deploys straight to S3
