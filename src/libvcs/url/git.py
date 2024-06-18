@@ -689,6 +689,7 @@ class GitPipURL(
 
 @dataclasses.dataclass(repr=False)
 class GitURL(
+    GitAWSCodeCommitURL,
     GitPipURL,
     GitBaseURL,
     URLProtocol,
@@ -702,13 +703,23 @@ class GitURL(
     - :class:`GitPipURL`
 
       - :meth:`GitPipURL.to_url`
+    - :class:`GitAWSCodeCommitURL`
+
+      - :meth:`GitAWSCodeCommitURL.to_url`
     - :class:`GitBaseURL`
 
       - :meth:`GitBaseURL.to_url`
     """
 
     rule_map = RuleMap(
-        _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
+        _rule_map={
+            m.label: m
+            for m in [
+                *DEFAULT_RULES,
+                *PIP_DEFAULT_RULES,
+                *AWS_CODE_COMMIT_DEFAULT_RULES,
+            ]
+        },
     )
 
     @classmethod
