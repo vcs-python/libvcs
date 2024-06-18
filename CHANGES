@@ -15,6 +15,19 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+## libvcs 0.30.1 (unreleased)
+
+### Bug Fixes
+
+- url(git): Remove unused `weight=0` flags from `AWS_CODE_COMMIT_DEFAULT_RULES`
+  (#464)
+- url(git[GitURL]): Support for detection of AWS CodeCommit URLs (#464)
+
+### Tests
+
+- url(registry): Tests for `test_registry.py` detection of AWS CodeCommit URLs
+  (#464)
+
 ## libvcs 0.30.0 (2024-06-18)
 
 ### New features
