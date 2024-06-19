@@ -15,6 +15,13 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Breaking changes
+
+#### cmd: Listing method renamed (#466)
+
+- `libvcs.cmd.git.GitCmd._list()` -> `libvcs.cmd.git.Git.ls()`
+- `libvcs.cmd.svn.Svn._list()` -> `libvcs.cmd.svn.Svn.ls()`
+
 ## libvcs 0.30.1 (2024-06-18)
 
 ### Bug Fixes

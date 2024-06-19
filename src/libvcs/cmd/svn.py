@@ -611,7 +611,7 @@ class Svn:
 
         return self.run(["info", *local_flags])
 
-    def _list(self, *args: Any, **kwargs: Any) -> str:
+    def ls(self, *args: Any, **kwargs: Any) -> str:
         """List files in SVN repository (without downloading them).
 
         Wraps `svn list

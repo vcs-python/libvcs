@@ -66,7 +66,7 @@ class Git:
         >>> git.remote.show()
         'origin'
 
-        >>> git.stash._list()
+        >>> git.stash.ls()
         ''
         """
         #: Directory to check out
@@ -2791,7 +2791,7 @@ class GitStashCmd:
             log_in_real_time=log_in_real_time,
         )
 
-    def _list(
+    def ls(
         self,
         *,
         # Pass-through to run()
@@ -2802,7 +2802,7 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=git_local_clone.path)._list()
+        >>> GitStashCmd(path=git_local_clone.path).ls()
         ''
         """
         return self.run(
