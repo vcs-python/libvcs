@@ -78,8 +78,9 @@ dev-dependencies = [
   # Testing
   "gp-libs",
   "pytest",
-  "pytest-rerunfailures",
+  "pytest-asyncio",
   "pytest-mock",
+  "pytest-rerunfailures",
   "pytest-watcher",
   # Coverage
   "codecov",
@@ -107,8 +108,9 @@ docs = [
 testing = [
   "gp-libs",
   "pytest",
-  "pytest-rerunfailures",
+  "pytest-asyncio",
   "pytest-mock",
+  "pytest-rerunfailures",
   "pytest-watcher",
 ]
 coverage =[
