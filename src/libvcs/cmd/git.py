@@ -78,7 +78,6 @@ class Git:
 
         self.progress_callback = progress_callback
 
-        # Initial git-submodule
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
         self.remote = GitRemoteCmd(path=self.path, cmd=self)
         self.stash = GitStashCmd(path=self.path, cmd=self)
