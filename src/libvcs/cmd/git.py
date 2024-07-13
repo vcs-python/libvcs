@@ -37,7 +37,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git
         <Git path=...>
 
@@ -447,11 +447,11 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.fetch()
         ''
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.fetch(reftag=f'file://{git_remote_repo}')
         ''
@@ -616,14 +616,14 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase()
         'Current branch master is up to date.'
 
         Declare upstream:
 
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase(upstream='origin')
         'Current branch master is up to date.'
@@ -850,7 +850,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.pull()
         'Already up to date.'
@@ -1082,7 +1082,7 @@ class Git:
         Existing repo:
 
         >>> git = Git(path=new_repo)
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.init()
         'Reinitialized existing Git repository in ...'
@@ -1239,7 +1239,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.reset()
         ''
@@ -1364,7 +1364,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.checkout()
         "Your branch is up to date with 'origin/master'."
@@ -1482,12 +1482,12 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.status()
         "On branch master..."
 
-        >>> pathlib.Path(git_local_clone.path / 'new_file.txt').touch()
+        >>> pathlib.Path(example_git_repo.path / 'new_file.txt').touch()
 
         >>> git.status(porcelain=True)
         '?? new_file.txt'
@@ -1498,7 +1498,7 @@ class Git:
         >>> git.status(porcelain='2')
         '? new_file.txt'
 
-        >>> git.status(C=git_local_clone.path / '.git', porcelain='2')
+        >>> git.status(C=example_git_repo.path / '.git', porcelain='2')
         '? new_file.txt'
 
         >>> git.status(porcelain=True, untracked_files="no")
@@ -1640,7 +1640,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.config()
         'usage: git config ...'
@@ -1763,7 +1763,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.version()
         'git version ...'
@@ -1799,7 +1799,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.rev_parse()
         ''
@@ -1917,7 +1917,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.rev_list(commit="HEAD")
         '...'
@@ -2059,7 +2059,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.symbolic_ref(name="test")
         'fatal: ref test is not a symbolic ref'
@@ -2104,7 +2104,7 @@ class Git:
 
         Examples
         --------
-        >>> git = Git(path=git_local_clone.path)
+        >>> git = Git(path=example_git_repo.path)
 
         >>> git.show_ref()
         '...'
@@ -2196,7 +2196,7 @@ class GitSubmoduleCmd:
         >>> GitSubmoduleCmd(path=tmp_path).run(quiet=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitSubmoduleCmd(path=git_local_clone.path).run(quiet=True)
+        >>> GitSubmoduleCmd(path=example_git_repo.path).run(quiet=True)
         ''
         """
         #: Directory to check out
@@ -2230,7 +2230,7 @@ class GitSubmoduleCmd:
 
         Examples
         --------
-        >>> GitSubmoduleCmd(path=git_local_clone.path).run()
+        >>> GitSubmoduleCmd(path=example_git_repo.path).run()
         ''
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2260,7 +2260,7 @@ class GitSubmoduleCmd:
 
         Examples
         --------
-        >>> GitSubmoduleCmd(path=git_local_clone.path).init()
+        >>> GitSubmoduleCmd(path=example_git_repo.path).init()
         ''
         """
         local_flags: list[str] = []
@@ -2297,19 +2297,21 @@ class GitSubmoduleCmd:
 
         Examples
         --------
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update()
+        >>> GitSubmoduleCmd(path=example_git_repo.path).update()
         ''
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update(init=True)
+        >>> GitSubmoduleCmd(path=example_git_repo.path).update(init=True)
         ''
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update(init=True, recursive=True)
+        >>> GitSubmoduleCmd(
+        ...     path=example_git_repo.path
+        ... ).update(init=True, recursive=True)
         ''
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update(force=True)
+        >>> GitSubmoduleCmd(path=example_git_repo.path).update(force=True)
         ''
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update(checkout=True)
+        >>> GitSubmoduleCmd(path=example_git_repo.path).update(checkout=True)
         ''
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update(rebase=True)
+        >>> GitSubmoduleCmd(path=example_git_repo.path).update(rebase=True)
         ''
-        >>> GitSubmoduleCmd(path=git_local_clone.path).update(merge=True)
+        >>> GitSubmoduleCmd(path=example_git_repo.path).update(merge=True)
         ''
         """
         local_flags: list[str] = []
@@ -2378,7 +2380,7 @@ class GitRemoteCmd:
         >>> GitRemoteCmd(path=tmp_path).run(verbose=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitRemoteCmd(path=git_local_clone.path).run(verbose=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).run(verbose=True)
         'origin\tfile:///...'
         """
         #: Directory to check out
@@ -2411,9 +2413,9 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(path=git_local_clone.path).run()
+        >>> GitRemoteCmd(path=example_git_repo.path).run()
         'origin'
-        >>> GitRemoteCmd(path=git_local_clone.path).run(verbose=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).run(verbose=True)
         'origin\tfile:///...'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2447,7 +2449,7 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=git_local_clone.path).add(
+        >>> GitRemoteCmd(path=example_git_repo.path).add(
         ...     name='my_remote', url=f'file://{git_remote_repo}'
         ... )
         ''
@@ -2483,9 +2485,11 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=git_local_clone.path).rename(old='origin', new='new_name')
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path
+        ... ).rename(old='origin', new='new_name')
         ''
-        >>> GitRemoteCmd(path=git_local_clone.path).run()
+        >>> GitRemoteCmd(path=example_git_repo.path).run()
         'new_name'
         """
         local_flags: list[str] = []
@@ -2515,9 +2519,9 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(path=git_local_clone.path).remove(name='origin')
+        >>> GitRemoteCmd(path=example_git_repo.path).remove(name='origin')
         ''
-        >>> GitRemoteCmd(path=git_local_clone.path).run()
+        >>> GitRemoteCmd(path=example_git_repo.path).run()
         ''
         """
         local_flags: list[str] = []
@@ -2544,7 +2548,7 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(path=git_local_clone.path).show()
+        >>> GitRemoteCmd(path=example_git_repo.path).show()
         'origin'
         """
         local_flags: list[str] = []
@@ -2580,10 +2584,10 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=git_local_clone.path).prune(name='origin')
+        >>> GitRemoteCmd(path=example_git_repo.path).prune(name='origin')
         ''
 
-        >>> GitRemoteCmd(path=git_local_clone.path).prune(name='origin', dry_run=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).prune(name='origin', dry_run=True)
         ''
         """
         local_flags: list[str] = []
@@ -2614,13 +2618,13 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin')
+        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin')
         'file:///...'
 
-        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', push=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin', push=True)
         'file:///...'
 
-        >>> GitRemoteCmd(path=git_local_clone.path).get_url(name='origin', _all=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin', _all=True)
         'file:///...'
         """
         local_flags: list[str] = []
@@ -2656,28 +2660,30 @@ class GitRemoteCmd:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
         ...     name='origin',
         ...     url='http://localhost'
         ... )
         ''
 
-        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
         ...     name='origin',
         ...     url='http://localhost',
         ...     push=True
         ... )
         ''
 
-        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
         ...     name='origin',
         ...     url='http://localhost',
         ...     add=True
         ... )
         ''
 
-        >>> current_url = GitRemoteCmd(path=git_local_clone.path).get_url(name='origin')
-        >>> GitRemoteCmd(path=git_local_clone.path).set_url(
+        >>> current_url = GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ... ).get_url(name='origin')
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
         ...     name='origin',
         ...     url=current_url,
         ...     delete=True
@@ -2739,7 +2745,7 @@ class GitStashCmd:
         >>> GitStashCmd(path=tmp_path).run(quiet=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitStashCmd(path=git_local_clone.path).run(quiet=True)
+        >>> GitStashCmd(path=example_git_repo.path).run(quiet=True)
         ''
         """
         #: Directory to check out
@@ -2773,7 +2779,7 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=git_local_clone.path).run()
+        >>> GitStashCmd(path=example_git_repo.path).run()
         'No local changes to save'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2802,7 +2808,7 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=git_local_clone.path).ls()
+        >>> GitStashCmd(path=example_git_repo.path).ls()
         ''
         """
         return self.run(
@@ -2828,10 +2834,10 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=git_local_clone.path).push()
+        >>> GitStashCmd(path=example_git_repo.path).push()
         'No local changes to save'
 
-        >>> GitStashCmd(path=git_local_clone.path).push(path='.')
+        >>> GitStashCmd(path=example_git_repo.path).push(path='.')
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -2869,19 +2875,19 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=git_local_clone.path).pop()
+        >>> GitStashCmd(path=example_git_repo.path).pop()
         'No stash entries found.'
 
-        >>> GitStashCmd(path=git_local_clone.path).pop(stash=0)
+        >>> GitStashCmd(path=example_git_repo.path).pop(stash=0)
         'error: refs/stash@{0} is not a valid reference'
 
-        >>> GitStashCmd(path=git_local_clone.path).pop(stash=1, index=True)
+        >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, index=True)
         'error: refs/stash@{1} is not a valid reference'
 
-        >>> GitStashCmd(path=git_local_clone.path).pop(stash=1, quiet=True)
+        >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, quiet=True)
         'error: refs/stash@{1} is not a valid reference'
 
-        >>> GitStashCmd(path=git_local_clone.path).push(path='.')
+        >>> GitStashCmd(path=example_git_repo.path).push(path='.')
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -2921,10 +2927,10 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=git_local_clone.path).save()
+        >>> GitStashCmd(path=example_git_repo.path).save()
         'No local changes to save'
 
-        >>> GitStashCmd(path=git_local_clone.path).save(message="Message")
+        >>> GitStashCmd(path=example_git_repo.path).save(message="Message")
         'No local changes to save'
         """
         local_flags: list[str] = []
