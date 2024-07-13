@@ -17,6 +17,11 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
+#### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
+
+Renamed `git_local_clone` to `example_git_repo` for better understandability in
+documentation / doctests.
+
 #### cmd: Listing method renamed (#466)
 
 - `libvcs.cmd.git.GitCmd._list()` -> `libvcs.cmd.git.Git.ls()`
