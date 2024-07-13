@@ -510,7 +510,7 @@ def add_doctest_fixtures(
             init_cmd_args=None,
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
-        doctest_namespace["git_local_clone"] = git_repo
+        doctest_namespace["example_git_repo"] = git_repo
     if shutil.which("svn"):
         doctest_namespace["create_svn_remote_repo_bare"] = create_svn_remote_repo
         doctest_namespace["create_svn_remote_repo"] = functools.partial(
