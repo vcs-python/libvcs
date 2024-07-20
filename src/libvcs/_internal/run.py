@@ -20,7 +20,7 @@ from libvcs._internal.types import StrOrBytesPath
 
 logger = logging.getLogger(__name__)
 
-console_encoding = sys.__stdout__.encoding
+console_encoding = sys.stdout.encoding
 
 
 def console_to_str(s: bytes) -> str:
