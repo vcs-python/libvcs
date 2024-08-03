@@ -1643,7 +1643,7 @@ class Git:
         >>> git = Git(path=example_git_repo.path)
 
         >>> git.config()
-        'usage: git config ...'
+        'error: no action specified'
 
         >>> git.config(_list=True)
         '...user.email=...'
