@@ -1,4 +1,4 @@
-"""Run hg commands directly against a local git repo."""
+"""Run git commands directly against a local git repo."""
 
 import datetime
 import pathlib
