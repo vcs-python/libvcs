@@ -149,7 +149,6 @@ include = [
   { path = "conftest.py", format = "sdist" },
 ]
 dependencies = [
-    "python == None",
     "typing-extensions == 4.12.2",]
 
 [project.optional-dependencies]
