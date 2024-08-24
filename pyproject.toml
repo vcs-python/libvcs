@@ -82,8 +82,8 @@ now = true
 ignore_patterns = ["*.py.*.py"]
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "libvcs"
