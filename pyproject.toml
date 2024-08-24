@@ -60,6 +60,10 @@ include = [
   { path = "conftest.py", format = "sdist" },
 ]
 
+[[tool.poetry.source]]
+name = "github"
+url = "https://github.com/vcs-python/libvcs"
+
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/vcs-python/libvcs/issues"
 Documentation = "https://libvcs.git-pull.com"
