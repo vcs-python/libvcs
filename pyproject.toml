@@ -89,7 +89,7 @@ build-backend = "setuptools.build_meta"
 name = "libvcs"
 version = "0.30.1"
 description = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
-license = "MIT"
+license = {text = "MIT License"}
 authors = ["Tony Narlock <tony@git-pull.com>"]
 keywords = [
   "libvcs",
