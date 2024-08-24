@@ -135,19 +135,7 @@ classifiers = [
   "Topic :: System :: Shells",
   "Typing :: Typed",
 ]
-homepage = "http://github.com/vcs-python/libvcs/"
 readme = "README.md"
-packages = [
-  { include = "*", from = "src" },
-]
-include = [
-  { path = "CHANGES", format = "sdist" },
-  { path = "MIGRATION", format = "sdist" },
-  { path = ".tmuxp.yaml", format = "sdist" },
-  { path = "tests", format = "sdist" },
-  { path = "docs", format = "sdist" },
-  { path = "conftest.py", format = "sdist" },
-]
 dependencies = [
     "typing-extensions == 4.12.2",]
 
@@ -183,6 +171,3 @@ test = [
 Documentation = "https://libvcs.git-pull.com"
 Repository = "https://github.com/vcs-python/libvcs"
 Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
-
-[project.plugins.pytest11]
-libvcs = "libvcs.pytest_plugin"
