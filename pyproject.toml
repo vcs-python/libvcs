@@ -1,3 +1,18 @@
+[project]
+name = "libvcs"
+version = "0.30.1"
+description = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
+authors = [
+  { name = "Tony Narlock", email = "tony@git-pull.com" }
+]
+dependencies = [
+]
+
+[project.optional-dependencies]
+dev = [
+]
+
+
 [tool.poetry]
 name = "libvcs"
 version = "0.33.0"
