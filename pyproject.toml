@@ -87,6 +87,7 @@ linkify-it-py = "*"
 ### Testing ###
 gp-libs = "*"
 pytest = "*"
+pytest-codspeed = "*"
 pytest-rerunfailures = "*"
 pytest-mock = "*"
 pytest-watcher = "*"
