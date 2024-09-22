@@ -30,6 +30,7 @@ ProjectTestFactoryLazyKwargs = t.Callable[..., dict[str, str]]
 ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
     ("constructor", "lazy_constructor_options"),
