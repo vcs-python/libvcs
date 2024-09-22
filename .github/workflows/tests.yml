@@ -53,6 +53,17 @@ jobs:
           COV_CORE_SOURCE: .
           COV_CORE_CONFIG: .coveragerc
           COV_CORE_DATAFILE: .coverage.eager
+
+      - name: Test with CodSpeed
+        uses: CodSpeedHQ/action@v3
+        with:
+           token: ${{ secrets.CODSPEED_TOKEN }}
+           run: poetry run py.test --cov=./ --cov-append --cov-report=xml --codspeed
+        env:
+          COV_CORE_SOURCE: .
+          COV_CORE_CONFIG: .coveragerc
+          COV_CORE_DATAFILE: .coverage.eager
+
       - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
