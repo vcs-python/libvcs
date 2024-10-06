@@ -113,6 +113,10 @@ files = [
   "tests",
 ]
 
+[[tool.mypy.overrides]]
+module = "pytest_codspeed.plugin"
+ignore_missing_imports = true
+
 [tool.coverage.run]
 branch = true
 parallel = true
