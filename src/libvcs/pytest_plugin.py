@@ -185,7 +185,7 @@ def remote_repos_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
-    """System's remote (file-based) repos to clone andpush to. Emphemeral directory."""
+    """System's remote (file-based) repos to clone and push to. Emphemeral directory."""
     path = user_path / "remote_repos"
     path.mkdir(exist_ok=True)
 
