@@ -47,13 +47,21 @@ These fixtures are automatically used when the plugin is enabled and `pytest` is
   - `/home/${user}` ({func}`user_path`)
 - Setting your home directory
   - Patch `$HOME` to point to {func}`user_path` ({func}`set_home`)
-- Set default configuration
+- Create configuration files:
 
-  - `.gitconfig`, via {func}`gitconfig`:
-  - `.hgrc`, via {func}`hgconfig`:
+  - `.gitconfig`, via {func}`gitconfig`
+   - `.hgrc`, via {func}`hgconfig` 
+
+- Set default configuration for VCS:
+
+  - Set {func}`hgconfig` to [`HGRCPATH`] via {func}`set_hgconfig`
+  - Set {func}`gitconfig` to [`GIT_CONFIG`] via {func}`set_gitconfig`
 
   These are set to ensure you can correctly clone and create repositories without without extra
   warnings.
+
+[`HGRCPATH`]: https://www.mercurial-scm.org/doc/hg.1.html#:~:text=UNIX%2Dlike%20environments.-,HGRCPATH,-If%20not%20set
+[`GIT_CONFIG`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIG
 
 ## Bootstrapping pytest in your `conftest.py`
 
