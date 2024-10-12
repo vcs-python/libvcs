@@ -30,6 +30,26 @@ def test_svn_sync(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None
     assert (tmp_path / repo_name).exists()
 
 
+def test_svn_sync_with_files(
+    tmp_path: pathlib.Path, svn_remote_repo_with_files: pathlib.Path
+) -> None:
+    """Tests for SvnSync."""
+    repo_name = "my_svn_project"
+
+    svn_repo = SvnSync(
+        url=f"file://{svn_remote_repo_with_files}",
+        path=str(tmp_path / repo_name),
+    )
+
+    svn_repo.obtain()
+    svn_repo.update_repo()
+
+    assert svn_repo.get_revision() == 0
+    assert svn_repo.get_revision_file("./") == 3
+
+    assert (tmp_path / repo_name).exists()
+
+
 def test_repo_svn_remote_checkout(
     create_svn_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,

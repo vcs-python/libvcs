@@ -180,7 +180,7 @@ def projects_path(
     return path
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def remote_repos_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
@@ -239,15 +239,16 @@ DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
 
 
 def _create_git_remote_repo(
-    remote_repos_path: pathlib.Path,
-    remote_repo_name: str,
+    remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
-    remote_repo_path = remote_repos_path / remote_repo_name
-    run(["git", "init", remote_repo_name, *init_cmd_args], cwd=remote_repos_path)
+    run(
+        ["git", "init", remote_repo_path.stem, *init_cmd_args],
+        cwd=remote_repo_path.parent,
+    )
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -255,10 +256,64 @@ def _create_git_remote_repo(
     return remote_repo_path
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def libvcs_test_cache_path(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+    """Return temporary directory to use as cache path for libvcs tests."""
+    return tmp_path_factory.mktemp("libvcs-test-cache")
+
+
+@pytest.fixture(scope="session")
+def empty_git_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
+    """Return temporary directory to use for master-copy of a git repo."""
+    return libvcs_test_cache_path / "empty_git_repo"
+
+
+@pytest.fixture(scope="session")
+def empty_git_bare_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
+    """Return temporary directory to use for master-copy of a bare git repo."""
+    return libvcs_test_cache_path / "empty_git_bare_repo"
+
+
+@pytest.fixture(scope="session")
 @skip_if_git_missing
-def create_git_remote_repo(
+def empty_git_bare_repo(
+    empty_git_bare_repo_path: pathlib.Path,
+) -> pathlib.Path:
+    """Return factory to create git remote repo to for clone / push purposes."""
+    if (
+        empty_git_bare_repo_path.exists()
+        and (empty_git_bare_repo_path / ".git").exists()
+    ):
+        return empty_git_bare_repo_path
+
+    return _create_git_remote_repo(
+        remote_repo_path=empty_git_bare_repo_path,
+        remote_repo_post_init=None,
+        init_cmd_args=DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,  # --bare
+    )
+
+
+@pytest.fixture(scope="session")
+@skip_if_git_missing
+def empty_git_repo(
+    empty_git_repo_path: pathlib.Path,
+) -> pathlib.Path:
+    """Return factory to create git remote repo to for clone / push purposes."""
+    if empty_git_repo_path.exists() and (empty_git_repo_path / ".git").exists():
+        return empty_git_repo_path
+
+    return _create_git_remote_repo(
+        remote_repo_path=empty_git_repo_path,
+        remote_repo_post_init=None,
+        init_cmd_args=None,
+    )
+
+
+@pytest.fixture(scope="session")
+@skip_if_git_missing
+def create_git_remote_bare_repo(
     remote_repos_path: pathlib.Path,
+    empty_git_bare_repo: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
     """Return factory to create git remote repo to for clone / push purposes."""
 
@@ -268,14 +323,51 @@ def create_git_remote_repo(
         remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     ) -> pathlib.Path:
-        return _create_git_remote_repo(
-            remote_repos_path=remote_repos_path,
-            remote_repo_name=remote_repo_name
-            if remote_repo_name is not None
-            else unique_repo_name(remote_repos_path=remote_repos_path),
-            remote_repo_post_init=remote_repo_post_init,
-            init_cmd_args=init_cmd_args,
-        )
+        if remote_repo_name is None:
+            remote_repo_name = unique_repo_name(remote_repos_path=remote_repos_path)
+        remote_repo_path = remote_repos_path / remote_repo_name
+
+        shutil.copytree(empty_git_bare_repo, remote_repo_path)
+
+        assert empty_git_bare_repo.exists()
+
+        assert remote_repo_path.exists()
+
+        return remote_repo_path
+
+    return fn
+
+
+@pytest.fixture(scope="session")
+@skip_if_git_missing
+def create_git_remote_repo(
+    remote_repos_path: pathlib.Path,
+    empty_git_repo: pathlib.Path,
+) -> CreateRepoPytestFixtureFn:
+    """Return factory to create git remote repo to for clone / push purposes."""
+
+    def fn(
+        remote_repos_path: pathlib.Path = remote_repos_path,
+        remote_repo_name: Optional[str] = None,
+        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+        init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
+    ) -> pathlib.Path:
+        if remote_repo_name is None:
+            remote_repo_name = unique_repo_name(remote_repos_path=remote_repos_path)
+        remote_repo_path = remote_repos_path / remote_repo_name
+
+        shutil.copytree(empty_git_repo, remote_repo_path)
+
+        if remote_repo_post_init is not None and callable(remote_repo_post_init):
+            remote_repo_post_init(remote_repo_path=remote_repo_path)
+
+        assert empty_git_repo.exists()
+        assert (empty_git_repo / ".git").exists()
+
+        assert remote_repo_path.exists()
+        assert (remote_repo_path / ".git").exists()
+
+        return remote_repo_path
 
     return fn
 
@@ -288,21 +380,20 @@ def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
     run(["git", "commit", "-m", "test file for dummyrepo"], cwd=remote_repo_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 @skip_if_git_missing
-def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
-    """Pre-made git repo w/ 1 commit, used as a file:// remote to clone and push to."""
-    return _create_git_remote_repo(
-        remote_repos_path=remote_repos_path,
-        remote_repo_name="dummyrepo",
-        remote_repo_post_init=git_remote_repo_single_commit_post_init,
-        init_cmd_args=None,  # Don't do --bare
-    )
+def git_remote_repo(
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
+) -> pathlib.Path:
+    """Copy the session-scoped Git repository to a temporary directory."""
+    # TODO: Cache the effect of of this in a session-based repo
+    repo_path = create_git_remote_repo()
+    git_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    return repo_path
 
 
 def _create_svn_remote_repo(
-    remote_repos_path: pathlib.Path,
-    remote_repo_name: str,
+    remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
@@ -310,7 +401,6 @@ def _create_svn_remote_repo(
     if init_cmd_args is None:
         init_cmd_args = []
 
-    remote_repo_path = remote_repos_path / remote_repo_name
     run(["svnadmin", "create", str(remote_repo_path), *init_cmd_args])
 
     assert remote_repo_path.exists()
@@ -340,10 +430,33 @@ def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def empty_svn_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
+    """Return temporary directory to use for master-copy of a svn repo."""
+    return libvcs_test_cache_path / "empty_svn_repo"
+
+
+@pytest.fixture(scope="session")
+@skip_if_svn_missing
+def empty_svn_repo(
+    empty_svn_repo_path: pathlib.Path,
+) -> pathlib.Path:
+    """Return factory to create svn remote repo to for clone / push purposes."""
+    if empty_svn_repo_path.exists() and (empty_svn_repo_path / "conf").exists():
+        return empty_svn_repo_path
+
+    return _create_svn_remote_repo(
+        remote_repo_path=empty_svn_repo_path,
+        remote_repo_post_init=None,
+        init_cmd_args=None,
+    )
+
+
+@pytest.fixture(scope="session")
 @skip_if_svn_missing
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
+    empty_svn_repo: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -353,32 +466,47 @@ def create_svn_remote_repo(
         remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
-        return _create_svn_remote_repo(
-            remote_repos_path=remote_repos_path,
-            remote_repo_name=remote_repo_name
-            if remote_repo_name is not None
-            else unique_repo_name(remote_repos_path=remote_repos_path),
-            remote_repo_post_init=remote_repo_post_init,
-            init_cmd_args=init_cmd_args,
-        )
+        if remote_repo_name is None:
+            remote_repo_name = unique_repo_name(remote_repos_path=remote_repos_path)
+        remote_repo_path = remote_repos_path / remote_repo_name
+
+        shutil.copytree(empty_svn_repo, remote_repo_path)
+
+        if remote_repo_post_init is not None and callable(remote_repo_post_init):
+            remote_repo_post_init(remote_repo_path=remote_repo_path)
+
+        assert empty_svn_repo.exists()
+
+        assert remote_repo_path.exists()
+
+        return remote_repo_path
 
     return fn
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 @skip_if_svn_missing
-def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
+def svn_remote_repo(
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
-    return _create_svn_remote_repo(
-        remote_repos_path=remote_repos_path,
-        remote_repo_name="svn_server_dir",
-        remote_repo_post_init=None,
-    )
+    repo_path = create_svn_remote_repo()
+    return repo_path
+
+
+@pytest.fixture(scope="session")
+@skip_if_svn_missing
+def svn_remote_repo_with_files(
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+) -> pathlib.Path:
+    """Pre-made. Local file:// based SVN server."""
+    repo_path = create_svn_remote_repo()
+    svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    return repo_path
 
 
 def _create_hg_remote_repo(
-    remote_repos_path: pathlib.Path,
-    remote_repo_name: str,
+    remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
@@ -386,8 +514,10 @@ def _create_hg_remote_repo(
     if init_cmd_args is None:
         init_cmd_args = []
 
-    remote_repo_path = remote_repos_path / remote_repo_name
-    run(["hg", "init", remote_repo_name, *init_cmd_args], cwd=remote_repos_path)
+    run(
+        ["hg", "init", remote_repo_path.stem, *init_cmd_args],
+        cwd=remote_repo_path.parent,
+    )
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -403,12 +533,33 @@ def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> No
     run(["hg", "commit", "-m", "test file for hg repo"], cwd=remote_repo_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def empty_hg_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
+    """Return temporary directory to use for master-copy of a hg repo."""
+    return libvcs_test_cache_path / "empty_hg_repo"
+
+
+@pytest.fixture(scope="session")
+@skip_if_hg_missing
+def empty_hg_repo(
+    empty_hg_repo_path: pathlib.Path,
+) -> pathlib.Path:
+    """Return factory to create hg remote repo to for clone / push purposes."""
+    if empty_hg_repo_path.exists() and (empty_hg_repo_path / ".hg").exists():
+        return empty_hg_repo_path
+
+    return _create_hg_remote_repo(
+        remote_repo_path=empty_hg_repo_path,
+        remote_repo_post_init=None,
+        init_cmd_args=None,
+    )
+
+
+@pytest.fixture(scope="session")
 @skip_if_hg_missing
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
-    hgconfig: pathlib.Path,
-    set_home: pathlib.Path,
+    empty_hg_repo: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -418,38 +569,57 @@ def create_hg_remote_repo(
         remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
-        return _create_hg_remote_repo(
-            remote_repos_path=remote_repos_path,
-            remote_repo_name=remote_repo_name
-            if remote_repo_name is not None
-            else unique_repo_name(remote_repos_path=remote_repos_path),
-            remote_repo_post_init=remote_repo_post_init,
-            init_cmd_args=init_cmd_args,
-        )
+        if remote_repo_name is None:
+            remote_repo_name = unique_repo_name(remote_repos_path=remote_repos_path)
+        remote_repo_path = remote_repos_path / remote_repo_name
+
+        shutil.copytree(empty_hg_repo, remote_repo_path)
+
+        if remote_repo_post_init is not None and callable(remote_repo_post_init):
+            remote_repo_post_init(remote_repo_path=remote_repo_path)
+
+        assert empty_hg_repo.exists()
+
+        assert remote_repo_path.exists()
+
+        return remote_repo_path
 
     return fn
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 @skip_if_hg_missing
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
-    hgconfig: pathlib.Path,
+    create_hg_remote_repo: CreateRepoPytestFixtureFn,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
-    return _create_hg_remote_repo(
-        remote_repos_path=remote_repos_path,
-        remote_repo_name="dummyrepo",
-        remote_repo_post_init=hg_remote_repo_single_commit_post_init,
-    )
+    repo_path = create_hg_remote_repo()
+    hg_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    return repo_path
 
 
 @pytest.fixture
-def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitSync:
+def git_repo(
+    remote_repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    git_remote_repo: pathlib.Path,
+) -> GitSync:
     """Pre-made git clone of remote repo checked out to user's projects dir."""
+    remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+    new_checkout_path = projects_path / remote_repo_name
+    master_copy = remote_repos_path / "git_repo"
+
+    if master_copy.exists():
+        shutil.copytree(master_copy, new_checkout_path)
+        return GitSync(
+            url=f"file://{git_remote_repo}",
+            path=str(new_checkout_path),
+        )
+
     git_repo = GitSync(
         url=f"file://{git_remote_repo}",
-        path=str(projects_path / "git_repo"),
+        path=master_copy,
         remotes={
             "origin": GitRemote(
                 name="origin",
@@ -463,19 +633,49 @@ def git_repo(projects_path: pathlib.Path, git_remote_repo: pathlib.Path) -> GitS
 
 
 @pytest.fixture
-def hg_repo(projects_path: pathlib.Path, hg_remote_repo: pathlib.Path) -> HgSync:
+def hg_repo(
+    remote_repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    hg_remote_repo: pathlib.Path,
+) -> HgSync:
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
+    remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+    new_checkout_path = projects_path / remote_repo_name
+    master_copy = remote_repos_path / "hg_repo"
+
+    if master_copy.exists():
+        shutil.copytree(master_copy, new_checkout_path)
+        return HgSync(
+            url=f"file://{hg_remote_repo}",
+            path=str(new_checkout_path),
+        )
+
     hg_repo = HgSync(
         url=f"file://{hg_remote_repo}",
-        path=str(projects_path / "hg_repo"),
+        path=master_copy,
     )
     hg_repo.obtain()
     return hg_repo
 
 
 @pytest.fixture
-def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnSync:
+def svn_repo(
+    remote_repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    svn_remote_repo: pathlib.Path,
+) -> SvnSync:
     """Pre-made svn clone of remote repo checked out to user's projects dir."""
+    remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+    new_checkout_path = projects_path / remote_repo_name
+    master_copy = remote_repos_path / "svn_repo"
+
+    if master_copy.exists():
+        shutil.copytree(master_copy, new_checkout_path)
+        return SvnSync(
+            url=f"file://{svn_remote_repo}",
+            path=str(new_checkout_path),
+        )
+
     svn_repo = SvnSync(
         url=f"file://{svn_remote_repo}",
         path=str(projects_path / "svn_repo"),
@@ -491,6 +691,7 @@ def add_doctest_fixtures(
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
     gitconfig: pathlib.Path,
+    hgconfig: pathlib.Path,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     create_svn_remote_repo: CreateRepoPytestFixtureFn,
     create_hg_remote_repo: CreateRepoPytestFixtureFn,
@@ -518,6 +719,7 @@ def add_doctest_fixtures(
             remote_repo_post_init=svn_remote_repo_single_commit_post_init,
         )
     if shutil.which("hg"):
+        doctest_namespace["hgconfig"] = hgconfig
         doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
         doctest_namespace["create_hg_remote_repo"] = functools.partial(
             create_hg_remote_repo,

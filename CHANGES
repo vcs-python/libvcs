@@ -17,6 +17,11 @@ $ pip install --user --upgrade --pre libvcs
 
 ### Breaking changes
 
+#### pytest plugin: Improve performacne via session-based scoping (#472)
+
+Improved test execution speed by over 54% by eliminated repetitive repository reinitialization between test runs.
+Git, Subversion, and Mercurial repositories are now cached from an initial starter repository
+
 #### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
 
 Renamed `git_local_clone` to `example_git_repo` for better understandability in

@@ -172,17 +172,17 @@ def test_repo_update_handle_cases(
 )
 def test_repo_update_stash_cases(
     tmp_path: pathlib.Path,
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
     mocker: MockerFixture,
     has_untracked_files: bool,
     needs_stash: bool,
     has_remote_changes: bool,
 ) -> None:
     """Test GitSync.update_repo() stash cases."""
-    git_remote_repo = create_git_remote_repo()
+    git_bare_repo = create_git_remote_bare_repo()
 
     git_repo: GitSync = GitSync(
-        url=git_remote_repo.as_uri(),
+        url=git_bare_repo.as_uri(),
         path=tmp_path / "myrepo",
         vcs="git",
     )
