@@ -108,17 +108,25 @@ def set_home(
     monkeypatch.setenv("HOME", str(user_path))
 
 
-@pytest.fixture
+vcs_email = "libvcs@git-pull.com"
+
+
+@pytest.fixture(scope="session")
 @skip_if_git_missing
-def gitconfig(user_path: pathlib.Path) -> pathlib.Path:
+def gitconfig(
+    user_path: pathlib.Path,
+) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
     gitconfig = user_path / ".gitconfig"
-    user_email = "libvcs@git-pull.com"
+
+    if gitconfig.exists():
+        return gitconfig
+
     gitconfig.write_text(
         textwrap.dedent(
             f"""
   [user]
-    email = {user_email}
+    email = {vcs_email}
     name = {getpass.getuser()}
   [color]
     diff = auto
@@ -127,26 +135,26 @@ def gitconfig(user_path: pathlib.Path) -> pathlib.Path:
         encoding="utf-8",
     )
 
-    output = run(["git", "config", "--get", "user.email"])
-    used_config_file_output = run(
-        [
-            "git",
-            "config",
-            "--show-origin",
-            "--get",
-            "user.email",
-        ],
-    )
-    assert str(gitconfig) in used_config_file_output
-    assert user_email in output, "Should use our fixture config and home directory"
-
     return gitconfig
 
 
 @pytest.fixture
+@skip_if_git_missing
+def set_gitconfig(
+    monkeypatch: pytest.MonkeyPatch,
+    gitconfig: pathlib.Path,
+) -> pathlib.Path:
+    """Set git configuration."""
+    monkeypatch.setenv("GIT_CONFIG", str(gitconfig))
+    return gitconfig
+
+
+@pytest.fixture(scope="session")
 @skip_if_hg_missing
-def hgconfig(user_path: pathlib.Path) -> pathlib.Path:
-    """Return Mercurial configuration, pytest fixture."""
+def hgconfig(
+    user_path: pathlib.Path,
+) -> pathlib.Path:
+    """Return Mercurial configuration."""
     hgrc = user_path / ".hgrc"
     hgrc.write_text(
         textwrap.dedent(
@@ -162,6 +170,17 @@ def hgconfig(user_path: pathlib.Path) -> pathlib.Path:
         encoding="utf-8",
     )
     return hgrc
+
+
+@pytest.fixture
+@skip_if_hg_missing
+def set_hgconfig(
+    monkeypatch: pytest.MonkeyPatch,
+    hgconfig: pathlib.Path,
+) -> pathlib.Path:
+    """Set Mercurial configuration."""
+    monkeypatch.setenv("HGRCPATH", str(hgconfig))
+    return hgconfig
 
 
 @pytest.fixture

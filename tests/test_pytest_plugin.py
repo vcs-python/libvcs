@@ -6,7 +6,8 @@ import textwrap
 
 import pytest
 
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+from libvcs._internal.run import run
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, vcs_email
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
@@ -109,3 +110,22 @@ def test_repo_git_remote_checkout(
     # Test
     result = pytester.runpytest(str(first_test_filename))
     result.assert_outcomes(passed=1)
+
+
+def test_gitconfig(
+    gitconfig: pathlib.Path,
+    set_gitconfig: pathlib.Path,
+) -> None:
+    """Test gitconfig fixture."""
+    output = run(["git", "config", "--get", "user.email"])
+    used_config_file_output = run(
+        [
+            "git",
+            "config",
+            "--show-origin",
+            "--get",
+            "user.email",
+        ],
+    )
+    assert str(gitconfig) in used_config_file_output
+    assert vcs_email in output, "Should use our fixture config and home directory"
