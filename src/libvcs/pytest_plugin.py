@@ -653,11 +653,26 @@ def git_repo(
 
 
 @pytest.fixture
-def hg_repo(projects_path: pathlib.Path, hg_remote_repo: pathlib.Path) -> HgSync:
+def hg_repo(
+    remote_repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    hg_remote_repo: pathlib.Path,
+) -> HgSync:
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
+    remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+    new_checkout_path = projects_path / remote_repo_name
+    master_copy = remote_repos_path / "hg_repo"
+
+    if master_copy.exists():
+        shutil.copytree(master_copy, new_checkout_path)
+        return HgSync(
+            url=f"file://{hg_remote_repo}",
+            path=str(new_checkout_path),
+        )
+
     hg_repo = HgSync(
         url=f"file://{hg_remote_repo}",
-        path=str(projects_path / "hg_repo"),
+        path=master_copy,
     )
     hg_repo.obtain()
     return hg_repo
