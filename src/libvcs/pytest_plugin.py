@@ -30,15 +30,15 @@ class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
         )
 
 
-skip_if_git_missing = pytest.mark.skipif(
+skip_if_missing_git = pytest.mark.skipif(
     not shutil.which("git"),
     reason="git is not available",
 )
-skip_if_svn_missing = pytest.mark.skipif(
+skip_if_missing_svn = pytest.mark.skipif(
     not shutil.which("svn"),
     reason="svn is not available",
 )
-skip_if_hg_missing = pytest.mark.skipif(
+skip_if_missing_hg = pytest.mark.skipif(
     not shutil.which("hg"),
     reason="hg is not available",
 )
@@ -109,7 +109,7 @@ def set_home(
 
 
 @pytest.fixture
-@skip_if_git_missing
+@skip_if_missing_git
 def gitconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
     gitconfig = user_path / ".gitconfig"
@@ -144,7 +144,7 @@ def gitconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
 
 
 @pytest.fixture
-@skip_if_hg_missing
+@skip_if_missing_hg
 def hgconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
     """Return Mercurial configuration, pytest fixture."""
     hgrc = user_path / ".hgrc"
@@ -256,7 +256,7 @@ def _create_git_remote_repo(
 
 
 @pytest.fixture
-@skip_if_git_missing
+@skip_if_missing_git
 def create_git_remote_repo(
     remote_repos_path: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
@@ -289,7 +289,7 @@ def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
 
 
 @pytest.fixture
-@skip_if_git_missing
+@skip_if_missing_git
 def git_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made git repo w/ 1 commit, used as a file:// remote to clone and push to."""
     return _create_git_remote_repo(
@@ -341,7 +341,7 @@ def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
 
 
 @pytest.fixture
-@skip_if_svn_missing
+@skip_if_missing_svn
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
@@ -366,7 +366,7 @@ def create_svn_remote_repo(
 
 
 @pytest.fixture
-@skip_if_svn_missing
+@skip_if_missing_svn
 def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
     return _create_svn_remote_repo(
@@ -404,7 +404,7 @@ def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> No
 
 
 @pytest.fixture
-@skip_if_hg_missing
+@skip_if_missing_hg
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     hgconfig: pathlib.Path,
@@ -431,7 +431,7 @@ def create_hg_remote_repo(
 
 
 @pytest.fixture
-@skip_if_hg_missing
+@skip_if_missing_hg
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
     hgconfig: pathlib.Path,
