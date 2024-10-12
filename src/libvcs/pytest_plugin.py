@@ -679,8 +679,23 @@ def hg_repo(
 
 
 @pytest.fixture
-def svn_repo(projects_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> SvnSync:
+def svn_repo(
+    remote_repos_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    svn_remote_repo: pathlib.Path,
+) -> SvnSync:
     """Pre-made svn clone of remote repo checked out to user's projects dir."""
+    remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+    new_checkout_path = projects_path / remote_repo_name
+    master_copy = remote_repos_path / "svn_repo"
+
+    if master_copy.exists():
+        shutil.copytree(master_copy, new_checkout_path)
+        return SvnSync(
+            url=f"file://{svn_remote_repo}",
+            path=str(new_checkout_path),
+        )
+
     svn_repo = SvnSync(
         url=f"file://{svn_remote_repo}",
         path=str(projects_path / "svn_repo"),
