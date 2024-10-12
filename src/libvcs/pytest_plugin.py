@@ -509,8 +509,7 @@ def svn_remote_repo(
     create_svn_remote_repo: CreateRepoPytestFixtureFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
-    repo_path = create_svn_remote_repo()
-    return repo_path
+    return create_svn_remote_repo()
 
 
 @pytest.fixture(scope="session")

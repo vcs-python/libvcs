@@ -31,7 +31,8 @@ def test_svn_sync(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None
 
 
 def test_svn_sync_with_files(
-    tmp_path: pathlib.Path, svn_remote_repo_with_files: pathlib.Path
+    tmp_path: pathlib.Path,
+    svn_remote_repo_with_files: pathlib.Path,
 ) -> None:
     """Tests for SvnSync."""
     repo_name = "my_svn_project"
