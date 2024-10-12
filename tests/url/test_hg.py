@@ -5,10 +5,17 @@ import typing
 
 import pytest
 
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.hg import HgSync
 from libvcs.url.base import RuleMap
 from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgBaseURL, HgURL
+
+
+@pytest.fixture(autouse=True)
+def set_hgconfig(
+    set_hgconfig: pathlib.Path,
+) -> pathlib.Path:
+    """Set mercurial configuration."""
+    return set_hgconfig
 
 
 class HgURLFixture(typing.NamedTuple):
@@ -17,16 +24,6 @@ class HgURLFixture(typing.NamedTuple):
     url: str
     is_valid: bool
     hg_url: HgURL
-
-
-@pytest.fixture
-def hg_repo(
-    set_home: pathlib.Path,
-    hgconfig: pathlib.Path,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
-) -> pathlib.Path:
-    """Create a remote hg repository."""
-    return create_hg_remote_repo()
 
 
 TEST_FIXTURES: list[HgURLFixture] = [
@@ -64,8 +61,8 @@ def test_hg_url(
     hg_repo: HgSync,
 ) -> None:
     """Test HgURL."""
-    url = url.format(local_repo=hg_repo)
-    hg_url.url = hg_url.url.format(local_repo=hg_repo)
+    url = url.format(local_repo=hg_repo.path)
+    hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
     assert HgURL.is_valid(url) == is_valid, f"{url} compatibility should be {is_valid}"
     assert HgURL(url) == hg_url
@@ -133,10 +130,10 @@ def test_hg_url_extension_pip(
             _rule_map={m.label: m for m in [*DEFAULT_RULES, *PIP_DEFAULT_RULES]},
         )
 
-    hg_url_kwargs["url"] = hg_url_kwargs["url"].format(local_repo=hg_repo)
-    url = url.format(local_repo=hg_repo)
+    hg_url_kwargs["url"] = hg_url_kwargs["url"].format(local_repo=hg_repo.path)
+    url = url.format(local_repo=hg_repo.path)
     hg_url = HgURLWithPip(**hg_url_kwargs)
-    hg_url.url = hg_url.url.format(local_repo=hg_repo)
+    hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
     assert (
         HgBaseURL.is_valid(url) != is_valid
@@ -198,6 +195,6 @@ def test_hg_to_url(
     hg_repo: HgSync,
 ) -> None:
     """Test HgURL.to_url()."""
-    hg_url.url = hg_url.url.format(local_repo=hg_repo)
+    hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
     assert hg_url.to_url() == expected

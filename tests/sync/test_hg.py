@@ -8,24 +8,20 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.hg import HgSync
 
 if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 
-@pytest.fixture
-def hg_remote_repo(
-    set_home: pathlib.Path,
-    hgconfig: pathlib.Path,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+@pytest.fixture(autouse=True)
+def set_hgconfig(
+    set_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
-    """Create a remote hg repository."""
-    return create_hg_remote_repo()
+    """Set mercurial configuration."""
+    return set_hgconfig
 
 
-@pytest.mark.usefixtures("set_home", "hgconfig")
 def test_hg_sync(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,

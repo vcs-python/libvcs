@@ -1,16 +1,14 @@
 (pytest_plugin)=
 
-# `pytest` plugin
+# `pytest` Plugin
 
-Create git, svn, and hg repos on the fly in [pytest].
+With libvcs's pytest plugin for [pytest], you can easily create Git, SVN, and Mercurial repositories on the fly.
 
-```{seealso} Using libvcs?
+```{seealso} Are you using libvcs?
 
-Do you want more flexibility? Correctness? Power? Defaults changed? [Connect with us] on the tracker, we want to know
-your case, we won't stabilize APIs until we're sure everything is by the book.
+Looking for more flexibility, correctness, or power? Need different defaults? [Connect with us] on GitHub. We'd love to hear about your use case—APIs won't be stabilized until we're confident everything meets expectations.
 
 [connect with us]: https://github.com/vcs-python/libvcs/discussions
-
 ```
 
 ```{module} libvcs.pytest_plugin
@@ -21,66 +19,92 @@ your case, we won't stabilize APIs until we're sure everything is by the book.
 
 ## Usage
 
-Install `libvcs` via the python package manager of your choosing, e.g.
+Install `libvcs` using your preferred Python package manager:
 
 ```console
 $ pip install libvcs
 ```
 
-The pytest plugin will automatically be detected via pytest, and the fixtures will be added.
+Pytest will automatically detect the plugin, and its fixtures will be available.
 
 ## Fixtures
 
-`pytest-vcs` works through providing {ref}`pytest fixtures <pytest:fixtures-api>` - so read up on
-those!
+This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api>`. The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache initial repositories, improving performance across tests.
 
-The plugin's fixtures guarantee a fresh git repository every test.
+[session-scoped fixtures]: https://docs.pytest.org/en/8.3.x/how-to/fixtures.html#fixture-scopes
 
 (recommended-fixtures)=
 
-## Recommended fixtures
+## Recommended Fixtures
 
-These fixtures are automatically used when the plugin is enabled and `pytest` is run.
+When the plugin is enabled and `pytest` is run, these fixtures are automatically used:
 
-- Creating temporary, test directories for:
+- Create temporary test directories for:
   - `/home/` ({func}`home_path`)
   - `/home/${user}` ({func}`user_path`)
-- Setting your home directory
-  - Patch `$HOME` to point to {func}`user_path` ({func}`set_home`)
-- Set default configuration
+- Set the home directory:
+  - Patch `$HOME` to point to {func}`user_path` using ({func}`set_home`)
+- Create configuration files:
+  - `.gitconfig` via {func}`gitconfig`
+  - `.hgrc` via {func}`hgconfig`
+- Set default VCS configurations:
+  - Use {func}`hgconfig` for [`HGRCPATH`] via {func}`set_hgconfig`
+  - Use {func}`gitconfig` for [`GIT_CONFIG`] via {func}`set_gitconfig`
 
-  - `.gitconfig`, via {func}`gitconfig`:
-  - `.hgrc`, via {func}`hgconfig`:
+These ensure that repositories can be cloned and created without unnecessary warnings.
 
-  These are set to ensure you can correctly clone and create repositories without without extra
-  warnings.
+[`HGRCPATH`]: https://www.mercurial-scm.org/doc/hg.1.html#:~:text=UNIX%2Dlike%20environments.-,HGRCPATH,-If%20not%20set
+[`GIT_CONFIG`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIG
 
-## Bootstrapping pytest in your `conftest.py`
+## Bootstrapping pytest in `conftest.py`
 
-The most common scenario is you will want to configure the above fixtures with `autouse`.
+To configure the above fixtures with `autouse=True`, add them to your `conftest.py` file or test file, depending on the desired scope.
 
-_Why doesn't the plugin automatically add them?_ It's part of being a decent pytest plugin and
-python package: explicitness.
+_Why aren't these fixtures added automatically by the plugin?_ This design choice promotes explicitness, adhering to best practices for pytest plugins and Python packages.
 
-(set_home)=
+### Setting a Temporary Home Directory
 
-### Setting a temporary home directory
+To set a temporary home directory, use the {func}`set_home` fixture with `autouse=True`:
 
 ```python
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(
-    set_home: None,
-):
+def setup(set_home: None):
     pass
 ```
 
-## See examples
+### Setting a Default VCS Configuration
 
-View libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests)
+#### Git
 
-## API reference
+Use the {func}`set_gitconfig` fixture with `autouse=True`:
+
+```python
+import pytest
+
+@pytest.fixture(autouse=True)
+def setup(set_gitconfig: None):
+    pass
+```
+
+#### Mercurial
+
+Use the {func}`set_hgconfig` fixture with `autouse=True`:
+
+```python
+import pytest
+
+@pytest.fixture(autouse=True)
+def setup(set_hgconfig: None):
+    pass
+```
+
+## Examples
+
+For usage examples, refer to libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests).
+
+## API Reference
 
 ```{eval-rst}
 .. automodule:: libvcs.pytest_plugin
