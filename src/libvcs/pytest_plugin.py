@@ -110,7 +110,7 @@ def set_home(
 
 @pytest.fixture
 @skip_if_git_missing
-def gitconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
+def gitconfig(user_path: pathlib.Path) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
     gitconfig = user_path / ".gitconfig"
     user_email = "libvcs@git-pull.com"
@@ -145,7 +145,7 @@ def gitconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
 
 @pytest.fixture
 @skip_if_hg_missing
-def hgconfig(user_path: pathlib.Path, set_home: pathlib.Path) -> pathlib.Path:
+def hgconfig(user_path: pathlib.Path) -> pathlib.Path:
     """Return Mercurial configuration, pytest fixture."""
     hgrc = user_path / ".hgrc"
     hgrc.write_text(
