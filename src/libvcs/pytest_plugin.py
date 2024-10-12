@@ -449,10 +449,34 @@ def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def empty_svn_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
+    """Return temporary directory to use for master-copy of a svn repo."""
+    return libvcs_test_cache_path / "empty_svn_repo"
+
+
+@pytest.fixture(scope="session")
+@skip_if_svn_missing
+def empty_svn_repo(
+    empty_svn_repo_path: pathlib.Path,
+) -> pathlib.Path:
+    """Return factory to create svn remote repo to for clone / push purposes."""
+    if empty_svn_repo_path.exists() and (empty_svn_repo_path / "conf").exists():
+        return empty_svn_repo_path
+
+    return _create_svn_remote_repo(
+        remote_repos_path=empty_svn_repo_path.parent,
+        remote_repo_name=empty_svn_repo_path.stem,
+        remote_repo_post_init=None,
+        init_cmd_args=None,
+    )
+
+
+@pytest.fixture(scope="session")
 @skip_if_svn_missing
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
+    empty_svn_repo: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -462,27 +486,43 @@ def create_svn_remote_repo(
         remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
-        return _create_svn_remote_repo(
-            remote_repos_path=remote_repos_path,
-            remote_repo_name=remote_repo_name
-            if remote_repo_name is not None
-            else unique_repo_name(remote_repos_path=remote_repos_path),
-            remote_repo_post_init=remote_repo_post_init,
-            init_cmd_args=init_cmd_args,
-        )
+        if remote_repo_name is None:
+            remote_repo_name = unique_repo_name(remote_repos_path=remote_repos_path)
+        remote_repo_path = remote_repos_path / remote_repo_name
+
+        shutil.copytree(empty_svn_repo, remote_repo_path)
+
+        if remote_repo_post_init is not None and callable(remote_repo_post_init):
+            remote_repo_post_init(remote_repo_path=remote_repo_path)
+
+        assert empty_svn_repo.exists()
+
+        assert remote_repo_path.exists()
+
+        return remote_repo_path
 
     return fn
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 @skip_if_svn_missing
-def svn_remote_repo(remote_repos_path: pathlib.Path) -> pathlib.Path:
+def svn_remote_repo(
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
-    return _create_svn_remote_repo(
-        remote_repos_path=remote_repos_path,
-        remote_repo_name="svn_server_dir",
-        remote_repo_post_init=None,
-    )
+    repo_path = create_svn_remote_repo()
+    return repo_path
+
+
+@pytest.fixture(scope="session")
+@skip_if_svn_missing
+def svn_remote_repo_with_files(
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+) -> pathlib.Path:
+    """Pre-made. Local file:// based SVN server."""
+    repo_path = create_svn_remote_repo()
+    svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    return repo_path
 
 
 def _create_hg_remote_repo(
