@@ -393,8 +393,7 @@ def git_remote_repo(
 
 
 def _create_svn_remote_repo(
-    remote_repos_path: pathlib.Path,
-    remote_repo_name: str,
+    remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
@@ -402,7 +401,6 @@ def _create_svn_remote_repo(
     if init_cmd_args is None:
         init_cmd_args = []
 
-    remote_repo_path = remote_repos_path / remote_repo_name
     run(["svnadmin", "create", str(remote_repo_path), *init_cmd_args])
 
     assert remote_repo_path.exists()
@@ -448,8 +446,7 @@ def empty_svn_repo(
         return empty_svn_repo_path
 
     return _create_svn_remote_repo(
-        remote_repos_path=empty_svn_repo_path.parent,
-        remote_repo_name=empty_svn_repo_path.stem,
+        remote_repo_path=empty_svn_repo_path,
         remote_repo_post_init=None,
         init_cmd_args=None,
     )
