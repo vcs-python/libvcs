@@ -1,5 +1,6 @@
 """Tests for mercurial URL module."""
 
+import pathlib
 import typing
 
 import pytest
@@ -7,6 +8,14 @@ import pytest
 from libvcs.sync.hg import HgSync
 from libvcs.url.base import RuleMap
 from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgBaseURL, HgURL
+
+
+@pytest.fixture(autouse=True)
+def set_hgconfig(
+    set_hgconfig: pathlib.Path,
+) -> pathlib.Path:
+    """Set mercurial configuration."""
+    return set_hgconfig
 
 
 class HgURLFixture(typing.NamedTuple):
