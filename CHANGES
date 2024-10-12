@@ -9,19 +9,21 @@ To install the unreleased libvcs version, see
 $ pip install --user --upgrade --pre libvcs
 ```
 
-## libvcs 0.32.x (unreleased)
+## libvcs 0.33.x (unreleased)
 
 - _Notes on upcoming releases will be added here_
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-## Breaking changes
+## libvcs 0.32.0 (2024-10-12)
 
-### pytest fixtures: Session-scoped `hgconfig` and `gitconfig` (#475)
+### Breaking changes
+
+#### pytest fixtures: Session-scoped `hgconfig` and `gitconfig` (#475)
 
 These are now set by `set_hgconfig` and `set_gitconfig`, which set `HGRCPATH` and `GIT_CONFIG`, instead of overriding `HOME`.
 
-## Documentation
+### Documentation
 
 - Updates for pytest plugin documentation.
 
