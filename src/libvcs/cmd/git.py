@@ -1,15 +1,11 @@
 """Run git commands directly against a local git repo."""
 
-from __future__ import annotations
-
 import datetime
 import pathlib
 import shlex
-import typing as t
 from collections.abc import Sequence
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
-from libvcs._internal.query_list import QueryList
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
@@ -19,19 +15,18 @@ _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 class Git:
     """Run commands directly on a git repository."""
 
-    progress_callback: ProgressCallbackProtocol | None = None
+    progress_callback: Optional[ProgressCallbackProtocol] = None
 
     # Sub-commands
-    submodule: GitSubmoduleCmd
-    remote: GitRemoteCmd
-    stash: GitStashCmd
-    branch: GitBranchManager
+    submodule: "GitSubmoduleCmd"
+    remote: "GitRemoteCmd"
+    stash: "GitStashCmd"
 
     def __init__(
         self,
         *,
         path: StrPath,
-        progress_callback: ProgressCallbackProtocol | None = None,
+        progress_callback: Optional[ProgressCallbackProtocol] = None,
     ) -> None:
         r"""Lite, typed, pythonic wrapper for git(1).
 
@@ -86,7 +81,6 @@ class Git:
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
         self.remote = GitRemoteCmd(path=self.path, cmd=self)
         self.stash = GitStashCmd(path=self.path, cmd=self)
-        self.branches = GitBranchManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -97,28 +91,28 @@ class Git:
         args: _CMD,
         *,
         # Print-and-exit flags
-        version: bool | None = None,
-        _help: bool | None = None,
-        html_path: bool | None = None,
-        man_path: bool | None = None,
-        info_path: bool | None = None,
+        version: Optional[bool] = None,
+        _help: Optional[bool] = None,
+        html_path: Optional[bool] = None,
+        man_path: Optional[bool] = None,
+        info_path: Optional[bool] = None,
         # Normal flags
-        C: StrOrBytesPath | list[StrOrBytesPath] | None = None,
-        cwd: StrOrBytesPath | None = None,
-        git_dir: StrOrBytesPath | None = None,
-        work_tree: StrOrBytesPath | None = None,
-        namespace: StrOrBytesPath | None = None,
-        super_prefix: StrOrBytesPath | None = None,
-        exec_path: StrOrBytesPath | None = None,
-        bare: bool | None = None,
-        no_replace_objects: bool | None = None,
-        literal_pathspecs: bool | None = None,
-        global_pathspecs: bool | None = None,
-        noglob_pathspecs: bool | None = None,
-        icase_pathspecs: bool | None = None,
-        no_optional_locks: bool | None = None,
-        config: dict[str, Any] | None = None,
-        config_env: str | None = None,
+        C: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        cwd: Optional[StrOrBytesPath] = None,
+        git_dir: Optional[StrOrBytesPath] = None,
+        work_tree: Optional[StrOrBytesPath] = None,
+        namespace: Optional[StrOrBytesPath] = None,
+        super_prefix: Optional[StrOrBytesPath] = None,
+        exec_path: Optional[StrOrBytesPath] = None,
+        bare: Optional[bool] = None,
+        no_replace_objects: Optional[bool] = None,
+        literal_pathspecs: Optional[bool] = None,
+        global_pathspecs: Optional[bool] = None,
+        noglob_pathspecs: Optional[bool] = None,
+        icase_pathspecs: Optional[bool] = None,
+        no_optional_locks: Optional[bool] = None,
+        config: Optional[dict[str, Any]] = None,
+        config_env: Optional[str] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         **kwargs: Any,
@@ -260,41 +254,41 @@ class Git:
         self,
         *,
         url: str,
-        separate_git_dir: StrOrBytesPath | None = None,
-        template: str | None = None,
-        depth: int | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
-        upload_pack: str | None = None,
-        shallow_since: str | None = None,
-        shallow_exclude: str | None = None,
-        reference: str | None = None,
-        reference_if_able: str | None = None,
-        server_option: str | None = None,
-        jobs: str | None = None,
-        force: bool | None = None,
-        local: bool | None = None,
-        _all: bool | None = None,
-        no_hardlinks: bool | None = None,
-        hardlinks: bool | None = None,
-        shared: bool | None = None,
-        progress: bool | None = None,
-        no_checkout: bool | None = None,
-        no_reject_shallow: bool | None = None,
-        reject_shallow: bool | None = None,
-        sparse: bool | None = None,
-        shallow_submodules: bool | None = None,
-        no_shallow_submodules: bool | None = None,
-        remote_submodules: bool | None = None,
-        no_remote_submodules: bool | None = None,
-        verbose: bool | None = None,
-        quiet: bool | None = None,
+        separate_git_dir: Optional[StrOrBytesPath] = None,
+        template: Optional[str] = None,
+        depth: Optional[int] = None,
+        branch: Optional[str] = None,
+        origin: Optional[str] = None,
+        upload_pack: Optional[str] = None,
+        shallow_since: Optional[str] = None,
+        shallow_exclude: Optional[str] = None,
+        reference: Optional[str] = None,
+        reference_if_able: Optional[str] = None,
+        server_option: Optional[str] = None,
+        jobs: Optional[str] = None,
+        force: Optional[bool] = None,
+        local: Optional[bool] = None,
+        _all: Optional[bool] = None,
+        no_hardlinks: Optional[bool] = None,
+        hardlinks: Optional[bool] = None,
+        shared: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        no_checkout: Optional[bool] = None,
+        no_reject_shallow: Optional[bool] = None,
+        reject_shallow: Optional[bool] = None,
+        sparse: Optional[bool] = None,
+        shallow_submodules: Optional[bool] = None,
+        no_shallow_submodules: Optional[bool] = None,
+        remote_submodules: Optional[bool] = None,
+        no_remote_submodules: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        quiet: Optional[bool] = None,
         # Pass-through to run
-        config: dict[str, Any] | None = None,
+        config: Optional[dict[str, Any]] = None,
         log_in_real_time: bool = False,
         # Special behavior
-        check_returncode: bool | None = None,
-        make_parents: bool | None = True,
+        check_returncode: Optional[bool] = None,
+        make_parents: Optional[bool] = True,
         **kwargs: Any,
     ) -> str:
         """Clone a working copy from an git repo.
@@ -394,54 +388,58 @@ class Git:
     def fetch(
         self,
         *,
-        reftag: Any | None = None,
-        deepen: str | None = None,
-        depth: str | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
-        upload_pack: str | None = None,
-        shallow_since: str | None = None,
-        shallow_exclude: str | None = None,
-        negotiation_tip: str | None = None,
-        jobs: str | None = None,
-        server_option: str | None = None,
-        recurse_submodules: bool | Literal["yes", "on-demand", "no"] | None = None,
-        recurse_submodules_default: bool | Literal["yes", "on-demand"] | None = None,
-        submodule_prefix: StrOrBytesPath | None = None,
-        _all: bool | None = None,
-        force: bool | None = None,
-        keep: bool | None = None,
-        multiple: bool | None = None,
-        dry_run: bool | None = None,
-        append: bool | None = None,
-        atomic: bool | None = None,
-        ipv4: bool | None = None,
-        ipv6: bool | None = None,
-        progress: bool | None = None,
-        quiet: bool | None = None,
-        verbose: bool | None = None,
-        unshallow: bool | None = None,
-        update_shallow: bool | None = None,
-        negotiate_tip: bool | None = None,
-        no_write_fetch_head: bool | None = None,
-        write_fetch_head: bool | None = None,
-        no_auto_maintenance: bool | None = None,
-        auto_maintenance: bool | None = None,
-        no_write_commit_graph: bool | None = None,
-        write_commit_graph: bool | None = None,
-        prefetch: bool | None = None,
-        prune: bool | None = None,
-        prune_tags: bool | None = None,
-        no_tags: bool | None = None,
-        tags: bool | None = None,
-        no_recurse_submodules: bool | None = None,
-        set_upstream: bool | None = None,
-        update_head_ok: bool | None = None,
-        show_forced_updates: bool | None = None,
-        no_show_forced_updates: bool | None = None,
-        negotiate_only: bool | None = None,
+        reftag: Optional[Any] = None,
+        deepen: Optional[str] = None,
+        depth: Optional[str] = None,
+        branch: Optional[str] = None,
+        origin: Optional[str] = None,
+        upload_pack: Optional[str] = None,
+        shallow_since: Optional[str] = None,
+        shallow_exclude: Optional[str] = None,
+        negotiation_tip: Optional[str] = None,
+        jobs: Optional[str] = None,
+        server_option: Optional[str] = None,
+        recurse_submodules: Optional[
+            Union[bool, Literal["yes", "on-demand", "no"]]
+        ] = None,
+        recurse_submodules_default: Optional[
+            Union[bool, Literal["yes", "on-demand"]]
+        ] = None,
+        submodule_prefix: Optional[StrOrBytesPath] = None,
+        _all: Optional[bool] = None,
+        force: Optional[bool] = None,
+        keep: Optional[bool] = None,
+        multiple: Optional[bool] = None,
+        dry_run: Optional[bool] = None,
+        append: Optional[bool] = None,
+        atomic: Optional[bool] = None,
+        ipv4: Optional[bool] = None,
+        ipv6: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        unshallow: Optional[bool] = None,
+        update_shallow: Optional[bool] = None,
+        negotiate_tip: Optional[bool] = None,
+        no_write_fetch_head: Optional[bool] = None,
+        write_fetch_head: Optional[bool] = None,
+        no_auto_maintenance: Optional[bool] = None,
+        auto_maintenance: Optional[bool] = None,
+        no_write_commit_graph: Optional[bool] = None,
+        write_commit_graph: Optional[bool] = None,
+        prefetch: Optional[bool] = None,
+        prune: Optional[bool] = None,
+        prune_tags: Optional[bool] = None,
+        no_tags: Optional[bool] = None,
+        tags: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        set_upstream: Optional[bool] = None,
+        update_head_ok: Optional[bool] = None,
+        show_forced_updates: Optional[bool] = None,
+        no_show_forced_updates: Optional[bool] = None,
+        negotiate_only: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Download from repo. Wraps `git fetch <https://git-scm.com/docs/git-fetch>`_.
@@ -550,60 +548,60 @@ class Git:
     def rebase(
         self,
         *,
-        upstream: str | None = None,
-        onto: str | None = None,
-        branch: str | None = None,
-        apply: bool | None = None,
-        merge: bool | None = None,
-        quiet: bool | None = None,
-        verbose: bool | None = None,
-        stat: bool | None = None,
-        no_stat: bool | None = None,
-        verify: bool | None = None,
-        no_verify: bool | None = None,
-        fork_point: bool | None = None,
-        no_fork_point: bool | None = None,
-        whitespace: str | None = None,
-        no_whitespace: bool | None = None,
-        commit_date_is_author_date: bool | None = None,
-        ignore_date: bool | None = None,
-        root: bool | None = None,
-        autostash: bool | None = None,
-        no_autostash: bool | None = None,
-        autosquash: bool | None = None,
-        no_autosquash: bool | None = None,
-        reschedule_failed_exec: bool | None = None,
-        no_reschedule_failed_exec: bool | None = None,
-        context: int | None = None,
-        rerere_autoupdate: bool | None = None,
-        no_rerere_autoupdate: bool | None = None,
-        keep_empty: bool | None = None,
-        no_keep_empty: bool | None = None,
-        reapply_cherry_picks: bool | None = None,
-        no_reapply_cherry_picks: bool | None = None,
-        allow_empty_message: bool | None = None,
-        signoff: bool | None = None,
-        keep_base: bool | None = None,
-        strategy: str | bool | None = None,
-        strategy_option: str | None = None,
-        _exec: str | None = None,
-        gpg_sign: str | bool | None = None,
-        no_gpg_sign: bool | None = None,
-        empty: str | Literal["drop", "keep", "ask"] | None = None,
-        rebase_merges: str
-        | Literal["rebase-cousins", "no-rebase-cousins"]
-        | None = None,
+        upstream: Optional[str] = None,
+        onto: Optional[str] = None,
+        branch: Optional[str] = None,
+        apply: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        stat: Optional[bool] = None,
+        no_stat: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        no_verify: Optional[bool] = None,
+        fork_point: Optional[bool] = None,
+        no_fork_point: Optional[bool] = None,
+        whitespace: Optional[str] = None,
+        no_whitespace: Optional[bool] = None,
+        commit_date_is_author_date: Optional[bool] = None,
+        ignore_date: Optional[bool] = None,
+        root: Optional[bool] = None,
+        autostash: Optional[bool] = None,
+        no_autostash: Optional[bool] = None,
+        autosquash: Optional[bool] = None,
+        no_autosquash: Optional[bool] = None,
+        reschedule_failed_exec: Optional[bool] = None,
+        no_reschedule_failed_exec: Optional[bool] = None,
+        context: Optional[int] = None,
+        rerere_autoupdate: Optional[bool] = None,
+        no_rerere_autoupdate: Optional[bool] = None,
+        keep_empty: Optional[bool] = None,
+        no_keep_empty: Optional[bool] = None,
+        reapply_cherry_picks: Optional[bool] = None,
+        no_reapply_cherry_picks: Optional[bool] = None,
+        allow_empty_message: Optional[bool] = None,
+        signoff: Optional[bool] = None,
+        keep_base: Optional[bool] = None,
+        strategy: Optional[Union[str, bool]] = None,
+        strategy_option: Optional[str] = None,
+        _exec: Optional[str] = None,
+        gpg_sign: Optional[Union[str, bool]] = None,
+        no_gpg_sign: Optional[bool] = None,
+        empty: Optional[Union[str, Literal["drop", "keep", "ask"]]] = None,
+        rebase_merges: Optional[
+            Union[str, Literal["rebase-cousins", "no-rebase-cousins"]]
+        ] = None,
         #
         # Interactive
         #
-        interactive: bool | None = None,
-        edit_todo: bool | None = None,
-        skip: bool | None = None,
-        show_current_patch: bool | None = None,
-        abort: bool | None = None,
-        _quit: bool | None = None,
+        interactive: Optional[bool] = None,
+        edit_todo: Optional[bool] = None,
+        skip: Optional[bool] = None,
+        show_current_patch: Optional[bool] = None,
+        abort: Optional[bool] = None,
+        _quit: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Reapply commit on top of another tip.
@@ -750,97 +748,101 @@ class Git:
     def pull(
         self,
         *,
-        reftag: Any | None = None,
-        repository: str | None = None,
-        deepen: str | None = None,
-        depth: str | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
-        upload_pack: str | None = None,
-        shallow_since: str | None = None,
-        shallow_exclude: str | None = None,
-        negotiation_tip: str | None = None,
-        jobs: str | None = None,
-        server_option: str | None = None,
-        recurse_submodules: bool | Literal["yes", "on-demand", "no"] | None = None,
-        recurse_submodules_default: bool | Literal["yes", "on-demand"] | None = None,
-        submodule_prefix: StrOrBytesPath | None = None,
+        reftag: Optional[Any] = None,
+        repository: Optional[str] = None,
+        deepen: Optional[str] = None,
+        depth: Optional[str] = None,
+        branch: Optional[str] = None,
+        origin: Optional[str] = None,
+        upload_pack: Optional[str] = None,
+        shallow_since: Optional[str] = None,
+        shallow_exclude: Optional[str] = None,
+        negotiation_tip: Optional[str] = None,
+        jobs: Optional[str] = None,
+        server_option: Optional[str] = None,
+        recurse_submodules: Optional[
+            Union[bool, Literal["yes", "on-demand", "no"]]
+        ] = None,
+        recurse_submodules_default: Optional[
+            Union[bool, Literal["yes", "on-demand"]]
+        ] = None,
+        submodule_prefix: Optional[StrOrBytesPath] = None,
         #
         # Pull specific flags
         #
         # Options related to git pull
         # https://git-scm.com/docs/git-pull#_options_related_to_pull
         #
-        cleanup: str | None = None,
-        rebase: str | bool | None = None,
-        no_rebase: bool | None = None,
-        strategy: str | bool | None = None,
-        strategy_option: str | None = None,
-        gpg_sign: str | bool | None = None,
-        no_gpg_sign: bool | None = None,
-        commit: bool | None = None,
-        no_commit: bool | None = None,
-        edit: bool | None = None,
-        no_edit: bool | None = None,
-        fast_forward_only: bool | None = None,
-        fast_forward: bool | None = None,
-        no_fast_forward: bool | None = None,
-        sign_off: bool | None = None,
-        no_sign_off: bool | None = None,
-        stat: bool | None = None,
-        no_stat: bool | None = None,
-        squash: bool | None = None,
-        no_squash: bool | None = None,
-        verify: bool | None = None,
-        no_verify: bool | None = None,
-        verify_signatures: bool | None = None,
-        no_verify_signatures: bool | None = None,
-        summary: bool | None = None,
-        no_summary: bool | None = None,
-        autostash: bool | None = None,
-        no_autostash: bool | None = None,
-        allow_unrelated_histories: bool | None = None,
+        cleanup: Optional[str] = None,
+        rebase: Optional[Union[str, bool]] = None,
+        no_rebase: Optional[bool] = None,
+        strategy: Optional[Union[str, bool]] = None,
+        strategy_option: Optional[str] = None,
+        gpg_sign: Optional[Union[str, bool]] = None,
+        no_gpg_sign: Optional[bool] = None,
+        commit: Optional[bool] = None,
+        no_commit: Optional[bool] = None,
+        edit: Optional[bool] = None,
+        no_edit: Optional[bool] = None,
+        fast_forward_only: Optional[bool] = None,
+        fast_forward: Optional[bool] = None,
+        no_fast_forward: Optional[bool] = None,
+        sign_off: Optional[bool] = None,
+        no_sign_off: Optional[bool] = None,
+        stat: Optional[bool] = None,
+        no_stat: Optional[bool] = None,
+        squash: Optional[bool] = None,
+        no_squash: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        no_verify: Optional[bool] = None,
+        verify_signatures: Optional[bool] = None,
+        no_verify_signatures: Optional[bool] = None,
+        summary: Optional[bool] = None,
+        no_summary: Optional[bool] = None,
+        autostash: Optional[bool] = None,
+        no_autostash: Optional[bool] = None,
+        allow_unrelated_histories: Optional[bool] = None,
         #
         # Options related to git fetch
         # https://git-scm.com/docs/git-pull#_options_related_to_fetching
         #
-        fetch: bool | None = None,
-        no_fetch: bool | None = None,
-        _all: bool | None = None,
-        force: bool | None = None,
-        keep: bool | None = None,
-        multiple: bool | None = None,
-        dry_run: bool | None = None,
-        append: bool | None = None,
-        atomic: bool | None = None,
-        ipv4: bool | None = None,
-        ipv6: bool | None = None,
-        progress: bool | None = None,
-        quiet: bool | None = None,
-        verbose: bool | None = None,
-        unshallow: bool | None = None,
-        update_shallow: bool | None = None,
-        negotiate_tip: bool | None = None,
-        no_write_fetch_head: bool | None = None,
-        write_fetch_head: bool | None = None,
-        no_auto_maintenance: bool | None = None,
-        auto_maintenance: bool | None = None,
-        no_write_commit_graph: bool | None = None,
-        write_commit_graph: bool | None = None,
-        prefetch: bool | None = None,
-        prune: bool | None = None,
-        prune_tags: bool | None = None,
-        no_tags: bool | None = None,
-        tags: bool | None = None,
-        no_recurse_submodules: bool | None = None,
-        set_upstream: bool | None = None,
-        update_head_ok: bool | None = None,
-        show_forced_updates: bool | None = None,
-        no_show_forced_updates: bool | None = None,
-        negotiate_only: bool | None = None,
+        fetch: Optional[bool] = None,
+        no_fetch: Optional[bool] = None,
+        _all: Optional[bool] = None,
+        force: Optional[bool] = None,
+        keep: Optional[bool] = None,
+        multiple: Optional[bool] = None,
+        dry_run: Optional[bool] = None,
+        append: Optional[bool] = None,
+        atomic: Optional[bool] = None,
+        ipv4: Optional[bool] = None,
+        ipv6: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        unshallow: Optional[bool] = None,
+        update_shallow: Optional[bool] = None,
+        negotiate_tip: Optional[bool] = None,
+        no_write_fetch_head: Optional[bool] = None,
+        write_fetch_head: Optional[bool] = None,
+        no_auto_maintenance: Optional[bool] = None,
+        auto_maintenance: Optional[bool] = None,
+        no_write_commit_graph: Optional[bool] = None,
+        write_commit_graph: Optional[bool] = None,
+        prefetch: Optional[bool] = None,
+        prune: Optional[bool] = None,
+        prune_tags: Optional[bool] = None,
+        no_tags: Optional[bool] = None,
+        tags: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        set_upstream: Optional[bool] = None,
+        update_head_ok: Optional[bool] = None,
+        show_forced_updates: Optional[bool] = None,
+        no_show_forced_updates: Optional[bool] = None,
+        negotiate_only: Optional[bool] = None,
         # Pass-through to run
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Download from repo. Wraps `git pull <https://git-scm.com/docs/git-pull>`_.
@@ -1030,16 +1032,16 @@ class Git:
     def init(
         self,
         *,
-        template: str | None = None,
-        separate_git_dir: StrOrBytesPath | None = None,
-        object_format: Literal["sha1", "sha256"] | None = None,
-        branch: str | None = None,
-        initial_branch: str | None = None,
-        shared: bool | None = None,
-        quiet: bool | None = None,
-        bare: bool | None = None,
+        template: Optional[str] = None,
+        separate_git_dir: Optional[StrOrBytesPath] = None,
+        object_format: Optional[Literal["sha1", "sha256"]] = None,
+        branch: Optional[str] = None,
+        initial_branch: Optional[str] = None,
+        shared: Optional[bool] = None,
+        quiet: Optional[bool] = None,
+        bare: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
@@ -1113,17 +1115,17 @@ class Git:
     def help(
         self,
         *,
-        _all: bool | None = None,
-        verbose: bool | None = None,
-        no_external_commands: bool | None = None,
-        no_aliases: bool | None = None,
-        config: bool | None = None,
-        guides: bool | None = None,
-        info: bool | None = None,
-        man: bool | None = None,
-        web: bool | None = None,
+        _all: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        no_external_commands: Optional[bool] = None,
+        no_aliases: Optional[bool] = None,
+        config: Optional[bool] = None,
+        guides: Optional[bool] = None,
+        info: Optional[bool] = None,
+        man: Optional[bool] = None,
+        web: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Help info. Wraps `git help <https://git-scm.com/docs/git-help>`_.
@@ -1199,21 +1201,21 @@ class Git:
     def reset(
         self,
         *,
-        quiet: bool | None = None,
-        refresh: bool | None = None,
-        no_refresh: bool | None = None,
-        pathspec_from_file: StrOrBytesPath | None = None,
-        pathspec: StrOrBytesPath | list[StrOrBytesPath] | None = None,
-        soft: bool | None = None,
-        mixed: bool | None = None,
-        hard: bool | None = None,
-        merge: bool | None = None,
-        keep: bool | None = None,
-        commit: str | None = None,
-        recurse_submodules: bool | None = None,
-        no_recurse_submodules: bool | None = None,
+        quiet: Optional[bool] = None,
+        refresh: Optional[bool] = None,
+        no_refresh: Optional[bool] = None,
+        pathspec_from_file: Optional[StrOrBytesPath] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        soft: Optional[bool] = None,
+        mixed: Optional[bool] = None,
+        hard: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        keep: Optional[bool] = None,
+        commit: Optional[str] = None,
+        recurse_submodules: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Reset HEAD. Wraps `git help <https://git-scm.com/docs/git-help>`_.
@@ -1293,37 +1295,37 @@ class Git:
     def checkout(
         self,
         *,
-        quiet: bool | None = None,
-        progress: bool | None = None,
-        no_progress: bool | None = None,
-        pathspec_from_file: StrOrBytesPath | None = None,
-        pathspec: StrOrBytesPath | list[StrOrBytesPath] | None = None,
-        force: bool | None = None,
-        ours: bool | None = None,
-        theirs: bool | None = None,
-        no_track: bool | None = None,
-        guess: bool | None = None,
-        no_guess: bool | None = None,
-        _list: bool | None = None,
-        detach: bool | None = None,
-        merge: bool | None = None,
-        ignore_skip_worktree_bits: bool | None = None,
-        patch: bool | None = None,
-        orphan: str | None = None,
-        conflict: str | None = None,
-        overwrite_ignore: bool | None = None,
-        no_overwrite_ignore: bool | None = None,
-        recurse_submodules: bool | None = None,
-        no_recurse_submodules: bool | None = None,
-        overlay: bool | None = None,
-        no_overlay: bool | None = None,
-        commit: str | None = None,
-        branch: str | None = None,
-        new_branch: str | None = None,
-        start_point: str | None = None,
-        treeish: str | None = None,
+        quiet: Optional[bool] = None,
+        progress: Optional[bool] = None,
+        no_progress: Optional[bool] = None,
+        pathspec_from_file: Optional[StrOrBytesPath] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
+        force: Optional[bool] = None,
+        ours: Optional[bool] = None,
+        theirs: Optional[bool] = None,
+        no_track: Optional[bool] = None,
+        guess: Optional[bool] = None,
+        no_guess: Optional[bool] = None,
+        _list: Optional[bool] = None,
+        detach: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        ignore_skip_worktree_bits: Optional[bool] = None,
+        patch: Optional[bool] = None,
+        orphan: Optional[str] = None,
+        conflict: Optional[str] = None,
+        overwrite_ignore: Optional[bool] = None,
+        no_overwrite_ignore: Optional[bool] = None,
+        recurse_submodules: Optional[bool] = None,
+        no_recurse_submodules: Optional[bool] = None,
+        overlay: Optional[bool] = None,
+        no_overlay: Optional[bool] = None,
+        commit: Optional[str] = None,
+        branch: Optional[str] = None,
+        new_branch: Optional[str] = None,
+        start_point: Optional[str] = None,
+        treeish: Optional[str] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Switch branches or checks out files.
@@ -1430,25 +1432,25 @@ class Git:
     def status(
         self,
         *,
-        verbose: bool | None = None,
-        long: bool | None = None,
-        short: bool | None = None,
-        branch: bool | None = None,
-        z: bool | None = None,
-        column: bool | str | None = None,
-        no_column: bool | None = None,
-        ahead_behind: bool | None = None,
-        no_ahead_behind: bool | None = None,
-        renames: bool | None = None,
-        no_renames: bool | None = None,
-        find_renames: bool | str | None = None,
-        porcelain: bool | str | None = None,
-        untracked_files: Literal["no", "normal", "all"] | None = None,
-        ignored: Literal["traditional", "no", "matching"] | None = None,
-        ignored_submodules: Literal["untracked", "dirty", "all"] | None = None,
-        pathspec: StrOrBytesPath | list[StrOrBytesPath] | None = None,
+        verbose: Optional[bool] = None,
+        long: Optional[bool] = None,
+        short: Optional[bool] = None,
+        branch: Optional[bool] = None,
+        z: Optional[bool] = None,
+        column: Optional[Union[bool, str]] = None,
+        no_column: Optional[bool] = None,
+        ahead_behind: Optional[bool] = None,
+        no_ahead_behind: Optional[bool] = None,
+        renames: Optional[bool] = None,
+        no_renames: Optional[bool] = None,
+        find_renames: Optional[Union[bool, str]] = None,
+        porcelain: Optional[Union[bool, str]] = None,
+        untracked_files: Optional[Literal["no", "normal", "all"]] = None,
+        ignored: Optional[Literal["traditional", "no", "matching"]] = None,
+        ignored_submodules: Optional[Literal["untracked", "dirty", "all"]] = None,
+        pathspec: Optional[Union[StrOrBytesPath, list[StrOrBytesPath]]] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Return status of working tree.
@@ -1564,38 +1566,39 @@ class Git:
     def config(
         self,
         *,
-        replace_all: bool | None = None,
-        get: str | None = None,
-        get_all: bool | None = None,
-        get_regexp: str | None = None,
-        get_urlmatch: tuple[str, str] | None = None,
-        system: bool | None = None,
-        local: bool | None = None,
-        worktree: bool | None = None,
-        file: StrOrBytesPath | None = None,
-        blob: str | None = None,
-        remove_section: bool | None = None,
-        rename_section: bool | None = None,
-        unset: bool | None = None,
-        unset_all: bool | None = None,
-        _list: bool | None = None,
-        fixed_value: bool | None = None,
-        no_type: bool | None = None,
-        null: bool | None = None,
-        name_only: bool | None = None,
-        show_origin: bool | None = None,
-        show_scope: bool | None = None,
-        get_color: str | bool | None = None,
-        get_colorbool: str | bool | None = None,
-        default: bool | None = None,
-        _type: Literal["bool", "int", "bool-or-int", "path", "expiry-date", "color"]
-        | None = None,
-        edit: bool | None = None,
-        no_includes: bool | None = None,
-        includes: bool | None = None,
-        add: bool | None = None,
+        replace_all: Optional[bool] = None,
+        get: Optional[str] = None,
+        get_all: Optional[bool] = None,
+        get_regexp: Optional[str] = None,
+        get_urlmatch: Optional[tuple[str, str]] = None,
+        system: Optional[bool] = None,
+        local: Optional[bool] = None,
+        worktree: Optional[bool] = None,
+        file: Optional[StrOrBytesPath] = None,
+        blob: Optional[str] = None,
+        remove_section: Optional[bool] = None,
+        rename_section: Optional[bool] = None,
+        unset: Optional[bool] = None,
+        unset_all: Optional[bool] = None,
+        _list: Optional[bool] = None,
+        fixed_value: Optional[bool] = None,
+        no_type: Optional[bool] = None,
+        null: Optional[bool] = None,
+        name_only: Optional[bool] = None,
+        show_origin: Optional[bool] = None,
+        show_scope: Optional[bool] = None,
+        get_color: Optional[Union[str, bool]] = None,
+        get_colorbool: Optional[Union[str, bool]] = None,
+        default: Optional[bool] = None,
+        _type: Optional[
+            Literal["bool", "int", "bool-or-int", "path", "expiry-date", "color"]
+        ] = None,
+        edit: Optional[bool] = None,
+        no_includes: Optional[bool] = None,
+        includes: Optional[bool] = None,
+        add: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Get and set repo configuration.
@@ -1750,9 +1753,9 @@ class Git:
     def version(
         self,
         *,
-        build_options: bool | None = None,
+        build_options: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Version. Wraps `git version <https://git-scm.com/docs/git-version>`_.
@@ -1780,15 +1783,15 @@ class Git:
     def rev_parse(
         self,
         *,
-        parseopt: bool | None = None,
-        sq_quote: bool | None = None,
-        keep_dashdash: bool | None = None,
-        stop_at_non_option: bool | None = None,
-        stuck_long: bool | None = None,
-        verify: bool | None = None,
-        args: str | None = None,
+        parseopt: Optional[bool] = None,
+        sq_quote: Optional[bool] = None,
+        keep_dashdash: Optional[bool] = None,
+        stop_at_non_option: Optional[bool] = None,
+        stuck_long: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        args: Optional[str] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """rev-parse. Wraps `git rev-parse <https://git-scm.com/docs/rev-parse>`_.
@@ -1836,60 +1839,60 @@ class Git:
     def rev_list(
         self,
         *,
-        commit: list[str] | str | None,
-        path: list[StrPath] | StrPath | None = None,
+        commit: Optional[Union[list[str], str]],
+        path: Optional[Union[list[StrPath], StrPath]] = None,
         #
         # Limiting
         #
-        max_count: int | None = None,
-        skip: int | None = None,
-        since: str | None = None,
-        after: str | None = None,
-        until: str | None = None,
-        before: str | None = None,
-        max_age: str | None = None,
-        min_age: str | None = None,
-        author: str | None = None,
-        committer: str | None = None,
-        grep: str | None = None,
-        all_match: bool | None = None,
-        invert_grep: bool | None = None,
-        regexp_ignore_case: bool | None = None,
-        basic_regexp: bool | None = None,
-        extended_regexp: bool | None = None,
-        fixed_strings: bool | None = None,
-        perl_regexp: bool | None = None,
-        remove_empty: bool | None = None,
-        merges: bool | None = None,
-        no_merges: bool | None = None,
-        no_min_parents: bool | None = None,
-        min_parents: int | None = None,
-        no_max_parents: bool | None = None,
-        max_parents: int | None = None,
-        first_parent: bool | None = None,
-        exclude_first_parent_only: bool | None = None,
-        _not: bool | None = None,
-        _all: bool | None = None,
-        branches: str | bool | None = None,
-        tags: str | bool | None = None,
-        remotes: str | bool | None = None,
-        exclude: bool | None = None,
-        reflog: bool | None = None,
-        alternative_refs: bool | None = None,
-        single_worktree: bool | None = None,
-        ignore_missing: bool | None = None,
-        stdin: bool | None = None,
-        disk_usage: bool | str | None = None,
-        cherry_mark: bool | None = None,
-        cherry_pick: bool | None = None,
-        left_only: bool | None = None,
-        right_only: bool | None = None,
-        cherry: bool | None = None,
-        walk_reflogs: bool | None = None,
-        merge: bool | None = None,
-        boundary: bool | None = None,
-        use_bitmap_index: bool | None = None,
-        progress: str | bool | None = None,
+        max_count: Optional[int] = None,
+        skip: Optional[int] = None,
+        since: Optional[str] = None,
+        after: Optional[str] = None,
+        until: Optional[str] = None,
+        before: Optional[str] = None,
+        max_age: Optional[str] = None,
+        min_age: Optional[str] = None,
+        author: Optional[str] = None,
+        committer: Optional[str] = None,
+        grep: Optional[str] = None,
+        all_match: Optional[bool] = None,
+        invert_grep: Optional[bool] = None,
+        regexp_ignore_case: Optional[bool] = None,
+        basic_regexp: Optional[bool] = None,
+        extended_regexp: Optional[bool] = None,
+        fixed_strings: Optional[bool] = None,
+        perl_regexp: Optional[bool] = None,
+        remove_empty: Optional[bool] = None,
+        merges: Optional[bool] = None,
+        no_merges: Optional[bool] = None,
+        no_min_parents: Optional[bool] = None,
+        min_parents: Optional[int] = None,
+        no_max_parents: Optional[bool] = None,
+        max_parents: Optional[int] = None,
+        first_parent: Optional[bool] = None,
+        exclude_first_parent_only: Optional[bool] = None,
+        _not: Optional[bool] = None,
+        _all: Optional[bool] = None,
+        branches: Optional[Union[str, bool]] = None,
+        tags: Optional[Union[str, bool]] = None,
+        remotes: Optional[Union[str, bool]] = None,
+        exclude: Optional[bool] = None,
+        reflog: Optional[bool] = None,
+        alternative_refs: Optional[bool] = None,
+        single_worktree: Optional[bool] = None,
+        ignore_missing: Optional[bool] = None,
+        stdin: Optional[bool] = None,
+        disk_usage: Optional[Union[bool, str]] = None,
+        cherry_mark: Optional[bool] = None,
+        cherry_pick: Optional[bool] = None,
+        left_only: Optional[bool] = None,
+        right_only: Optional[bool] = None,
+        cherry: Optional[bool] = None,
+        walk_reflogs: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        boundary: Optional[bool] = None,
+        use_bitmap_index: Optional[bool] = None,
+        progress: Optional[Union[str, bool]] = None,
         # Formatting
         #
         # --parents
@@ -1903,9 +1906,9 @@ class Git:
         # --abbrev-commit
         # --left-right
         # --count
-        header: bool | None = None,
+        header: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = True,
+        check_returncode: Optional[bool] = True,
         log_in_real_time: bool = False,
         **kwargs: Any,
     ) -> str:
@@ -2040,13 +2043,13 @@ class Git:
         self,
         *,
         name: str,
-        ref: str | None = None,
-        message: str | None = None,
-        short: bool | None = None,
-        delete: bool | None = None,
-        quiet: bool | None = None,
+        ref: Optional[str] = None,
+        message: Optional[str] = None,
+        short: Optional[bool] = None,
+        delete: Optional[bool] = None,
+        quiet: Optional[bool] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Return symbolic-ref.
@@ -2084,16 +2087,16 @@ class Git:
     def show_ref(
         self,
         *,
-        pattern: list[str] | str | None = None,
-        quiet: bool | None = None,
-        verify: bool | None = None,
-        head: bool | None = None,
-        dereference: bool | None = None,
-        tags: bool | None = None,
-        _hash: str | bool | None = None,
-        abbrev: str | bool | None = None,
+        pattern: Optional[Union[list[str], str]] = None,
+        quiet: Optional[bool] = None,
+        verify: Optional[bool] = None,
+        head: Optional[bool] = None,
+        dereference: Optional[bool] = None,
+        tags: Optional[bool] = None,
+        _hash: Optional[Union[str, bool]] = None,
+        abbrev: Optional[Union[str, bool]] = None,
         # libvcs special behavior
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         r"""show-ref. Wraps `git show-ref <https://git-scm.com/docs/git-show-ref>`_.
@@ -2176,7 +2179,7 @@ GitSubmoduleCmdCommandLiteral = Literal[
 class GitSubmoduleCmd:
     """Run submodule commands in a git repository."""
 
-    def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
+    def __init__(self, *, path: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-submodule(1).
 
         Parameters
@@ -2210,14 +2213,14 @@ class GitSubmoduleCmd:
 
     def run(
         self,
-        command: GitSubmoduleCmdCommandLiteral | None = None,
-        local_flags: list[str] | None = None,
+        command: Optional[GitSubmoduleCmdCommandLiteral] = None,
+        local_flags: Optional[list[str]] = None,
         *,
-        quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
+        quiet: Optional[bool] = None,
+        cached: Optional[bool] = None,  # Only when no command entered and status
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Run a command against a git submodule.
@@ -2247,10 +2250,10 @@ class GitSubmoduleCmd:
     def init(
         self,
         *,
-        path: list[StrPath] | StrPath | None = None,
+        path: Optional[Union[list[StrPath], StrPath]] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git submodule init.
 
@@ -2277,16 +2280,16 @@ class GitSubmoduleCmd:
     def update(
         self,
         *,
-        path: list[StrPath] | StrPath | None = None,
-        init: bool | None = None,
-        force: bool | None = None,
-        checkout: bool | None = None,
-        rebase: bool | None = None,
-        merge: bool | None = None,
-        recursive: bool | None = None,
+        path: Optional[Union[list[StrPath], StrPath]] = None,
+        init: Optional[bool] = None,
+        force: Optional[bool] = None,
+        checkout: Optional[bool] = None,
+        rebase: Optional[bool] = None,
+        merge: Optional[bool] = None,
+        recursive: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Git submodule update.
@@ -2360,7 +2363,7 @@ GitRemoteCommandLiteral = Literal[
 class GitRemoteCmd:
     """Run commands directly for a git remote on a git repository."""
 
-    def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
+    def __init__(self, *, path: StrPath, cmd: Optional[Git] = None) -> None:
         r"""Lite, typed, pythonic wrapper for git-remote(1).
 
         Parameters
@@ -2394,13 +2397,13 @@ class GitRemoteCmd:
 
     def run(
         self,
-        command: GitRemoteCommandLiteral | None = None,
-        local_flags: list[str] | None = None,
+        command: Optional[GitRemoteCommandLiteral] = None,
+        local_flags: Optional[list[str]] = None,
         *,
-        verbose: bool | None = None,
+        verbose: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         r"""Run command against a git remote.
@@ -2432,13 +2435,13 @@ class GitRemoteCmd:
         *,
         name: str,
         url: str,
-        fetch: bool | None = None,
-        track: str | None = None,
-        master: str | None = None,
-        mirror: Literal["push", "fetch"] | bool | None = None,
+        fetch: Optional[bool] = None,
+        track: Optional[str] = None,
+        master: Optional[str] = None,
+        mirror: Optional[Union[Literal["push", "fetch"], bool]] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote add.
 
@@ -2471,10 +2474,10 @@ class GitRemoteCmd:
         *,
         old: str,
         new: str,
-        progress: bool | None = None,
+        progress: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote rename.
 
@@ -2509,7 +2512,7 @@ class GitRemoteCmd:
         name: str,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote remove.
 
@@ -2533,12 +2536,12 @@ class GitRemoteCmd:
     def show(
         self,
         *,
-        name: str | None = None,
-        verbose: bool | None = None,
-        no_query_remotes: bool | None = None,
+        name: Optional[str] = None,
+        verbose: Optional[bool] = None,
+        no_query_remotes: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote show.
 
@@ -2570,10 +2573,10 @@ class GitRemoteCmd:
         self,
         *,
         name: str,
-        dry_run: bool | None = None,
+        dry_run: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote prune.
 
@@ -2603,11 +2606,11 @@ class GitRemoteCmd:
         self,
         *,
         name: str,
-        push: bool | None = None,
-        _all: bool | None = None,
+        push: Optional[bool] = None,
+        _all: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote get-url.
 
@@ -2643,13 +2646,13 @@ class GitRemoteCmd:
         *,
         name: str,
         url: str,
-        old_url: str | None = None,
-        push: bool | None = None,
-        add: bool | None = None,
-        delete: bool | None = None,
+        old_url: Optional[str] = None,
+        push: Optional[bool] = None,
+        add: Optional[bool] = None,
+        delete: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git remote set-url.
 
@@ -2725,7 +2728,7 @@ GitStashCommandLiteral = Literal[
 class GitStashCmd:
     """Run commands directly against a git stash storage for a git repo."""
 
-    def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
+    def __init__(self, *, path: StrPath, cmd: Optional[Git] = None) -> None:
         """Lite, typed, pythonic wrapper for git-stash(1).
 
         Parameters
@@ -2759,14 +2762,14 @@ class GitStashCmd:
 
     def run(
         self,
-        command: GitStashCommandLiteral | None = None,
-        local_flags: list[str] | None = None,
+        command: Optional[GitStashCommandLiteral] = None,
+        local_flags: Optional[list[str]] = None,
         *,
-        quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
+        quiet: Optional[bool] = None,
+        cached: Optional[bool] = None,  # Only when no command entered and status
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Run a command against a git repository's stash storage.
@@ -2798,7 +2801,7 @@ class GitStashCmd:
         *,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
     ) -> str:
         """Git stash list.
 
@@ -2816,12 +2819,12 @@ class GitStashCmd:
     def push(
         self,
         *,
-        path: list[StrPath] | StrPath | None = None,
-        patch: bool | None = None,
-        staged: bool | None = None,
+        path: Optional[Union[list[StrPath], StrPath]] = None,
+        patch: Optional[bool] = None,
+        staged: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Git stash update.
@@ -2859,12 +2862,12 @@ class GitStashCmd:
     def pop(
         self,
         *,
-        stash: int | None = None,
-        index: bool | None = None,
-        quiet: bool | None = None,
+        stash: Optional[int] = None,
+        index: Optional[bool] = None,
+        quiet: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Git stash pop.
@@ -2907,16 +2910,16 @@ class GitStashCmd:
     def save(
         self,
         *,
-        message: str | None = None,
-        staged: int | None = None,
-        keep_index: int | None = None,
-        patch: bool | None = None,
-        include_untracked: bool | None = None,
-        _all: bool | None = None,
-        quiet: bool | None = None,
+        message: Optional[str] = None,
+        staged: Optional[int] = None,
+        keep_index: Optional[int] = None,
+        patch: Optional[bool] = None,
+        include_untracked: Optional[bool] = None,
+        _all: Optional[bool] = None,
+        quiet: Optional[bool] = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
+        check_returncode: Optional[bool] = None,
         **kwargs: Any,
     ) -> str:
         """Git stash save.
@@ -2954,315 +2957,3 @@ class GitStashCmd:
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
-
-
-GitBranchCommandLiteral = Literal[
-    # "create",  # checkout -b
-    # "checkout",  # checkout
-    "--list",
-    "move",  # branch -m, or branch -M with force
-    "copy",  # branch -c, or branch -C with force
-    "delete",  # branch -d, or branch -D /ith force
-    "set_upstream",
-    "unset_upstream",
-    "track",
-    "no_track",
-    "edit_description",
-]
-
-
-class GitBranchCmd:
-    """Run commands directly against a git branch for a git repo."""
-
-    branch_name: str
-
-    def __init__(
-        self,
-        *,
-        path: StrPath,
-        branch_name: str,
-        cmd: Git | None = None,
-    ) -> None:
-        """Lite, typed, pythonic wrapper for git-branch(1).
-
-        Parameters
-        ----------
-        path :
-            Operates as PATH in the corresponding git subcommand.
-        branch_name:
-            Name of branch.
-
-        Examples
-        --------
-        >>> GitBranchCmd(path=tmp_path, branch_name='master')
-        <GitBranchCmd path=... branch_name=master>
-
-        >>> GitBranchCmd(path=tmp_path, branch_name="master").run(quiet=True)
-        'fatal: not a git repository (or any of the parent directories): .git'
-
-        >>> GitBranchCmd(
-        ...     path=git_local_clone.path, branch_name="master").run(quiet=True)
-        '* master'
-        """
-        #: Directory to check out
-        self.path: pathlib.Path
-        if isinstance(path, pathlib.Path):
-            self.path = path
-        else:
-            self.path = pathlib.Path(path)
-
-        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
-
-        self.branch_name = branch_name
-
-    def __repr__(self) -> str:
-        """Representation of git branch command object."""
-        return f"<GitBranchCmd path={self.path} branch_name={self.branch_name}>"
-
-    def run(
-        self,
-        command: GitBranchCommandLiteral | None = None,
-        local_flags: list[str] | None = None,
-        *,
-        quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-        **kwargs: Any,
-    ) -> str:
-        """Run a command against a git repository's branch.
-
-        Wraps `git branch <https://git-scm.com/docs/git-branch>`_.
-
-        Examples
-        --------
-        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').run()
-        '* master'
-        """
-        local_flags = local_flags if isinstance(local_flags, list) else []
-        if command is not None:
-            local_flags.insert(0, command)
-
-        if quiet is True:
-            local_flags.append("--quiet")
-        if cached is True:
-            local_flags.append("--cached")
-
-        return self.cmd.run(
-            ["branch", *local_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def checkout(self) -> str:
-        """Git branch checkout.
-
-        Examples
-        --------
-        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').checkout()
-        "Your branch is up to date with 'origin/master'."
-        """
-        return self.cmd.run(
-            [
-                "checkout",
-                *[self.branch_name],
-            ],
-        )
-
-    def create(self) -> str:
-        """Create a git branch.
-
-        Examples
-        --------
-        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').create()
-        "fatal: a branch named 'master' already exists"
-        """
-        return self.cmd.run(
-            [
-                "checkout",
-                *["-b", self.branch_name],
-            ],
-            # Pass-through to run()
-            check_returncode=False,
-        )
-
-
-class GitBranchManager:
-    """Run commands directly related to git branches of a git repo."""
-
-    branch_name: str
-
-    def __init__(
-        self,
-        *,
-        path: StrPath,
-        cmd: Git | None = None,
-    ) -> None:
-        """Wrap some of git-branch(1), git-checkout(1), manager.
-
-        Parameters
-        ----------
-        path :
-            Operates as PATH in the corresponding git subcommand.
-
-        Examples
-        --------
-        >>> GitBranchManager(path=tmp_path)
-        <GitBranchManager path=...>
-
-        >>> GitBranchManager(path=tmp_path).run(quiet=True)
-        'fatal: not a git repository (or any of the parent directories): .git'
-
-        >>> GitBranchManager(
-        ...     path=git_local_clone.path).run(quiet=True)
-        '* master'
-        """
-        #: Directory to check out
-        self.path: pathlib.Path
-        if isinstance(path, pathlib.Path):
-            self.path = path
-        else:
-            self.path = pathlib.Path(path)
-
-        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
-
-    def __repr__(self) -> str:
-        """Representation of git branch manager object."""
-        return f"<GitBranchManager path={self.path}>"
-
-    def run(
-        self,
-        command: GitBranchCommandLiteral | None = None,
-        local_flags: list[str] | None = None,
-        *,
-        quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-        **kwargs: Any,
-    ) -> str:
-        """Run a command against a git repository's branches.
-
-        Wraps `git branch <https://git-scm.com/docs/git-branch>`_.
-
-        Examples
-        --------
-        >>> GitBranchManager(path=git_local_clone.path).run()
-        '* master'
-        """
-        local_flags = local_flags if isinstance(local_flags, list) else []
-        if command is not None:
-            local_flags.insert(0, command)
-
-        if quiet is True:
-            local_flags.append("--quiet")
-        if cached is True:
-            local_flags.append("--cached")
-
-        return self.cmd.run(
-            ["branch", *local_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def checkout(self, *, branch: str) -> str:
-        """Git branch checkout.
-
-        Examples
-        --------
-        >>> GitBranchManager(path=git_local_clone.path).checkout(branch='master')
-        "Your branch is up to date with 'origin/master'."
-        """
-        return self.cmd.run(
-            [
-                "checkout",
-                *[branch],
-            ],
-        )
-
-    def create(self, *, branch: str) -> str:
-        """Create a git branch.
-
-        Examples
-        --------
-        >>> GitBranchManager(path=git_local_clone.path).create(branch='master')
-        "fatal: a branch named 'master' already exists"
-        """
-        return self.cmd.run(
-            [
-                "checkout",
-                *["-b", branch],
-            ],
-            # Pass-through to run()
-            check_returncode=False,
-        )
-
-    def _ls(self) -> list[str]:
-        """List branches.
-
-        Examples
-        --------
-        >>> GitBranchManager(path=git_local_clone.path)._ls()
-        ['* master']
-        """
-        return self.run(
-            "--list",
-        ).splitlines()
-
-    def ls(self) -> QueryList[GitBranchCmd]:
-        """List branches.
-
-        Examples
-        --------
-        >>> GitBranchManager(path=git_local_clone.path).ls()
-        [<GitBranchCmd path=... branch_name=master>]
-        """
-        return QueryList(
-            [
-                GitBranchCmd(path=self.path, branch_name=branch_name.lstrip("* "))
-                for branch_name in self._ls()
-            ],
-        )
-
-    def get(self, *args: t.Any, **kwargs: t.Any) -> GitBranchCmd | None:
-        """Get branch via filter lookup.
-
-        Examples
-        --------
-        >>> GitBranchManager(
-        ...     path=git_local_clone.path
-        ... ).get(branch_name='master')
-        <GitBranchCmd path=... branch_name=master>
-
-        >>> GitBranchManager(
-        ...     path=git_local_clone.path
-        ... ).get(branch_name='unknown')
-        Traceback (most recent call last):
-            exec(compile(example.source, filename, "single",
-            ...
-            return self.ls().get(*args, **kwargs)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-          File "..._internal/query_list.py", line ..., in get
-            raise ObjectDoesNotExist
-        libvcs._internal.query_list.ObjectDoesNotExist
-        """
-        return self.ls().get(*args, **kwargs)
-
-    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitBranchCmd]:
-        """Get branches via filter lookup.
-
-        Examples
-        --------
-        >>> GitBranchManager(
-        ...     path=git_local_clone.path
-        ... ).filter(branch_name__contains='master')
-        [<GitBranchCmd path=... branch_name=master>]
-
-        >>> GitBranchManager(
-        ...     path=git_local_clone.path
-        ... ).filter(branch_name__contains='unknown')
-        []
-        """
-        return self.ls().filter(*args, **kwargs)
