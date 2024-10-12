@@ -22,6 +22,12 @@ $ pip install --user --upgrade --pre libvcs
 Renamed `git_local_clone` to `example_git_repo` for better understandability in
 documentation / doctests.
 
+#### pytest plugin: Rename `skip_if_{vcs}_missing` -> `skip_if_missing_{vcs}` (#473)
+
+- `skip_if_git_missing` -> `skip_if_missing_git`
+- `skip_if_hg_missing` -> `skip_if_missing_hg`
+- `skip_if_svn_missing` -> `skip_if_missing_svn`
+
 #### cmd: Listing method renamed (#466)
 
 - `libvcs.cmd.git.GitCmd._list()` -> `libvcs.cmd.git.Git.ls()`
