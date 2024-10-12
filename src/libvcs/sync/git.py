@@ -548,13 +548,13 @@ class GitSync(BaseSync):
         """
         remotes = {}
 
-        ret = self.cmd.remotes.ls()
+        cmd = self.cmd.remote.run()
+        ret: filter[str] = filter(None, cmd.split("\n"))
 
-        for r in ret:
-            # FIXME: Cast to the GitRemote that sync uses, for now
-            remote = self.remote(r.remote_name)
+        for remote_name in ret:
+            remote = self.remote(remote_name)
             if remote is not None:
-                remotes[r.remote_name] = remote
+                remotes[remote_name] = remote
         return remotes
 
     def remote(self, name: str, **kwargs: Any) -> Optional[GitRemote]:
@@ -570,7 +570,7 @@ class GitSync(BaseSync):
         Remote name and url in tuple form
         """
         try:
-            ret = self.cmd.remotes.show(
+            ret = self.cmd.remote.show(
                 name=name,
                 no_query_remotes=True,
                 log_in_real_time=True,
@@ -606,12 +606,11 @@ class GitSync(BaseSync):
             defines the remote URL
         """
         url = self.chomp_protocol(url)
-        remote_cmd = self.cmd.remotes.get(remote_name=name, default=None)
 
-        if remote_cmd is not None and overwrite:
-            remote_cmd.set_url(url=url, check_returncode=True)
+        if self.remote(name) and overwrite:
+            self.cmd.remote.set_url(name=name, url=url, check_returncode=True)
         else:
-            self.cmd.remotes.add(name=name, url=url, check_returncode=True)
+            self.cmd.remote.add(name=name, url=url, check_returncode=True)
 
         remote = self.remote(name=name)
         if remote is None:

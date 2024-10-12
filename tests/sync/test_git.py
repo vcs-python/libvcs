@@ -677,11 +677,9 @@ def test_git_sync_remotes(git_repo: GitSync) -> None:
     remotes = git_repo.remotes()
 
     assert "origin" in remotes
-    assert git_repo.cmd.remotes.show() == "origin"
-    git_origin = git_repo.cmd.remotes.get(remote_name="origin")
-    assert git_origin is not None
-    assert "origin" in git_origin.show()
-    assert "origin" in git_origin.show(no_query_remotes=True)
+    assert git_repo.cmd.remote.show() == "origin"
+    assert "origin" in git_repo.cmd.remote.show(name="origin")
+    assert "origin" in git_repo.cmd.remote.show(name="origin", no_query_remotes=True)
     assert git_repo.remotes()["origin"].name == "origin"
 
 

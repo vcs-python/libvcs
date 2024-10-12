@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime
 import pathlib
-import re
 import shlex
 import typing as t
 from collections.abc import Sequence
@@ -24,7 +23,7 @@ class Git:
 
     # Sub-commands
     submodule: GitSubmoduleCmd
-    remote: GitRemoteManager
+    remote: GitRemoteCmd
     stash: GitStashCmd
     branch: GitBranchManager
 
@@ -49,15 +48,15 @@ class Git:
 
         Subcommands:
 
-        >>> git.remotes.show()
+        >>> git.remote.show()
         'origin'
 
-        >>> git.remotes.add(
+        >>> git.remote.add(
         ...     name='my_remote', url=f'file:///dev/null'
         ... )
         ''
 
-        >>> git.remotes.show()
+        >>> git.remote.show()
         'my_remote\norigin'
 
         >>> git.stash.save(message="Message")
@@ -67,9 +66,9 @@ class Git:
         ''
 
         # Additional tests
-        >>> git.remotes.get(remote_name='my_remote').remove()
+        >>> git.remote.remove(name='my_remote')
         ''
-        >>> git.remotes.show()
+        >>> git.remote.show()
         'origin'
 
         >>> git.stash.ls()
@@ -85,7 +84,7 @@ class Git:
         self.progress_callback = progress_callback
 
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
-        self.remotes = GitRemoteManager(path=self.path, cmd=self)
+        self.remote = GitRemoteCmd(path=self.path, cmd=self)
         self.stash = GitStashCmd(path=self.path, cmd=self)
         self.branches = GitBranchManager(path=self.path, cmd=self)
 
@@ -2361,46 +2360,23 @@ GitRemoteCommandLiteral = Literal[
 class GitRemoteCmd:
     """Run commands directly for a git remote on a git repository."""
 
-    remote_name: str
-    fetch_url: str | None
-    push_url: str | None
-
-    def __init__(
-        self,
-        *,
-        path: StrPath,
-        remote_name: str,
-        fetch_url: str | None = None,
-        push_url: str | None = None,
-        cmd: Git | None = None,
-    ) -> None:
+    def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
         r"""Lite, typed, pythonic wrapper for git-remote(1).
 
         Parameters
         ----------
         path :
             Operates as PATH in the corresponding git subcommand.
-        remote_name :
-            Name of remote
 
         Examples
         --------
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin',
-        ... )
-        <GitRemoteCmd path=... remote_name=...>
+        >>> GitRemoteCmd(path=tmp_path)
+        <GitRemoteCmd path=...>
 
-        >>> GitRemoteCmd(
-        ...     path=tmp_path,
-        ...     remote_name='origin',
-        ... ).run(verbose=True)
+        >>> GitRemoteCmd(path=tmp_path).run(verbose=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin',
-        ... ).run(verbose=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).run(verbose=True)
         'origin\tfile:///...'
         """
         #: Directory to check out
@@ -2412,13 +2388,9 @@ class GitRemoteCmd:
 
         self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
 
-        self.remote_name = remote_name
-        self.fetch_url = fetch_url
-        self.push_url = push_url
-
     def __repr__(self) -> str:
         """Representation of a git remote for a git repository."""
-        return f"<GitRemoteCmd path={self.path} remote_name={self.remote_name}>"
+        return f"<GitRemoteCmd path={self.path}>"
 
     def run(
         self,
@@ -2437,15 +2409,9 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='master',
-        ... ).run()
+        >>> GitRemoteCmd(path=example_git_repo.path).run()
         'origin'
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='master',
-        ... ).run(verbose=True)
+        >>> GitRemoteCmd(path=example_git_repo.path).run(verbose=True)
         'origin\tfile:///...'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2454,374 +2420,6 @@ class GitRemoteCmd:
 
         if verbose is True:
             local_flags.append("--verbose")
-
-        return self.cmd.run(
-            ["remote", *local_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def rename(
-        self,
-        *,
-        old: str,
-        new: str,
-        progress: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote rename.
-
-        Examples
-        --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin',
-        ... ).rename(old='origin', new='new_name')
-        ''
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin',
-        ... ).run()
-        'new_name'
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [old, new]
-
-        if progress is not None:
-            if progress:
-                local_flags.append("--progress")
-            else:
-                local_flags.append("--no-progress")
-        return self.run(
-            "rename",
-            local_flags=local_flags + required_flags,
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def remove(
-        self,
-        *,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote remove.
-
-        Examples
-        --------
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin',
-        ... ).remove()
-        ''
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin',
-        ... ).run()
-        ''
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [self.remote_name]
-
-        return self.run(
-            "remove",
-            local_flags=local_flags + required_flags,
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def show(
-        self,
-        *,
-        verbose: bool | None = None,
-        no_query_remotes: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote show.
-
-        Examples
-        --------
-        >>> print(
-        ...     GitRemoteCmd(
-        ...         path=example_git_repo.path,
-        ...         remote_name='origin',
-        ...     ).show()
-        ... )
-        * remote origin
-        Fetch URL: ...
-        Push  URL: ...
-        HEAD branch: master
-        Remote branch:
-        master tracked...
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [self.remote_name]
-
-        if verbose is not None:
-            local_flags.append("--verbose")
-
-        if no_query_remotes is not None or no_query_remotes:
-            local_flags.append("-n")
-
-        return self.run(
-            "show",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def prune(
-        self,
-        *,
-        dry_run: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote prune.
-
-        Examples
-        --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).prune()
-        ''
-
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).prune(dry_run=True)
-        ''
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [self.remote_name]
-
-        if dry_run:
-            local_flags.append("--dry-run")
-
-        return self.run(
-            "prune",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def get_url(
-        self,
-        *,
-        push: bool | None = None,
-        _all: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote get-url.
-
-        Examples
-        --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).get_url()
-        'file:///...'
-
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).get_url(push=True)
-        'file:///...'
-
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).get_url(_all=True)
-        'file:///...'
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [self.remote_name]
-
-        if push:
-            local_flags.append("--push")
-        if _all:
-            local_flags.append("--all")
-
-        return self.run(
-            "get-url",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-    def set_url(
-        self,
-        *,
-        url: str,
-        old_url: str | None = None,
-        push: bool | None = None,
-        add: bool | None = None,
-        delete: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote set-url.
-
-        Examples
-        --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).set_url(
-        ...     url='http://localhost'
-        ... )
-        ''
-
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).set_url(
-        ...     url='http://localhost',
-        ...     push=True
-        ... )
-        ''
-
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).set_url(
-        ...     url='http://localhost',
-        ...     add=True
-        ... )
-        ''
-
-        >>> current_url = GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).get_url()
-        >>> GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ...     remote_name='origin'
-        ... ).set_url(
-        ...     url=current_url,
-        ...     delete=True
-        ... )
-        'fatal: Will not delete all non-push URLs'
-
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [self.remote_name, url]
-        if old_url is not None:
-            required_flags.append(old_url)
-
-        if push:
-            local_flags.append("--push")
-        if add:
-            local_flags.append("--add")
-        if delete:
-            local_flags.append("--delete")
-
-        return self.run(
-            "set-url",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
-
-
-GitRemoteManagerLiteral = Literal[
-    "--verbose",
-    "add",
-    "rename",
-    "remove",
-    "set-branches",
-    "set-head",
-    "set-branch",
-    "get-url",
-    "set-url",
-    "set-url --add",
-    "set-url --delete",
-    "prune",
-    "show",
-    "update",
-]
-
-
-class GitRemoteManager:
-    """Run commands directly related to git remotes of a git repo."""
-
-    remote_name: str
-
-    def __init__(
-        self,
-        *,
-        path: StrPath,
-        cmd: Git | None = None,
-    ) -> None:
-        """Wrap some of git-remote(1), git-checkout(1), manager.
-
-        Parameters
-        ----------
-        path :
-            Operates as PATH in the corresponding git subcommand.
-
-        Examples
-        --------
-        >>> GitRemoteManager(path=tmp_path)
-        <GitRemoteManager path=...>
-
-        >>> GitRemoteManager(path=tmp_path).run(quiet=True)
-        'fatal: not a git repository (or any of the parent directories): .git'
-
-        >>> GitRemoteManager(
-        ...     path=example_git_repo.path
-        ... ).run()
-        'origin'
-        """
-        #: Directory to check out
-        self.path: pathlib.Path
-        if isinstance(path, pathlib.Path):
-            self.path = path
-        else:
-            self.path = pathlib.Path(path)
-
-        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
-
-    def __repr__(self) -> str:
-        """Representation of git remote manager object."""
-        return f"<GitRemoteManager path={self.path}>"
-
-    def run(
-        self,
-        command: GitRemoteManagerLiteral | None = None,
-        local_flags: list[str] | None = None,
-        *,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-        **kwargs: Any,
-    ) -> str:
-        """Run a command against a git repository's remotes.
-
-        Wraps `git remote <https://git-scm.com/docs/git-remote>`_.
-
-        Examples
-        --------
-        >>> GitRemoteManager(path=example_git_repo.path).run()
-        'origin'
-        """
-        local_flags = local_flags if isinstance(local_flags, list) else []
-        if command is not None:
-            local_flags.insert(0, command)
 
         return self.cmd.run(
             ["remote", *local_flags],
@@ -2847,9 +2445,8 @@ class GitRemoteManager:
         Examples
         --------
         >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteManager(path=example_git_repo.path).add(
-        ...     name='my_remote',
-        ...     url=f'file://{git_remote_repo}'
+        >>> GitRemoteCmd(path=example_git_repo.path).add(
+        ...     name='my_remote', url=f'file://{git_remote_repo}'
         ... )
         ''
         """
@@ -2869,6 +2466,70 @@ class GitRemoteManager:
             log_in_real_time=log_in_real_time,
         )
 
+    def rename(
+        self,
+        *,
+        old: str,
+        new: str,
+        progress: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote rename.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path
+        ... ).rename(old='origin', new='new_name')
+        ''
+        >>> GitRemoteCmd(path=example_git_repo.path).run()
+        'new_name'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [old, new]
+
+        if progress is not None:
+            if progress:
+                local_flags.append("--progress")
+            else:
+                local_flags.append("--no-progress")
+        return self.run(
+            "rename",
+            local_flags=local_flags + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def remove(
+        self,
+        *,
+        name: str,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote remove.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(path=example_git_repo.path).remove(name='origin')
+        ''
+        >>> GitRemoteCmd(path=example_git_repo.path).run()
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name]
+
+        return self.run(
+            "remove",
+            local_flags=local_flags + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
     def show(
         self,
         *,
@@ -2883,18 +2544,8 @@ class GitRemoteManager:
 
         Examples
         --------
-        >>> GitRemoteManager(path=example_git_repo.path).show()
+        >>> GitRemoteCmd(path=example_git_repo.path).show()
         'origin'
-
-        For the example below, add a remote:
-        >>> GitRemoteManager(path=example_git_repo.path).add(
-        ...     name='my_remote', url=f'file:///dev/null'
-        ... )
-        ''
-
-        Retrieve a list of remote names:
-        >>> GitRemoteManager(path=example_git_repo.path).show().splitlines()
-        ['my_remote', 'origin']
         """
         local_flags: list[str] = []
         required_flags: list[str] = []
@@ -2915,115 +2566,145 @@ class GitRemoteManager:
             log_in_real_time=log_in_real_time,
         )
 
-    def _ls(self) -> str:
-        r"""List remotes (raw output).
+    def prune(
+        self,
+        *,
+        name: str,
+        dry_run: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote prune.
 
         Examples
         --------
-        >>> GitRemoteManager(path=example_git_repo.path)._ls()
-        'origin\tfile:///... (fetch)\norigin\tfile:///... (push)'
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(path=example_git_repo.path).prune(name='origin')
+        ''
+
+        >>> GitRemoteCmd(path=example_git_repo.path).prune(name='origin', dry_run=True)
+        ''
         """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name]
+
+        if dry_run:
+            local_flags.append("--dry-run")
+
         return self.run(
-            "--verbose",
+            "prune",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
         )
 
-    def ls(self) -> QueryList[GitRemoteCmd]:
-        """List remotes.
+    def get_url(
+        self,
+        *,
+        name: str,
+        push: bool | None = None,
+        _all: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote get-url.
 
         Examples
         --------
-        >>> GitRemoteManager(path=example_git_repo.path).ls()
-        [<GitRemoteCmd path=... remote_name=origin>]
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin')
+        'file:///...'
 
-        For the example below, add a remote:
-        >>> GitRemoteManager(path=example_git_repo.path).add(
-        ...     name='my_remote', url=f'file:///dev/null'
+        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin', push=True)
+        'file:///...'
+
+        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin', _all=True)
+        'file:///...'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name]
+
+        if push:
+            local_flags.append("--push")
+        if _all:
+            local_flags.append("--all")
+
+        return self.run(
+            "get-url",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_url(
+        self,
+        *,
+        name: str,
+        url: str,
+        old_url: str | None = None,
+        push: bool | None = None,
+        add: bool | None = None,
+        delete: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote set-url.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
+        ...     name='origin',
+        ...     url='http://localhost'
         ... )
         ''
 
-        >>> GitRemoteManager(path=example_git_repo.path).ls()
-        [<GitRemoteCmd path=... remote_name=my_remote>,
-         <GitRemoteCmd path=... remote_name=origin>]
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
+        ...     name='origin',
+        ...     url='http://localhost',
+        ...     push=True
+        ... )
+        ''
+
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
+        ...     name='origin',
+        ...     url='http://localhost',
+        ...     add=True
+        ... )
+        ''
+
+        >>> current_url = GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ... ).get_url(name='origin')
+        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
+        ...     name='origin',
+        ...     url=current_url,
+        ...     delete=True
+        ... )
+        'fatal: Will not delete all non-push URLs'
+
         """
-        remote_str = self._ls()
-        remote_pattern = re.compile(
-            r"""
-            (?P<name>\S+)           # Remote name: one or more non-whitespace characters
-            \s+                     # One or more whitespace characters
-            (?P<url>\S+)            # URL: one or more non-whitespace characters
-            \s+                     # One or more whitespace characters
-            \((?P<cmd_type>fetch|push)\)  # 'fetch' or 'push' in parentheses
-        """,
-            re.VERBOSE | re.MULTILINE,
+        local_flags: list[str] = []
+        required_flags: list[str] = [name, url]
+        if old_url is not None:
+            required_flags.append(old_url)
+
+        if push:
+            local_flags.append("--push")
+        if add:
+            local_flags.append("--add")
+        if delete:
+            local_flags.append("--delete")
+
+        return self.run(
+            "set-url",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
         )
-
-        remotes: dict[str, dict[str, str | None]] = {}
-
-        for match_obj in remote_pattern.finditer(remote_str):
-            name = match_obj.group("name")
-            url = match_obj.group("url")
-            cmd_type = match_obj.group("cmd_type")
-
-            if name not in remotes:
-                remotes[name] = {}
-
-            remotes[name][cmd_type] = url
-
-        remote_cmds: list[GitRemoteCmd] = []
-        for name, urls in remotes.items():
-            fetch_url = urls.get("fetch")
-            push_url = urls.get("push")
-            remote_cmds.append(
-                GitRemoteCmd(
-                    path=self.path,
-                    remote_name=name,
-                    fetch_url=fetch_url,
-                    push_url=push_url,
-                ),
-            )
-
-        return QueryList(remote_cmds)
-
-    def get(self, *args: t.Any, **kwargs: t.Any) -> GitRemoteCmd | None:
-        """Get remote via filter lookup.
-
-        Examples
-        --------
-        >>> GitRemoteManager(
-        ...     path=example_git_repo.path
-        ... ).get(remote_name='origin')
-        <GitRemoteCmd path=... remote_name=origin>
-
-        >>> GitRemoteManager(
-        ...     path=example_git_repo.path
-        ... ).get(remote_name='unknown')
-        Traceback (most recent call last):
-            exec(compile(example.source, filename, "single",
-            ...
-            return self.ls().get(*args, **kwargs)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-          File "..._internal/query_list.py", line ..., in get
-            raise ObjectDoesNotExist
-        libvcs._internal.query_list.ObjectDoesNotExist
-        """
-        return self.ls().get(*args, **kwargs)
-
-    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitRemoteCmd]:
-        """Get remotes via filter lookup.
-
-        Examples
-        --------
-        >>> GitRemoteManager(
-        ...     path=example_git_repo.path
-        ... ).filter(remote_name__contains='origin')
-        [<GitRemoteCmd path=... remote_name=origin>]
-
-        >>> GitRemoteManager(
-        ...     path=example_git_repo.path
-        ... ).filter(remote_name__contains='unknown')
-        []
-        """
-        return self.ls().filter(*args, **kwargs)
 
 
 GitStashCommandLiteral = Literal[
@@ -3313,22 +2994,14 @@ class GitBranchCmd:
 
         Examples
         --------
-        >>> GitBranchCmd(
-        ...     path=tmp_path,
-        ...     branch_name='master'
-        ... )
+        >>> GitBranchCmd(path=tmp_path, branch_name='master')
         <GitBranchCmd path=... branch_name=master>
 
-        >>> GitBranchCmd(
-        ...     path=tmp_path,
-        ...     branch_name='master'
-        ... ).run(quiet=True)
+        >>> GitBranchCmd(path=tmp_path, branch_name="master").run(quiet=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitBranchCmd(
-        ...     path=example_git_repo.path,
-        ...     branch_name='master'
-        ... ).run(quiet=True)
+        ...     path=git_local_clone.path, branch_name="master").run(quiet=True)
         '* master'
         """
         #: Directory to check out
@@ -3364,10 +3037,7 @@ class GitBranchCmd:
 
         Examples
         --------
-        >>> GitBranchCmd(
-        ...     path=example_git_repo.path,
-        ...     branch_name='master'
-        ... ).run()
+        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').run()
         '* master'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -3390,10 +3060,7 @@ class GitBranchCmd:
 
         Examples
         --------
-        >>> GitBranchCmd(
-        ...     path=example_git_repo.path,
-        ...     branch_name='master'
-        ... ).checkout()
+        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').checkout()
         "Your branch is up to date with 'origin/master'."
         """
         return self.cmd.run(
@@ -3408,10 +3075,7 @@ class GitBranchCmd:
 
         Examples
         --------
-        >>> GitBranchCmd(
-        ...     path=example_git_repo.path,
-        ...     branch_name='master'
-        ... ).create()
+        >>> GitBranchCmd(path=git_local_clone.path, branch_name='master').create()
         "fatal: a branch named 'master' already exists"
         """
         return self.cmd.run(
@@ -3451,7 +3115,7 @@ class GitBranchManager:
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitBranchManager(
-        ...     path=example_git_repo.path).run(quiet=True)
+        ...     path=git_local_clone.path).run(quiet=True)
         '* master'
         """
         #: Directory to check out
@@ -3485,7 +3149,7 @@ class GitBranchManager:
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).run()
+        >>> GitBranchManager(path=git_local_clone.path).run()
         '* master'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -3508,7 +3172,7 @@ class GitBranchManager:
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).checkout(branch='master')
+        >>> GitBranchManager(path=git_local_clone.path).checkout(branch='master')
         "Your branch is up to date with 'origin/master'."
         """
         return self.cmd.run(
@@ -3523,7 +3187,7 @@ class GitBranchManager:
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).create(branch='master')
+        >>> GitBranchManager(path=git_local_clone.path).create(branch='master')
         "fatal: a branch named 'master' already exists"
         """
         return self.cmd.run(
@@ -3540,7 +3204,7 @@ class GitBranchManager:
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path)._ls()
+        >>> GitBranchManager(path=git_local_clone.path)._ls()
         ['* master']
         """
         return self.run(
@@ -3552,7 +3216,7 @@ class GitBranchManager:
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).ls()
+        >>> GitBranchManager(path=git_local_clone.path).ls()
         [<GitBranchCmd path=... branch_name=master>]
         """
         return QueryList(
@@ -3568,12 +3232,12 @@ class GitBranchManager:
         Examples
         --------
         >>> GitBranchManager(
-        ...     path=example_git_repo.path
+        ...     path=git_local_clone.path
         ... ).get(branch_name='master')
         <GitBranchCmd path=... branch_name=master>
 
         >>> GitBranchManager(
-        ...     path=example_git_repo.path
+        ...     path=git_local_clone.path
         ... ).get(branch_name='unknown')
         Traceback (most recent call last):
             exec(compile(example.source, filename, "single",
@@ -3592,12 +3256,12 @@ class GitBranchManager:
         Examples
         --------
         >>> GitBranchManager(
-        ...     path=example_git_repo.path
+        ...     path=git_local_clone.path
         ... ).filter(branch_name__contains='master')
         [<GitBranchCmd path=... branch_name=master>]
 
         >>> GitBranchManager(
-        ...     path=example_git_repo.path
+        ...     path=git_local_clone.path
         ... ).filter(branch_name__contains='unknown')
         []
         """
