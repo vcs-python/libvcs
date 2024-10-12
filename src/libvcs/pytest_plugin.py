@@ -709,8 +709,6 @@ def add_doctest_fixtures(
     doctest_namespace: dict[str, Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
-    gitconfig: pathlib.Path,
-    hgconfig: pathlib.Path,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     create_svn_remote_repo: CreateRepoPytestFixtureFn,
     create_hg_remote_repo: CreateRepoPytestFixtureFn,
@@ -723,7 +721,6 @@ def add_doctest_fixtures(
         return
     doctest_namespace["tmp_path"] = tmp_path
     if shutil.which("git"):
-        doctest_namespace["gitconfig"] = gitconfig
         doctest_namespace["create_git_remote_repo"] = functools.partial(
             create_git_remote_repo,
             remote_repo_post_init=git_remote_repo_single_commit_post_init,
@@ -738,7 +735,6 @@ def add_doctest_fixtures(
             remote_repo_post_init=svn_remote_repo_single_commit_post_init,
         )
     if shutil.which("hg"):
-        doctest_namespace["hgconfig"] = hgconfig
         doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
         doctest_namespace["create_hg_remote_repo"] = functools.partial(
             create_hg_remote_repo,
