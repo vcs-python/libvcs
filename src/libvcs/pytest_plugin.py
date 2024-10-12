@@ -239,23 +239,6 @@ DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
 
 
 def _create_git_remote_repo(
-    remote_repos_path: pathlib.Path,
-    remote_repo_name: str,
-    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
-    init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
-) -> pathlib.Path:
-    if init_cmd_args is None:
-        init_cmd_args = []
-    remote_repo_path = remote_repos_path / remote_repo_name
-    run(["git", "init", remote_repo_name, *init_cmd_args], cwd=remote_repos_path)
-
-    if remote_repo_post_init is not None and callable(remote_repo_post_init):
-        remote_repo_post_init(remote_repo_path=remote_repo_path)
-
-    return remote_repo_path
-
-
-def _create_git_remote_repo_full_path(
     remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
@@ -303,7 +286,7 @@ def empty_git_bare_repo(
     ):
         return empty_git_bare_repo_path
 
-    return _create_git_remote_repo_full_path(
+    return _create_git_remote_repo(
         remote_repo_path=empty_git_bare_repo_path,
         remote_repo_post_init=None,
         init_cmd_args=DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,  # --bare
@@ -319,7 +302,7 @@ def empty_git_repo(
     if empty_git_repo_path.exists() and (empty_git_repo_path / ".git").exists():
         return empty_git_repo_path
 
-    return _create_git_remote_repo_full_path(
+    return _create_git_remote_repo(
         remote_repo_path=empty_git_repo_path,
         remote_repo_post_init=None,
         init_cmd_args=None,
