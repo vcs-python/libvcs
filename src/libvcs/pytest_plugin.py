@@ -506,8 +506,7 @@ def svn_remote_repo_with_files(
 
 
 def _create_hg_remote_repo(
-    remote_repos_path: pathlib.Path,
-    remote_repo_name: str,
+    remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
@@ -515,8 +514,10 @@ def _create_hg_remote_repo(
     if init_cmd_args is None:
         init_cmd_args = []
 
-    remote_repo_path = remote_repos_path / remote_repo_name
-    run(["hg", "init", remote_repo_name, *init_cmd_args], cwd=remote_repos_path)
+    run(
+        ["hg", "init", remote_repo_path.stem, *init_cmd_args],
+        cwd=remote_repo_path.parent,
+    )
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path)
@@ -548,8 +549,7 @@ def empty_hg_repo(
         return empty_hg_repo_path
 
     return _create_hg_remote_repo(
-        remote_repos_path=empty_hg_repo_path.parent,
-        remote_repo_name=empty_hg_repo_path.stem,
+        remote_repo_path=empty_hg_repo_path,
         remote_repo_post_init=None,
         init_cmd_args=None,
     )
