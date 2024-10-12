@@ -15,6 +15,16 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+## Breaking changes
+
+### pytest fixtures: Session-scoped `hgconfig` and `gitconfig` (#475)
+
+These are now set by `set_hgconfig` and `set_gitconfig`, which set `HGRCPATH` and `GIT_CONFIG`, instead of overriding `HOME`.
+
+## Documentation
+
+- Updates for pytest plugin documentation.
+
 ## libvcs 0.31.0 (2024-10-12)
 
 ### Breaking changes
