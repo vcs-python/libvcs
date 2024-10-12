@@ -15,6 +15,12 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+## libvcs 0.32.1 (2024-10-12)
+
+### Revert accidental commit
+
+Update to commands for `Git` from #465 were pushed to trunk before being prepared (even for experimental use).
+
 ## libvcs 0.32.0 (2024-10-12)
 
 ### Breaking changes
