@@ -37,7 +37,7 @@ This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api
 
 ## Recommended Fixtures
 
-When the plugin is enabled and `pytest` is run, these fixtures are automatically used:
+When the plugin is enabled and `pytest` is run, these overridable fixtures are automatically used:
 
 - Create temporary test directories for:
   - `/home/` ({func}`home_path`)
@@ -50,6 +50,11 @@ When the plugin is enabled and `pytest` is run, these fixtures are automatically
 - Set default VCS configurations:
   - Use {func}`hgconfig` for [`HGRCPATH`] via {func}`set_hgconfig`
   - Use {func}`gitconfig` for [`GIT_CONFIG`] via {func}`set_gitconfig`
+- Set default commit names and emails:
+  - Name: {func}`vcs_name`
+  - Email: {func}`vcs_email`
+  - User (e.g. _`user <email@tld>`_): {func}`vcs_user`
+  - For git only: {func}`git_commit_envvars`
 
 These ensure that repositories can be cloned and created without unnecessary warnings.
 
@@ -74,9 +79,18 @@ def setup(set_home: None):
     pass
 ```
 
-### Setting a Default VCS Configuration
+### VCS Configuration
 
 #### Git
+
+You can override the default author used in {func}`git_remote_repo` and other
+fixtures via {func}`vcs_name`, {func}`vcs_email`, and {func}`vcs_user`:
+
+```
+@pytest.fixture(scope="session")
+def vcs_name() -> str:
+    return "My custom name"
+```
 
 Use the {func}`set_gitconfig` fixture with `autouse=True`:
 
@@ -86,6 +100,27 @@ import pytest
 @pytest.fixture(autouse=True)
 def setup(set_gitconfig: None):
     pass
+```
+
+Sometimes, `set_getconfig` via `GIT_CONFIG` doesn't apply as expected. For those
+cases, you can use {func}`git_commit_envvars`:
+
+```python
+import pytest
+
+@pytest.fixture
+def my_git_repo(
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    gitconfig: pathlib.Path,
+    git_commit_envvars: "_ENV",
+) -> pathlib.Path:
+    """Copy the session-scoped Git repository to a temporary directory."""
+    repo_path = create_git_remote_repo()
+    git_remote_repo_single_commit_post_init(
+        remote_repo_path=repo_path,
+        env=git_commit_envvars,
+    )
+    return repo_path
 ```
 
 #### Mercurial
