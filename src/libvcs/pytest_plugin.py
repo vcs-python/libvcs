@@ -622,6 +622,7 @@ def git_repo(
     remote_repos_path: pathlib.Path,
     projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
+    set_gitconfig: pathlib.Path,
 ) -> GitSync:
     """Pre-made git clone of remote repo checked out to user's projects dir."""
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
@@ -655,6 +656,7 @@ def hg_repo(
     remote_repos_path: pathlib.Path,
     projects_path: pathlib.Path,
     hg_remote_repo: pathlib.Path,
+    set_hgconfig: pathlib.Path,
 ) -> HgSync:
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
