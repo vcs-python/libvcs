@@ -19,6 +19,8 @@ from libvcs.sync.svn import SvnSync
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
+    from libvcs._internal.run import _ENV
+
 
 class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
     """Raised when exceeded threshold of attempts to find a unique repo destination."""
@@ -391,10 +393,17 @@ def create_git_remote_repo(
     return fn
 
 
-def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> None:
+def git_remote_repo_single_commit_post_init(
+    remote_repo_path: pathlib.Path,
+    env: "_ENV | None" = None,
+) -> None:
     """Post-initialization: Create a test git repo with a single commit."""
     testfile_filename = "testfile.test"
-    run(["touch", testfile_filename], cwd=remote_repo_path)
+    run(
+        ["touch", testfile_filename],
+        cwd=remote_repo_path,
+        env={"GITCONFIG": str(gitconfig)},
+    )
     run(["git", "add", testfile_filename], cwd=remote_repo_path)
     run(["git", "commit", "-m", "test file for dummyrepo"], cwd=remote_repo_path)
 
@@ -403,11 +412,17 @@ def git_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> N
 @skip_if_git_missing
 def git_remote_repo(
     create_git_remote_repo: CreateRepoPytestFixtureFn,
+    gitconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
     # TODO: Cache the effect of of this in a session-based repo
     repo_path = create_git_remote_repo()
-    git_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    git_remote_repo_single_commit_post_init(
+        remote_repo_path=repo_path,
+        env={
+            "GITCONFIG": str(gitconfig),
+        },
+    )
     return repo_path
 
 
