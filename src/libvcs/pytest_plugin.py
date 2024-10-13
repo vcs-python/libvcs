@@ -402,10 +402,14 @@ def git_remote_repo_single_commit_post_init(
     run(
         ["touch", testfile_filename],
         cwd=remote_repo_path,
-        env={"GITCONFIG": str(gitconfig)},
+        env=env,
     )
-    run(["git", "add", testfile_filename], cwd=remote_repo_path)
-    run(["git", "commit", "-m", "test file for dummyrepo"], cwd=remote_repo_path)
+    run(["git", "add", testfile_filename], cwd=remote_repo_path, env=env)
+    run(
+        ["git", "commit", "-m", "test file for dummyrepo"],
+        cwd=remote_repo_path,
+        env=env,
+    )
 
 
 @pytest.fixture(scope="session")
