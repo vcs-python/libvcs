@@ -7,7 +7,7 @@ import textwrap
 import pytest
 
 from libvcs._internal.run import run
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, vcs_email
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
@@ -212,6 +212,7 @@ def test_git_bare_repo_sync_and_commit(
 def test_gitconfig(
     gitconfig: pathlib.Path,
     set_gitconfig: pathlib.Path,
+    vcs_email: str,
 ) -> None:
     """Test gitconfig fixture."""
     output = run(["git", "config", "--get", "user.email"])

@@ -46,6 +46,43 @@ skip_if_hg_missing = pytest.mark.skipif(
 )
 
 
+DEFAULT_VCS_NAME = "Test user"
+DEFAULT_VCS_EMAIL = "test@example.com"
+
+
+@pytest.fixture(scope="session")
+def vcs_name() -> str:
+    """Return default VCS name."""
+    return DEFAULT_VCS_NAME
+
+
+@pytest.fixture(scope="session")
+def vcs_email() -> str:
+    """Return default VCS email."""
+    return DEFAULT_VCS_EMAIL
+
+
+@pytest.fixture(scope="session")
+def vcs_user(vcs_name: str, vcs_email: str) -> str:
+    """Return default VCS user."""
+    return f"{vcs_name} <{vcs_email}>"
+
+
+@pytest.fixture(scope="session")
+def git_commit_envvars(vcs_name: str, vcs_email: str) -> "_ENV":
+    """Return environment variables for `git commit`.
+
+    For some reason, `GIT_CONFIG` via {func}`set_gitconfig` doesn't work for `git
+    commit`.
+    """
+    return {
+        "GIT_AUTHOR_NAME": vcs_name,
+        "GIT_AUTHOR_EMAIL": vcs_email,
+        "GIT_COMMITTER_NAME": vcs_name,
+        "GIT_COMMITTER_EMAIL": vcs_email,
+    }
+
+
 class RandomStrSequence:
     """Create a random string sequence."""
 
@@ -110,13 +147,12 @@ def set_home(
     monkeypatch.setenv("HOME", str(user_path))
 
 
-vcs_email = "libvcs@git-pull.com"
-
-
 @pytest.fixture(scope="session")
 @skip_if_git_missing
 def gitconfig(
     user_path: pathlib.Path,
+    vcs_email: str,
+    vcs_name: str,
 ) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
     gitconfig = user_path / ".gitconfig"
@@ -129,7 +165,7 @@ def gitconfig(
             f"""
   [user]
     email = {vcs_email}
-    name = {getpass.getuser()}
+    name = {vcs_name}
   [color]
     diff = auto
     """,
@@ -155,6 +191,7 @@ def set_gitconfig(
 @skip_if_hg_missing
 def hgconfig(
     user_path: pathlib.Path,
+    vcs_user: str,
 ) -> pathlib.Path:
     """Return Mercurial configuration."""
     hgrc = user_path / ".hgrc"
@@ -162,7 +199,7 @@ def hgconfig(
         textwrap.dedent(
             f"""
         [ui]
-        username = libvcs tests <libvcs@git-pull.com>
+        username = {vcs_user}
         merge = internal:merge
 
         [trusted]
@@ -237,7 +274,11 @@ InitCmdArgs: "TypeAlias" = Optional[list[str]]
 class CreateRepoPostInitFn(Protocol):
     """Typing for VCS repo creation callback."""
 
-    def __call__(self, remote_repo_path: pathlib.Path) -> None:
+    def __call__(
+        self,
+        remote_repo_path: pathlib.Path,
+        env: "_ENV | None" = None,
+    ) -> None:
         """Ran after creating a repo from pytest fixture."""
         ...
 
@@ -263,6 +304,7 @@ def _create_git_remote_repo(
     remote_repo_path: pathlib.Path,
     remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
+    env: "_ENV | None" = None,
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
@@ -272,7 +314,7 @@ def _create_git_remote_repo(
     )
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
-        remote_repo_post_init(remote_repo_path=remote_repo_path)
+        remote_repo_post_init(remote_repo_path=remote_repo_path, env=env)
 
     return remote_repo_path
 
@@ -417,15 +459,14 @@ def git_remote_repo_single_commit_post_init(
 def git_remote_repo(
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     gitconfig: pathlib.Path,
+    git_commit_envvars: "_ENV",
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
     # TODO: Cache the effect of of this in a session-based repo
     repo_path = create_git_remote_repo()
     git_remote_repo_single_commit_post_init(
         remote_repo_path=repo_path,
-        env={
-            "GITCONFIG": str(gitconfig),
-        },
+        env=git_commit_envvars,
     )
     return repo_path
 
@@ -600,6 +641,7 @@ def empty_hg_repo(
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_hg_repo: pathlib.Path,
+    hgconfig: pathlib.Path,
 ) -> CreateRepoPytestFixtureFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -616,7 +658,10 @@ def create_hg_remote_repo(
         shutil.copytree(empty_hg_repo, remote_repo_path)
 
         if remote_repo_post_init is not None and callable(remote_repo_post_init):
-            remote_repo_post_init(remote_repo_path=remote_repo_path)
+            remote_repo_post_init(
+                remote_repo_path=remote_repo_path,
+                env={"HGRCPATH": str(hgconfig)},
+            )
 
         assert empty_hg_repo.exists()
 
@@ -637,7 +682,8 @@ def hg_remote_repo(
     """Pre-made, file-based repo for push and pull."""
     repo_path = create_hg_remote_repo()
     hg_remote_repo_single_commit_post_init(
-        remote_repo_path=repo_path, env={"HGRCPATH": str(hgconfig)}
+        remote_repo_path=repo_path,
+        env={"HGRCPATH": str(hgconfig)},
     )
     return repo_path
 
@@ -735,6 +781,8 @@ def add_doctest_fixtures(
     doctest_namespace: dict[str, Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
+    git_commit_envvars: "_ENV",
+    hgconfig: pathlib.Path,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     create_svn_remote_repo: CreateRepoPytestFixtureFn,
     create_hg_remote_repo: CreateRepoPytestFixtureFn,
@@ -749,7 +797,10 @@ def add_doctest_fixtures(
     if shutil.which("git"):
         doctest_namespace["create_git_remote_repo"] = functools.partial(
             create_git_remote_repo,
-            remote_repo_post_init=git_remote_repo_single_commit_post_init,
+            remote_repo_post_init=functools.partial(
+                git_remote_repo_single_commit_post_init,
+                env=git_commit_envvars,
+            ),
             init_cmd_args=None,
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
@@ -764,5 +815,8 @@ def add_doctest_fixtures(
         doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
         doctest_namespace["create_hg_remote_repo"] = functools.partial(
             create_hg_remote_repo,
-            remote_repo_post_init=hg_remote_repo_single_commit_post_init,
+            remote_repo_post_init=functools.partial(
+                hg_remote_repo_single_commit_post_init,
+                env={"HGRCPATH": str(hgconfig)},
+            ),
         )
