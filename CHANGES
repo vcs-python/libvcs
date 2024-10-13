@@ -15,7 +15,15 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-## libvcs 0.32.2 (2024-10-12)
+## libvcs 0.32.3 (2024-10-13)
+
+### Bug fixes
+
+- Pytest fixtures `hg_remote_repo_single_commit_post_init()` and `git_remote_repo_single_commit_post_init()` now support passing `env` for VCS configuration. 
+
+  Both functions accept `hgconfig` and `gitconfig` fixtures, now applied in the `hg_repo` and `git_repo` fixtures.
+
+## libvcs 0.32.2 (2024-10-13)
 
 ### Bug fixes
 
