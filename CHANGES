@@ -17,6 +17,10 @@ $ pip install --user --upgrade --pre libvcs
 
 ### New features
 
+#### Python 3.13 support (#477)
+
+Added Python 3.13 to package trove classifiers and CI tests.
+
 #### pytest plugin: Authorship fixtures (#476)
 
 - New, customizable session-scoped fixtures for default committer on Mercurial and Git:
