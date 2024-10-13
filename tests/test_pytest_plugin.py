@@ -112,6 +112,103 @@ def test_repo_git_remote_repo_and_sync(
     result.assert_outcomes(passed=1)
 
 
+def test_git_remote_repo(
+    pytester: pytest.Pytester,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Tests for libvcs pytest plugin git configuration."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    # Initialize variables
+    pytester.plugins = ["pytest_plugin"]
+    pytester.makefile(
+        ".ini",
+        pytest=textwrap.dedent(
+            """
+[pytest]
+addopts=-vv
+        """.strip(),
+        ),
+    )
+    pytester.makeconftest(
+        textwrap.dedent(
+            r"""
+import pathlib
+import pytest
+
+@pytest.fixture(scope="session")
+def vcs_email() -> str:
+    return "custom_email@testemail.com"
+
+@pytest.fixture(autouse=True)
+def setup(
+    request: pytest.FixtureRequest,
+    gitconfig: pathlib.Path,
+    set_home: pathlib.Path,
+) -> None:
+    pass
+    """,
+        ),
+    )
+    tests_path = pytester.path / "tests"
+    files = {
+        "example.py": textwrap.dedent(
+            """
+import pathlib
+
+from libvcs.sync.git import GitSync
+from libvcs.pytest_plugin import (
+    CreateRepoPytestFixtureFn,
+    git_remote_repo_single_commit_post_init
+)
+
+def test_git_bare_repo_sync_and_commit(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    projects_path: pathlib.Path,
+) -> None:
+    git_server = create_git_remote_bare_repo()
+    git_repo_checkout_dir = projects_path / "my_git_checkout"
+    git_repo = GitSync(path=str(git_repo_checkout_dir), url=f"file://{git_server!s}")
+
+    git_repo.obtain()
+    git_repo.update_repo()
+
+    assert git_repo.get_revision() == "initial"
+
+    assert git_repo_checkout_dir.exists()
+    assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
+
+    git_remote_repo_single_commit_post_init(
+        remote_repo_path=git_repo_checkout_dir
+    )
+
+    assert git_repo.get_revision() != "initial"
+
+    last_committer_email = git_repo.cmd.run(["log", "-1", "--pretty=format:%ae"])
+
+    assert last_committer_email == "custom_email@testemail.com", (
+        'Email should use the override from the "vcs_email" fixture'
+    )
+        """,
+        ),
+    }
+    first_test_key = next(iter(files.keys()))
+    first_test_filename = str(tests_path / first_test_key)
+
+    tests_path.mkdir()
+    for file_name, text in files.items():
+        test_file = tests_path / file_name
+        test_file.write_text(
+            text,
+            encoding="utf-8",
+        )
+
+    # Test
+    result = pytester.runpytest(str(first_test_filename))
+    result.assert_outcomes(passed=1)
+
+
 def test_gitconfig(
     gitconfig: pathlib.Path,
     set_gitconfig: pathlib.Path,
