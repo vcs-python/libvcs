@@ -558,12 +558,15 @@ def _create_hg_remote_repo(
     return remote_repo_path
 
 
-def hg_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> None:
+def hg_remote_repo_single_commit_post_init(
+    remote_repo_path: pathlib.Path,
+    env: "_ENV | None" = None,
+) -> None:
     """Post-initialization: Create a test mercurial repo with a single commit."""
     testfile_filename = "testfile.test"
-    run(["touch", testfile_filename], cwd=remote_repo_path)
-    run(["hg", "add", testfile_filename], cwd=remote_repo_path)
-    run(["hg", "commit", "-m", "test file for hg repo"], cwd=remote_repo_path)
+    run(["touch", testfile_filename], cwd=remote_repo_path, env=env)
+    run(["hg", "add", testfile_filename], cwd=remote_repo_path, env=env)
+    run(["hg", "commit", "-m", "test file for hg repo"], cwd=remote_repo_path, env=env)
 
 
 @pytest.fixture(scope="session")
@@ -625,10 +628,13 @@ def create_hg_remote_repo(
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
     create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
     repo_path = create_hg_remote_repo()
-    hg_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    hg_remote_repo_single_commit_post_init(
+        remote_repo_path=repo_path, env={"HGRCPATH": str(hgconfig)}
+    )
     return repo_path
 
 
