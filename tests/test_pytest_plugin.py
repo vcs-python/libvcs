@@ -36,6 +36,26 @@ def test_create_svn_remote_repo(
     assert svn_remote_1 != svn_remote_2
 
 
+def test_gitconfig(
+    gitconfig: pathlib.Path,
+    set_gitconfig: pathlib.Path,
+    vcs_email: str,
+) -> None:
+    """Test gitconfig fixture."""
+    output = run(["git", "config", "--get", "user.email"])
+    used_config_file_output = run(
+        [
+            "git",
+            "config",
+            "--show-origin",
+            "--get",
+            "user.email",
+        ],
+    )
+    assert str(gitconfig) in used_config_file_output
+    assert vcs_email in output, "Should use our fixture config and home directory"
+
+
 def test_git_fixtures(
     pytester: pytest.Pytester,
     monkeypatch: pytest.MonkeyPatch,
@@ -150,23 +170,3 @@ def test_git_bare_repo_sync_and_commit(
     # Test
     result = pytester.runpytest(str(first_test_filename))
     result.assert_outcomes(passed=2)
-
-
-def test_gitconfig(
-    gitconfig: pathlib.Path,
-    set_gitconfig: pathlib.Path,
-    vcs_email: str,
-) -> None:
-    """Test gitconfig fixture."""
-    output = run(["git", "config", "--get", "user.email"])
-    used_config_file_output = run(
-        [
-            "git",
-            "config",
-            "--show-origin",
-            "--get",
-            "user.email",
-        ],
-    )
-    assert str(gitconfig) in used_config_file_output
-    assert vcs_email in output, "Should use our fixture config and home directory"
