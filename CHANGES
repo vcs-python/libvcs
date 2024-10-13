@@ -15,11 +15,25 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### New features
+
+#### pytest plugin: Authorship fixtures (#476)
+
+- New, customizable session-scoped fixtures for default committer on Mercurial and Git:
+  - Name: {func}`libvcs.pytest_plugin.vcs_name`
+  - Email: {func}`libvcs.pytest_plugin.vcs_email`
+  - User (e.g. _`user <email@tld>`_): {func}`libvcs.pytest_plugin.vcs_user`
+  - For git only: {func}`libvcs.pytest_plugin.git_commit_envvars`
+
+#### pytest plugins: Default repos use authorship fixtures (#476)
+
+New repos will automatically apply these session-scoped fixtures.
+
 ## libvcs 0.32.3 (2024-10-13)
 
 ### Bug fixes
 
-- Pytest fixtures `hg_remote_repo_single_commit_post_init()` and `git_remote_repo_single_commit_post_init()` now support passing `env` for VCS configuration. 
+- Pytest fixtures `hg_remote_repo_single_commit_post_init()` and `git_remote_repo_single_commit_post_init()` now support passing `env` for VCS configuration.
 
   Both functions accept `hgconfig` and `gitconfig` fixtures, now applied in the `hg_repo` and `git_repo` fixtures.
 
