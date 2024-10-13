@@ -36,11 +36,11 @@ def test_create_svn_remote_repo(
     assert svn_remote_1 != svn_remote_2
 
 
-def test_plugin(
+def test_create_git_remote_repo_and_git_sync(
     pytester: pytest.Pytester,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Tests for libvcs pytest plugin at large."""
+    """Tests pytest plugin integration for create_git_remote_repo() and GitSync()."""
     # Initialize variables
     pytester.plugins = ["pytest_plugin"]
     pytester.makefile(
@@ -77,7 +77,7 @@ import pathlib
 from libvcs.sync.git import GitSync
 from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
-def test_repo_git_remote_checkout(
+def test_repo_git_remote_repo_and_sync(
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
