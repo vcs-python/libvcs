@@ -6,7 +6,7 @@ WATCH_FILES= find .. -type f -not -path '*/\.*' | grep -i '.*[.]\(rst\|md\)\$\|.
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = poetry run sphinx-build
+SPHINXBUILD   = uv run sphinx-build
 PAPER         =
 BUILDDIR      = _build
 
@@ -173,16 +173,16 @@ serve:
 	@echo 'docs server running at http://localhost:${HTTP_PORT}/'
 	@echo
 	@echo '=============================================================='
-	poetry run python -m http.server ${HTTP_PORT} --directory _build/html
+	uv run python -m http.server ${HTTP_PORT} --directory _build/html
 
 dev:
 	$(MAKE) -j watch serve
 
 start:
-	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} $(O)
+	uv run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} $(O)
 
 design:
 	# This adds additional watch directories (for _static file changes) and disable incremental builds
-	poetry run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} \
+	uv run sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) --port ${HTTP_PORT} \
 		--watch ".." --ignore "../.*" --ignore "_build" -a \
 		$(O)
