@@ -8,6 +8,7 @@ import textwrap
 import typing as t
 
 import pytest
+from pytest_codspeed.plugin import BenchmarkFixture
 from pytest_mock import MockerFixture
 
 from libvcs import exc
@@ -56,6 +57,7 @@ def test_repo_git_obtain_initial_commit_repo(
     tmp_path: pathlib.Path,
     constructor: ProjectTestFactory,
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
+    benchmark: BenchmarkFixture,
 ) -> None:
     """Initial commit repos return 'initial'.
 
@@ -69,7 +71,7 @@ def test_repo_git_obtain_initial_commit_repo(
     bare_dir = tmp_path / repo_name
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
 
-    git_repo.obtain()
+    benchmark(lambda: git_repo.obtain())
     assert git_repo.get_revision() == "initial"
 
 
