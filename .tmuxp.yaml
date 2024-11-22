@@ -1,23 +1,15 @@
 session_name: libvcs
 start_directory: ./ # load session relative to config location (project root).
+shell_command_before:
+- uv virtualenv --quiet > /dev/null 2>&1 && clear
 windows:
 - window_name: libvcs
   focus: True
   layout: main-horizontal
   options:
-    main-pane-height: 35
+    main-pane-height: 67%
   panes:
   - focus: true
-  - pane
-  - make watch_mypy
-  - make start
-- window_name: docs
-  layout: main-horizontal
-  options:
-    main-pane-height: 35
-  start_directory: docs/
-  panes:
-  - focus: true
-  - pane
+  - pane 
   - pane
   - make start

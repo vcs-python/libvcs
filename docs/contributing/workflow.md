@@ -4,7 +4,7 @@
 
 ## Development environment
 
-[poetry] is a required package to develop.
+[uv] is a required package to develop.
 
 ```console
 $ git clone https://github.com/vcs-python/libvcs.git
@@ -15,7 +15,7 @@ $ cd libvcs
 ```
 
 ```console
-$ poetry install -E "docs test coverage lint"
+$ uv install -E "docs test coverage lint"
 ```
 
 Makefile commands prefixed with `watch_` will watch files and rerun.
@@ -23,7 +23,7 @@ Makefile commands prefixed with `watch_` will watch files and rerun.
 ## Tests
 
 ```console
-$ poetry run py.test
+$ uv run py.test
 ```
 
 Helpers: `make test` Rerun tests on file change: `make watch_test` (requires [entr(1)])
@@ -57,10 +57,10 @@ The project uses [ruff] to handle formatting, sorting imports and linting.
 
 ````{tab} Command
 
-poetry:
+uv:
 
 ```console
-$ poetry run ruff
+$ uv run ruff
 ```
 
 If you setup manually:
@@ -91,10 +91,10 @@ requires [`entr(1)`].
 
 ````{tab} Fix files
 
-poetry:
+uv:
 
 ```console
-$ poetry run ruff . --fix
+$ uv run ruff . --fix
 ```
 
 If you setup manually:
@@ -111,10 +111,10 @@ $ ruff . --fix
 
 ````{tab} Command
 
-poetry:
+uv:
 
 ```console
-$ poetry run ruff format .
+$ uv run ruff format .
 ```
 
 If you setup manually:
@@ -139,10 +139,10 @@ $ make ruff_format
 
 ````{tab} Command
 
-poetry:
+uv:
 
 ```console
-$ poetry run mypy .
+$ uv run mypy .
 ```
 
 If you setup manually:
@@ -176,10 +176,10 @@ requires [`entr(1)`].
 
 ````{tab} Command
 
-poetry:
+uv:
 
 ```console
-$ poetry run mypy .
+$ uv run mypy .
 ```
 
 If you setup manually:
@@ -245,7 +245,7 @@ After `git push` and `git push --tags`, CI will automatically build and deploy t
 
 ### Releasing (manual)
 
-As of 0.10, [poetry] handles virtualenv creation, package requirements, versioning, building, and
+As of 0.10, [uv] handles virtualenv creation, package requirements, versioning, building, and
 publishing. Therefore there is no setup.py or requirements files.
 
 Update `__version__` in `__about__.py` and `pyproject.toml`::
@@ -254,10 +254,10 @@ Update `__version__` in `__about__.py` and `pyproject.toml`::
     git tag v0.1.1
     git push
     git push --tags
-    poetry build
-    poetry publish
+    uv build
+    uv publish
 
-[poetry]: https://python-poetry.org/
+[uv]: https://github.com/astral-sh/uv 
 [entr(1)]: http://eradman.com/entrproject/
 [`entr(1)`]: http://eradman.com/entrproject/
 [ruff format]: https://docs.astral.sh/ruff/formatter/

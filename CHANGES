@@ -15,6 +15,14 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Development
+
+#### Project and package management: poetry to uv (#479)
+
+[uv] is the new package and project manager for the project, replacing Poetry.
+
+[uv]: https://github.com/astral-sh/uv
+
 ## libvcs 0.33.0 (2024-10-13)
 
 ### New features
