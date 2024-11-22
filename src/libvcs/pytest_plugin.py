@@ -521,6 +521,11 @@ def empty_svn_repo(
     empty_svn_repo_path: pathlib.Path,
 ) -> pathlib.Path:
     """Return factory to create svn remote repo to for clone / push purposes."""
+    if not shutil.which("svn") or not shutil.which("svnadmin"):
+        pytest.skip(
+            reason="svn is not available",
+        )
+
     if empty_svn_repo_path.exists() and (empty_svn_repo_path / "conf").exists():
         return empty_svn_repo_path
 
