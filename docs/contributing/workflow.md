@@ -66,7 +66,7 @@ $ uv run ruff
 If you setup manually:
 
 ```console
-$ ruff .
+$ ruff check .
 ```
 
 ````
@@ -94,13 +94,13 @@ requires [`entr(1)`].
 uv:
 
 ```console
-$ uv run ruff . --fix
+$ uv run ruff check . --fix
 ```
 
 If you setup manually:
 
 ```console
-$ ruff . --fix
+$ ruff check . --fix
 ```
 
 ````

@@ -37,7 +37,7 @@ ruff_format:
 	uv run ruff format .
 
 ruff:
-	uv run ruff .
+	uv run ruff check .
 
 watch_ruff:
 	if command -v entr > /dev/null; then ${PY_FILES} | entr -c $(MAKE) ruff; else $(MAKE) ruff entr_warn; fi
