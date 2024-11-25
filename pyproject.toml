@@ -70,10 +70,10 @@ dev-dependencies = [
   "sphinx-autobuild",
   "sphinx-autodoc-typehints",
   "sphinx-inline-tabs",
-  "sphinxext-opengraph<0.8",
+  "sphinxext-opengraph",
   "sphinx-copybutton",
   "sphinxext-rediraffe",
-  "myst-parser>=0.18.1",
+  "myst-parser",
   "linkify-it-py",
   # Testing
   "gp-libs",
@@ -98,10 +98,10 @@ docs = [
   "sphinx-autobuild",
   "sphinx-autodoc-typehints",
   "sphinx-inline-tabs",
-  "sphinxext-opengraph<0.8",
+  "sphinxext-opengraph",
   "sphinx-copybutton",
   "sphinxext-rediraffe",
-  "myst-parser>=0.18.1",
+  "myst-parser",
   "linkify-it-py",
 ]
 testing = [
