@@ -27,6 +27,14 @@ _Maintenance only, no bug fixes, or new features_
 
 [uv]: https://github.com/astral-sh/uv
 
+#### Build system: poetry to hatchling (#479)
+
+[Build system] moved from [poetry] to [hatchling].
+
+[Build system]: https://packaging.python.org/en/latest/tutorials/packaging-projects/#choosing-a-build-backend
+[poetry]: https://github.com/python-poetry/poetry
+[hatchling]: https://hatch.pypa.io/latest/
+
 ## libvcs 0.33.0 (2024-10-13)
 
 ### New features
