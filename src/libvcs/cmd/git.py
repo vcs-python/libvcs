@@ -2033,7 +2033,7 @@ class Git:
                 "rev-list",
                 *local_flags,
                 *required_flags,
-                *(["--", *path_flags] if len(path_flags) else []),
+                *(["--", *path_flags] if path_flags else []),
             ],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
@@ -2156,7 +2156,7 @@ class Git:
             [
                 "show-ref",
                 *local_flags,
-                *(["--", *pattern_flags] if len(pattern_flags) else []),
+                *(["--", *pattern_flags] if pattern_flags else []),
             ],
             check_returncode=check_returncode,
         )

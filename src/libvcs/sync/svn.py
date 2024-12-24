@@ -104,9 +104,9 @@ class SvnSync(BaseSync):
         """Return revision for a file."""
         current_rev = self.cmd.info(location)
 
-        _INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.MULTILINE)
+        INI_RE = re.compile(r"^([^:]+):\s+(\S.*)$", re.MULTILINE)
 
-        info_list = _INI_RE.findall(current_rev)
+        info_list = INI_RE.findall(current_rev)
         return int(dict(info_list)["Revision"])
 
     def get_revision(self, location: Optional[str] = None) -> int:
@@ -165,10 +165,10 @@ class SvnSync(BaseSync):
 
     @classmethod
     def _get_svn_url_rev(cls, location: str) -> tuple[Optional[str], int]:
-        _svn_xml_url_re = re.compile('url="([^"]+)"')
-        _svn_rev_re = re.compile(r'committed-rev="(\d+)"')
-        _svn_info_xml_rev_re = re.compile(r'\s*revision="(\d+)"')
-        _svn_info_xml_url_re = re.compile(r"<url>(.*)</url>")
+        svn_xml_url_re = re.compile(r'url="([^"]+)"')
+        svn_rev_re = re.compile(r'committed-rev="(\d+)"')
+        svn_info_xml_rev_re = re.compile(r'\s*revision="(\d+)"')
+        svn_info_xml_url_re = re.compile(r"<url>(.*)</url>")
 
         entries_path = pathlib.Path(location) / ".svn" / "entries"
         if entries_path.exists():
@@ -184,11 +184,11 @@ class SvnSync(BaseSync):
             url = entries[0][3]
             revs = [int(d[9]) for d in entries if len(d) > 9 and d[9]] + [0]
         elif data.startswith("<?xml"):
-            match = _svn_xml_url_re.search(data)
+            match = svn_xml_url_re.search(data)
             if not match:
                 raise SvnUrlRevFormattingError(data=data)
             url = match.group(1)  # get repository URL
-            revs = [int(m.group(1)) for m in _svn_rev_re.finditer(data)] + [0]
+            revs = [int(m.group(1)) for m in svn_rev_re.finditer(data)] + [0]
         else:
             try:
                 # Note that using get_remote_call_options is not necessary here
@@ -200,10 +200,10 @@ class SvnSync(BaseSync):
                     target=pathlib.Path(location),
                     xml=True,
                 )
-                match = _svn_info_xml_url_re.search(xml)
+                match = svn_info_xml_url_re.search(xml)
                 assert match is not None
                 url = match.group(1)
-                revs = [int(m.group(1)) for m in _svn_info_xml_rev_re.finditer(xml)]
+                revs = [int(m.group(1)) for m in svn_info_xml_rev_re.finditer(xml)]
             except Exception:
                 url, revs = None, []
 

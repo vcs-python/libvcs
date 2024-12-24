@@ -526,7 +526,7 @@ class QueryList(list[T], t.Generic[T]):
             return True
 
         if callable(matcher):
-            _filter = matcher
+            filter_ = matcher
         elif matcher is not None:
 
             def val_match(obj: t.Union[str, list[t.Any], T]) -> bool:
@@ -534,11 +534,11 @@ class QueryList(list[T], t.Generic[T]):
                     return obj in matcher
                 return bool(obj == matcher)
 
-            _filter = val_match
+            filter_ = val_match
         else:
-            _filter = filter_lookup
+            filter_ = filter_lookup
 
-        return self.__class__(k for k in self if _filter(k))
+        return self.__class__(k for k in self if filter_(k))
 
     def get(
         self,
