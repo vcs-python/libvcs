@@ -1,13 +1,17 @@
 """Foundational tools to set up a VCS manager in libvcs.sync."""
 
+from __future__ import annotations
+
 import logging
 import pathlib
 from collections.abc import Sequence
-from typing import Any, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, NamedTuple
 from urllib import parse as urlparse
 
 from libvcs._internal.run import _CMD, CmdLoggingAdapter, ProgressCallbackProtocol, run
-from libvcs._internal.types import StrPath
+
+if TYPE_CHECKING:
+    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +20,7 @@ class VCSLocation(NamedTuple):
     """Generic VCS Location (URL and optional revision)."""
 
     url: str
-    rev: Optional[str]
+    rev: str | None
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
@@ -53,7 +57,7 @@ class BaseSync:
         *,
         url: str,
         path: StrPath,
-        progress_callback: Optional[ProgressCallbackProtocol] = None,
+        progress_callback: ProgressCallbackProtocol | None = None,
         **kwargs: Any,
     ) -> None:
         r"""Initialize a tool to manage a local VCS Checkout, Clone, Copy, or Work tree.
@@ -131,7 +135,7 @@ class BaseSync:
         return self.path.stem
 
     @classmethod
-    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseSync":
+    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> BaseSync:
         """Create synchronization object from pip-style URL."""
         url, rev = convert_pip_url(pip_url)
         return cls(url=url, rev=rev, **kwargs)
@@ -141,7 +145,7 @@ class BaseSync:
         cmd: _CMD,
         cwd: None = None,
         check_returncode: bool = True,
-        log_in_real_time: Optional[bool] = None,
+        log_in_real_time: bool | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> str:

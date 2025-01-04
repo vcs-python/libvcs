@@ -8,9 +8,11 @@
    <https://github.com/vcs-python/libvcs>`_, 'APIs unstable until we fit the spec.
 """
 
+from __future__ import annotations
+
 import pathlib
 from collections.abc import Sequence
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Union
 
 from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
@@ -32,13 +34,13 @@ class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
 class Svn:
     """Run commands directly against SVN working copy."""
 
-    progress_callback: Optional[ProgressCallbackProtocol] = None
+    progress_callback: ProgressCallbackProtocol | None = None
 
     def __init__(
         self,
         *,
         path: StrPath,
-        progress_callback: Optional[ProgressCallbackProtocol] = None,
+        progress_callback: ProgressCallbackProtocol | None = None,
     ) -> None:
         """Lite, typed, pythonic wrapper for svn(1).
 
@@ -69,17 +71,17 @@ class Svn:
         self,
         args: _CMD,
         *,
-        quiet: Optional[bool] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        no_auth_cache: Optional[bool] = None,
-        non_interactive: Optional[bool] = True,
-        trust_server_cert: Optional[bool] = None,
-        config_dir: Optional[pathlib.Path] = None,
-        config_option: Optional[pathlib.Path] = None,
+        quiet: bool | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        no_auth_cache: bool | None = None,
+        non_interactive: bool | None = True,
+        trust_server_cert: bool | None = None,
+        config_dir: pathlib.Path | None = None,
+        config_option: pathlib.Path | None = None,
         # Special behavior
-        make_parents: Optional[bool] = True,
-        check_returncode: Optional[bool] = None,
+        make_parents: bool | None = True,
+        check_returncode: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Run a command for this SVN working copy.
@@ -156,19 +158,19 @@ class Svn:
         self,
         *,
         url: str,
-        revision: Union[RevisionLiteral, str] = None,
-        force: Optional[bool] = None,
-        ignore_externals: Optional[bool] = None,
+        revision: RevisionLiteral | str = None,
+        force: bool | None = None,
+        ignore_externals: bool | None = None,
         depth: DepthLiteral = None,
-        quiet: Optional[bool] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        no_auth_cache: Optional[bool] = None,
-        non_interactive: Optional[bool] = True,
-        trust_server_cert: Optional[bool] = None,
+        quiet: bool | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        no_auth_cache: bool | None = None,
+        non_interactive: bool | None = True,
+        trust_server_cert: bool | None = None,
         # Special behavior
-        make_parents: Optional[bool] = True,
-        check_returncode: Optional[bool] = False,
+        make_parents: bool | None = True,
+        check_returncode: bool | None = False,
     ) -> str:
         """Check out a working copy from an SVN repo.
 
@@ -229,13 +231,13 @@ class Svn:
     def add(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
-        auto_props: Optional[bool] = None,
-        no_auto_props: Optional[bool] = None,
-        parents: Optional[bool] = None,
+        force: bool | None = None,
+        auto_props: bool | None = None,
+        no_auto_props: bool | None = None,
+        parents: bool | None = None,
     ) -> str:
         """Stage an unversioned file to be pushed to repository next commit.
 
@@ -294,8 +296,8 @@ class Svn:
 
     def auth(
         self,
-        remove: Optional[str] = None,
-        show_passwords: Optional[bool] = None,
+        remove: str | None = None,
+        show_passwords: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Manage stored authentication credentials.
@@ -328,13 +330,13 @@ class Svn:
         self,
         target: StrOrBytesPath,
         *,
-        revision: Union[RevisionLiteral, str] = None,
-        verbose: Optional[bool] = None,
-        force: Optional[bool] = None,
-        use_merge_history: Optional[bool] = None,
-        incremental: Optional[bool] = None,
-        xml: Optional[bool] = None,
-        extensions: Optional[str] = None,
+        revision: RevisionLiteral | str = None,
+        verbose: bool | None = None,
+        force: bool | None = None,
+        use_merge_history: bool | None = None,
+        incremental: bool | None = None,
+        xml: bool | None = None,
+        extensions: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Show authorship for file line-by-line.
@@ -429,16 +431,16 @@ class Svn:
     def commit(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
-        message: Optional[str] = None,
-        no_unlock: Optional[bool] = None,
-        file: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
+        message: str | None = None,
+        no_unlock: bool | None = None,
+        file: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        encoding: Optional[str] = None,
-        force_log: Optional[bool] = None,
-        keep_changelists: Optional[bool] = None,
-        include_externals: Optional[bool] = None,
+        encoding: str | None = None,
+        force_log: bool | None = None,
+        keep_changelists: bool | None = None,
+        include_externals: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Push changes from working copy to SVN repo.
@@ -559,14 +561,14 @@ class Svn:
 
     def info(
         self,
-        target: Optional[StrPath] = None,
-        targets: Optional[Union[list[StrPath], StrPath]] = None,
-        changelist: Optional[list[str]] = None,
-        revision: Optional[str] = None,
+        target: StrPath | None = None,
+        targets: list[StrPath] | StrPath | None = None,
+        changelist: list[str] | None = None,
+        revision: str | None = None,
         depth: DepthLiteral = None,
-        incremental: Optional[bool] = None,
-        recursive: Optional[bool] = None,
-        xml: Optional[bool] = None,
+        incremental: bool | None = None,
+        recursive: bool | None = None,
+        xml: bool | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> str:
@@ -623,8 +625,8 @@ class Svn:
 
     def lock(
         self,
-        targets: Optional[pathlib.Path] = None,
-        force: Optional[bool] = None,
+        targets: pathlib.Path | None = None,
+        force: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Lock path or URLs for working copy or repository.
@@ -747,10 +749,10 @@ class Svn:
     def propset(
         self,
         name: str,
-        path: Optional[StrPath] = None,
-        value: Optional[str] = None,
-        value_path: Optional[StrPath] = None,
-        target: Optional[StrOrBytesPath] = None,
+        path: StrPath | None = None,
+        value: str | None = None,
+        value_path: StrPath | None = None,
+        target: StrOrBytesPath | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> str:
@@ -824,10 +826,10 @@ class Svn:
 
     def resolve(
         self,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
+        force: bool | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> str:
@@ -867,10 +869,10 @@ class Svn:
     def resolved(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
+        force: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Resolve this working copy's conflicted state.
@@ -916,10 +918,10 @@ class Svn:
     def revert(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
+        force: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Revert any changes to this SVN working copy.
@@ -992,7 +994,7 @@ class Svn:
         *,
         to_path: StrPath,
         path: StrPath,
-        ignore_ancestry: Optional[bool] = None,
+        ignore_ancestry: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Switch working copy to a different SVN repo URL.
@@ -1034,8 +1036,8 @@ class Svn:
 
     def unlock(
         self,
-        targets: Optional[pathlib.Path] = None,
-        force: Optional[bool] = None,
+        targets: pathlib.Path | None = None,
+        force: bool | None = None,
         **kwargs: Any,
     ) -> str:
         """Unlock path or URL reserved by another user.
@@ -1068,16 +1070,16 @@ class Svn:
 
     def update(
         self,
-        accept: Optional[str] = None,
-        changelist: Optional[list[str]] = None,
-        diff3_cmd: Optional[str] = None,
-        editor_cmd: Optional[str] = None,
-        force: Optional[bool] = None,
-        ignore_externals: Optional[bool] = None,
-        parents: Optional[bool] = None,
-        quiet: Optional[bool] = None,
-        revision: Optional[str] = None,
-        set_depth: Optional[str] = None,
+        accept: str | None = None,
+        changelist: list[str] | None = None,
+        diff3_cmd: str | None = None,
+        editor_cmd: str | None = None,
+        force: bool | None = None,
+        ignore_externals: bool | None = None,
+        parents: bool | None = None,
+        quiet: bool | None = None,
+        revision: str | None = None,
+        set_depth: str | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> str:

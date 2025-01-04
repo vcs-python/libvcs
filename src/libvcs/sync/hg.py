@@ -9,14 +9,18 @@
    - [`HgSync.get_revision`](libvcs.hg.HgSync.get_revision)
 """  # E5
 
+from __future__ import annotations
+
 import logging
 import pathlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from libvcs._internal.types import StrPath
 from libvcs.cmd.hg import Hg
 
 from .base import BaseSync
+
+if TYPE_CHECKING:
+    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 

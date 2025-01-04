@@ -13,16 +13,20 @@
     - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import pathlib
 import re
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from libvcs._internal.types import StrPath
 from libvcs.cmd.svn import Svn
 
 from .base import BaseSync
+
+if TYPE_CHECKING:
+    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +86,7 @@ class SvnSync(BaseSync):
                 args.extend(["--" + param_name[4:], getattr(self, param_name)])
         return args
 
-    def obtain(self, quiet: Optional[bool] = None, *args: Any, **kwargs: Any) -> None:
+    def obtain(self, quiet: bool | None = None, *args: Any, **kwargs: Any) -> None:
         """Check out a working copy from a SVN repository."""
         url, rev = self.url, self.rev
 
@@ -109,7 +113,7 @@ class SvnSync(BaseSync):
         info_list = INI_RE.findall(current_rev)
         return int(dict(info_list)["Revision"])
 
-    def get_revision(self, location: Optional[str] = None) -> int:
+    def get_revision(self, location: str | None = None) -> int:
         """Return maximum revision for all files under a given location."""
         if not location:
             location = self.url
@@ -143,7 +147,7 @@ class SvnSync(BaseSync):
 
     def update_repo(
         self,
-        dest: Optional[str] = None,
+        dest: str | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -164,7 +168,7 @@ class SvnSync(BaseSync):
             self.update_repo()
 
     @classmethod
-    def _get_svn_url_rev(cls, location: str) -> tuple[Optional[str], int]:
+    def _get_svn_url_rev(cls, location: str) -> tuple[str | None, int]:
         svn_xml_url_re = re.compile(r'url="([^"]+)"')
         svn_rev_re = re.compile(r'committed-rev="(\d+)"')
         svn_info_xml_rev_re = re.compile(r'\s*revision="(\d+)"')

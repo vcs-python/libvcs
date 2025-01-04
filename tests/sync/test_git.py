@@ -1,5 +1,7 @@
 """Tests for libvcs GitSync."""
 
+from __future__ import annotations
+
 import datetime
 import pathlib
 import random
@@ -9,18 +11,21 @@ import typing as t
 from collections.abc import Callable
 
 import pytest
-from pytest_mock import MockerFixture
 
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.git import (
     GitRemote,
     GitStatus,
     GitSync,
     convert_pip_url as git_convert_pip_url,
 )
+
+if t.TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")

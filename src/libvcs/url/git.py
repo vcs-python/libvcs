@@ -16,9 +16,10 @@
   :class:`~libvcs.url.base.Rule`
 """
 
+from __future__ import annotations
+
 import dataclasses
 import re
-from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
@@ -327,17 +328,17 @@ class GitBaseURL(
     """
 
     url: str
-    scheme: Optional[str] = None
-    user: Optional[str] = None
-    hostname: Optional[str] = None
-    port: Optional[int] = None
-    path: Optional[str] = None
+    scheme: str | None = None
+    user: str | None = None
+    hostname: str | None = None
+    port: int | None = None
+    path: str | None = None
 
     # Decoration
-    suffix: Optional[str] = None
+    suffix: str | None = None
 
     # Matched
-    rule: Optional[str] = None
+    rule: str | None = None
 
     # Settings
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
@@ -369,7 +370,7 @@ class GitBaseURL(
             break
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -459,9 +460,9 @@ class GitAWSCodeCommitURL(
     """Supports AWS CodeCommit git URLs."""
 
     # AWS CodeCommit Region
-    region: Optional[str] = None
+    region: str | None = None
     # commit-ish (rev): tag, branch, ref
-    rev: Optional[str] = None
+    rev: str | None = None
 
     rule_map = RuleMap(_rule_map={m.label: m for m in AWS_CODE_COMMIT_DEFAULT_RULES})
 
@@ -533,7 +534,7 @@ class GitAWSCodeCommitURL(
         return url
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with AWS CodeCommit Git's VCS URL pattern or not.
 
         Examples
@@ -594,7 +595,7 @@ class GitPipURL(
     """Supports pip git URLs."""
 
     # commit-ish (rev): tag, branch, ref
-    rev: Optional[str] = None
+    rev: str | None = None
 
     rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
@@ -650,7 +651,7 @@ class GitPipURL(
         return url
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with Pip Git's VCS URL pattern or not.
 
         Examples
@@ -723,7 +724,7 @@ class GitURL(
     )
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         r"""Whether URL is compatible included Git URL rule_map or not.
 
         Examples

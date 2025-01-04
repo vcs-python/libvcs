@@ -1,14 +1,18 @@
 """tests for libvcs.sync abstract base class."""
 
-import datetime
+from __future__ import annotations
+
 import pathlib
 import sys
-from typing import AnyStr
-
-import pytest
+from typing import TYPE_CHECKING, AnyStr
 
 from libvcs._internal.shortcuts import create_project
 from libvcs.sync.base import BaseSync, convert_pip_url
+
+if TYPE_CHECKING:
+    import datetime
+
+    import pytest
 
 
 def test_repr_via_create_project() -> None:

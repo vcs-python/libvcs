@@ -1,13 +1,18 @@
 """Tests for mercurial URL module."""
 
-import pathlib
+from __future__ import annotations
+
 import typing
 
 import pytest
 
-from libvcs.sync.hg import HgSync
 from libvcs.url.base import RuleMap
 from libvcs.url.hg import DEFAULT_RULES, PIP_DEFAULT_RULES, HgBaseURL, HgURL
+
+if typing.TYPE_CHECKING:
+    import pathlib
+
+    from libvcs.sync.hg import HgSync
 
 
 @pytest.fixture(autouse=True)

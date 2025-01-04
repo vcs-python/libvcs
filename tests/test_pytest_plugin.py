@@ -1,13 +1,19 @@
 """Tests for libvcs pytest plugin."""
 
-import pathlib
+from __future__ import annotations
+
 import shutil
 import textwrap
+from typing import TYPE_CHECKING
 
 import pytest
 
 from libvcs._internal.run import run
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+
+if TYPE_CHECKING:
+    import pathlib
+
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")

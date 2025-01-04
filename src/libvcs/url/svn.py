@@ -18,9 +18,10 @@
    covered accurately and can handle all-terrain scenarios.
 """
 
+from __future__ import annotations
+
 import dataclasses
 import re
-from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
@@ -181,16 +182,16 @@ class SvnBaseURL(
     """
 
     url: str
-    scheme: Optional[str] = None
-    user: Optional[str] = None
+    scheme: str | None = None
+    user: str | None = None
     hostname: str = dataclasses.field(default="")
-    port: Optional[int] = None
+    port: int | None = None
     separator: str = dataclasses.field(default="/")
     path: str = dataclasses.field(default="")
 
-    ref: Optional[str] = None
+    ref: str | None = None
 
-    rule: Optional[str] = None
+    rule: str | None = None
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
@@ -210,7 +211,7 @@ class SvnBaseURL(
                     setattr(self, k, rule.defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -288,12 +289,12 @@ class SvnPipURL(
     """Supports pip svn URLs."""
 
     # commit-ish (rev): tag, branch, ref
-    rev: Optional[str] = None
+    rev: str | None = None
 
     rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -369,7 +370,7 @@ class SvnURL(
     )
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         r"""Whether URL is compatible included Svn URL rule_map or not.
 
         Examples

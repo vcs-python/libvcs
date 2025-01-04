@@ -15,21 +15,25 @@
     - [`GitSync.get_git_version`](libvcs.git.GitProject.get_git_version)
 """  # NOQA: E501
 
+from __future__ import annotations
+
 import dataclasses
 import logging
 import pathlib
 import re
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Union
 from urllib import parse as urlparse
 
 from libvcs import exc
-from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
 from libvcs.sync.base import (
     BaseSync,
     VCSLocation,
     convert_pip_url as base_convert_pip_url,
 )
+
+if TYPE_CHECKING:
+    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -91,15 +95,15 @@ GitRemotesArgs = Union[None, GitSyncRemoteDict, dict[str, str]]
 class GitStatus:
     """Git status information."""
 
-    branch_oid: Optional[str] = None
-    branch_head: Optional[str] = None
-    branch_upstream: Optional[str] = None
-    branch_ab: Optional[str] = None
-    branch_ahead: Optional[str] = None
-    branch_behind: Optional[str] = None
+    branch_oid: str | None = None
+    branch_head: str | None = None
+    branch_upstream: str | None = None
+    branch_ab: str | None = None
+    branch_ahead: str | None = None
+    branch_behind: str | None = None
 
     @classmethod
-    def from_stdout(cls, value: str) -> "GitStatus":
+    def from_stdout(cls, value: str) -> GitStatus:
         """Return ``git status -sb --porcelain=2`` extracted to a dict.
 
         Returns
@@ -297,7 +301,7 @@ class GitSync(BaseSync):
         self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
-    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "GitSync":
+    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> GitSync:
         """Clone a git repository from a pip-style URL."""
         url, rev = convert_pip_url(pip_url)
         return cls(url=url, rev=rev, **kwargs)
@@ -557,7 +561,7 @@ class GitSync(BaseSync):
                 remotes[remote_name] = remote
         return remotes
 
-    def remote(self, name: str, **kwargs: Any) -> Optional[GitRemote]:
+    def remote(self, name: str, **kwargs: Any) -> GitRemote | None:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters

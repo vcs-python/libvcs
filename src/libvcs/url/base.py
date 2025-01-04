@@ -1,14 +1,16 @@
 """Foundational tools to detect, parse, and validate VCS URLs."""
 
+from __future__ import annotations
+
 import dataclasses
-from collections.abc import Iterator
-from re import Pattern
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
 if TYPE_CHECKING:
     from _collections_abc import dict_values
+    from collections.abc import Iterator
+    from re import Pattern
 
 
 class URLProtocol(Protocol):
@@ -21,7 +23,7 @@ class URLProtocol(Protocol):
         ...
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Return True if URL is valid for this parser."""
         ...
 
@@ -220,6 +222,6 @@ class RuleMap(SkipDefaultFieldsReprMixin):
 
     def values(
         self,  # https://github.com/python/typing/discussions/1033
-    ) -> "dict_values[str, Rule]":
+    ) -> dict_values[str, Rule]:
         """Return list of URL rules."""
         return self._rule_map.values()

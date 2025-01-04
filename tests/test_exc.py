@@ -1,6 +1,8 @@
 # ruff: noqa: TRY003
 """tests for libvcs exceptions."""
 
+from __future__ import annotations
+
 import pytest
 
 from libvcs import exc

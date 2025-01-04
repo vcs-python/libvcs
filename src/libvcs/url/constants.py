@@ -1,5 +1,7 @@
 """Constants shared across ``libvcs.url``."""
 
+from __future__ import annotations
+
 RE_USER = r"""
     ((?P<user>[^/:@]+)@)?
 """

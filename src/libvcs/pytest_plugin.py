@@ -1,5 +1,7 @@
 """pytest plugin for VCS Repository testing and management."""
 
+from __future__ import annotations
+
 import functools
 import getpass
 import pathlib
@@ -69,7 +71,7 @@ def vcs_user(vcs_name: str, vcs_email: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def git_commit_envvars(vcs_name: str, vcs_email: str) -> "_ENV":
+def git_commit_envvars(vcs_name: str, vcs_email: str) -> _ENV:
     """Return environment variables for `git commit`.
 
     For some reason, `GIT_CONFIG` via {func}`set_gitconfig` doesn't work for `git
@@ -92,7 +94,7 @@ class RandomStrSequence:
     ) -> None:
         self.characters: str = characters
 
-    def __iter__(self) -> "RandomStrSequence":
+    def __iter__(self) -> RandomStrSequence:
         """Iterate across generated strings."""
         return self
 
@@ -268,7 +270,7 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
         return remote_repo_name
 
 
-InitCmdArgs: "TypeAlias" = Optional[list[str]]
+InitCmdArgs: TypeAlias = Optional[list[str]]
 
 
 class CreateRepoPostInitFn(Protocol):
@@ -277,7 +279,7 @@ class CreateRepoPostInitFn(Protocol):
     def __call__(
         self,
         remote_repo_path: pathlib.Path,
-        env: "_ENV | None" = None,
+        env: _ENV | None = None,
     ) -> None:
         """Ran after creating a repo from pytest fixture."""
         ...
@@ -289,8 +291,8 @@ class CreateRepoPytestFixtureFn(Protocol):
     def __call__(
         self,
         remote_repos_path: pathlib.Path = ...,
-        remote_repo_name: Optional[str] = ...,
-        remote_repo_post_init: Optional[CreateRepoPostInitFn] = ...,
+        remote_repo_name: str | None = ...,
+        remote_repo_post_init: CreateRepoPostInitFn | None = ...,
         init_cmd_args: InitCmdArgs = ...,
     ) -> pathlib.Path:
         """py.test fixture function to create a project in a remote repo."""
@@ -302,9 +304,9 @@ DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
 
 def _create_git_remote_repo(
     remote_repo_path: pathlib.Path,
-    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+    remote_repo_post_init: CreateRepoPostInitFn | None = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
-    env: "_ENV | None" = None,
+    env: _ENV | None = None,
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
@@ -382,8 +384,8 @@ def create_git_remote_bare_repo(
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
-        remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+        remote_repo_name: str | None = None,
+        remote_repo_post_init: CreateRepoPostInitFn | None = None,
         init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     ) -> pathlib.Path:
         if remote_repo_name is None:
@@ -411,8 +413,8 @@ def create_git_remote_repo(
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
-        remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+        remote_repo_name: str | None = None,
+        remote_repo_post_init: CreateRepoPostInitFn | None = None,
         init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     ) -> pathlib.Path:
         if remote_repo_name is None:
@@ -437,7 +439,7 @@ def create_git_remote_repo(
 
 def git_remote_repo_single_commit_post_init(
     remote_repo_path: pathlib.Path,
-    env: "_ENV | None" = None,
+    env: _ENV | None = None,
 ) -> None:
     """Post-initialization: Create a test git repo with a single commit."""
     testfile_filename = "testfile.test"
@@ -459,7 +461,7 @@ def git_remote_repo_single_commit_post_init(
 def git_remote_repo(
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     gitconfig: pathlib.Path,
-    git_commit_envvars: "_ENV",
+    git_commit_envvars: _ENV,
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
     # TODO: Cache the effect of of this in a session-based repo
@@ -473,7 +475,7 @@ def git_remote_repo(
 
 def _create_svn_remote_repo(
     remote_repo_path: pathlib.Path,
-    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+    remote_repo_post_init: CreateRepoPostInitFn | None = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
     """Create a test SVN repo to for checkout / commit purposes."""
@@ -546,8 +548,8 @@ def create_svn_remote_repo(
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
-        remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+        remote_repo_name: str | None = None,
+        remote_repo_post_init: CreateRepoPostInitFn | None = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
         if remote_repo_name is None:
@@ -590,7 +592,7 @@ def svn_remote_repo_with_files(
 
 def _create_hg_remote_repo(
     remote_repo_path: pathlib.Path,
-    remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+    remote_repo_post_init: CreateRepoPostInitFn | None = None,
     init_cmd_args: InitCmdArgs = None,
 ) -> pathlib.Path:
     """Create a test hg repo to for checkout / commit purposes."""
@@ -610,7 +612,7 @@ def _create_hg_remote_repo(
 
 def hg_remote_repo_single_commit_post_init(
     remote_repo_path: pathlib.Path,
-    env: "_ENV | None" = None,
+    env: _ENV | None = None,
 ) -> None:
     """Post-initialization: Create a test mercurial repo with a single commit."""
     testfile_filename = "testfile.test"
@@ -652,8 +654,8 @@ def create_hg_remote_repo(
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
-        remote_repo_name: Optional[str] = None,
-        remote_repo_post_init: Optional[CreateRepoPostInitFn] = None,
+        remote_repo_name: str | None = None,
+        remote_repo_post_init: CreateRepoPostInitFn | None = None,
         init_cmd_args: InitCmdArgs = None,
     ) -> pathlib.Path:
         if remote_repo_name is None:
@@ -786,7 +788,7 @@ def add_doctest_fixtures(
     doctest_namespace: dict[str, Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
-    git_commit_envvars: "_ENV",
+    git_commit_envvars: _ENV,
     hgconfig: pathlib.Path,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     create_svn_remote_repo: CreateRepoPytestFixtureFn,

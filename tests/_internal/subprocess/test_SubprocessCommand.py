@@ -1,12 +1,16 @@
 """Tests for SubprocessCommand."""
 
-import pathlib
+from __future__ import annotations
+
 import subprocess
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from libvcs._internal.subprocess import SubprocessCommand
+
+if TYPE_CHECKING:
+    import pathlib
 
 
 def idfn(val: Any) -> str:

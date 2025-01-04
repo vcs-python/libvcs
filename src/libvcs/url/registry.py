@@ -1,18 +1,20 @@
 """Registry of VCS URL Parsers for libvcs."""
 
+from __future__ import annotations
+
 import typing as t
 
 from libvcs._internal.module_loading import import_string
 
-from .base import URLProtocol
-
 if t.TYPE_CHECKING:
     from typing_extensions import TypeAlias
+
+    from .base import URLProtocol
 
     ParserLazyMap: TypeAlias = dict[str, t.Union[type[URLProtocol], str]]
     ParserMap: TypeAlias = dict[str, type[URLProtocol]]
 
-DEFAULT_PARSERS: "ParserLazyMap" = {
+DEFAULT_PARSERS: ParserLazyMap = {
     "git": "libvcs.url.git.GitURL",
     "hg": "libvcs.url.hg.HgURL",
     "svn": "libvcs.url.svn.SvnURL",
@@ -31,9 +33,9 @@ class ParserMatch(t.NamedTuple):
 class VCSRegistry:
     """Index of parsers."""
 
-    parser_map: t.ClassVar["ParserMap"] = {}
+    parser_map: t.ClassVar[ParserMap] = {}
 
-    def __init__(self, parsers: "ParserLazyMap") -> None:
+    def __init__(self, parsers: ParserLazyMap) -> None:
         for k, v in parsers.items():
             if isinstance(v, str):
                 v = import_string(v)
@@ -43,8 +45,8 @@ class VCSRegistry:
     def match(
         self,
         url: str,
-        is_explicit: t.Optional[bool] = None,
-    ) -> list["ParserMatch"]:
+        is_explicit: bool | None = None,
+    ) -> list[ParserMatch]:
         """Return a list of potential VCS' identified for a given URL."""
         matches: list[ParserMatch] = []
         for vcs, parser in self.parser_map.items():

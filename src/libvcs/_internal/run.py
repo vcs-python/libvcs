@@ -8,6 +8,8 @@ Note
 This is an internal API not covered by versioning policy.
 """
 
+from __future__ import annotations
+
 import datetime
 import logging
 import subprocess
@@ -88,46 +90,46 @@ class ProgressCallbackProtocol(Protocol):
 
 
 if sys.platform == "win32":
-    _ENV: "TypeAlias" = Mapping[str, str]
+    _ENV: TypeAlias = Mapping[str, str]
 else:
-    _ENV: "TypeAlias" = Union[
+    _ENV: TypeAlias = Union[
         Mapping[bytes, StrOrBytesPath],
         Mapping[str, StrOrBytesPath],
     ]
 
 _CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
-_FILE: "TypeAlias" = Optional[Union[int, IO[Any]]]
+_FILE: TypeAlias = Optional[Union[int, IO[Any]]]
 
 
 def run(
     args: _CMD,
     bufsize: int = -1,
-    executable: Optional[StrOrBytesPath] = None,
-    stdin: Optional[_FILE] = None,
-    stdout: Optional[_FILE] = None,
-    stderr: Optional[_FILE] = None,
-    preexec_fn: Optional[Callable[[], Any]] = None,
+    executable: StrOrBytesPath | None = None,
+    stdin: _FILE | None = None,
+    stdout: _FILE | None = None,
+    stderr: _FILE | None = None,
+    preexec_fn: Callable[[], Any] | None = None,
     close_fds: bool = True,
     shell: bool = False,
-    cwd: Optional[StrOrBytesPath] = None,
-    env: Optional[_ENV] = None,
+    cwd: StrOrBytesPath | None = None,
+    env: _ENV | None = None,
     universal_newlines: bool = False,
-    startupinfo: Optional[Any] = None,
+    startupinfo: Any | None = None,
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
     pass_fds: Any = (),
     *,
-    text: Optional[bool] = None,
-    encoding: Optional[str] = None,
-    errors: Optional[str] = None,
-    user: Optional[Union[str, int]] = None,
-    group: Optional[Union[str, int]] = None,
-    extra_groups: Optional[Iterable[Union[str, int]]] = None,
+    text: bool | None = None,
+    encoding: str | None = None,
+    errors: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
+    extra_groups: Iterable[str | int] | None = None,
     umask: int = -1,
     log_in_real_time: bool = False,
     check_returncode: bool = True,
-    callback: Optional[ProgressCallbackProtocol] = None,
+    callback: ProgressCallbackProtocol | None = None,
 ) -> str:
     """Run a command.
 
