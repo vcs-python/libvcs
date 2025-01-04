@@ -19,13 +19,13 @@ import logging
 import os
 import pathlib
 import re
-from typing import TYPE_CHECKING, Any
+import typing as t
 
 from libvcs.cmd.svn import Svn
 
 from .base import BaseSync
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class SvnSync(BaseSync):
         *,
         url: str,
         path: StrPath,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> None:
         """Working copy of a SVN repository.
 
@@ -79,14 +79,14 @@ class SvnSync(BaseSync):
 
         self.cmd = Svn(path=path, progress_callback=self.progress_callback)
 
-    def _user_pw_args(self) -> list[Any]:
+    def _user_pw_args(self) -> list[t.Any]:
         args = []
         for param_name in ["svn_username", "svn_password"]:
             if hasattr(self, param_name):
                 args.extend(["--" + param_name[4:], getattr(self, param_name)])
         return args
 
-    def obtain(self, quiet: bool | None = None, *args: Any, **kwargs: Any) -> None:
+    def obtain(self, quiet: bool | None = None, *args: t.Any, **kwargs: t.Any) -> None:
         """Check out a working copy from a SVN repository."""
         url, rev = self.url, self.rev
 
@@ -148,8 +148,8 @@ class SvnSync(BaseSync):
     def update_repo(
         self,
         dest: str | None = None,
-        *args: Any,
-        **kwargs: Any,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> None:
         """Fetch changes from SVN repository to local working copy."""
         self.ensure_dir()

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import shutil
 import textwrap
-from typing import TYPE_CHECKING
+import typing as t
 
 import pytest
 
 from libvcs._internal.run import run
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     import pathlib
 
     from libvcs.pytest_plugin import CreateRepoPytestFixtureFn

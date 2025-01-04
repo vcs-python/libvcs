@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Protocol
+import typing as t
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from _collections_abc import dict_values
     from collections.abc import Iterator
     from re import Pattern
 
 
-class URLProtocol(Protocol):
+class URLProtocol(t.Protocol):
     """Common interface for VCS URL Parsers."""
 
     def __init__(self, url: str) -> None: ...

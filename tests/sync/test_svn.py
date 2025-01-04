@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import shutil
-from typing import TYPE_CHECKING
+import typing as t
 
 import pytest
 
 from libvcs.sync.svn import SvnSync
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     import pathlib
 
     from libvcs.pytest_plugin import CreateRepoPytestFixtureFn

@@ -11,17 +11,17 @@
 from __future__ import annotations
 
 import pathlib
+import typing as t
 from collections.abc import Sequence
-from typing import Any, Literal, Union
 
 from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
-DepthLiteral = Union[Literal["infinity", "empty", "files", "immediates"], None]
-RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
+DepthLiteral = t.Union[t.Literal["infinity", "empty", "files", "immediates"], None]
+RevisionLiteral = t.Union[t.Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
 class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
@@ -82,7 +82,7 @@ class Svn:
         # Special behavior
         make_parents: bool | None = True,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command for this SVN working copy.
 
@@ -298,7 +298,7 @@ class Svn:
         self,
         remove: str | None = None,
         show_passwords: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Manage stored authentication credentials.
 
@@ -337,7 +337,7 @@ class Svn:
         incremental: bool | None = None,
         xml: bool | None = None,
         extensions: str | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Show authorship for file line-by-line.
 
@@ -398,7 +398,7 @@ class Svn:
 
         return self.run(["blame", *local_flags])
 
-    def cat(self, *args: Any, **kwargs: Any) -> str:
+    def cat(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Output contents of files from working copy or repository URLs.
 
         Wraps `svn cat
@@ -408,7 +408,7 @@ class Svn:
 
         return self.run(["cat", *local_flags])
 
-    def changelist(self, *args: Any, **kwargs: Any) -> str:
+    def changelist(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Connect or disconnect files with a changelist.
 
         Wraps `svn changelist
@@ -418,7 +418,7 @@ class Svn:
 
         return self.run(["changelist", *local_flags])
 
-    def cleanup(self, *args: Any, **kwargs: Any) -> str:
+    def cleanup(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Recursively clean up working copy of locks. Unblocks operations.
 
         Wraps `svn cleanup
@@ -441,7 +441,7 @@ class Svn:
         force_log: bool | None = None,
         keep_changelists: bool | None = None,
         include_externals: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Push changes from working copy to SVN repo.
 
@@ -496,7 +496,7 @@ class Svn:
 
         return self.run(["commit", *local_flags])
 
-    def copy(self, *args: Any, **kwargs: Any) -> str:
+    def copy(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Copy file or dir in this SVN working copy or repo.
 
         Wraps `svn copy
@@ -506,7 +506,7 @@ class Svn:
 
         return self.run(["copy", *local_flags])
 
-    def delete(self, *args: Any, **kwargs: Any) -> str:
+    def delete(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Remove file from this SVN working copy or repo.
 
         Wraps `svn delete
@@ -517,7 +517,7 @@ class Svn:
 
         return self.run(["delete", *local_flags])
 
-    def diff(self, *args: Any, **kwargs: Any) -> str:
+    def diff(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return diff of two files or revisions.
 
         Wraps `svn diff
@@ -527,7 +527,7 @@ class Svn:
 
         return self.run(["diff", *local_flags])
 
-    def export(self, *args: Any, **kwargs: Any) -> str:
+    def export(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Export clean directory tree of working directory.
 
         Wraps `svn export
@@ -537,7 +537,7 @@ class Svn:
 
         return self.run(["export", *local_flags])
 
-    def help(self, *args: Any, **kwargs: Any) -> str:
+    def help(self, *args: t.Any, **kwargs: t.Any) -> str:
         """SVN Help command.
 
         Wraps `svn help
@@ -547,7 +547,7 @@ class Svn:
 
         return self.run(["help", *local_flags])
 
-    def import_(self, *args: Any, **kwargs: Any) -> str:
+    def import_(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Import local directory into repository.
 
         Wraps `svn import
@@ -569,8 +569,8 @@ class Svn:
         incremental: bool | None = None,
         recursive: bool | None = None,
         xml: bool | None = None,
-        *args: Any,
-        **kwargs: Any,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Return info about this SVN repository.
 
@@ -613,7 +613,7 @@ class Svn:
 
         return self.run(["info", *local_flags])
 
-    def ls(self, *args: Any, **kwargs: Any) -> str:
+    def ls(self, *args: t.Any, **kwargs: t.Any) -> str:
         """List files in SVN repository (without downloading them).
 
         Wraps `svn list
@@ -627,7 +627,7 @@ class Svn:
         self,
         targets: pathlib.Path | None = None,
         force: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Lock path or URLs for working copy or repository.
 
@@ -655,7 +655,7 @@ class Svn:
 
         return self.run(["lock", *local_flags])
 
-    def log(self, *args: Any, **kwargs: Any) -> str:
+    def log(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Show logs from repository.
 
         Wraps `svn log
@@ -665,7 +665,7 @@ class Svn:
 
         return self.run(["log", *local_flags])
 
-    def merge(self, *args: Any, **kwargs: Any) -> str:
+    def merge(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Apply diffs between two places to SVN working copy.
 
         Wraps `svn merge
@@ -675,7 +675,7 @@ class Svn:
 
         return self.run(["merge", *local_flags])
 
-    def mkdir(self, *args: Any, **kwargs: Any) -> str:
+    def mkdir(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Create directory in SVN working copy.
 
         Wraps `svn mkdir
@@ -685,7 +685,7 @@ class Svn:
 
         return self.run(["mkdir", *local_flags])
 
-    def move(self, *args: Any, **kwargs: Any) -> str:
+    def move(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Move a file in SVN working copy.
 
         Wraps `svn move
@@ -696,7 +696,7 @@ class Svn:
 
         return self.run(["move", *local_flags])
 
-    def patch(self, *args: Any, **kwargs: Any) -> str:
+    def patch(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Apply a patch to SVN working copy.
 
         Wraps `svn patch
@@ -706,7 +706,7 @@ class Svn:
 
         return self.run(["patch", *local_flags])
 
-    def propdel(self, *args: Any, **kwargs: Any) -> str:
+    def propdel(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Remove a property for this SVN working copy.
 
         Wraps `svn propdel
@@ -716,7 +716,7 @@ class Svn:
 
         return self.run(["propdel", *local_flags])
 
-    def propedit(self, *args: Any, **kwargs: Any) -> str:
+    def propedit(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Change a property for this SVN working copy.
 
         Wraps `svn propedit
@@ -726,7 +726,7 @@ class Svn:
 
         return self.run(["propedit", *local_flags])
 
-    def propget(self, *args: Any, **kwargs: Any) -> str:
+    def propget(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return a property for this SVN working copy.
 
         Wraps `svn propget
@@ -736,7 +736,7 @@ class Svn:
 
         return self.run(["propget", *local_flags])
 
-    def proplist(self, *args: Any, **kwargs: Any) -> str:
+    def proplist(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return list of properties for this SVN working copy.
 
         Wraps `svn proplist
@@ -753,8 +753,8 @@ class Svn:
         value: str | None = None,
         value_path: StrPath | None = None,
         target: StrOrBytesPath | None = None,
-        *args: Any,
-        **kwargs: Any,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Set property for this SVN working copy or a remote revision.
 
@@ -795,7 +795,7 @@ class Svn:
 
         return self.run(["propset", *local_flags])
 
-    def relocate(self, *, to_path: StrPath, **kwargs: Any) -> str:
+    def relocate(self, *, to_path: StrPath, **kwargs: t.Any) -> str:
         """Set the SVN repository URL for this working copy.
 
         Wraps `svn relocate
@@ -830,8 +830,8 @@ class Svn:
         targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
         force: bool | None = None,
-        *args: Any,
-        **kwargs: Any,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Resolve conflicts with this SVN working copy.
 
@@ -873,7 +873,7 @@ class Svn:
         targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
         force: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Resolve this working copy's conflicted state.
 
@@ -922,7 +922,7 @@ class Svn:
         targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
         force: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Revert any changes to this SVN working copy.
 
@@ -971,7 +971,7 @@ class Svn:
 
         return self.run(["revert", *local_flags])
 
-    def status(self, *args: Any, **kwargs: Any) -> str:
+    def status(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return status of this SVN working copy.
 
         Wraps `svn status
@@ -995,7 +995,7 @@ class Svn:
         to_path: StrPath,
         path: StrPath,
         ignore_ancestry: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Switch working copy to a different SVN repo URL.
 
@@ -1038,7 +1038,7 @@ class Svn:
         self,
         targets: pathlib.Path | None = None,
         force: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Unlock path or URL reserved by another user.
 
@@ -1080,8 +1080,8 @@ class Svn:
         quiet: bool | None = None,
         revision: str | None = None,
         set_depth: str | None = None,
-        *args: Any,
-        **kwargs: Any,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Fetch latest changes to working copy.
 
@@ -1119,7 +1119,7 @@ class Svn:
 
         return self.run(["update", *local_flags])
 
-    def upgrade(self, *args: Any, **kwargs: Any) -> str:
+    def upgrade(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Upgrade working copy's metadata storage format.
 
         Wraps `svn upgrade

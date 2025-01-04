@@ -21,7 +21,7 @@ import dataclasses
 import logging
 import pathlib
 import re
-from typing import TYPE_CHECKING, Any, Union
+import typing as t
 from urllib import parse as urlparse
 
 from libvcs import exc
@@ -32,7 +32,7 @@ from libvcs.sync.base import (
     convert_pip_url as base_convert_pip_url,
 )
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ class GitRemote:
 
 
 GitSyncRemoteDict = dict[str, GitRemote]
-GitRemotesArgs = Union[None, GitSyncRemoteDict, dict[str, str]]
+GitRemotesArgs = t.Union[None, GitSyncRemoteDict, dict[str, str]]
 
 
 @dataclasses.dataclass
@@ -205,7 +205,7 @@ class GitSync(BaseSync):
         url: str,
         path: StrPath,
         remotes: GitRemotesArgs = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> None:
         """Local git repository.
 
@@ -301,7 +301,7 @@ class GitSync(BaseSync):
         self.url = self.chomp_protocol(origin.fetch_url)
 
     @classmethod
-    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> GitSync:
+    def from_pip_url(cls, pip_url: str, **kwargs: t.Any) -> GitSync:
         """Clone a git repository from a pip-style URL."""
         url, rev = convert_pip_url(pip_url)
         return cls(url=url, rev=rev, **kwargs)
@@ -351,7 +351,7 @@ class GitSync(BaseSync):
                         overwrite=overwrite,
                     )
 
-    def obtain(self, *args: Any, **kwargs: Any) -> None:
+    def obtain(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Retrieve the repository, clone if doesn't exist."""
         self.ensure_dir()
 
@@ -378,7 +378,9 @@ class GitSync(BaseSync):
 
         self.set_remotes(overwrite=True)
 
-    def update_repo(self, set_remotes: bool = False, *args: Any, **kwargs: Any) -> None:
+    def update_repo(
+        self, set_remotes: bool = False, *args: t.Any, **kwargs: t.Any
+    ) -> None:
         """Pull latest changes from git remote."""
         self.ensure_dir()
 
@@ -561,7 +563,7 @@ class GitSync(BaseSync):
                 remotes[remote_name] = remote
         return remotes
 
-    def remote(self, name: str, **kwargs: Any) -> GitRemote | None:
+    def remote(self, name: str, **kwargs: t.Any) -> GitRemote | None:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters

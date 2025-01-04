@@ -5,13 +5,13 @@ from __future__ import annotations
 import datetime
 import pathlib
 import shlex
+import typing as t
 from collections.abc import Sequence
-from typing import Any, Literal, Union
 
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class Git:
@@ -113,11 +113,11 @@ class Git:
         noglob_pathspecs: bool | None = None,
         icase_pathspecs: bool | None = None,
         no_optional_locks: bool | None = None,
-        config: dict[str, Any] | None = None,
+        config: dict[str, t.Any] | None = None,
         config_env: str | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command for this git repository.
 
@@ -213,7 +213,7 @@ class Git:
         if config is not None:
             assert isinstance(config, dict)
 
-            def stringify(v: Any) -> str:
+            def stringify(v: t.Any) -> str:
                 if isinstance(v, bool):
                     return "true" if True else "false"
                 if not isinstance(v, str):
@@ -286,12 +286,12 @@ class Git:
         verbose: bool | None = None,
         quiet: bool | None = None,
         # Pass-through to run
-        config: dict[str, Any] | None = None,
+        config: dict[str, t.Any] | None = None,
         log_in_real_time: bool = False,
         # Special behavior
         check_returncode: bool | None = None,
         make_parents: bool | None = True,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Clone a working copy from an git repo.
 
@@ -390,7 +390,7 @@ class Git:
     def fetch(
         self,
         *,
-        reftag: Any | None = None,
+        reftag: t.Any | None = None,
         deepen: str | None = None,
         depth: str | None = None,
         branch: str | None = None,
@@ -401,8 +401,8 @@ class Git:
         negotiation_tip: str | None = None,
         jobs: str | None = None,
         server_option: str | None = None,
-        recurse_submodules: bool | Literal["yes", "on-demand", "no"] | None = None,
-        recurse_submodules_default: bool | Literal["yes", "on-demand"] | None = None,
+        recurse_submodules: bool | t.Literal["yes", "on-demand", "no"] | None = None,
+        recurse_submodules_default: bool | t.Literal["yes", "on-demand"] | None = None,
         submodule_prefix: StrOrBytesPath | None = None,
         _all: bool | None = None,
         force: bool | None = None,
@@ -438,7 +438,7 @@ class Git:
         negotiate_only: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Download from repo. Wraps `git fetch <https://git-scm.com/docs/git-fetch>`_.
 
@@ -585,9 +585,9 @@ class Git:
         _exec: str | None = None,
         gpg_sign: str | bool | None = None,
         no_gpg_sign: bool | None = None,
-        empty: str | Literal["drop", "keep", "ask"] | None = None,
+        empty: str | t.Literal["drop", "keep", "ask"] | None = None,
         rebase_merges: str
-        | Literal["rebase-cousins", "no-rebase-cousins"]
+        | t.Literal["rebase-cousins", "no-rebase-cousins"]
         | None = None,
         #
         # Interactive
@@ -600,7 +600,7 @@ class Git:
         _quit: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Reapply commit on top of another tip.
 
@@ -746,7 +746,7 @@ class Git:
     def pull(
         self,
         *,
-        reftag: Any | None = None,
+        reftag: t.Any | None = None,
         repository: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
@@ -758,8 +758,8 @@ class Git:
         negotiation_tip: str | None = None,
         jobs: str | None = None,
         server_option: str | None = None,
-        recurse_submodules: bool | Literal["yes", "on-demand", "no"] | None = None,
-        recurse_submodules_default: bool | Literal["yes", "on-demand"] | None = None,
+        recurse_submodules: bool | t.Literal["yes", "on-demand", "no"] | None = None,
+        recurse_submodules_default: bool | t.Literal["yes", "on-demand"] | None = None,
         submodule_prefix: StrOrBytesPath | None = None,
         #
         # Pull specific flags
@@ -837,7 +837,7 @@ class Git:
         # Pass-through to run
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Download from repo. Wraps `git pull <https://git-scm.com/docs/git-pull>`_.
 
@@ -1028,7 +1028,7 @@ class Git:
         *,
         template: str | None = None,
         separate_git_dir: StrOrBytesPath | None = None,
-        object_format: Literal["sha1", "sha256"] | None = None,
+        object_format: t.Literal["sha1", "sha256"] | None = None,
         branch: str | None = None,
         initial_branch: str | None = None,
         shared: bool | None = None,
@@ -1036,7 +1036,7 @@ class Git:
         bare: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
 
@@ -1120,7 +1120,7 @@ class Git:
         web: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Help info. Wraps `git help <https://git-scm.com/docs/git-help>`_.
 
@@ -1210,7 +1210,7 @@ class Git:
         no_recurse_submodules: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Reset HEAD. Wraps `git help <https://git-scm.com/docs/git-help>`_.
 
@@ -1320,7 +1320,7 @@ class Git:
         treeish: str | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Switch branches or checks out files.
 
@@ -1439,13 +1439,13 @@ class Git:
         no_renames: bool | None = None,
         find_renames: bool | str | None = None,
         porcelain: bool | str | None = None,
-        untracked_files: Literal["no", "normal", "all"] | None = None,
-        ignored: Literal["traditional", "no", "matching"] | None = None,
-        ignored_submodules: Literal["untracked", "dirty", "all"] | None = None,
+        untracked_files: t.Literal["no", "normal", "all"] | None = None,
+        ignored: t.Literal["traditional", "no", "matching"] | None = None,
+        ignored_submodules: t.Literal["untracked", "dirty", "all"] | None = None,
         pathspec: StrOrBytesPath | list[StrOrBytesPath] | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Return status of working tree.
 
@@ -1584,7 +1584,7 @@ class Git:
         get_color: str | bool | None = None,
         get_colorbool: str | bool | None = None,
         default: bool | None = None,
-        _type: Literal["bool", "int", "bool-or-int", "path", "expiry-date", "color"]
+        _type: t.Literal["bool", "int", "bool-or-int", "path", "expiry-date", "color"]
         | None = None,
         edit: bool | None = None,
         no_includes: bool | None = None,
@@ -1592,7 +1592,7 @@ class Git:
         add: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Get and set repo configuration.
 
@@ -1621,8 +1621,8 @@ class Git:
         name_only : Optional[bool]
         show_origin : Optional[bool]
         show_scope : Optional[bool]
-        get_color : Optional[Union[str, bool]]
-        get_colorbool : Optional[Union[str, bool]]
+        get_color : Optional[t.Union[str, bool]]
+        get_colorbool : Optional[t.Union[str, bool]]
         default : Optional[str]
         _type : "bool", "int", "bool-or-int", "path", "expiry-date", "color"
         edit : Optional[bool]
@@ -1749,7 +1749,7 @@ class Git:
         build_options: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Version. Wraps `git version <https://git-scm.com/docs/git-version>`_.
 
@@ -1785,7 +1785,7 @@ class Git:
         args: str | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """rev-parse. Wraps `git rev-parse <https://git-scm.com/docs/rev-parse>`_.
 
@@ -1903,7 +1903,7 @@ class Git:
         # libvcs special behavior
         check_returncode: bool | None = True,
         log_in_real_time: bool = False,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """rev-list. Wraps `git rev-list <https://git-scm.com/docs/rev-list>`_.
 
@@ -2043,7 +2043,7 @@ class Git:
         quiet: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Return symbolic-ref.
 
@@ -2090,7 +2090,7 @@ class Git:
         abbrev: str | bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         r"""show-ref. Wraps `git show-ref <https://git-scm.com/docs/git-show-ref>`_.
 
@@ -2155,7 +2155,7 @@ class Git:
         )
 
 
-GitSubmoduleCmdCommandLiteral = Literal[
+GitSubmoduleCmdCommandLiteral = t.Literal[
     "status",
     "init",
     "deinit",
@@ -2214,7 +2214,7 @@ class GitSubmoduleCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command against a git submodule.
 
@@ -2283,7 +2283,7 @@ class GitSubmoduleCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Git submodule update.
 
@@ -2336,7 +2336,7 @@ class GitSubmoduleCmd:
         )
 
 
-GitRemoteCommandLiteral = Literal[
+GitRemoteCommandLiteral = t.Literal[
     "add",
     "rename",
     "remove",
@@ -2397,7 +2397,7 @@ class GitRemoteCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         r"""Run command against a git remote.
 
@@ -2431,7 +2431,7 @@ class GitRemoteCmd:
         fetch: bool | None = None,
         track: str | None = None,
         master: str | None = None,
-        mirror: Literal["push", "fetch"] | bool | None = None,
+        mirror: t.Literal["push", "fetch"] | bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -2703,7 +2703,7 @@ class GitRemoteCmd:
         )
 
 
-GitStashCommandLiteral = Literal[
+GitStashCommandLiteral = t.Literal[
     "list",
     "show",
     "save",
@@ -2763,7 +2763,7 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command against a git repository's stash storage.
 
@@ -2818,7 +2818,7 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Git stash update.
 
@@ -2861,7 +2861,7 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Git stash pop.
 
@@ -2913,7 +2913,7 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Git stash save.
 

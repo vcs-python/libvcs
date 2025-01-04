@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import enum
 import pathlib
+import typing as t
 from collections.abc import Sequence
-from typing import Any, Union
 
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class HgColorType(enum.Enum):
@@ -98,7 +98,7 @@ class Hg:
         pager: HgPagerType | None = None,
         color: HgColorType | None = None,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command for this Mercurial repository.
 

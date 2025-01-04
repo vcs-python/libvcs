@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypedDict, TypeVar
+import typing as t
 
 import pytest
 
@@ -10,23 +10,23 @@ from libvcs import GitSync, HgSync, SvnSync
 from libvcs._internal.shortcuts import create_project
 from libvcs.exc import InvalidVCS
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     import pathlib
 
     from libvcs._internal.run import ProgressCallbackProtocol
     from libvcs._internal.types import StrPath
 
 
-class CreateProjectKwargsDict(TypedDict, total=False):
+class CreateProjectKwargsDict(t.TypedDict, total=False):
     """Test fixtures for create_project()."""
 
     url: str
     path: StrPath
-    vcs: Literal["git"]
+    vcs: t.Literal["git"]
     progress_callback: ProgressCallbackProtocol | None
 
 
-E = TypeVar("E", bound=BaseException)
+E = t.TypeVar("E", bound=BaseException)
 
 
 @pytest.mark.parametrize(

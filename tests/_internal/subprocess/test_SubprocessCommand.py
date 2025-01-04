@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import subprocess
-from typing import TYPE_CHECKING, Any
+import typing as t
 
 import pytest
 
 from libvcs._internal.subprocess import SubprocessCommand
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     import pathlib
 
 
-def idfn(val: Any) -> str:
+def idfn(val: t.Any) -> str:
     """Test ID naming function for SubprocessCommand py.test parametrize."""
     if isinstance(val, list):
         if len(val):
@@ -39,7 +39,9 @@ def idfn(val: Any) -> str:
     ],
     ids=idfn,
 )
-def test_init(args: list[Any], kwargs: dict[str, Any], expected_result: Any) -> None:
+def test_init(
+    args: list[t.Any], kwargs: dict[str, t.Any], expected_result: t.Any
+) -> None:
     """Test SubprocessCommand via list + kwargs, assert attributes."""
     cmd = SubprocessCommand(*args, **kwargs)
     assert cmd == expected_result
@@ -65,9 +67,9 @@ FIXTURES = [
     ids=idfn,
 )
 def test_init_and_Popen(
-    args: list[Any],
-    kwargs: dict[str, Any],
-    expected_result: Any,
+    args: list[t.Any],
+    kwargs: dict[str, t.Any],
+    expected_result: t.Any,
 ) -> None:
     """Test SubprocessCommand with Popen."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -88,9 +90,9 @@ def test_init_and_Popen(
     ids=idfn,
 )
 def test_init_and_Popen_run(
-    args: list[Any],
-    kwargs: dict[str, Any],
-    expected_result: Any,
+    args: list[t.Any],
+    kwargs: dict[str, t.Any],
+    expected_result: t.Any,
 ) -> None:
     """Test SubprocessCommand with run."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -110,9 +112,9 @@ def test_init_and_Popen_run(
     ids=idfn,
 )
 def test_init_and_check_call(
-    args: list[Any],
-    kwargs: dict[str, Any],
-    expected_result: Any,
+    args: list[t.Any],
+    kwargs: dict[str, t.Any],
+    expected_result: t.Any,
 ) -> None:
     """Test SubprocessCommand with Popen.check_call."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -130,9 +132,9 @@ def test_init_and_check_call(
     FIXTURES,
 )
 def test_init_and_check_output(
-    args: list[Any],
-    kwargs: dict[str, Any],
-    expected_result: Any,
+    args: list[t.Any],
+    kwargs: dict[str, t.Any],
+    expected_result: t.Any,
 ) -> None:
     """Test SubprocessCommand with Popen.check_output."""
     cmd = SubprocessCommand(*args, **kwargs)
@@ -156,9 +158,9 @@ def test_init_and_check_output(
 )
 def test_run(
     tmp_path: pathlib.Path,
-    args: list[Any],
-    kwargs: dict[str, Any],
-    run_kwargs: dict[str, Any],
+    args: list[t.Any],
+    kwargs: dict[str, t.Any],
+    run_kwargs: dict[str, t.Any],
 ) -> None:
     """Test SubprocessCommand.run()."""
     kwargs["cwd"] = tmp_path

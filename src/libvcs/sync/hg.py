@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import logging
 import pathlib
-from typing import TYPE_CHECKING, Any
+import typing as t
 
 from libvcs.cmd.hg import Hg
 
 from .base import BaseSync
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class HgSync(BaseSync):
         *,
         url: str,
         path: StrPath,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> None:
         """Local Mercurial repository.
 
@@ -50,7 +50,7 @@ class HgSync(BaseSync):
 
         self.cmd = Hg(path=path, progress_callback=self.progress_callback)
 
-    def obtain(self, *args: Any, **kwargs: Any) -> None:
+    def obtain(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Clone and update a Mercurial repository to this location."""
         self.cmd.clone(
             no_update=True,
@@ -66,7 +66,7 @@ class HgSync(BaseSync):
         """Get latest revision of this mercurial repository."""
         return self.run(["parents", "--template={rev}"])
 
-    def update_repo(self, *args: Any, **kwargs: Any) -> None:
+    def update_repo(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Pull changes from remote Mercurial repository into this one."""
         if not pathlib.Path(self.path / ".hg").exists():
             self.obtain()

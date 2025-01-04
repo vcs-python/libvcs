@@ -8,7 +8,7 @@ import pathlib
 import random
 import shutil
 import textwrap
-from typing import TYPE_CHECKING, Any, Optional, Protocol
+import typing as t
 
 import pytest
 
@@ -18,7 +18,7 @@ from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
     from libvcs._internal.run import _ENV
@@ -270,10 +270,10 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
         return remote_repo_name
 
 
-InitCmdArgs: TypeAlias = Optional[list[str]]
+InitCmdArgs: TypeAlias = t.Optional[list[str]]
 
 
-class CreateRepoPostInitFn(Protocol):
+class CreateRepoPostInitFn(t.Protocol):
     """Typing for VCS repo creation callback."""
 
     def __call__(
@@ -285,7 +285,7 @@ class CreateRepoPostInitFn(Protocol):
         ...
 
 
-class CreateRepoPytestFixtureFn(Protocol):
+class CreateRepoPytestFixtureFn(t.Protocol):
     """Typing for VCS pytest fixture callback."""
 
     def __call__(
@@ -785,7 +785,7 @@ def svn_repo(
 @pytest.fixture
 def add_doctest_fixtures(
     request: pytest.FixtureRequest,
-    doctest_namespace: dict[str, Any],
+    doctest_namespace: dict[str, t.Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
     git_commit_envvars: _ENV,

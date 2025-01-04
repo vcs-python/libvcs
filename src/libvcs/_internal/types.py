@@ -9,16 +9,16 @@ Notes
 
 from __future__ import annotations
 
+import typing as t
 from os import PathLike
-from typing import TYPE_CHECKING, Literal, Union
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
-StrPath: TypeAlias = Union[str, PathLike[str]]  # stable
+StrPath: TypeAlias = t.Union[str, PathLike[str]]  # stable
 """:class:`os.PathLike` or :class:`str`"""
 
-StrOrBytesPath: TypeAlias = Union[
+StrOrBytesPath: TypeAlias = t.Union[
     str,
     bytes,
     PathLike[str],
@@ -27,5 +27,5 @@ StrOrBytesPath: TypeAlias = Union[
 """:class:`os.PathLike`, :class:`str` or :term:`bytes-like object`"""
 
 
-VCSLiteral = Literal["git", "svn", "hg"]
+VCSLiteral = t.Literal["git", "svn", "hg"]
 """UNSTABLE: Literal of built-in VCS aliases"""
