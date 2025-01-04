@@ -379,7 +379,10 @@ class GitSync(BaseSync):
         self.set_remotes(overwrite=True)
 
     def update_repo(
-        self, set_remotes: bool = False, *args: t.Any, **kwargs: t.Any
+        self,
+        set_remotes: bool = False,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> None:
         """Pull latest changes from git remote."""
         self.ensure_dir()

@@ -59,7 +59,11 @@ class CmdLoggingAdapter(_LoggerAdapter):
     """
 
     def __init__(
-        self, bin_name: str, keyword: str, *args: t.Any, **kwargs: t.Any
+        self,
+        bin_name: str,
+        keyword: str,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> None:
         #: bin_name
         self.bin_name = bin_name

@@ -40,7 +40,9 @@ def idfn(val: t.Any) -> str:
     ids=idfn,
 )
 def test_init(
-    args: list[t.Any], kwargs: dict[str, t.Any], expected_result: t.Any
+    args: list[t.Any],
+    kwargs: dict[str, t.Any],
+    expected_result: t.Any,
 ) -> None:
     """Test SubprocessCommand via list + kwargs, assert attributes."""
     cmd = SubprocessCommand(*args, **kwargs)
