@@ -6,6 +6,7 @@ import random
 import shutil
 import textwrap
 import typing as t
+from collections.abc import Callable
 
 import pytest
 from pytest_mock import MockerFixture
@@ -25,9 +26,9 @@ if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
 
 
-ProjectTestFactory = t.Callable[..., GitSync]
-ProjectTestFactoryLazyKwargs = t.Callable[..., dict[str, str]]
-ProjectTestFactoryRemoteLazyExpected = t.Callable[..., dict[str, GitRemote]]
+ProjectTestFactory = Callable[..., GitSync]
+ProjectTestFactoryLazyKwargs = Callable[..., dict[str, str]]
+ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
 
 
 @pytest.mark.parametrize(

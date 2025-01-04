@@ -10,9 +10,11 @@ from libvcs.url.hg import HgURL
 from libvcs.url.svn import SvnURL
 
 if t.TYPE_CHECKING:
+    from collections.abc import Callable
+
     from typing_extensions import TypeAlias
 
-    ParserMatchLazy: TypeAlias = t.Callable[[str], registry.ParserMatch]
+    ParserMatchLazy: TypeAlias = Callable[[str], registry.ParserMatch]
     DetectVCSFixtureExpectedMatch: TypeAlias = t.Union[
         registry.ParserMatch,
         ParserMatchLazy,
