@@ -1,10 +1,11 @@
 """Tests for GitURL."""
 
+from __future__ import annotations
+
 import typing
 
 import pytest
 
-from libvcs.sync.git import GitSync
 from libvcs.url.base import RuleMap
 from libvcs.url.git import (
     AWS_CODE_COMMIT_DEFAULT_RULES,
@@ -13,6 +14,9 @@ from libvcs.url.git import (
     GitBaseURL,
     GitURL,
 )
+
+if typing.TYPE_CHECKING:
+    from libvcs.sync.git import GitSync
 
 
 class GitURLFixture(typing.NamedTuple):
@@ -334,7 +338,7 @@ class RevFixture(typing.NamedTuple):
     """Test fixture for GitURL with revisions."""
 
     git_url_kwargs: GitURLKwargs
-    expected: typing.Optional[str]
+    expected: str | None
     # Expected revision / branch / tag
 
 

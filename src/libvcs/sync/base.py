@@ -1,22 +1,26 @@
 """Foundational tools to set up a VCS manager in libvcs.sync."""
 
+from __future__ import annotations
+
 import logging
 import pathlib
+import typing as t
 from collections.abc import Sequence
-from typing import Any, NamedTuple, Optional
 from urllib import parse as urlparse
 
 from libvcs._internal.run import _CMD, CmdLoggingAdapter, ProgressCallbackProtocol, run
-from libvcs._internal.types import StrPath
+
+if t.TYPE_CHECKING:
+    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 
 
-class VCSLocation(NamedTuple):
+class VCSLocation(t.NamedTuple):
     """Generic VCS Location (URL and optional revision)."""
 
     url: str
-    rev: Optional[str]
+    rev: str | None
 
 
 def convert_pip_url(pip_url: str) -> VCSLocation:
@@ -53,8 +57,8 @@ class BaseSync:
         *,
         url: str,
         path: StrPath,
-        progress_callback: Optional[ProgressCallbackProtocol] = None,
-        **kwargs: Any,
+        progress_callback: ProgressCallbackProtocol | None = None,
+        **kwargs: t.Any,
     ) -> None:
         r"""Initialize a tool to manage a local VCS Checkout, Clone, Copy, or Work tree.
 
@@ -131,7 +135,7 @@ class BaseSync:
         return self.path.stem
 
     @classmethod
-    def from_pip_url(cls, pip_url: str, **kwargs: Any) -> "BaseSync":
+    def from_pip_url(cls, pip_url: str, **kwargs: t.Any) -> BaseSync:
         """Create synchronization object from pip-style URL."""
         url, rev = convert_pip_url(pip_url)
         return cls(url=url, rev=rev, **kwargs)
@@ -141,9 +145,9 @@ class BaseSync:
         cmd: _CMD,
         cwd: None = None,
         check_returncode: bool = True,
-        log_in_real_time: Optional[bool] = None,
-        *args: Any,
-        **kwargs: Any,
+        log_in_real_time: bool | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Return combined stderr/stdout from a command.
 
@@ -182,7 +186,7 @@ class BaseSync:
             cwd=cwd,
         )
 
-    def ensure_dir(self, *args: Any, **kwargs: Any) -> bool:
+    def ensure_dir(self, *args: t.Any, **kwargs: t.Any) -> bool:
         """Assure destination path exists. If not, create directories."""
         if self.path.exists():
             return True
@@ -198,11 +202,11 @@ class BaseSync:
 
         return True
 
-    def update_repo(self, *args: Any, **kwargs: Any) -> None:
+    def update_repo(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Pull latest changes to here from remote repository."""
         raise NotImplementedError
 
-    def obtain(self, *args: Any, **kwargs: Any) -> None:
+    def obtain(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Checkout initial VCS repository or working copy from remote repository."""
         raise NotImplementedError
 

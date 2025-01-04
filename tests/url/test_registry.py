@@ -1,5 +1,7 @@
 """Tests for URL Registry."""
 
+from __future__ import annotations
+
 import typing as t
 
 import pytest
@@ -25,7 +27,7 @@ class DetectVCSFixture(t.NamedTuple):
     """Test VCS Detection fixture."""
 
     url: str
-    expected_matches_lazy: list["DetectVCSFixtureExpectedMatch"]
+    expected_matches_lazy: list[DetectVCSFixtureExpectedMatch]
     is_explicit: bool
 
 
@@ -90,7 +92,7 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
 )
 def test_registry(
     url: str,
-    expected_matches_lazy: list["DetectVCSFixtureExpectedMatch"],
+    expected_matches_lazy: list[DetectVCSFixtureExpectedMatch],
     is_explicit: bool,
 ) -> None:
     """Test URL detection registry."""

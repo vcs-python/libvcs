@@ -8,18 +8,20 @@
    <https://github.com/vcs-python/libvcs>`_, 'APIs unstable until we fit the spec.
 """
 
+from __future__ import annotations
+
 import pathlib
+import typing as t
 from collections.abc import Sequence
-from typing import Any, Literal, Optional, Union
 
 from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
-DepthLiteral = Union[Literal["infinity", "empty", "files", "immediates"], None]
-RevisionLiteral = Union[Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
+DepthLiteral = t.Union[t.Literal["infinity", "empty", "files", "immediates"], None]
+RevisionLiteral = t.Union[t.Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
 
 
 class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
@@ -32,13 +34,13 @@ class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
 class Svn:
     """Run commands directly against SVN working copy."""
 
-    progress_callback: Optional[ProgressCallbackProtocol] = None
+    progress_callback: ProgressCallbackProtocol | None = None
 
     def __init__(
         self,
         *,
         path: StrPath,
-        progress_callback: Optional[ProgressCallbackProtocol] = None,
+        progress_callback: ProgressCallbackProtocol | None = None,
     ) -> None:
         """Lite, typed, pythonic wrapper for svn(1).
 
@@ -69,18 +71,18 @@ class Svn:
         self,
         args: _CMD,
         *,
-        quiet: Optional[bool] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        no_auth_cache: Optional[bool] = None,
-        non_interactive: Optional[bool] = True,
-        trust_server_cert: Optional[bool] = None,
-        config_dir: Optional[pathlib.Path] = None,
-        config_option: Optional[pathlib.Path] = None,
+        quiet: bool | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        no_auth_cache: bool | None = None,
+        non_interactive: bool | None = True,
+        trust_server_cert: bool | None = None,
+        config_dir: pathlib.Path | None = None,
+        config_option: pathlib.Path | None = None,
         # Special behavior
-        make_parents: Optional[bool] = True,
-        check_returncode: Optional[bool] = None,
-        **kwargs: Any,
+        make_parents: bool | None = True,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command for this SVN working copy.
 
@@ -156,19 +158,19 @@ class Svn:
         self,
         *,
         url: str,
-        revision: Union[RevisionLiteral, str] = None,
-        force: Optional[bool] = None,
-        ignore_externals: Optional[bool] = None,
+        revision: RevisionLiteral | str = None,
+        force: bool | None = None,
+        ignore_externals: bool | None = None,
         depth: DepthLiteral = None,
-        quiet: Optional[bool] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        no_auth_cache: Optional[bool] = None,
-        non_interactive: Optional[bool] = True,
-        trust_server_cert: Optional[bool] = None,
+        quiet: bool | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        no_auth_cache: bool | None = None,
+        non_interactive: bool | None = True,
+        trust_server_cert: bool | None = None,
         # Special behavior
-        make_parents: Optional[bool] = True,
-        check_returncode: Optional[bool] = False,
+        make_parents: bool | None = True,
+        check_returncode: bool | None = False,
     ) -> str:
         """Check out a working copy from an SVN repo.
 
@@ -229,13 +231,13 @@ class Svn:
     def add(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
-        auto_props: Optional[bool] = None,
-        no_auto_props: Optional[bool] = None,
-        parents: Optional[bool] = None,
+        force: bool | None = None,
+        auto_props: bool | None = None,
+        no_auto_props: bool | None = None,
+        parents: bool | None = None,
     ) -> str:
         """Stage an unversioned file to be pushed to repository next commit.
 
@@ -294,9 +296,9 @@ class Svn:
 
     def auth(
         self,
-        remove: Optional[str] = None,
-        show_passwords: Optional[bool] = None,
-        **kwargs: Any,
+        remove: str | None = None,
+        show_passwords: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Manage stored authentication credentials.
 
@@ -328,14 +330,14 @@ class Svn:
         self,
         target: StrOrBytesPath,
         *,
-        revision: Union[RevisionLiteral, str] = None,
-        verbose: Optional[bool] = None,
-        force: Optional[bool] = None,
-        use_merge_history: Optional[bool] = None,
-        incremental: Optional[bool] = None,
-        xml: Optional[bool] = None,
-        extensions: Optional[str] = None,
-        **kwargs: Any,
+        revision: RevisionLiteral | str = None,
+        verbose: bool | None = None,
+        force: bool | None = None,
+        use_merge_history: bool | None = None,
+        incremental: bool | None = None,
+        xml: bool | None = None,
+        extensions: str | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Show authorship for file line-by-line.
 
@@ -396,7 +398,7 @@ class Svn:
 
         return self.run(["blame", *local_flags])
 
-    def cat(self, *args: Any, **kwargs: Any) -> str:
+    def cat(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Output contents of files from working copy or repository URLs.
 
         Wraps `svn cat
@@ -406,7 +408,7 @@ class Svn:
 
         return self.run(["cat", *local_flags])
 
-    def changelist(self, *args: Any, **kwargs: Any) -> str:
+    def changelist(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Connect or disconnect files with a changelist.
 
         Wraps `svn changelist
@@ -416,7 +418,7 @@ class Svn:
 
         return self.run(["changelist", *local_flags])
 
-    def cleanup(self, *args: Any, **kwargs: Any) -> str:
+    def cleanup(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Recursively clean up working copy of locks. Unblocks operations.
 
         Wraps `svn cleanup
@@ -429,17 +431,17 @@ class Svn:
     def commit(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
-        message: Optional[str] = None,
-        no_unlock: Optional[bool] = None,
-        file: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
+        message: str | None = None,
+        no_unlock: bool | None = None,
+        file: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        encoding: Optional[str] = None,
-        force_log: Optional[bool] = None,
-        keep_changelists: Optional[bool] = None,
-        include_externals: Optional[bool] = None,
-        **kwargs: Any,
+        encoding: str | None = None,
+        force_log: bool | None = None,
+        keep_changelists: bool | None = None,
+        include_externals: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Push changes from working copy to SVN repo.
 
@@ -494,7 +496,7 @@ class Svn:
 
         return self.run(["commit", *local_flags])
 
-    def copy(self, *args: Any, **kwargs: Any) -> str:
+    def copy(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Copy file or dir in this SVN working copy or repo.
 
         Wraps `svn copy
@@ -504,7 +506,7 @@ class Svn:
 
         return self.run(["copy", *local_flags])
 
-    def delete(self, *args: Any, **kwargs: Any) -> str:
+    def delete(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Remove file from this SVN working copy or repo.
 
         Wraps `svn delete
@@ -515,7 +517,7 @@ class Svn:
 
         return self.run(["delete", *local_flags])
 
-    def diff(self, *args: Any, **kwargs: Any) -> str:
+    def diff(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return diff of two files or revisions.
 
         Wraps `svn diff
@@ -525,7 +527,7 @@ class Svn:
 
         return self.run(["diff", *local_flags])
 
-    def export(self, *args: Any, **kwargs: Any) -> str:
+    def export(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Export clean directory tree of working directory.
 
         Wraps `svn export
@@ -535,7 +537,7 @@ class Svn:
 
         return self.run(["export", *local_flags])
 
-    def help(self, *args: Any, **kwargs: Any) -> str:
+    def help(self, *args: t.Any, **kwargs: t.Any) -> str:
         """SVN Help command.
 
         Wraps `svn help
@@ -545,7 +547,7 @@ class Svn:
 
         return self.run(["help", *local_flags])
 
-    def import_(self, *args: Any, **kwargs: Any) -> str:
+    def import_(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Import local directory into repository.
 
         Wraps `svn import
@@ -559,16 +561,16 @@ class Svn:
 
     def info(
         self,
-        target: Optional[StrPath] = None,
-        targets: Optional[Union[list[StrPath], StrPath]] = None,
-        changelist: Optional[list[str]] = None,
-        revision: Optional[str] = None,
+        target: StrPath | None = None,
+        targets: list[StrPath] | StrPath | None = None,
+        changelist: list[str] | None = None,
+        revision: str | None = None,
         depth: DepthLiteral = None,
-        incremental: Optional[bool] = None,
-        recursive: Optional[bool] = None,
-        xml: Optional[bool] = None,
-        *args: Any,
-        **kwargs: Any,
+        incremental: bool | None = None,
+        recursive: bool | None = None,
+        xml: bool | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Return info about this SVN repository.
 
@@ -611,7 +613,7 @@ class Svn:
 
         return self.run(["info", *local_flags])
 
-    def ls(self, *args: Any, **kwargs: Any) -> str:
+    def ls(self, *args: t.Any, **kwargs: t.Any) -> str:
         """List files in SVN repository (without downloading them).
 
         Wraps `svn list
@@ -623,9 +625,9 @@ class Svn:
 
     def lock(
         self,
-        targets: Optional[pathlib.Path] = None,
-        force: Optional[bool] = None,
-        **kwargs: Any,
+        targets: pathlib.Path | None = None,
+        force: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Lock path or URLs for working copy or repository.
 
@@ -653,7 +655,7 @@ class Svn:
 
         return self.run(["lock", *local_flags])
 
-    def log(self, *args: Any, **kwargs: Any) -> str:
+    def log(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Show logs from repository.
 
         Wraps `svn log
@@ -663,7 +665,7 @@ class Svn:
 
         return self.run(["log", *local_flags])
 
-    def merge(self, *args: Any, **kwargs: Any) -> str:
+    def merge(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Apply diffs between two places to SVN working copy.
 
         Wraps `svn merge
@@ -673,7 +675,7 @@ class Svn:
 
         return self.run(["merge", *local_flags])
 
-    def mkdir(self, *args: Any, **kwargs: Any) -> str:
+    def mkdir(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Create directory in SVN working copy.
 
         Wraps `svn mkdir
@@ -683,7 +685,7 @@ class Svn:
 
         return self.run(["mkdir", *local_flags])
 
-    def move(self, *args: Any, **kwargs: Any) -> str:
+    def move(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Move a file in SVN working copy.
 
         Wraps `svn move
@@ -694,7 +696,7 @@ class Svn:
 
         return self.run(["move", *local_flags])
 
-    def patch(self, *args: Any, **kwargs: Any) -> str:
+    def patch(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Apply a patch to SVN working copy.
 
         Wraps `svn patch
@@ -704,7 +706,7 @@ class Svn:
 
         return self.run(["patch", *local_flags])
 
-    def propdel(self, *args: Any, **kwargs: Any) -> str:
+    def propdel(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Remove a property for this SVN working copy.
 
         Wraps `svn propdel
@@ -714,7 +716,7 @@ class Svn:
 
         return self.run(["propdel", *local_flags])
 
-    def propedit(self, *args: Any, **kwargs: Any) -> str:
+    def propedit(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Change a property for this SVN working copy.
 
         Wraps `svn propedit
@@ -724,7 +726,7 @@ class Svn:
 
         return self.run(["propedit", *local_flags])
 
-    def propget(self, *args: Any, **kwargs: Any) -> str:
+    def propget(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return a property for this SVN working copy.
 
         Wraps `svn propget
@@ -734,7 +736,7 @@ class Svn:
 
         return self.run(["propget", *local_flags])
 
-    def proplist(self, *args: Any, **kwargs: Any) -> str:
+    def proplist(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return list of properties for this SVN working copy.
 
         Wraps `svn proplist
@@ -747,12 +749,12 @@ class Svn:
     def propset(
         self,
         name: str,
-        path: Optional[StrPath] = None,
-        value: Optional[str] = None,
-        value_path: Optional[StrPath] = None,
-        target: Optional[StrOrBytesPath] = None,
-        *args: Any,
-        **kwargs: Any,
+        path: StrPath | None = None,
+        value: str | None = None,
+        value_path: StrPath | None = None,
+        target: StrOrBytesPath | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Set property for this SVN working copy or a remote revision.
 
@@ -793,7 +795,7 @@ class Svn:
 
         return self.run(["propset", *local_flags])
 
-    def relocate(self, *, to_path: StrPath, **kwargs: Any) -> str:
+    def relocate(self, *, to_path: StrPath, **kwargs: t.Any) -> str:
         """Set the SVN repository URL for this working copy.
 
         Wraps `svn relocate
@@ -824,12 +826,12 @@ class Svn:
 
     def resolve(
         self,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
-        *args: Any,
-        **kwargs: Any,
+        force: bool | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Resolve conflicts with this SVN working copy.
 
@@ -867,11 +869,11 @@ class Svn:
     def resolved(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
-        **kwargs: Any,
+        force: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Resolve this working copy's conflicted state.
 
@@ -916,11 +918,11 @@ class Svn:
     def revert(
         self,
         *,
-        path: Union[list[pathlib.Path], pathlib.Path],
-        targets: Optional[pathlib.Path] = None,
+        path: list[pathlib.Path] | pathlib.Path,
+        targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
-        force: Optional[bool] = None,
-        **kwargs: Any,
+        force: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Revert any changes to this SVN working copy.
 
@@ -969,7 +971,7 @@ class Svn:
 
         return self.run(["revert", *local_flags])
 
-    def status(self, *args: Any, **kwargs: Any) -> str:
+    def status(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return status of this SVN working copy.
 
         Wraps `svn status
@@ -992,8 +994,8 @@ class Svn:
         *,
         to_path: StrPath,
         path: StrPath,
-        ignore_ancestry: Optional[bool] = None,
-        **kwargs: Any,
+        ignore_ancestry: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Switch working copy to a different SVN repo URL.
 
@@ -1034,9 +1036,9 @@ class Svn:
 
     def unlock(
         self,
-        targets: Optional[pathlib.Path] = None,
-        force: Optional[bool] = None,
-        **kwargs: Any,
+        targets: pathlib.Path | None = None,
+        force: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Unlock path or URL reserved by another user.
 
@@ -1068,18 +1070,18 @@ class Svn:
 
     def update(
         self,
-        accept: Optional[str] = None,
-        changelist: Optional[list[str]] = None,
-        diff3_cmd: Optional[str] = None,
-        editor_cmd: Optional[str] = None,
-        force: Optional[bool] = None,
-        ignore_externals: Optional[bool] = None,
-        parents: Optional[bool] = None,
-        quiet: Optional[bool] = None,
-        revision: Optional[str] = None,
-        set_depth: Optional[str] = None,
-        *args: Any,
-        **kwargs: Any,
+        accept: str | None = None,
+        changelist: list[str] | None = None,
+        diff3_cmd: str | None = None,
+        editor_cmd: str | None = None,
+        force: bool | None = None,
+        ignore_externals: bool | None = None,
+        parents: bool | None = None,
+        quiet: bool | None = None,
+        revision: str | None = None,
+        set_depth: str | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Fetch latest changes to working copy.
 
@@ -1117,7 +1119,7 @@ class Svn:
 
         return self.run(["update", *local_flags])
 
-    def upgrade(self, *args: Any, **kwargs: Any) -> str:
+    def upgrade(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Upgrade working copy's metadata storage format.
 
         Wraps `svn upgrade

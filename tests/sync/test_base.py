@@ -1,14 +1,18 @@
 """tests for libvcs.sync abstract base class."""
 
-import datetime
+from __future__ import annotations
+
 import pathlib
 import sys
-from typing import AnyStr
-
-import pytest
+import typing as t
 
 from libvcs._internal.shortcuts import create_project
 from libvcs.sync.base import BaseSync, convert_pip_url
+
+if t.TYPE_CHECKING:
+    import datetime
+
+    import pytest
 
 
 def test_repr_via_create_project() -> None:
@@ -56,7 +60,7 @@ def test_progress_callback(
 ) -> None:
     """Test GitSync with progress callback."""
 
-    def progress_cb(output: AnyStr, timestamp: datetime.datetime) -> None:
+    def progress_cb(output: t.AnyStr, timestamp: datetime.datetime) -> None:
         sys.stdout.write(str(output))
         sys.stdout.flush()
 

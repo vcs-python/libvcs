@@ -1,6 +1,6 @@
 """Exceptions for libvcs."""
 
-from typing import Optional, Union
+from __future__ import annotations
 
 
 class LibVCSException(Exception):
@@ -13,8 +13,8 @@ class CommandError(LibVCSException):
     def __init__(
         self,
         output: str,
-        returncode: Optional[int] = None,
-        cmd: Optional[Union[str, list[str]]] = None,
+        returncode: int | None = None,
+        cmd: str | list[str] | None = None,
     ) -> None:
         self.returncode = returncode
         self.output = output

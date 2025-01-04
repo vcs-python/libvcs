@@ -8,12 +8,14 @@ Note
 This is an internal API not covered by versioning policy.
 """
 
+from __future__ import annotations
+
 import datetime
 import logging
 import subprocess
 import sys
+import typing as t
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Optional, Protocol, Union
 
 from libvcs import exc
 from libvcs._internal.types import StrOrBytesPath
@@ -33,7 +35,7 @@ def console_to_str(s: bytes) -> str:
         return str(s)
 
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
     from typing_extensions import TypeAlias
 else:
@@ -56,7 +58,13 @@ class CmdLoggingAdapter(_LoggerAdapter):
         directory basename, name of repo, hint, etc. e.g. 'django'
     """
 
-    def __init__(self, bin_name: str, keyword: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        bin_name: str,
+        keyword: str,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> None:
         #: bin_name
         self.bin_name = bin_name
         #: directory basename, name of repository, hint, etc.
@@ -67,8 +75,8 @@ class CmdLoggingAdapter(_LoggerAdapter):
     def process(
         self,
         msg: str,
-        kwargs: MutableMapping[str, Any],
-    ) -> tuple[Any, MutableMapping[str, Any]]:
+        kwargs: MutableMapping[str, t.Any],
+    ) -> tuple[t.Any, MutableMapping[str, t.Any]]:
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict["bin_name"] = self.bin_name
@@ -79,55 +87,55 @@ class CmdLoggingAdapter(_LoggerAdapter):
         return msg, kwargs
 
 
-class ProgressCallbackProtocol(Protocol):
+class ProgressCallbackProtocol(t.Protocol):
     """Callback to report subprocess communication."""
 
-    def __call__(self, output: AnyStr, timestamp: datetime.datetime) -> None:
+    def __call__(self, output: t.AnyStr, timestamp: datetime.datetime) -> None:
         """Process progress for subprocess communication."""
         ...
 
 
 if sys.platform == "win32":
-    _ENV: "TypeAlias" = Mapping[str, str]
+    _ENV: TypeAlias = Mapping[str, str]
 else:
-    _ENV: "TypeAlias" = Union[
+    _ENV: TypeAlias = t.Union[
         Mapping[bytes, StrOrBytesPath],
         Mapping[str, StrOrBytesPath],
     ]
 
-_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
-_FILE: "TypeAlias" = Optional[Union[int, IO[Any]]]
+_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_FILE: TypeAlias = t.Optional[t.Union[int, t.IO[t.Any]]]
 
 
 def run(
     args: _CMD,
     bufsize: int = -1,
-    executable: Optional[StrOrBytesPath] = None,
-    stdin: Optional[_FILE] = None,
-    stdout: Optional[_FILE] = None,
-    stderr: Optional[_FILE] = None,
-    preexec_fn: Optional[Callable[[], Any]] = None,
+    executable: StrOrBytesPath | None = None,
+    stdin: _FILE | None = None,
+    stdout: _FILE | None = None,
+    stderr: _FILE | None = None,
+    preexec_fn: t.Callable[[], t.Any] | None = None,
     close_fds: bool = True,
     shell: bool = False,
-    cwd: Optional[StrOrBytesPath] = None,
-    env: Optional[_ENV] = None,
+    cwd: StrOrBytesPath | None = None,
+    env: _ENV | None = None,
     universal_newlines: bool = False,
-    startupinfo: Optional[Any] = None,
+    startupinfo: t.Any | None = None,
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
-    pass_fds: Any = (),
+    pass_fds: t.Any = (),
     *,
-    text: Optional[bool] = None,
-    encoding: Optional[str] = None,
-    errors: Optional[str] = None,
-    user: Optional[Union[str, int]] = None,
-    group: Optional[Union[str, int]] = None,
-    extra_groups: Optional[Iterable[Union[str, int]]] = None,
+    text: bool | None = None,
+    encoding: str | None = None,
+    errors: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
+    extra_groups: Iterable[str | int] | None = None,
     umask: int = -1,
     log_in_real_time: bool = False,
     check_returncode: bool = True,
-    callback: Optional[ProgressCallbackProtocol] = None,
+    callback: ProgressCallbackProtocol | None = None,
 ) -> str:
     """Run a command.
 
@@ -203,7 +211,7 @@ def run(
     line = None
     if log_in_real_time and callback is None:
 
-        def progress_cb(output: AnyStr, timestamp: datetime.datetime) -> None:
+        def progress_cb(output: t.AnyStr, timestamp: datetime.datetime) -> None:
             sys.stdout.write(str(output))
             sys.stdout.flush()
 

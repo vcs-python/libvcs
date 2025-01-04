@@ -9,15 +9,17 @@
    <https://github.com/vcs-python/libvcs>`_. It's not too late to change the API.
 """
 
+from __future__ import annotations
+
 import enum
 import pathlib
+import typing as t
 from collections.abc import Sequence
-from typing import Any, Optional, Union
 
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
 
 
 class HgColorType(enum.Enum):
@@ -42,13 +44,13 @@ class HgPagerType(enum.Enum):
 class Hg:
     """Run commands directly on a Mercurial repository."""
 
-    progress_callback: Optional[ProgressCallbackProtocol] = None
+    progress_callback: ProgressCallbackProtocol | None = None
 
     def __init__(
         self,
         *,
         path: StrPath,
-        progress_callback: Optional[ProgressCallbackProtocol] = None,
+        progress_callback: ProgressCallbackProtocol | None = None,
     ) -> None:
         """Lite, typed, pythonic wrapper for hg(1).
 
@@ -79,24 +81,24 @@ class Hg:
         self,
         args: _CMD,
         *,
-        config: Optional[str] = None,
-        repository: Optional[str] = None,
-        quiet: Optional[bool] = None,
-        _help: Optional[bool] = None,
-        encoding: Optional[str] = None,
-        encoding_mode: Optional[str] = None,
-        verbose: Optional[bool] = None,
-        traceback: Optional[bool] = None,
-        debug: Optional[bool] = None,
-        debugger: Optional[bool] = None,
-        profile: Optional[bool] = None,
-        version: Optional[bool] = None,
-        hidden: Optional[bool] = None,
-        time: Optional[bool] = None,
-        pager: Optional[HgPagerType] = None,
-        color: Optional[HgColorType] = None,
-        check_returncode: Optional[bool] = None,
-        **kwargs: Any,
+        config: str | None = None,
+        repository: str | None = None,
+        quiet: bool | None = None,
+        _help: bool | None = None,
+        encoding: str | None = None,
+        encoding_mode: str | None = None,
+        verbose: bool | None = None,
+        traceback: bool | None = None,
+        debug: bool | None = None,
+        debugger: bool | None = None,
+        profile: bool | None = None,
+        version: bool | None = None,
+        hidden: bool | None = None,
+        time: bool | None = None,
+        pager: HgPagerType | None = None,
+        color: HgColorType | None = None,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command for this Mercurial repository.
 
@@ -199,19 +201,19 @@ class Hg:
         self,
         *,
         url: str,
-        no_update: Optional[bool] = None,
-        update_rev: Optional[str] = None,
-        rev: Optional[str] = None,
-        branch: Optional[str] = None,
-        ssh: Optional[str] = None,
-        remote_cmd: Optional[str] = None,
-        pull: Optional[bool] = None,
-        stream: Optional[bool] = None,
-        insecure: Optional[bool] = None,
-        quiet: Optional[bool] = None,
+        no_update: bool | None = None,
+        update_rev: str | None = None,
+        rev: str | None = None,
+        branch: str | None = None,
+        ssh: str | None = None,
+        remote_cmd: str | None = None,
+        pull: bool | None = None,
+        stream: bool | None = None,
+        insecure: bool | None = None,
+        quiet: bool | None = None,
         # Special behavior
-        make_parents: Optional[bool] = True,
-        check_returncode: Optional[bool] = None,
+        make_parents: bool | None = True,
+        check_returncode: bool | None = None,
     ) -> str:
         """Clone a working copy from a mercurial repo.
 
@@ -265,10 +267,10 @@ class Hg:
 
     def update(
         self,
-        quiet: Optional[bool] = None,
-        verbose: Optional[bool] = None,
+        quiet: bool | None = None,
+        verbose: bool | None = None,
         # libvcs special behavior
-        check_returncode: Optional[bool] = True,
+        check_returncode: bool | None = True,
         *args: object,
         **kwargs: object,
     ) -> str:
@@ -296,11 +298,11 @@ class Hg:
 
     def pull(
         self,
-        quiet: Optional[bool] = None,
-        verbose: Optional[bool] = None,
-        update: Optional[bool] = None,
+        quiet: bool | None = None,
+        verbose: bool | None = None,
+        update: bool | None = None,
         # libvcs special behavior
-        check_returncode: Optional[bool] = True,
+        check_returncode: bool | None = True,
         *args: object,
         **kwargs: object,
     ) -> str:

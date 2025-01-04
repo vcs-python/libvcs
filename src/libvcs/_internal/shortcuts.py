@@ -5,17 +5,19 @@ Note
 This is an internal API not covered by versioning policy.
 """
 
+from __future__ import annotations
+
 import typing as t
-from typing import Union
 
 from libvcs import GitSync, HgSync, SvnSync, exc
-from libvcs._internal.run import ProgressCallbackProtocol
-from libvcs._internal.types import StrPath, VCSLiteral
 from libvcs.exc import InvalidVCS
 from libvcs.url import registry as url_tools
 
 if t.TYPE_CHECKING:
     from typing_extensions import TypeGuard
+
+    from libvcs._internal.run import ProgressCallbackProtocol
+    from libvcs._internal.types import StrPath, VCSLiteral
 
 
 class VCSNoMatchFoundForUrl(exc.LibVCSException):
@@ -39,7 +41,7 @@ def create_project(
     url: str,
     path: StrPath,
     vcs: t.Literal["git"],
-    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    progress_callback: ProgressCallbackProtocol | None = None,
     **kwargs: dict[t.Any, t.Any],
 ) -> GitSync: ...
 
@@ -50,7 +52,7 @@ def create_project(
     url: str,
     path: StrPath,
     vcs: t.Literal["svn"],
-    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    progress_callback: ProgressCallbackProtocol | None = None,
     **kwargs: dict[t.Any, t.Any],
 ) -> SvnSync: ...
 
@@ -61,7 +63,7 @@ def create_project(
     url: str,
     path: StrPath,
     vcs: t.Literal["hg"],
-    progress_callback: t.Optional[ProgressCallbackProtocol] = ...,
+    progress_callback: ProgressCallbackProtocol | None = ...,
     **kwargs: dict[t.Any, t.Any],
 ) -> HgSync: ...
 
@@ -70,10 +72,10 @@ def create_project(
     *,
     url: str,
     path: StrPath,
-    vcs: t.Optional[VCSLiteral] = None,
-    progress_callback: t.Optional[ProgressCallbackProtocol] = None,
+    vcs: VCSLiteral | None = None,
+    progress_callback: ProgressCallbackProtocol | None = None,
     **kwargs: dict[t.Any, t.Any],
-) -> Union[GitSync, HgSync, SvnSync]:
+) -> GitSync | HgSync | SvnSync:
     r"""Return an object representation of a VCS repository.
 
     Examples
@@ -109,7 +111,7 @@ def create_project(
 
         assert vcs_matches[0].vcs is not None
 
-        def is_vcs(val: t.Any) -> "TypeGuard[VCSLiteral]":
+        def is_vcs(val: t.Any) -> TypeGuard[VCSLiteral]:
             return isinstance(val, str) and val in {"git", "hg", "svn"}
 
         if is_vcs(vcs_matches[0].vcs):

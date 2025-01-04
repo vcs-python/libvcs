@@ -17,9 +17,10 @@
    any APIs until we're satisfied support is up to snuff and is bullet proofed.
 """
 
+from __future__ import annotations
+
 import dataclasses
 import re
-from typing import Optional
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
 from libvcs.url.git import RE_SUFFIX
@@ -192,22 +193,22 @@ class HgBaseURL(
     """
 
     url: str
-    scheme: Optional[str] = None
-    user: Optional[str] = None
+    scheme: str | None = None
+    user: str | None = None
     hostname: str = dataclasses.field(default="")
-    port: Optional[int] = None
+    port: int | None = None
     separator: str = dataclasses.field(default="/")
     path: str = dataclasses.field(default="")
 
     # Decoration
-    suffix: Optional[str] = None
+    suffix: str | None = None
 
     #
     # commit-ish: tag, branch, ref, revision
     #
-    ref: Optional[str] = None
+    ref: str | None = None
 
-    rule: Optional[str] = None
+    rule: str | None = None
     # name of the :class:`Rule`
 
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
@@ -229,7 +230,7 @@ class HgBaseURL(
                     setattr(self, k, rule.defaults[k])
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -349,12 +350,12 @@ class HgPipURL(
     """Supports pip hg URLs."""
 
     # commit-ish (rev): tag, branch, ref
-    rev: Optional[str] = None
+    rev: str | None = None
 
     rule_map = RuleMap(_rule_map={m.label: m for m in PIP_DEFAULT_RULES})
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         """Whether URL is compatible with VCS or not.
 
         Examples
@@ -441,7 +442,7 @@ class HgURL(
     )
 
     @classmethod
-    def is_valid(cls, url: str, is_explicit: Optional[bool] = None) -> bool:
+    def is_valid(cls, url: str, is_explicit: bool | None = None) -> bool:
         r"""Whether URL is compatible included Hg URL rule_map or not.
 
         Examples

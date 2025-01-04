@@ -1,7 +1,9 @@
 """Tests for libvcs.cmd.git."""
 
+from __future__ import annotations
+
 import pathlib
-from typing import Any, Callable, Union
+import typing as t
 
 import pytest
 
@@ -10,7 +12,7 @@ from libvcs.cmd import git
 
 @pytest.mark.parametrize("path_type", [str, pathlib.Path])
 def test_git_constructor(
-    path_type: Callable[[Union[str, pathlib.Path]], Any],
+    path_type: t.Callable[[str | pathlib.Path], t.Any],
     tmp_path: pathlib.Path,
 ) -> None:
     """Test Git constructor."""

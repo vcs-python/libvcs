@@ -1,12 +1,18 @@
 """Tests for libvcs svn repos."""
 
-import pathlib
+from __future__ import annotations
+
 import shutil
+import typing as t
 
 import pytest
 
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 from libvcs.sync.svn import SvnSync
+
+if t.TYPE_CHECKING:
+    import pathlib
+
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")

@@ -1,12 +1,16 @@
 """Tests for SVNUrl."""
 
+from __future__ import annotations
+
 import typing
 
 import pytest
 
-from libvcs.sync.svn import SvnSync
 from libvcs.url.base import RuleMap
 from libvcs.url.svn import DEFAULT_RULES, PIP_DEFAULT_RULES, SvnBaseURL, SvnURL
+
+if typing.TYPE_CHECKING:
+    from libvcs.sync.svn import SvnSync
 
 
 class SvnURLFixture(typing.NamedTuple):

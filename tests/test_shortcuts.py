@@ -1,27 +1,32 @@
 """Tests for libvcs.shortcuts."""
 
-import pathlib
-from typing import Literal, Optional, TypedDict, TypeVar, Union
+from __future__ import annotations
+
+import typing as t
 
 import pytest
 
 from libvcs import GitSync, HgSync, SvnSync
-from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.shortcuts import create_project
-from libvcs._internal.types import StrPath
 from libvcs.exc import InvalidVCS
 
+if t.TYPE_CHECKING:
+    import pathlib
 
-class CreateProjectKwargsDict(TypedDict, total=False):
+    from libvcs._internal.run import ProgressCallbackProtocol
+    from libvcs._internal.types import StrPath
+
+
+class CreateProjectKwargsDict(t.TypedDict, total=False):
     """Test fixtures for create_project()."""
 
     url: str
     path: StrPath
-    vcs: Literal["git"]
-    progress_callback: Optional[ProgressCallbackProtocol]
+    vcs: t.Literal["git"]
+    progress_callback: ProgressCallbackProtocol | None
 
 
-E = TypeVar("E", bound=BaseException)
+E = t.TypeVar("E", bound=BaseException)
 
 
 @pytest.mark.parametrize(
@@ -52,8 +57,8 @@ E = TypeVar("E", bound=BaseException)
 def test_create_project(
     tmp_path: pathlib.Path,
     repo_dict: CreateProjectKwargsDict,
-    repo_class: type[Union[SvnSync, GitSync, HgSync]],
-    raises_exception: Union[None, Union[type[E], tuple[type[E], ...]]],
+    repo_class: type[SvnSync | GitSync | HgSync],
+    raises_exception: None | type[E] | tuple[type[E], ...],
 ) -> None:
     """Tests for create_project()."""
     # add parent_dir via fixture
