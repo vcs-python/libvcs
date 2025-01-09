@@ -147,15 +147,15 @@ def test_svn_url_extension_pip(
     svn_url = SvnURLWithPip(**svn_url_kwargs)
     svn_url.url = svn_url.url.format(local_repo=svn_repo.path)
 
-    assert (
-        SvnBaseURL.is_valid(url) != is_valid
-    ), f"{url} compatibility should work with core, expects {not is_valid}"
-    assert (
-        SvnURL.is_valid(url) == is_valid
-    ), f"{url} compatibility should work with core, expects {not is_valid}"
-    assert (
-        SvnURLWithPip.is_valid(url) == is_valid
-    ), f"{url} compatibility should be {is_valid}"
+    assert SvnBaseURL.is_valid(url) != is_valid, (
+        f"{url} compatibility should work with core, expects {not is_valid}"
+    )
+    assert SvnURL.is_valid(url) == is_valid, (
+        f"{url} compatibility should work with core, expects {not is_valid}"
+    )
+    assert SvnURLWithPip.is_valid(url) == is_valid, (
+        f"{url} compatibility should be {is_valid}"
+    )
     assert SvnURLWithPip(url) == svn_url
 
 

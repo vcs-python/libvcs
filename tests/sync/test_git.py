@@ -723,9 +723,9 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
     remote = git_repo.remote(name="myrepo")
     assert remote is not None
     if remote is not None:
-        assert (
-            new_repo_url in remote.fetch_url
-        ), "Running remove_set should overwrite previous remote"
+        assert new_repo_url in remote.fetch_url, (
+            "Running remove_set should overwrite previous remote"
+        )
 
 
 def test_get_git_version(git_repo: GitSync) -> None:
@@ -741,9 +741,9 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
 
     new_branch = "another-branch-with-no-upstream"
     git_repo.run(["checkout", "-B", new_branch])
-    assert (
-        git_repo.get_current_remote_name() == new_branch
-    ), "branch w/o upstream should return branch only"
+    assert git_repo.get_current_remote_name() == new_branch, (
+        "branch w/o upstream should return branch only"
+    )
 
     new_remote_name = "new_remote_name"
     git_repo.set_remote(
@@ -753,25 +753,25 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
     )
     git_repo.run(["fetch", new_remote_name])
     git_repo.run(["branch", "--set-upstream-to", f"{new_remote_name}/{new_branch}"])
-    assert (
-        git_repo.get_current_remote_name() == new_remote_name
-    ), "Should reflect new upstream branch (different remote)"
+    assert git_repo.get_current_remote_name() == new_remote_name, (
+        "Should reflect new upstream branch (different remote)"
+    )
 
     upstream = "{}/{}".format(new_remote_name, "master")
 
     git_repo.run(["branch", "--set-upstream-to", upstream])
-    assert (
-        git_repo.get_current_remote_name() == upstream
-    ), "Should reflect upstream branch (different remote+branch)"
+    assert git_repo.get_current_remote_name() == upstream, (
+        "Should reflect upstream branch (different remote+branch)"
+    )
 
     git_repo.run(["checkout", "master"])
 
     # Different remote, different branch
     remote = f"{new_remote_name}/{new_branch}"
     git_repo.run(["branch", "--set-upstream-to", remote])
-    assert (
-        git_repo.get_current_remote_name() == remote
-    ), "Should reflect new upstream branch (different branch)"
+    assert git_repo.get_current_remote_name() == remote, (
+        "Should reflect new upstream branch (different branch)"
+    )
 
 
 def test_GitRemote_from_stdout() -> None:

@@ -177,17 +177,17 @@ def test_git_url_extension_pip(
     git_url.url = git_url.url.format(local_repo=git_repo.path)
 
     if is_generic:
-        assert (
-            GitBaseURL.is_valid(url) == is_valid
-        ), f"{url} compatibility should be {is_valid}"
+        assert GitBaseURL.is_valid(url) == is_valid, (
+            f"{url} compatibility should be {is_valid}"
+        )
     else:
-        assert (
-            GitBaseURL.is_valid(url) != is_valid
-        ), f"{url} compatibility should work with core, expects {not is_valid}"
+        assert GitBaseURL.is_valid(url) != is_valid, (
+            f"{url} compatibility should work with core, expects {not is_valid}"
+        )
 
-    assert (
-        GitURLWithPip.is_valid(url) == is_valid
-    ), f"{url} compatibility should be {is_valid}"
+    assert GitURLWithPip.is_valid(url) == is_valid, (
+        f"{url} compatibility should be {is_valid}"
+    )
     assert GitURLWithPip(url) == git_url
 
 
@@ -258,16 +258,16 @@ def test_git_url_extension_aws_code_commit(
     git_url.url = git_url.url.format(local_repo=git_repo.path)
 
     if is_generic:
-        assert (
-            GitBaseURL.is_valid(url) == is_valid
-        ), f"{url} compatibility should be {is_valid}"
+        assert GitBaseURL.is_valid(url) == is_valid, (
+            f"{url} compatibility should be {is_valid}"
+        )
     else:
-        assert (
-            GitBaseURL.is_valid(url) != is_valid
-        ), f"{url} compatibility should work with core, expects {not is_valid}"
-    assert (
-        GitURLWithAWSCodeCommit.is_valid(url) == is_valid
-    ), f"{url} compatibility should be {is_valid}"
+        assert GitBaseURL.is_valid(url) != is_valid, (
+            f"{url} compatibility should work with core, expects {not is_valid}"
+        )
+    assert GitURLWithAWSCodeCommit.is_valid(url) == is_valid, (
+        f"{url} compatibility should be {is_valid}"
+    )
     assert GitURLWithAWSCodeCommit(url) == git_url
 
 

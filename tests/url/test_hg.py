@@ -140,12 +140,12 @@ def test_hg_url_extension_pip(
     hg_url = HgURLWithPip(**hg_url_kwargs)
     hg_url.url = hg_url.url.format(local_repo=hg_repo.path)
 
-    assert (
-        HgBaseURL.is_valid(url) != is_valid
-    ), f"{url} compatibility should work with core, expects {not is_valid}"
-    assert (
-        HgURLWithPip.is_valid(url) == is_valid
-    ), f"{url} compatibility should be {is_valid}"
+    assert HgBaseURL.is_valid(url) != is_valid, (
+        f"{url} compatibility should work with core, expects {not is_valid}"
+    )
+    assert HgURLWithPip.is_valid(url) == is_valid, (
+        f"{url} compatibility should be {is_valid}"
+    )
     assert HgURLWithPip(url) == hg_url
 
 
