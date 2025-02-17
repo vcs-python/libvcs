@@ -200,6 +200,7 @@ required-imports = [
 
 [tool.ruff.lint.flake8-builtins]
 builtins-allowed-modules = [
+  "cmd",
   "dataclasses",
   "subprocess",
   "types",
