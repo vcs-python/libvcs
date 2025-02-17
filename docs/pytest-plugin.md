@@ -6,7 +6,7 @@ With libvcs's pytest plugin for [pytest], you can easily create Git, SVN, and Me
 
 ```{seealso} Are you using libvcs?
 
-Looking for more flexibility, correctness, or power? Need different defaults? [Connect with us] on GitHub. We'd love to hear about your use case—APIs won't be stabilized until we're confident everything meets expectations.
+Looking for more flexibility, correctness, or power? Need different defaults? [Connect with us] on GitHub. We'd love to hear about your use case. Our APIs won't be stabilized until we're confident they meet all expectations.
 
 [connect with us]: https://github.com/vcs-python/libvcs/discussions
 ```
@@ -29,7 +29,7 @@ Pytest will automatically detect the plugin, and its fixtures will be available.
 
 ## Fixtures
 
-This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api>`. The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache initial repositories, improving performance across tests.
+This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api>`. The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache the initial repositories, improving performance across tests.
 
 [session-scoped fixtures]: https://docs.pytest.org/en/8.3.x/how-to/fixtures.html#fixture-scopes
 
@@ -65,7 +65,7 @@ These ensure that repositories can be cloned and created without unnecessary war
 
 To configure the above fixtures with `autouse=True`, add them to your `conftest.py` file or test file, depending on the desired scope.
 
-_Why aren't these fixtures added automatically by the plugin?_ This design choice promotes explicitness, adhering to best practices for pytest plugins and Python packages.
+_Why aren't these fixtures added automatically by the plugin?_ This design choice promotes explicitness and adheres to best practices for pytest plugins and Python packages.
 
 ### Setting a Temporary Home Directory
 
