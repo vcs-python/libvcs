@@ -37,26 +37,26 @@ This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api
 
 ## Recommended Fixtures
 
-When the plugin is enabled and `pytest` is run, these overridable fixtures are automatically used:
+When the plugin is enabled and `pytest` is run, the following overridable fixtures are automatically used:
 
 - Create temporary test directories for:
   - `/home/` ({func}`home_path`)
   - `/home/${user}` ({func}`user_path`)
-- Set the home directory:
+- Set up the home directory:
   - Patch `$HOME` to point to {func}`user_path` using {func}`set_home`
 - Create configuration files:
   - `.gitconfig` via {func}`gitconfig`
   - `.hgrc` via {func}`hgconfig`
-- Set default VCS configurations:
+- Configure default VCS settings:
   - Use {func}`hgconfig` for [`HGRCPATH`] via {func}`set_hgconfig`
   - Use {func}`gitconfig` for [`GIT_CONFIG`] via {func}`set_gitconfig`
-- Set default commit names and emails:
+- Set default commit information:
   - Name: {func}`vcs_name`
   - Email: {func}`vcs_email`
-  - User (e.g. _`user <email@tld>`_): {func}`vcs_user`
-  - For git only: {func}`git_commit_envvars`
+  - User (e.g., _`user <email@tld>`_): {func}`vcs_user`
+  - Git-specific: {func}`git_commit_envvars`
 
-These ensure that repositories can be cloned and created without unnecessary warnings.
+These fixtures ensure that repositories can be cloned and created without unnecessary warnings.
 
 [`HGRCPATH`]: https://www.mercurial-scm.org/doc/hg.1.html#:~:text=UNIX%2Dlike%20environments.-,HGRCPATH,-If%20not%20set
 [`GIT_CONFIG`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIG
