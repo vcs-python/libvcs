@@ -131,6 +131,10 @@ def my_git_repo(
     return repo_path
 ```
 
+```{note}
+The `create_git_remote_repo` fixture creates a repository once per test session and reuses it, making copies for individual tests to avoid repeated `git init` operations.
+```
+
 #### Mercurial
 
 Use the {func}`set_hgconfig` fixture with `autouse=True`:
