@@ -43,7 +43,7 @@ When the plugin is enabled and `pytest` is run, these overridable fixtures are a
   - `/home/` ({func}`home_path`)
   - `/home/${user}` ({func}`user_path`)
 - Set the home directory:
-  - Patch `$HOME` to point to {func}`user_path` using ({func}`set_home`)
+  - Patch `$HOME` to point to {func}`user_path` using {func}`set_home`
 - Create configuration files:
   - `.gitconfig` via {func}`gitconfig`
   - `.hgrc` via {func}`hgconfig`
@@ -107,12 +107,14 @@ cases, you can use {func}`git_commit_envvars`:
 
 ```python
 import pytest
+from typing import Dict, Any
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 @pytest.fixture
 def my_git_repo(
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     gitconfig: pathlib.Path,
-    git_commit_envvars: "_ENV",
+    git_commit_envvars: Dict[str, Any],
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
     repo_path = create_git_remote_repo()
