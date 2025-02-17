@@ -7,13 +7,13 @@
 For latest official version:
 
 ```console
-$ pip install --user libvcs
+$ python -m pip install libvcs
 ```
 
 Upgrading:
 
 ```console
-$ pip install --user --upgrade libvcs
+$ python -m pip install --upgrade libvcs
 ```
 
 (developmental-releases)=
