@@ -86,7 +86,7 @@ def setup(set_home: None):
 You can override the default author used in {func}`git_remote_repo` and other
 fixtures via {func}`vcs_name`, {func}`vcs_email`, and {func}`vcs_user`:
 
-```
+```python
 @pytest.fixture(scope="session")
 def vcs_name() -> str:
     return "My custom name"
@@ -102,7 +102,7 @@ def setup(set_gitconfig: None):
     pass
 ```
 
-Sometimes, `set_getconfig` via `GIT_CONFIG` doesn't apply as expected. For those
+Sometimes, `set_gitconfig` via `GIT_CONFIG` doesn't apply as expected. For those
 cases, you can use {func}`git_commit_envvars`:
 
 ```python
