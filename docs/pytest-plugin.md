@@ -69,13 +69,13 @@ _Why aren't these fixtures added automatically by the plugin?_ This design choic
 
 ### Setting a Temporary Home Directory
 
-To set a temporary home directory, use the {func}`set_home` fixture with `autouse=True`:
+To set up a temporary home directory, use the {func}`set_home` fixture with `autouse=True`:
 
 ```python
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(set_home: None):
+def setup_home(set_home: None):
     pass
 ```
 
@@ -83,12 +83,13 @@ def setup(set_home: None):
 
 #### Git
 
-You can override the default author used in {func}`git_remote_repo` and other
-fixtures via {func}`vcs_name`, {func}`vcs_email`, and {func}`vcs_user`:
+You can override the default author information used in {func}`git_remote_repo` and other
+fixtures by customizing {func}`vcs_name`, {func}`vcs_email`, or {func}`vcs_user`:
 
 ```python
 @pytest.fixture(scope="session")
 def vcs_name() -> str:
+    """Provide a custom author name for Git commits."""
     return "My custom name"
 ```
 
@@ -98,7 +99,7 @@ Use the {func}`set_gitconfig` fixture with `autouse=True`:
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(set_gitconfig: None):
+def setup_git(set_gitconfig: None):
     pass
 ```
 
@@ -133,7 +134,7 @@ Use the {func}`set_hgconfig` fixture with `autouse=True`:
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(set_hgconfig: None):
+def setup_hg(set_hgconfig: None):
     pass
 ```
 
