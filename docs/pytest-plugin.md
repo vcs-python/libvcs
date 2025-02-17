@@ -75,7 +75,8 @@ To set up a temporary home directory, use the {func}`set_home` fixture with `aut
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup_home(set_home: None):
+def setup_home(set_home: None) -> None:
+    """Configure a temporary home directory for testing."""
     pass
 ```
 
@@ -99,7 +100,8 @@ Use the {func}`set_gitconfig` fixture with `autouse=True`:
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup_git(set_gitconfig: None):
+def setup_git(set_gitconfig: None) -> None:
+    """Configure Git settings for testing."""
     pass
 ```
 
