@@ -29,13 +29,13 @@ Installation options:
 - Via pip (pre-release versions):
 
   ```console
-  $ pip install --user --upgrade --pre libvcs
+  $ python -m pip install --upgrade --pre libvcs
   ```
 
 - Via trunk (development version, may be unstable):
 
   ```console
-  $ pip install --user -e git+https://github.com/vcs-python/libvcs.git#egg=libvcs
+  $ python -m pip install -e git+https://github.com/vcs-python/libvcs.git#egg=libvcs
   ```
 
 [pip]: https://pip.pypa.io/en/stable/
