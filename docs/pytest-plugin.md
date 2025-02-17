@@ -109,7 +109,7 @@ cases, you can use {func}`git_commit_envvars`:
 ```python
 import pytest
 from typing import Dict, Any
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, git_remote_repo_single_commit_post_init
 
 @pytest.fixture
 def my_git_repo(
@@ -117,7 +117,10 @@ def my_git_repo(
     gitconfig: pathlib.Path,
     git_commit_envvars: Dict[str, Any],
 ) -> pathlib.Path:
-    """Copy the session-scoped Git repository to a temporary directory."""
+    """Create a fresh Git repository in a temporary directory.
+    
+    This fixture demonstrates how to create a Git repository with custom commit settings.
+    """
     repo_path = create_git_remote_repo()
     git_remote_repo_single_commit_post_init(
         remote_repo_path=repo_path,
@@ -134,13 +137,14 @@ Use the {func}`set_hgconfig` fixture with `autouse=True`:
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup_hg(set_hgconfig: None):
+def setup_hg(set_hgconfig: None) -> None:
+    """Configure Mercurial settings for testing."""
     pass
 ```
 
 ## Examples
 
-For usage examples, refer to libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests).
+For more usage examples, refer to libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests).
 
 ## API Reference
 
