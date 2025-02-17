@@ -2,7 +2,7 @@
 
 # `pytest` Plugin
 
-With libvcs's pytest plugin for [pytest], you can easily create Git, SVN, and Mercurial repositories on the fly.
+With libvcs's pytest plugin for [pytest], you can easily create Git, Subversion (SVN), and Mercurial repositories on the fly.
 
 ```{seealso} Are you using libvcs?
 
@@ -25,11 +25,11 @@ Install `libvcs` using your preferred Python package manager:
 $ python -m pip install libvcs
 ```
 
-Pytest will automatically detect the plugin, and its fixtures will be available.
+Once installed, pytest will automatically detect the plugin and make its fixtures available.
 
 ## Fixtures
 
-This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api>`. The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache the initial repositories, improving performance across tests.
+This pytest plugin provides {ref}`pytest fixtures <pytest:fixtures-api>` that ensure a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache the initial repositories, improving performance across tests.
 
 [session-scoped fixtures]: https://docs.pytest.org/en/8.3.x/how-to/fixtures.html#fixture-scopes
 
