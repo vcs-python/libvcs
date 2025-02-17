@@ -22,7 +22,7 @@ Looking for more flexibility, correctness, or power? Need different defaults? [C
 Install `libvcs` using your preferred Python package manager:
 
 ```console
-$ pip install libvcs
+$ python -m pip install libvcs
 ```
 
 Pytest will automatically detect the plugin, and its fixtures will be available.
