@@ -171,3 +171,85 @@ def test_git_init_validation_errors(tmp_path: pathlib.Path) -> None:
     # Test invalid octal number for shared
     with pytest.raises(ValueError, match="Invalid shared value"):
         repo.init(shared="8888")  # Invalid octal number
+
+    # Test octal number out of range
+    with pytest.raises(ValueError, match="Invalid shared value"):
+        repo.init(shared="1000")  # Octal number > 0777
+
+    # Test non-existent directory with make_parents=False
+    non_existent = tmp_path / "non_existent"
+    with pytest.raises(FileNotFoundError, match="Directory does not exist"):
+        repo = git.Git(path=non_existent)
+        repo.init(make_parents=False)
+
+
+def test_git_init_shared_octal(tmp_path: pathlib.Path) -> None:
+    """Test git init with shared octal permissions."""
+    repo = git.Git(path=tmp_path)
+
+    # Test valid octal numbers
+    for octal in ["0660", "0644", "0755"]:
+        repo_dir = tmp_path / f"shared_{octal}"
+        repo_dir.mkdir()
+        repo = git.Git(path=repo_dir)
+        result = repo.init(shared=octal)
+        assert "Initialized empty shared Git repository" in result
+
+
+def test_git_init_shared_values(tmp_path: pathlib.Path) -> None:
+    """Test git init with all valid shared values."""
+    valid_values = ["false", "true", "umask", "group", "all", "world", "everybody"]
+
+    for value in valid_values:
+        repo_dir = tmp_path / f"shared_{value}"
+        repo_dir.mkdir()
+        repo = git.Git(path=repo_dir)
+        result = repo.init(shared=value)
+        # The output message varies between git versions and shared values
+        assert any(
+            msg in result
+            for msg in [
+                "Initialized empty Git repository",
+                "Initialized empty shared Git repository",
+            ]
+        )
+
+
+def test_git_init_ref_format(tmp_path: pathlib.Path) -> None:
+    """Test git init with different ref formats."""
+    repo = git.Git(path=tmp_path)
+
+    # Test with files format (default)
+    result = repo.init()
+    assert "Initialized empty Git repository" in result
+
+    # Test with reftable format (requires git >= 2.37.0)
+    repo_dir = tmp_path / "reftable"
+    repo_dir.mkdir()
+    repo = git.Git(path=repo_dir)
+    try:
+        result = repo.init(ref_format="reftable")
+        assert "Initialized empty Git repository" in result
+    except Exception as e:
+        if "unknown option" in str(e):
+            pytest.skip("ref-format option not supported in this git version")
+        raise
+
+
+def test_git_init_make_parents(tmp_path: pathlib.Path) -> None:
+    """Test git init with make_parents flag."""
+    deep_path = tmp_path / "a" / "b" / "c"
+
+    # Test with make_parents=True (default)
+    repo = git.Git(path=deep_path)
+    result = repo.init()
+    assert "Initialized empty Git repository" in result
+    assert deep_path.exists()
+    assert (deep_path / ".git").is_dir()
+
+    # Test with make_parents=False on existing directory
+    existing_path = tmp_path / "existing"
+    existing_path.mkdir()
+    repo = git.Git(path=existing_path)
+    result = repo.init(make_parents=False)
+    assert "Initialized empty Git repository" in result

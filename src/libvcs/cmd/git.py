@@ -1031,26 +1031,29 @@ class Git:
     def init(
         self,
         *,
-        template: str | None = None,
+        template: str | pathlib.Path | None = None,
         separate_git_dir: StrOrBytesPath | None = None,
         object_format: t.Literal["sha1", "sha256"] | None = None,
         branch: str | None = None,
         initial_branch: str | None = None,
         shared: bool
-        | Literal[false, true, umask, group, all, world, everybody]
-        | str
+        | t.Literal["false", "true", "umask", "group", "all", "world", "everybody"]
+        | str  # Octal number string (e.g., "0660")
         | None = None,
         quiet: bool | None = None,
         bare: bool | None = None,
+        ref_format: t.Literal["files", "reftable"] | None = None,
+        default: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        make_parents: bool = True,
         **kwargs: t.Any,
     ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
 
         Parameters
         ----------
-        template : str, optional
+        template : str | pathlib.Path, optional
             Directory from which templates will be used. The template directory
             contains files and directories that will be copied to the $GIT_DIR
             after it is created. The template directory will be one of the
@@ -1084,7 +1087,7 @@ class Git:
             - umask: Use permissions specified by umask
             - group: Make the repository group-writable
             - all, world, everybody: Same as world, make repo readable by all users
-            - An octal number: Explicit mode specification (e.g., "0660")
+            - An octal number string: Explicit mode specification (e.g., "0660")
         quiet : bool, optional
             Only print error and warning messages; all other output will be
             suppressed. Useful for scripting.
@@ -1092,9 +1095,19 @@ class Git:
             Create a bare repository. If GIT_DIR environment is not set, it is set
             to the current working directory. Bare repositories have no working
             tree and are typically used as central repositories.
+        ref_format : "files" | "reftable", optional
+            Specify the reference storage format. Requires git version >= 2.37.0.
+            - files: Classic format with packed-refs and loose refs (default)
+            - reftable: New format that is more efficient for large repositories
+        default : bool, optional
+            Use default permissions for directories and files. This is the same as
+            running git init without any options.
         check_returncode : bool, optional
             If True, check the return code of the git command and raise a
             CalledProcessError if it is non-zero.
+        make_parents : bool, default: True
+            If True, create the target directory if it doesn't exist. If False,
+            raise an error if the directory doesn't exist.
 
         Returns
         -------
@@ -1105,6 +1118,10 @@ class Git:
         ------
         CalledProcessError
             If the git command fails and check_returncode is True.
+        ValueError
+            If invalid parameters are provided.
+        FileNotFoundError
+            If make_parents is False and the target directory doesn't exist.
 
         Examples
         --------
@@ -1144,6 +1161,14 @@ class Git:
         >>> shared_repo.mkdir()
         >>> git = Git(path=shared_repo)
         >>> git.init(shared='group')
+        'Initialized empty shared Git repository in ...'
+
+        Create with octal permissions:
+
+        >>> shared_repo = tmp_path / 'shared_octal_example'
+        >>> shared_repo.mkdir()
+        >>> git = Git(path=shared_repo)
+        >>> git.init(shared='0660')
         'Initialized empty shared Git repository in ...'
 
         Create with a template directory:
@@ -1218,18 +1243,31 @@ class Git:
                         shared_str.isdigit()
                         and len(shared_str) <= 4
                         and all(c in string.octdigits for c in shared_str)
+                        and int(shared_str, 8) <= 0o777  # Validate octal range
                     )
                 ):
                     msg = (
                         f"Invalid shared value. Must be one of {valid_shared_values} "
-                        "or an octal number"
+                        "or a valid octal number between 0000 and 0777"
                     )
                     raise ValueError(msg)
                 local_flags.append(f"--shared={shared}")
+
         if quiet is True:
             local_flags.append("--quiet")
         if bare is True:
             local_flags.append("--bare")
+        if ref_format is not None:
+            local_flags.append(f"--ref-format={ref_format}")
+        if default is True:
+            local_flags.append("--default")
+
+        # libvcs special behavior
+        if make_parents and not self.path.exists():
+            self.path.mkdir(parents=True)
+        elif not self.path.exists():
+            msg = f"Directory does not exist: {self.path}"
+            raise FileNotFoundError(msg)
 
         return self.run(
             ["init", *local_flags, "--", *required_flags],
@@ -2863,7 +2901,7 @@ class GitRemoteCmd:
         )
 
 
-GitRemoteManagerLiteral = Literal[
+GitRemoteManagerLiteral = t.Literal[
     "--verbose",
     "add",
     "rename",
@@ -2933,7 +2971,7 @@ class GitRemoteManager:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-        **kwargs: Any,
+        **kwargs: t.Any,
     ) -> str:
         """Run a command against a git repository's remotes.
 
