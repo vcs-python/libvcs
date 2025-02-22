@@ -15,6 +15,14 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Breaking changes
+
+#### `run()` now uses `text=True` (#485)
+
+This means that unicode, not bytes, will be used for running `subprocess`
+commands in libvcs. If there are any compatibility issues with this, please file
+a ticket.
+
 ### Development
 
 #### chore: Implement PEP 563 deferred annotation resolution (#483)
