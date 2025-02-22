@@ -1035,7 +1035,10 @@ class Git:
         object_format: t.Literal["sha1", "sha256"] | None = None,
         branch: str | None = None,
         initial_branch: str | None = None,
-        shared: bool | str | None = None,
+        shared: bool
+        | Literal[false, true, umask, group, all, world, everybody]
+        | str
+        | None = None,
         quiet: bool | None = None,
         bare: bool | None = None,
         # libvcs special behavior
@@ -1049,28 +1052,58 @@ class Git:
         template : str, optional
             Directory from which templates will be used. The template directory
             contains files and directories that will be copied to the $GIT_DIR
-            after it is created.
+            after it is created. The template directory will be one of the
+            following (in order):
+            - The argument given with the --template option
+            - The contents of the $GIT_TEMPLATE_DIR environment variable
+            - The init.templateDir configuration variable
+            - The default template directory: /usr/share/git-core/templates
         separate_git_dir : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
             Instead of placing the git repository in <directory>/.git/, place it in
-            the specified path.
+            the specified path. The .git file at <directory>/.git will contain a
+            gitfile that points to the separate git dir. This is useful when you
+            want to store the git directory on a different disk or filesystem.
         object_format : "sha1" | "sha256", optional
             Specify the hash algorithm to use. The default is sha1. Note that
-            sha256 is still experimental in git.
+            sha256 is still experimental in git and requires git version >= 2.29.0.
+            Once the repository is created with a specific hash algorithm, it cannot
+            be changed.
         branch : str, optional
             Use the specified name for the initial branch. If not specified, fall
-            back to the default name (currently "master").
+            back to the default name (currently "master", but may change based on
+            init.defaultBranch configuration).
         initial_branch : str, optional
             Alias for branch parameter. Specify the name for the initial branch.
+            This is provided for compatibility with newer git versions.
         shared : bool | str, optional
             Specify that the git repository is to be shared amongst several users.
-            Can be 'false', 'true', 'umask', 'group', 'all', 'world',
-            'everybody', or an octal number.
+            Valid values are:
+            - false: Turn off sharing (default)
+            - true: Same as group
+            - umask: Use permissions specified by umask
+            - group: Make the repository group-writable
+            - all, world, everybody: Same as world, make repo readable by all users
+            - An octal number: Explicit mode specification (e.g., "0660")
         quiet : bool, optional
             Only print error and warning messages; all other output will be
-            suppressed.
+            suppressed. Useful for scripting.
         bare : bool, optional
             Create a bare repository. If GIT_DIR environment is not set, it is set
-            to the current working directory.
+            to the current working directory. Bare repositories have no working
+            tree and are typically used as central repositories.
+        check_returncode : bool, optional
+            If True, check the return code of the git command and raise a
+            CalledProcessError if it is non-zero.
+
+        Returns
+        -------
+        str
+            The output of the git init command.
+
+        Raises
+        ------
+        CalledProcessError
+            If the git command fails and check_returncode is True.
 
         Examples
         --------
@@ -1119,6 +1152,13 @@ class Git:
         >>> git = Git(path=template_repo)
         >>> git.init(template=str(tmp_path))
         'Initialized empty Git repository in ...'
+
+        Create with SHA-256 object format (requires git >= 2.29.0):
+
+        >>> sha256_repo = tmp_path / 'sha256_example'
+        >>> sha256_repo.mkdir()
+        >>> git = Git(path=sha256_repo)
+        >>> git.init(object_format='sha256')  # doctest: +SKIP
         """
         local_flags: list[str] = []
         required_flags: list[str] = [str(self.path)]
