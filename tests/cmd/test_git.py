@@ -34,8 +34,13 @@ def test_git_init_bare(tmp_path: pathlib.Path) -> None:
     repo = git.Git(path=tmp_path)
     result = repo.init(bare=True)
     assert "Initialized empty Git repository" in result
-    # Bare repos have files directly in the directory
+
+    # Verify bare repository structure and configuration
     assert (tmp_path / "HEAD").exists()
+    config_path = tmp_path / "config"
+    assert config_path.exists(), "Config file does not exist in bare repository"
+    config_text = config_path.read_text()
+    assert "bare = true" in config_text, "Repository core.bare flag not set to true"
 
 
 def test_git_init_template(tmp_path: pathlib.Path) -> None:
