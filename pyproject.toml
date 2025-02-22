@@ -1,6 +1,6 @@
 [project]
 name = "libvcs"
-version = "0.34.0"
+version = "0.35.0"
 description = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
 requires-python = ">=3.9,<4.0"
 authors = [
