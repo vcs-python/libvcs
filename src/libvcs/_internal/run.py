@@ -18,21 +18,9 @@ import typing as t
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 
 from libvcs import exc
-from libvcs._internal.types import StrOrBytesPath
+from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
-
-console_encoding = sys.stdout.encoding
-
-
-def console_to_str(s: bytes) -> str:
-    """From pypa/pip project, pip.backwardwardcompat. License MIT."""
-    try:
-        return s.decode(console_encoding)
-    except UnicodeDecodeError:
-        return s.decode("utf_8")
-    except AttributeError:  # for tests, #13
-        return str(s)
 
 
 if t.TYPE_CHECKING:
@@ -99,34 +87,32 @@ if sys.platform == "win32":
     _ENV: TypeAlias = Mapping[str, str]
 else:
     _ENV: TypeAlias = t.Union[
-        Mapping[bytes, StrOrBytesPath],
-        Mapping[str, StrOrBytesPath],
+        Mapping[bytes, StrPath],
+        Mapping[str, StrPath],
     ]
 
-_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = t.Union[StrPath, Sequence[StrPath]]
 _FILE: TypeAlias = t.Optional[t.Union[int, t.IO[t.Any]]]
 
 
 def run(
     args: _CMD,
     bufsize: int = -1,
-    executable: StrOrBytesPath | None = None,
+    executable: StrPath | None = None,
     stdin: _FILE | None = None,
     stdout: _FILE | None = None,
     stderr: _FILE | None = None,
     preexec_fn: t.Callable[[], t.Any] | None = None,
     close_fds: bool = True,
     shell: bool = False,
-    cwd: StrOrBytesPath | None = None,
+    cwd: StrPath | None = None,
     env: _ENV | None = None,
-    universal_newlines: bool = False,
     startupinfo: t.Any | None = None,
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
     pass_fds: t.Any = (),
     *,
-    text: bool | None = None,
     encoding: str | None = None,
     errors: str | None = None,
     user: str | int | None = None,
@@ -191,13 +177,12 @@ def run(
         shell=shell,
         cwd=cwd,
         env=env,
-        universal_newlines=universal_newlines,
         startupinfo=startupinfo,
         creationflags=creationflags,
         restore_signals=restore_signals,
         start_new_session=start_new_session,
         pass_fds=pass_fds,
-        text=text,
+        text=True,
         encoding=encoding,
         errors=errors,
         user=user,
@@ -206,7 +191,7 @@ def run(
         umask=umask,
     )
 
-    all_output: list[str] = []
+    all_output: str = ""
     code = None
     line = None
     if log_in_real_time and callback is None:
@@ -220,18 +205,32 @@ def run(
         code = proc.poll()
 
         if callback and callable(callback) and proc.stderr is not None:
-            line = console_to_str(proc.stderr.read(128))
+            line = str(proc.stderr.read(128))
             if line:
                 callback(output=line, timestamp=datetime.datetime.now())
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now())
 
-    lines = filter(None, (line.strip() for line in proc.stdout.readlines()))
-    all_output = console_to_str(b"\n".join(lines))
+    lines = (
+        filter(None, (line.strip() for line in proc.stdout.readlines()))
+        if proc.stdout is not None
+        else []
+    )
+    all_output = "\n".join(lines)
     if code:
-        stderr_lines = filter(None, (line.strip() for line in proc.stderr.readlines()))
-        all_output = console_to_str(b"".join(stderr_lines))
+        stderr_lines = (
+            filter(None, (line.strip() for line in proc.stderr.readlines()))
+            if proc.stderr is not None
+            else []
+        )
+        all_output = "".join(stderr_lines)
     output = "".join(all_output)
     if code != 0 and check_returncode:
-        raise exc.CommandError(output=output, returncode=code, cmd=args)
+        raise exc.CommandError(
+            output=output,
+            returncode=code,
+            cmd=[str(arg) for arg in args]
+            if isinstance(args, (list, tuple))
+            else str(args),
+        )
     return output
