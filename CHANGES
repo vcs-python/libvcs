@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Development
+
+- Cursor rules for development loop and git commit messages (#488)
+
 ## libvcs 0.35.0 (2025-02-22)
 
 ### Breaking changes
