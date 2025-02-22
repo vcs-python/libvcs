@@ -132,3 +132,42 @@ def test_git_reinit(tmp_path: pathlib.Path) -> None:
     # Reinit
     second_result = repo.init()
     assert "Reinitialized existing Git repository" in second_result
+
+
+def test_git_init_validation_errors(tmp_path: pathlib.Path) -> None:
+    """Test validation errors in git init."""
+    repo = git.Git(path=tmp_path)
+
+    # Test invalid template type
+    with pytest.raises(TypeError, match="template must be a string or Path"):
+        repo.init(template=123)  # type: ignore
+
+    # Test non-existent template directory
+    with pytest.raises(ValueError, match="template directory does not exist"):
+        repo.init(template=str(tmp_path / "nonexistent"))
+
+    # Test invalid object format
+    with pytest.raises(
+        ValueError,
+        match="object_format must be either 'sha1' or 'sha256'",
+    ):
+        repo.init(object_format="invalid")  # type: ignore
+
+    # Test specifying both branch and initial_branch
+    with pytest.raises(
+        ValueError,
+        match="Cannot specify both branch and initial_branch",
+    ):
+        repo.init(branch="main", initial_branch="master")
+
+    # Test branch name with whitespace
+    with pytest.raises(ValueError, match="Branch name cannot contain whitespace"):
+        repo.init(branch="main branch")
+
+    # Test invalid shared value
+    with pytest.raises(ValueError, match="Invalid shared value"):
+        repo.init(shared="invalid")
+
+    # Test invalid octal number for shared
+    with pytest.raises(ValueError, match="Invalid shared value"):
+        repo.init(shared="8888")  # Invalid octal number
