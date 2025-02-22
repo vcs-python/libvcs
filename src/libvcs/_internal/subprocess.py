@@ -258,7 +258,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         args: _CMD | None = ...,
         universal_newlines: t.Literal[False] = ...,
         *,
-        text: t.Literal[None, False] = ...,
+        text: t.Literal[False] | None = ...,
         encoding: None = ...,
         errors: None = ...,
     ) -> subprocess.Popen[bytes]: ...
@@ -370,7 +370,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         input: str | bytes | None = ...,
         encoding: None = ...,
         errors: None = ...,
-        text: t.Literal[None, False] = ...,
+        text: t.Literal[False] | None = ...,
         **kwargs: t.Any,
     ) -> bytes: ...
 
@@ -484,7 +484,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         encoding: None = ...,
         errors: None = ...,
         input: bytes | None = ...,
-        text: t.Literal[None, False] = ...,
+        text: t.Literal[False] | None = ...,
     ) -> subprocess.CompletedProcess[bytes]: ...
 
     def run(
