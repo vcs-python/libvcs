@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import pathlib
 import shlex
+import string
 import typing as t
 from collections.abc import Sequence
 
@@ -1155,26 +1156,71 @@ class Git:
         >>> sha256_repo.mkdir()
         >>> git = Git(path=sha256_repo)
         >>> git.init(object_format='sha256')  # doctest: +SKIP
+        'Initialized empty Git repository in ...'
         """
         local_flags: list[str] = []
         required_flags: list[str] = [str(self.path)]
 
         if template is not None:
+            if not isinstance(template, (str, pathlib.Path)):
+                msg = "template must be a string or Path"
+                raise TypeError(msg)
+            template_path = pathlib.Path(template)
+            if not template_path.is_dir():
+                msg = f"template directory does not exist: {template}"
+                raise ValueError(msg)
             local_flags.append(f"--template={template}")
+
         if separate_git_dir is not None:
             if isinstance(separate_git_dir, pathlib.Path):
                 separate_git_dir = str(separate_git_dir.absolute())
             local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
+
         if object_format is not None:
+            if object_format not in {"sha1", "sha256"}:
+                msg = "object_format must be either 'sha1' or 'sha256'"
+                raise ValueError(msg)
             local_flags.append(f"--object-format={object_format}")
-        if branch is not None:
-            local_flags.extend(["--initial-branch", branch])
-        elif initial_branch is not None:
-            local_flags.extend(["--initial-branch", initial_branch])
+
+        if branch is not None and initial_branch is not None:
+            msg = "Cannot specify both branch and initial_branch"
+            raise ValueError(msg)
+
+        branch_name = branch or initial_branch
+        if branch_name is not None:
+            if any(c.isspace() for c in branch_name):
+                msg = "Branch name cannot contain whitespace"
+                raise ValueError(msg)
+            local_flags.extend(["--initial-branch", branch_name])
+
         if shared is not None:
+            valid_shared_values = {
+                "false",
+                "true",
+                "umask",
+                "group",
+                "all",
+                "world",
+                "everybody",
+            }
             if isinstance(shared, bool):
                 local_flags.append("--shared")
             else:
+                shared_str = str(shared).lower()
+                # Check if it's a valid string value or an octal number
+                if not (
+                    shared_str in valid_shared_values
+                    or (
+                        shared_str.isdigit()
+                        and len(shared_str) <= 4
+                        and all(c in string.octdigits for c in shared_str)
+                    )
+                ):
+                    msg = (
+                        f"Invalid shared value. Must be one of {valid_shared_values} "
+                        "or an octal number"
+                    )
+                    raise ValueError(msg)
                 local_flags.append(f"--shared={shared}")
         if quiet is True:
             local_flags.append("--quiet")
