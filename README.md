@@ -1,84 +1,84 @@
 # `libvcs` &middot; [![Python Package](https://img.shields.io/pypi/v/libvcs.svg)](https://pypi.org/project/libvcs/) [![License](https://img.shields.io/github/license/vcs-python/libvcs.svg)](https://github.com/vcs-python/libvcs/blob/master/LICENSE) [![Code Coverage](https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg)](https://codecov.io/gh/vcs-python/libvcs)
 
-libvcs is a lite, [typed](https://docs.python.org/3/library/typing.html), pythonic tool box for
-detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `svn`. Powers
-[vcspull](https://www.github.com/vcs-python/vcspull/).
+**Stop struggling with VCS command-line tools in Python.** libvcs gives you a clean, typed API to work with Git, Mercurial, and SVN repositories - parse URLs, run commands, and sync repos with just a few lines of code.
 
-## Overview
+## Why Use libvcs?
 
-### Key Features
+- 🔄 **Manage multiple repos** without shell scripts or subprocess calls
+- 🔍 **Parse and transform VCS URLs** between different formats
+- 🧪 **Test code that interacts with repositories** using included pytest fixtures
+- 🔒 **Type-safe operations** with full typing support
 
-- **URL Detection and Parsing**: Validate and parse Git, Mercurial, and Subversion URLs.
-- **Command Abstraction**: Interact with VCS systems through a Python API.
-- **Repository Synchronization**: Clone and update repositories locally via
-  Python API.
-- **py.test fixtures**: Create temporary local repositories and working copies for testing for unit tests.
-
-_Supports Python 3.9 and above, Git (including AWS CodeCommit), Subversion, and Mercurial._
-
-To **get started**, see the [quickstart guide](https://libvcs.git-pull.com/quickstart.html) for more information.
+*Supports Python 3.9 and above, Git (including AWS CodeCommit), Subversion, and Mercurial.*
 
 ```console
 $ pip install --user libvcs
 ```
 
-## URL Detection and Parsing
+---
 
-Easily validate and parse VCS URLs using the
-[`libvcs.url`](https://libvcs.git-pull.com/url/index.html) module:
+## Quick Examples
 
-### Validate URLs
-
+### Parse and transform Git URLs
 ```python
 >>> from libvcs.url.git import GitURL
+>>> # Transform a GitHub URL to GitLab with one line
+>>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
+>>> git_location.hostname = 'gitlab.com'  # Change is this simple!
+>>> git_location.to_url()
+'git@gitlab.com:vcs-python/libvcs.git'
+```
 
+### Clone and update repositories
+```python
+>>> from libvcs.sync.git import GitSync
+>>> import pathlib
+>>> # Set up our repository with options
+>>> repo = GitSync(
+...    url="https://github.com/vcs-python/libvcs",
+...    path=pathlib.Path.cwd() / "my_repo",
+...    remotes={
+...        'gitlab': 'https://gitlab.com/vcs-python/libvcs'
+...    }
+... )
+>>> # Operations are simple to understand
+>>> # repo.obtain()  # Clone if needed
+>>> # repo.update_repo()  # Pull latest changes
+>>> # repo.get_revision()
+>>> # '5c227e6ab4aab44bf097da2e088b0ff947370ab8'
+```
+
+### Validate repository URLs
+```python
+>>> from libvcs.url.git import GitURL
+>>> # Quickly validate if a URL is a proper Git URL
 >>> GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')
 True
 ```
 
-### Parse and adjust Git URLs:
+---
+
+## Core Features
+
+### 1. URL Detection and Parsing
+
+Easily validate and parse VCS URLs using the [`libvcs.url`](https://libvcs.git-pull.com/url/index.html) module:
+
+Parse URLs and modify them programmatically:
 
 ```python
 >>> from libvcs.url.git import GitURL
-
 >>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
-
->>> git_location
-GitURL(url=git@github.com:vcs-python/libvcs.git,
-        user=git,
-        hostname=github.com,
-        path=vcs-python/libvcs,
-        suffix=.git,
-        rule=core-git-scp)
-```
-
-Switch repo libvcs -> vcspull:
-
-```python
->>> from libvcs.url.git import GitURL
-
->>> git_location = GitURL(url='git@github.com:vcs-python/libvcs.git')
-
 >>> git_location.path = 'vcs-python/vcspull'
-
 >>> git_location.to_url()
 'git@github.com:vcs-python/vcspull.git'
-
-# Switch them to gitlab:
->>> git_location.hostname = 'gitlab.com'
-
-# Export to a `git clone` compatible URL.
->>> git_location.to_url()
-'git@gitlab.com:vcs-python/vcspull.git'
 ```
 
-See more in the [parser document](https://libvcs.git-pull.com/parse/index.html).
+See more in the [parser documentation](https://libvcs.git-pull.com/parse/index.html).
 
-## Command Abstraction
+### 2. Command Abstraction
 
 Abstracts CLI commands for `git(1)`, `hg(1)`, `svn(1)` via a lightweight [`subprocess`](https://docs.python.org/3/library/subprocess.html) wrapper.
-
-### Run Git Commands
 
 ```python
 import pathlib
@@ -91,12 +91,9 @@ git.clone(url='https://github.com/vcs-python/libvcs.git')
 Above: [`libvcs.cmd.git.Git`](https://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git) using
 [`Git.clone()`](http://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git.clone).
 
-## Repository Synchronization
+### 3. Repository Synchronization
 
-Synchronize your repositories using the
-[`libvcs.sync`](https://libvcs.git-pull.com/sync/) module.
-
-### Clone and Update Repositories
+Synchronize repositories using the [`libvcs.sync`](https://libvcs.git-pull.com/sync/) module.
 
 ```python
 import pathlib
@@ -111,26 +108,18 @@ repo = GitSync(
 )
 
 # Update / clone repo:
->>> repo.update_repo()
+# repo.update_repo()
 
 # Get revision:
->>> repo.get_revision()
-u'5c227e6ab4aab44bf097da2e088b0ff947370ab8'
+# repo.get_revision()
+# '5c227e6ab4aab44bf097da2e088b0ff947370ab8'
 ```
 
-Above: [`libvcs.sync.git.GitSync`](https://libvcs.git-pull.com/projects/git.html#libvcs.sync.git.GitSync) repository
-object using
-[`GitSync.update_repo()`](https://libvcs.git-pull.com/sync/git.html#libvcs.sync.git.GitSync.update_repo)
-and
-[`GitSync.get_revision()`](https://libvcs.git-pull.com/sync/git.html#libvcs.sync.git.GitSync.get_revision).
+### 4. Pytest Fixtures for Testing
 
-## Pytest plugin: Temporary VCS repositories for testing
-
-libvcs [pytest plugin](https://libvcs.git-pull.com/pytest-plugin.html) provides [py.test fixtures] to swiftly create local VCS repositories and working repositories to test with. Repositories are automatically cleaned on test teardown.
+libvcs [pytest plugin](https://libvcs.git-pull.com/pytest-plugin.html) provides [py.test fixtures] to create temporary VCS repositories for testing. Repositories are automatically cleaned on test teardown.
 
 [py.test fixtures]: https://docs.pytest.org/en/8.2.x/explanation/fixtures.html
-
-### Use temporary, local VCS in py.test
 
 ```python
 import pathlib
@@ -158,33 +147,39 @@ def test_repo_git_remote_checkout(
 ```
 
 Under the hood: fixtures bootstrap a temporary `$HOME` environment in a
-[`TmpPathFactory`](https://docs.pytest.org/en/7.1.x/reference/reference.html#tmp-path-factory-factory-api)
-for automatic cleanup and `pytest-xdist` compatibility..
+[`TempPathFactory`](https://docs.pytest.org/en/8.3.x/reference/reference.html#pytest.TempPathFactory)
+for automatic cleanup and `pytest-xdist` compatibility.
 
-## Donations
+---
+
+## Documentation & Resources
+
+- **Getting Started**: [Quickstart Guide](https://libvcs.git-pull.com/quickstart.html)
+- **Full Documentation**: [libvcs.git-pull.com](https://libvcs.git-pull.com)
+- **Changelog**: [History](https://libvcs.git-pull.com/history.html)
+- **Source Code**: [GitHub](https://github.com/vcs-python/libvcs)
+- **PyPI Package**: [libvcs](https://pypi.python.org/pypi/libvcs)
+
+## API References
+
+- [`libvcs.url`](https://libvcs.git-pull.com/url/): URL Parser
+- [`libvcs.cmd`](https://libvcs.git-pull.com/cmd/): Commands
+- [`libvcs.sync`](https://libvcs.git-pull.com/sync/): Clone and update
+
+## Support
 
 Your donations fund development of new features, testing and support. Your money will go directly to
-maintenance and development of the project. If you are an individual, feel free to give whatever
-feels right for the value you get out of the project.
+maintenance and development of the project.
 
 See donation options at <https://www.git-pull.com/support.html>.
 
-## More information
+## About
 
-- Python support: 3.9+, pypy
-- VCS supported: git(1), svn(1), hg(1)
-- Source: <https://github.com/vcs-python/libvcs>
-- Docs: <https://libvcs.git-pull.com>
-- Changelog: <https://libvcs.git-pull.com/history.html>
-- APIs for git, hg, and svn:
-  - [`libvcs.url`](https://libvcs.git-pull.com/url/): URL Parser
-  - [`libvcs.cmd`](https://libvcs.git-pull.com/cmd/): Commands
-  - [`libvcs.sync`](https://libvcs.git-pull.com/sync/): Clone and update
-- Issues: <https://github.com/vcs-python/libvcs/issues>
-- Test Coverage: <https://codecov.io/gh/vcs-python/libvcs>
-- pypi: <https://pypi.python.org/pypi/libvcs>
-- Open Hub: <https://www.openhub.net/p/libvcs>
-- License: [MIT](https://opensource.org/licenses/MIT).
+- **Python support**: 3.9+, pypy
+- **VCS supported**: git(1), svn(1), hg(1)
+- **Issues**: <https://github.com/vcs-python/libvcs/issues>
+- **Test Coverage**: <https://codecov.io/gh/vcs-python/libvcs>
+- **License**: [MIT](https://opensource.org/licenses/MIT)
 
 [![Docs](https://github.com/vcs-python/libvcs/workflows/docs/badge.svg)](https://libvcs.git-pull.com/)
 [![Build Status](https://github.com/vcs-python/libvcs/workflows/tests/badge.svg)](https://github.com/vcs-python/libvcs/actions?query=workflow%3A%22tests%22)
