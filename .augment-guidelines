@@ -1,0 +1,328 @@
+# Augment Guidelines
+
+## Development Process
+
+### Project Stack
+
+The project uses the following tools and technologies:
+
+- **uv** - Python package management and virtual environments
+- **ruff** - Fast Python linter and formatter
+- **py.test** - Testing framework
+  - **pytest-watcher** - Continuous test runner
+- **mypy** - Static type checking
+- **doctest** - Testing code examples in documentation
+
+### Development Workflow
+
+1. **Start with Formatting**
+   ```
+   uv run ruff format .
+   ```
+
+2. **Run Tests**
+   ```
+   uv run py.test
+   ```
+
+   For continuous testing during development, use pytest-watcher:
+   ```
+   # Watch all tests
+   uv run ptw .
+
+   # Watch and run tests immediately, including doctests
+   uv run ptw . --now --doctest-modules
+
+   # Watch specific files or directories
+   uv run ptw . --now --doctest-modules src/libtmux/_internal/
+   ```
+
+3. **Commit Initial Changes**
+   Make an atomic commit for your changes using conventional commits.
+
+4. **Run Linting and Type Checking**
+   ```
+   uv run ruff check . --fix --show-fixes
+   uv run mypy
+   ```
+
+5. **Verify Tests Again**
+   ```
+   uv run py.test
+   ```
+
+6. **Final Commit**
+   Make a final commit with any linting/typing fixes.
+
+### Python Code Standards
+
+#### Docstring Guidelines
+
+For `src/**/*.py` files, follow these docstring guidelines:
+
+1. **Use reStructuredText format** for all docstrings.
+   ```python
+   """Short description of the function or class.
+
+   Detailed description using reStructuredText format.
+
+   Parameters
+   ----------
+   param1 : type
+       Description of param1
+   param2 : type
+       Description of param2
+
+   Returns
+   -------
+   type
+       Description of return value
+   """
+   ```
+
+2. **Keep the main description on the first line** after the opening `"""`.
+
+3. **Use NumPy docstyle** for parameter and return value documentation.
+
+#### Doctest Guidelines
+
+For doctests in `src/**/*.py` files:
+
+1. **Use narrative descriptions** for test sections rather than inline comments:
+   ```python
+   """Example function.
+
+   Examples
+   --------
+   Create an instance:
+
+   >>> obj = ExampleClass()
+   
+   Verify a property:
+   
+   >>> obj.property
+   'expected value'
+   """
+   ```
+
+2. **Move complex examples** to dedicated test files at `tests/examples/<path_to_module>/test_<example>.py` if they require elaborate setup or multiple steps.
+
+3. **Utilize pytest fixtures** via `doctest_namespace` for more complex test scenarios:
+   ```python
+   """Example with fixture.
+
+   Examples
+   --------
+   >>> # doctest_namespace contains all pytest fixtures from conftest.py
+   >>> example_fixture = getfixture('example_fixture')
+   >>> example_fixture.method()
+   'expected result'
+   """
+   ```
+
+4. **Keep doctests simple and focused** on demonstrating usage rather than comprehensive testing.
+
+5. **Add blank lines between test sections** for improved readability.
+
+6. **Test your doctests continuously** using pytest-watcher during development:
+   ```
+   # Watch specific modules for doctest changes
+   uv run ptw . --now --doctest-modules src/path/to/module.py
+   ```
+
+#### Pytest Testing Guidelines
+
+1. **Use existing fixtures over mocks**:
+   - Use fixtures from conftest.py instead of `monkeypatch` and `MagicMock` when available
+   - For instance, if using libtmux, use provided fixtures: `server`, `session`, `window`, and `pane`
+   - Document in test docstrings why standard fixtures weren't used for exceptional cases
+
+2. **Preferred pytest patterns**:
+   - Use `tmp_path` (pathlib.Path) fixture over Python's `tempfile`
+   - Use `monkeypatch` fixture over `unittest.mock`
+
+#### Import Guidelines
+
+1. **Prefer namespace imports**:
+   - Import modules and access attributes through the namespace instead of importing specific symbols
+   - Example: Use `import enum` and access `enum.Enum` instead of `from enum import Enum`
+   - This applies to standard library modules like `pathlib`, `os`, and similar cases
+
+2. **Standard aliases**:
+   - For `typing` module, use `import typing as t`
+   - Access typing elements via the namespace: `t.NamedTuple`, `t.TypedDict`, etc.
+   - Note primitive types like unions can be done via `|` pipes and primitive types like list and dict can be done via `list` and `dict` directly.
+
+3. **Benefits of namespace imports**:
+   - Improves code readability by making the source of symbols clear
+   - Reduces potential naming conflicts
+   - Makes import statements more maintainable
+
+## Git Commit Standards
+
+### Commit Message Format
+```
+Component/File(commit-type[Subcomponent/method]): Concise description
+
+why: Explanation of necessity or impact.
+what:
+- Specific technical changes made
+- Focused on a single topic
+
+refs: #issue-number, breaking changes, or relevant links
+```
+
+### Component Patterns
+#### General Code Changes
+```
+Component/File(feat[method]): Add feature
+Component/File(fix[method]): Fix bug
+Component/File(refactor[method]): Code restructure
+```
+
+#### Packages and Dependencies
+| Language   | Standard Packages                  | Dev Packages                  | Extras / Sub-packages                          |
+|------------|------------------------------------|-------------------------------|-----------------------------------------------|
+| General    | `lang(deps):`                      | `lang(deps[dev]):`            |                                               |
+| Python     | `py(deps):`                        | `py(deps[dev]):`              | `py(deps[extra]):`                            |
+| JavaScript | `js(deps):`                        | `js(deps[dev]):`              | `js(deps[subpackage]):`, `js(deps[dev{subpackage}]):` |
+
+##### Examples
+- `py(deps[dev]): Update pytest to v8.1`
+- `js(deps[ui-components]): Upgrade Button component package`
+- `js(deps[dev{linting}]): Add ESLint plugin`
+
+#### Documentation Changes
+Prefix with `docs:`
+```
+docs(Component/File[Subcomponent/method]): Update API usage guide
+```
+
+#### Test Changes
+Prefix with `tests:`
+```
+tests(Component/File[Subcomponent/method]): Add edge case tests
+```
+
+### Commit Types Summary
+- **feat**: New features or enhancements
+- **fix**: Bug fixes
+- **refactor**: Code restructuring without functional change
+- **docs**: Documentation updates
+- **chore**: Maintenance (dependencies, tooling, config)
+- **test**: Test-related updates
+- **style**: Code style and formatting
+
+### General Guidelines
+- Subject line: Maximum 50 characters
+- Body lines: Maximum 72 characters
+- Use imperative mood (e.g., "Add", "Fix", not "Added", "Fixed")
+- Limit to one topic per commit
+- Separate subject from body with a blank line
+- Mark breaking changes clearly: `BREAKING:`
+- Use `See also:` to provide external references
+
+### Good Commit Example
+```
+Pane(feat[capture_pane]): Add screenshot capture support
+
+why: Provide visual debugging capability
+what:
+- Implement capturePane method with image export
+- Integrate with existing Pane component logic
+- Document usage in Pane README
+
+refs: #485
+See also: https://example.com/docs/pane-capture
+```
+
+### Bad Commit Example
+```
+fixed stuff and improved some functions
+```
+
+## Avoiding Debug Loops
+
+When debugging becomes circular and unproductive, follow these steps:
+
+### Detection
+- You have made multiple unsuccessful attempts to fix the same issue
+- You are adding increasingly complex code to address errors
+- Each fix creates new errors in a cascading pattern
+- You are uncertain about the root cause after 2-3 iterations
+
+### Action Plan
+
+1. **Pause and acknowledge the loop**
+   - Explicitly state that you are in a potential debug loop
+   - Review what approaches have been tried and failed
+
+2. **Minimize to MVP**
+   - Remove all debugging cruft and experimental code
+   - Revert to the simplest version that demonstrates the issue
+   - Focus on isolating the core problem without added complexity
+
+3. **Comprehensive Documentation**
+   - Provide a clear summary of the issue
+   - Include minimal but complete code examples that reproduce the problem
+   - Document exact error messages and unexpected behaviors
+   - Explain your current understanding of potential causes
+
+4. **Format for Portability**
+   - Present the problem in quadruple backticks for easy copying:
+
+````
+# Problem Summary
+[Concise explanation of the issue]
+
+## Minimal Reproduction Code
+```python
+# Minimal code example that reproduces the issue
+```
+
+## Error/Unexpected Output
+```
+[Exact error messages or unexpected output]
+```
+
+## Failed Approaches
+[Brief summary of approaches already tried]
+
+## Suspected Cause
+[Your current hypothesis about what might be causing the issue]
+````
+
+## LLM-Optimized Markdown Content Guidelines
+
+When creating or editing markdown files within notes directories, adhere to the following guidelines:
+
+1. **Conciseness and Clarity**:
+   - **Be Brief**: Present information succinctly, avoiding unnecessary elaboration.
+   - **Use Clear Language**: Employ straightforward language to convey ideas effectively.
+
+2. **Structured Formatting**:
+   - **Headings**: Utilize markdown headings (`#`, `##`, `###`, etc.) to organize content hierarchically.
+   - **Lists**: Use bullet points (`-`) or numbered lists (`1.`, `2.`, etc.) to enumerate items clearly.
+   - **Code Blocks**: Enclose code snippets within triple backticks (```) to distinguish them from regular text.
+
+3. **Semantic Elements**:
+   - **Emphasis**: Use asterisks (`*`) or underscores (`_`) for italicizing text to denote emphasis.
+   - **Strong Emphasis**: Use double asterisks (`**`) or double underscores (`__`) for bold text to highlight critical points.
+   - **Inline Code**: Use single backticks (`) for inline code references.
+
+4. **Linking and References**:
+   - **Hyperlinks**: Format links using `[Link Text](mdc:URL)` to provide direct access to external resources.
+   - **References**: When citing sources, use footnotes or inline citations to maintain readability.
+
+5. **Avoid Redundancy**:
+   - **Eliminate Repetition**: Ensure that information is not unnecessarily repeated within the document.
+   - **Use Summaries**: Provide brief summaries where detailed explanations are not essential.
+
+6. **Standard Compliance**:
+   - **llms.txt Conformance**: Structure the document in alignment with the `llms.txt` standard, which includes:
+     - An H1 heading with the project or site name.
+     - A blockquote summarizing the project's purpose.
+     - Additional markdown sections providing detailed information.
+     - H2-delimited sections containing lists of URLs for further details.
+
+For more information on the `llms.txt` standard, refer to the official documentation: https://llmstxt.org/
