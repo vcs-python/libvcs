@@ -12,7 +12,7 @@ Detect VCS from `git`, `hg`, and `svn` URLs.
 [ParserMatch(vcs='git', match=GitURL(...))]
 
 >>> registry.match('git@invent.kde.org:plasma/plasma-sdk.git', is_explicit=True)
-[]
+[ParserMatch(vcs='git', match=GitURL(...))]
 
 >>> registry.match('git+ssh://git@invent.kde.org:plasma/plasma-sdk.git')
 [ParserMatch(vcs='git', match=GitURL(...))]

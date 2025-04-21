@@ -53,6 +53,8 @@ TEST_FIXTURES: list[DetectVCSFixture] = [
             "codecommit::ap-northeast-1://MyDemoRepo",
             "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
             "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/test",
+            # plain SCP-style Git URLs should be recognized explicitly
+            "git@github.com:tmux-python/tmuxp.git",
         ]
     ],
     *[

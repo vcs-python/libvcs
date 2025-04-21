@@ -68,6 +68,17 @@ def create_project(
 ) -> HgSync: ...
 
 
+@t.overload
+def create_project(
+    *,
+    url: str,
+    path: StrPath,
+    vcs: None = None,
+    progress_callback: ProgressCallbackProtocol | None = None,
+    **kwargs: dict[t.Any, t.Any],
+) -> GitSync | HgSync | SvnSync: ...
+
+
 def create_project(
     *,
     url: str,
@@ -98,6 +109,15 @@ def create_project(
     ...     path=tmp_path
     ... )
 
+    >>> isinstance(r, GitSync)
+    True
+
+    It also supports unprefixed SSH-style Git URLs:
+
+    >>> r = create_project(
+    ...     url='git@github.com:tmux-python/tmuxp.git',
+    ...     path=tmp_path
+    ... )
     >>> isinstance(r, GitSync)
     True
     """
