@@ -167,7 +167,7 @@ Your donations fund development of new features, testing and support. Your money
 maintenance and development of the project. If you are an individual, feel free to give whatever
 feels right for the value you get out of the project.
 
-See donation options at <https://www.git-pull.com/support.html>.
+See donation options at <https://tony.sh/support.html>.
 
 ## More information
 
