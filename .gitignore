@@ -89,3 +89,5 @@ monkeytype.sqlite3
 
 # AI
 *repopack*
+
+**/.claude/settings.local.json
