@@ -15,6 +15,14 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### Compatibility
+
+- Add `GitVersionInfo` dataclass and `build_options()` method to `Git` class to
+  provide structured access to git version information, making version handling more homogeneous
+  and type-safe (#491). The `version()` method now returns a `Version` object instead of a string.
+  This allows for more reliable version parsing and comparison, while `GitSync.get_git_version()`
+  continues to return a string for backward compatibility.
+
 ## libvcs 0.35.1 (2025-06-21)
 
 ### Bug fixes
