@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import pathlib
 import shlex
@@ -10,8 +11,46 @@ from collections.abc import Sequence
 
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs._vendor.version import InvalidVersion, Version, parse as parse_version
 
 _CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+
+
+class InvalidBuildOptions(ValueError):
+    """Raised when a git version output is in an unexpected format.
+
+    >>> InvalidBuildOptions("...")
+    InvalidBuildOptions('Unexpected git version output format: ...')
+    """
+
+    def __init__(self, version: str, *args: object) -> None:
+        return super().__init__(f"Unexpected git version output format: {version}")
+
+
+@dataclasses.dataclass
+class GitVersionInfo:
+    """Information about the git version."""
+
+    version: str
+    """Git version string (e.g. '2.43.0')"""
+
+    version_info: tuple[int, int, int] | None = None
+    """Tuple of (major, minor, micro) version numbers, or None if version invalid"""
+
+    cpu: str | None = None
+    """CPU architecture information"""
+
+    commit: str | None = None
+    """Commit associated with this build"""
+
+    sizeof_long: str | None = None
+    """Size of long in the compiled binary"""
+
+    sizeof_size_t: str | None = None
+    """Size of size_t in the compiled binary"""
+
+    shell_path: str | None = None
+    """Shell path configured in git"""
 
 
 class Git:
@@ -1746,32 +1785,129 @@ class Git:
     def version(
         self,
         *,
-        build_options: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
         **kwargs: t.Any,
-    ) -> str:
-        """Version. Wraps `git version <https://git-scm.com/docs/git-version>`_.
+    ) -> Version:
+        """Get git version. Wraps `git version <https://git-scm.com/docs/git-version>`_.
+
+        Returns
+        -------
+        Version
+            Parsed semantic version object from git version output
+
+        Raises
+        ------
+        InvalidVersion
+            If the git version output is in an unexpected format
 
         Examples
         --------
         >>> git = Git(path=example_git_repo.path)
 
-        >>> git.version()
-        'git version ...'
-
-        >>> git.version(build_options=True)
-        'git version ...'
+        >>> version = git.version()
+        >>> isinstance(version.major, int)
+        True
         """
         local_flags: list[str] = []
 
-        if build_options is True:
-            local_flags.append("--build-options")
-
-        return self.run(
+        output = self.run(
             ["version", *local_flags],
             check_returncode=check_returncode,
         )
+
+        # Extract version string and parse it
+        if output.startswith("git version "):
+            version_str = output.split("\n", 1)[0].replace("git version ", "").strip()
+            return parse_version(version_str)
+
+        # Raise exception if output format is unexpected
+        raise InvalidVersion(output)
+
+    def build_options(
+        self,
+        *,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> GitVersionInfo:
+        """Get detailed Git version information as a structured dataclass.
+
+        Runs ``git --version --build-options`` and parses the output.
+
+        Returns
+        -------
+        GitVersionInfo
+            Dataclass containing structured information about the git version and build
+
+        Raises
+        ------
+        InvalidBuildOptions
+            If the git build options output is in an unexpected format
+
+        Examples
+        --------
+        >>> git = Git(path=example_git_repo.path)
+        >>> version_info = git.build_options()
+        >>> isinstance(version_info, GitVersionInfo)
+        True
+        >>> isinstance(version_info.version, str)
+        True
+        """
+        # Get raw output directly using run() instead of version()
+        output = self.run(
+            ["version", "--build-options"],
+            check_returncode=check_returncode,
+        )
+
+        # Parse the output into a structured format
+        result = GitVersionInfo(version="")
+
+        # First line is always "git version X.Y.Z"
+        lines = output.strip().split("\n")
+        if not lines or not lines[0].startswith("git version "):
+            raise InvalidBuildOptions(output)
+
+        version_str = lines[0].replace("git version ", "").strip()
+        result.version = version_str
+
+        # Parse semantic version components
+        try:
+            parsed_version = parse_version(version_str)
+            result.version_info = (
+                parsed_version.major,
+                parsed_version.minor,
+                parsed_version.micro,
+            )
+        except InvalidVersion:
+            # Fall back to string-only if can't be parsed
+            result.version_info = None
+
+        # Parse additional build info
+        for line in lines[1:]:
+            line = line.strip()
+            if not line:
+                continue
+
+            if ":" in line:
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+
+                if key == "cpu":
+                    result.cpu = value
+                elif key == "sizeof-long":
+                    result.sizeof_long = value
+                elif key == "sizeof-size_t":
+                    result.sizeof_size_t = value
+                elif key == "shell-path":
+                    result.shell_path = value
+                elif key == "commit":
+                    result.commit = value
+            # Special handling for the "no commit" line which has no colon
+            elif "no commit associated with this build" in line.lower():
+                result.commit = line
+
+        return result
 
     def rev_parse(
         self,

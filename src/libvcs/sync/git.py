@@ -657,13 +657,8 @@ class GitSync(BaseSync):
         -------
         git version
         """
-        VERSION_PFX = "git version "
         version = self.cmd.version()
-        if version.startswith(VERSION_PFX):
-            version = version[len(VERSION_PFX) :].split()[0]
-        else:
-            version = ""
-        return ".".join(version.split(".")[:3])
+        return ".".join([str(x) for x in (version.major, version.minor, version.micro)])
 
     def status(self) -> GitStatus:
         """Retrieve status of project in dict format.
