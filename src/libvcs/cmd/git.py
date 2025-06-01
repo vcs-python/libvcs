@@ -1860,15 +1860,14 @@ class Git:
         )
 
         # Parse the output into a structured format
-        result = GitVersionInfo(version="")
-
-        # First line is always "git version X.Y.Z"
         lines = output.strip().split("\n")
         if not lines or not lines[0].startswith("git version "):
-            raise InvalidBuildOptions(output)
+            first_line = lines[0] if lines else "(empty)"
+            msg = f"Expected 'git version' in first line, got: {first_line}"
+            raise InvalidBuildOptions(msg)
 
         version_str = lines[0].replace("git version ", "").strip()
-        result.version = version_str
+        result = GitVersionInfo(version=version_str)
 
         # Parse semantic version components
         try:
@@ -1882,30 +1881,37 @@ class Git:
             # Fall back to string-only if can't be parsed
             result.version_info = None
 
-        # Parse additional build info
+        # Field mapping with type annotations for clarity
+        field_mapping: dict[str, str] = {
+            "cpu": "cpu",
+            "sizeof-long": "sizeof_long",
+            "sizeof-size_t": "sizeof_size_t",
+            "shell-path": "shell_path",
+            "commit": "commit",
+        }
+
+        # Parse build options
         for line in lines[1:]:
             line = line.strip()
             if not line:
                 continue
 
-            if ":" in line:
-                key, value = line.split(":", 1)
-                key = key.strip()
-                value = value.strip()
-
-                if key == "cpu":
-                    result.cpu = value
-                elif key == "sizeof-long":
-                    result.sizeof_long = value
-                elif key == "sizeof-size_t":
-                    result.sizeof_size_t = value
-                elif key == "shell-path":
-                    result.shell_path = value
-                elif key == "commit":
-                    result.commit = value
-            # Special handling for the "no commit" line which has no colon
-            elif "no commit associated with this build" in line.lower():
+            # Special case for "no commit" message
+            if "no commit associated with this build" in line.lower():
                 result.commit = line
+                continue
+
+            # Parse key:value pairs
+            if ":" not in line:
+                # Log unexpected format but don't fail
+                continue
+
+            key, _, value = line.partition(":")
+            key = key.strip()
+            value = value.strip()
+
+            if key in field_mapping:
+                setattr(result, field_mapping[key], value)
 
         return result
 
