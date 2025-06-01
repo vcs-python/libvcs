@@ -493,7 +493,10 @@ def _create_svn_remote_repo(
     return remote_repo_path
 
 
-def svn_remote_repo_single_commit_post_init(remote_repo_path: pathlib.Path) -> None:
+def svn_remote_repo_single_commit_post_init(
+    remote_repo_path: pathlib.Path,
+    env: _ENV | None = None,
+) -> None:
     """Post-initialization: Create a test SVN repo with a single commit."""
     assert remote_repo_path.exists()
     repo_dumpfile = pathlib.Path(__file__).parent / "data" / "repotest.dump"
