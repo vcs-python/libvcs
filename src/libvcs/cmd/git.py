@@ -655,14 +655,14 @@ class Git:
         >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase()
-        'Current branch master is up to date.'
+        'Current branch main is up to date.'
 
         Declare upstream:
 
         >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
         >>> git.rebase(upstream='origin')
-        'Current branch master is up to date.'
+        'Current branch main is up to date.'
         >>> git.path.exists()
         True
         """
@@ -1399,9 +1399,9 @@ class Git:
         >>> git = Git(path=example_git_repo.path)
 
         >>> git.checkout()
-        "Your branch is up to date with 'origin/master'."
+        "Your branch is up to date with 'origin/main'."
 
-        >>> git.checkout(branch='origin/master', pathspec='.')
+        >>> git.checkout(branch='origin/main', pathspec='.')
         ''
         """
         local_flags: list[str] = []
@@ -1517,7 +1517,7 @@ class Git:
         >>> git = Git(path=example_git_repo.path)
 
         >>> git.status()
-        "On branch master..."
+        "On branch main..."
 
         >>> pathlib.Path(example_git_repo.path / 'new_file.txt').touch()
 
@@ -2057,7 +2057,7 @@ class Git:
         '...'
 
         >>> git.run(['commit', '--allow-empty', '--message=Moo'])
-        '[master ...] Moo'
+        '[main ...] Moo'
 
         >>> git.rev_list(commit="HEAD", max_count=1)
         '...'
@@ -2243,17 +2243,17 @@ class Git:
         >>> git.show_ref()
         '...'
 
-        >>> git.show_ref(pattern='master')
+        >>> git.show_ref(pattern='main')
         '...'
 
-        >>> git.show_ref(pattern='master', head=True)
+        >>> git.show_ref(pattern='main', head=True)
         '...'
 
         >>> git.show_ref(pattern='HEAD', verify=True)
         '... HEAD'
 
-        >>> git.show_ref(pattern='master', dereference=True)
-        '... refs/heads/master\n... refs/remotes/origin/master'
+        >>> git.show_ref(pattern='main', dereference=True)
+        '... refs/heads/main\n... refs/remotes/origin/main'
 
         >>> git.show_ref(pattern='HEAD', tags=True)
         ''

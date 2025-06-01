@@ -757,14 +757,14 @@ def test_get_current_remote_name(git_repo: GitSync) -> None:
         "Should reflect new upstream branch (different remote)"
     )
 
-    upstream = "{}/{}".format(new_remote_name, "master")
+    upstream = "{}/{}".format(new_remote_name, "main")
 
     git_repo.run(["branch", "--set-upstream-to", upstream])
     assert git_repo.get_current_remote_name() == upstream, (
         "Should reflect upstream branch (different remote+branch)"
     )
 
-    git_repo.run(["checkout", "master"])
+    git_repo.run(["checkout", "main"])
 
     # Different remote, different branch
     remote = f"{new_remote_name}/{new_branch}"

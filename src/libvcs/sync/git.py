@@ -678,8 +678,8 @@ class GitSync(BaseSync):
         >>> git_repo.obtain()
         >>> git_repo.status()
         GitStatus(\
-branch_oid='...', branch_head='master', \
-branch_upstream='origin/master', \
+branch_oid='...', branch_head='main', \
+branch_upstream='origin/main', \
 branch_ab='+0 -0', \
 branch_ahead='0', \
 branch_behind='0'\
