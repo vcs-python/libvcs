@@ -73,8 +73,7 @@ class GitRemoteRefNotFound(exc.CommandError):
 
     def __init__(self, git_tag: str, ref_output: str, *args: object) -> None:
         return super().__init__(
-            f"Could not fetch remote in refs/remotes/{git_tag}:"
-            + f"Output: {ref_output}",
+            f"Could not fetch remote in refs/remotes/{git_tag}:Output: {ref_output}",
         )
 
 
@@ -529,8 +528,8 @@ class GitSync(BaseSync):
                         self.cmd.stash.pop(index=True, quiet=True)
                         self.log.exception(
                             f"\nFailed to rebase in: '{self.path}'.\n"
-                            + "You will have to resolve the "
-                            + "conflicts manually",
+                            "You will have to resolve the "
+                            "conflicts manually",
                         )
                         return
 
