@@ -73,7 +73,7 @@ class GitRemoteRefNotFound(exc.CommandError):
 
     def __init__(self, git_tag: str, ref_output: str, *args: object) -> None:
         return super().__init__(
-            f"Could not fetch remote in refs/remotes/{git_tag}:Output: {ref_output}",
+            f"Could not fetch remote in refs/remotes/{git_tag}. Output: {ref_output}",
         )
 
 
