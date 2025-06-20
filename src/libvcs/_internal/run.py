@@ -22,6 +22,18 @@ from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 
+console_encoding = sys.stdout.encoding
+
+
+def console_to_str(s: bytes) -> str:
+    """From pypa/pip project, pip.backwardwardcompat. License MIT."""
+    try:
+        return s.decode(console_encoding)
+    except UnicodeDecodeError:
+        return s.decode("utf_8")
+    except AttributeError:  # for tests, #13
+        return str(s)
+
 
 if t.TYPE_CHECKING:
     _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
@@ -182,7 +194,7 @@ def run(
         restore_signals=restore_signals,
         start_new_session=start_new_session,
         pass_fds=pass_fds,
-        text=True,
+        text=False,  # Keep in bytes mode to preserve \r properly
         encoding=encoding,
         errors=errors,
         user=user,
@@ -213,25 +225,17 @@ def run(
         code = proc.poll()
 
         if callback and callable(callback) and proc.stderr is not None:
-            line = str(proc.stderr.read(128))
+            line = console_to_str(proc.stderr.read(128))
             if line:
                 callback(output=line, timestamp=datetime.datetime.now())
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now())
 
-    lines = (
-        filter(None, (line.strip() for line in proc.stdout.readlines()))
-        if proc.stdout is not None
-        else []
-    )
-    all_output = "\n".join(lines)
+    lines = filter(None, (line.strip() for line in proc.stdout.readlines()))
+    all_output = console_to_str(b"\n".join(lines))
     if code:
-        stderr_lines = (
-            filter(None, (line.strip() for line in proc.stderr.readlines()))
-            if proc.stderr is not None
-            else []
-        )
-        all_output = "".join(stderr_lines)
+        stderr_lines = filter(None, (line.strip() for line in proc.stderr.readlines()))
+        all_output = console_to_str(b"".join(stderr_lines))
     output = "".join(all_output)
     if code != 0 and check_returncode:
         raise exc.CommandError(
