@@ -201,6 +201,14 @@ def run(
             sys.stdout.flush()
 
         callback = progress_cb
+
+    # Note: When git detects that stderr is not a TTY (e.g., when piped),
+    # it outputs progress with newlines instead of carriage returns.
+    # This causes each progress update to appear on a new line.
+    # To get proper single-line progress updates, git would need to be
+    # connected to a pseudo-TTY, which would require significant changes
+    # to how subprocess execution is handled.
+
     while code is None:
         code = proc.poll()
 
