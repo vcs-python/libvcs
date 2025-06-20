@@ -90,7 +90,7 @@ class CmdLoggingAdapter(_LoggerAdapter):
 class ProgressCallbackProtocol(t.Protocol):
     """Callback to report subprocess communication."""
 
-    def __call__(self, output: t.AnyStr, timestamp: datetime.datetime) -> None:
+    def __call__(self, output: str, timestamp: datetime.datetime) -> None:
         """Process progress for subprocess communication."""
         ...
 
@@ -231,10 +231,17 @@ def run(
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now())
 
-    lines = filter(None, (line.strip() for line in proc.stdout.readlines()))
-    all_output = console_to_str(b"\n".join(lines))
-    if code:
-        stderr_lines = filter(None, (line.strip() for line in proc.stderr.readlines()))
+    if proc.stdout is not None:
+        lines: t.Iterable[bytes] = filter(
+            None, (line.strip() for line in proc.stdout.readlines())
+        )
+        all_output = console_to_str(b"\n".join(lines))
+    else:
+        all_output = ""
+    if code and proc.stderr is not None:
+        stderr_lines: t.Iterable[bytes] = filter(
+            None, (line.strip() for line in proc.stderr.readlines())
+        )
         all_output = console_to_str(b"".join(stderr_lines))
     output = "".join(all_output)
     if code != 0 and check_returncode:
