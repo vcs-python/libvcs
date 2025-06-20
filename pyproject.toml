@@ -213,8 +213,18 @@ convention = "numpy"
 "*/__init__.py" = ["F401"]
 
 [tool.pytest.ini_options]
-addopts = "--tb=short --no-header --showlocals --doctest-modules"
-doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE"
+addopts = [
+  "--tb=short",
+  "--no-header",
+  "--showlocals",
+  "--doctest-docutils-modules",
+  "-p no:doctest",
+  "--reruns=2"
+]
+doctest_optionflags = [
+  "ELLIPSIS",
+  "NORMALIZE_WHITESPACE"
+]
 testpaths = [
   "src/libvcs",
   "tests",
