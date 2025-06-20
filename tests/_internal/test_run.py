@@ -18,7 +18,7 @@ if t.TYPE_CHECKING:
     import pathlib
 
 # Type alias for cleaner callback signatures
-CallbackOutput = t.AnyStr
+CallbackOutput = str
 
 
 class TestProgressOutput:
@@ -105,7 +105,7 @@ sys.stderr.flush()
             callback=capture_callback,
         )
 
-        # With line-buffered reading, output without newlines 
+        # With line-buffered reading, output without newlines
         # should come as a single chunk after the process ends
         assert len(captured_chunks) == 1, "Output without newline should be one chunk"
 
@@ -435,7 +435,9 @@ class TestDesiredBehavior:
 
         # Verify each chunk is a complete line
         for chunk in non_cr_chunks:
-            assert chunk.endswith("\n"), f"Each chunk should be a complete line: {repr(chunk)}"
+            assert chunk.endswith("\n"), (
+                f"Each chunk should be a complete line: {chunk!r}"
+            )
 
     def test_no_fragmentation_of_progress_lines(self, tmp_path: pathlib.Path) -> None:
         """Test that progress lines should not be fragmented."""
@@ -962,7 +964,9 @@ class TestStreamingFix:
                 lines = [
                     "Short line\\n",
                     "This is a medium length line that is longer than the short one\\n",
-                    "This is a very long line that should definitely be longer than 128 characters to ensure we're not just getting lucky with the buffering behavior\\n",
+                    "This is a very long line that should definitely be longer than "
+                    "128 characters to ensure we're not just getting lucky with the "
+                    "buffering behavior\\n",
                     "Another short\\n",
                     "Progress: 50% [=================>                    ]\\r",
                     "Progress: 100% [======================================]\\n",
@@ -1003,7 +1007,7 @@ class TestStreamingFix:
             # Each chunk should either end with \n or \r (except possibly the last)
             if chunk and chunk != non_cr_chunks[-1]:
                 assert chunk.endswith(("\n", "\r")), (
-                    f"Chunk should end with newline or carriage return: {repr(chunk)}"
+                    f"Chunk should end with newline or carriage return: {chunk!r}"
                 )
 
     def test_real_time_line_streaming_with_timing(self, tmp_path: pathlib.Path) -> None:
@@ -1052,10 +1056,10 @@ class TestStreamingFix:
         # Check timing - with line buffering, lines should come separately
         if len(events) >= 3:
             # Verify we got separate events for each line
-            assert "Line 1: Starting\n" == events[0][0]
-            assert "Line 2: After 100ms\n" == events[1][0]
-            assert "Line 3: After 200ms\n" == events[2][0]
-            
+            assert events[0][0] == "Line 1: Starting\n"
+            assert events[1][0] == "Line 2: After 100ms\n"
+            assert events[2][0] == "Line 3: After 200ms\n"
+
             # The timing might vary due to process startup and buffering,
             # but we should see that lines come as separate events
             # rather than all at once
@@ -1081,7 +1085,7 @@ sys.stderr.write("Start: {long_line} :End\\n")
 sys.stderr.flush()
 
 # Output another long line
-sys.stderr.write("Line2: {'B' * 150} :Done\\n")
+sys.stderr.write("Line2: {"B" * 150} :Done\\n")
 sys.stderr.flush()
 """,
         )
