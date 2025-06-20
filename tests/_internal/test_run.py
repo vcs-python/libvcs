@@ -77,8 +77,8 @@ class TestProgressOutput:
         # Check that final carriage return was sent
         assert captured_chunks[-1] == "\r", "Should end with carriage return"
 
-    def test_fragmentation_with_128_byte_chunks(self, tmp_path: pathlib.Path) -> None:
-        """Test that current implementation fragments output at 128-byte boundaries."""
+    def test_no_fragmentation_without_newlines(self, tmp_path: pathlib.Path) -> None:
+        """Test that output without newlines is sent as one chunk after process ends."""
         captured_chunks: list[str] = []
 
         def capture_callback(output: t.AnyStr, timestamp: datetime.datetime) -> None:
@@ -87,9 +87,9 @@ class TestProgressOutput:
             if output_str != "\r":  # Ignore the final \r
                 captured_chunks.append(output_str)
 
-        # Create a script that outputs a long line
+        # Create a script that outputs a long line without newline
         script = tmp_path / "long_line_test.py"
-        long_message = "X" * 300  # 300 characters, should be split into 3 chunks
+        long_message = "X" * 300  # 300 characters without newline
         script.write_text(
             f"""
 import sys
@@ -105,12 +105,9 @@ sys.stderr.flush()
             callback=capture_callback,
         )
 
-        # Verify fragmentation occurs at 128-byte boundaries
-        assert len(captured_chunks) >= 2, "Long line should be fragmented"
-
-        # Check chunk sizes (except possibly the last one)
-        for chunk in captured_chunks[:-1]:
-            assert len(chunk) == 128, f"Chunk should be 128 bytes, got {len(chunk)}"
+        # With line-buffered reading, output without newlines 
+        # should come as a single chunk after the process ends
+        assert len(captured_chunks) == 1, "Output without newline should be one chunk"
 
         # Verify total output is preserved
         total_output = "".join(captured_chunks)
@@ -394,8 +391,8 @@ class TestDesiredBehavior:
         assert "Starting process..." in full_output
         assert "Process complete!" in full_output
 
-    def test_demonstrate_fragmentation(self, tmp_path: pathlib.Path) -> None:
-        """Demonstrate the fragmentation issue with actual output."""
+    def test_line_based_output_chunks(self, tmp_path: pathlib.Path) -> None:
+        """Demonstrate that output is now properly line-buffered."""
         captured_chunks: list[str] = []
 
         def capture_callback(output: str, timestamp: datetime.datetime) -> None:
@@ -403,13 +400,13 @@ class TestDesiredBehavior:
             captured_chunks.append(output)
 
         # Create a script with realistic git clone output
-        script = tmp_path / "demo_fragmentation.py"
+        script = tmp_path / "line_based_output.py"
         script.write_text(
             textwrap.dedent(
                 """
                 import sys
 
-                # Simulate git clone output that will be fragmented
+                # Simulate git clone output with multiple lines
                 output = (
                     "Cloning into '/home/user/project'...\\n"
                     "remote: Enumerating objects: 11363, done.\\n"
@@ -430,14 +427,15 @@ class TestDesiredBehavior:
             callback=capture_callback,
         )
 
-        # Verify fragmentation occurred
-        non_cr_chunks = [c for c in captured_chunks if c != "\\r"]
-        # With current 128-byte chunking, this output should be fragmented
-        assert len(non_cr_chunks) >= 2, (
-            "Output should be fragmented into multiple chunks"
+        # With line-buffered reading, we should get one chunk per line
+        non_cr_chunks = [c for c in captured_chunks if c != "\r"]
+        assert len(non_cr_chunks) == 5, (
+            f"Expected 5 chunks (one per line), got {len(non_cr_chunks)}"
         )
 
-        assert len(captured_chunks) > 0
+        # Verify each chunk is a complete line
+        for chunk in non_cr_chunks:
+            assert chunk.endswith("\n"), f"Each chunk should be a complete line: {repr(chunk)}"
 
     def test_no_fragmentation_of_progress_lines(self, tmp_path: pathlib.Path) -> None:
         """Test that progress lines should not be fragmented."""
@@ -939,6 +937,175 @@ class TestFlushingBehavior:
         assert "STDOUT: Line 1" in stdout_result
         assert "STDOUT: Line 2" in stdout_result
         assert "STDERR:" not in stdout_result
+
+
+class TestStreamingFix:
+    """Test the fix for proper line-buffered streaming."""
+
+    def test_line_by_line_streaming(self, tmp_path: pathlib.Path) -> None:
+        """Test that output is streamed line by line, not in fixed chunks."""
+        captured_chunks: list[str] = []
+
+        def capture_callback(output: str, timestamp: datetime.datetime) -> None:
+            """Capture output chunks."""
+            captured_chunks.append(output)
+
+        # Create a script that outputs lines of varying lengths
+        script = tmp_path / "line_streaming_test.py"
+        script.write_text(
+            textwrap.dedent(
+                """
+                import sys
+                import time
+
+                # Output lines of different lengths to verify line-buffered behavior
+                lines = [
+                    "Short line\\n",
+                    "This is a medium length line that is longer than the short one\\n",
+                    "This is a very long line that should definitely be longer than 128 characters to ensure we're not just getting lucky with the buffering behavior\\n",
+                    "Another short\\n",
+                    "Progress: 50% [=================>                    ]\\r",
+                    "Progress: 100% [======================================]\\n",
+                ]
+
+                for line in lines:
+                    sys.stderr.write(line)
+                    sys.stderr.flush()
+                    time.sleep(0.01)  # Small delay to ensure separate chunks
+                """,
+            ),
+        )
+
+        # Run with the fixed implementation
+        run(
+            [sys.executable, str(script)],
+            log_in_real_time=True,
+            callback=capture_callback,
+        )
+
+        # Remove the final \r if present
+        non_cr_chunks = [c for c in captured_chunks if c != "\r"]
+
+        # With proper line buffering, each line should be its own chunk
+        # This test will fail with current implementation but pass with the fix
+        assert len(non_cr_chunks) >= 6, (
+            f"Expected at least 6 chunks (one per line), got {len(non_cr_chunks)}"
+        )
+
+        # Verify that complete lines are preserved
+        full_output = "".join(non_cr_chunks)
+        assert "Short line\n" in full_output
+        assert "Progress: 100%" in full_output
+
+        # Check that lines weren't fragmented
+        # With line buffering, no line should be split across chunks
+        for chunk in non_cr_chunks:
+            # Each chunk should either end with \n or \r (except possibly the last)
+            if chunk and chunk != non_cr_chunks[-1]:
+                assert chunk.endswith(("\n", "\r")), (
+                    f"Chunk should end with newline or carriage return: {repr(chunk)}"
+                )
+
+    def test_real_time_line_streaming_with_timing(self, tmp_path: pathlib.Path) -> None:
+        """Test that lines are streamed immediately when flushed, not buffered."""
+        capture_events: list[tuple[str, float]] = []
+        start_time = time.time()
+
+        def timing_callback(output: str, timestamp: datetime.datetime) -> None:
+            """Capture output with relative timing."""
+            capture_events.append((output, time.time() - start_time))
+
+        script = tmp_path / "realtime_line_test.py"
+        script.write_text(
+            textwrap.dedent(
+                """
+                import sys
+                import time
+
+                # Output lines with delays to verify real-time streaming
+                sys.stderr.write("Line 1: Starting\\n")
+                sys.stderr.flush()
+                time.sleep(0.1)
+
+                sys.stderr.write("Line 2: After 100ms\\n")
+                sys.stderr.flush()
+                time.sleep(0.1)
+
+                sys.stderr.write("Line 3: After 200ms\\n")
+                sys.stderr.flush()
+                """,
+            ),
+        )
+
+        run(
+            [sys.executable, str(script)],
+            log_in_real_time=True,
+            callback=timing_callback,
+        )
+
+        # Remove final \r
+        events = [(o, t) for o, t in capture_events if o != "\r"]
+
+        # With proper streaming, we should get 3 separate events
+        assert len(events) >= 3, f"Expected at least 3 events, got {len(events)}"
+
+        # Check timing - with line buffering, lines should come separately
+        if len(events) >= 3:
+            # Verify we got separate events for each line
+            assert "Line 1: Starting\n" == events[0][0]
+            assert "Line 2: After 100ms\n" == events[1][0]
+            assert "Line 3: After 200ms\n" == events[2][0]
+            
+            # The timing might vary due to process startup and buffering,
+            # but we should see that lines come as separate events
+            # rather than all at once
+
+    def test_no_fragmentation_with_line_buffering(self, tmp_path: pathlib.Path) -> None:
+        """Test that line buffering prevents fragmentation of lines."""
+        captured_chunks: list[str] = []
+
+        def capture_callback(output: str, timestamp: datetime.datetime) -> None:
+            """Capture output chunks."""
+            if output != "\r":
+                captured_chunks.append(output)
+
+        # Create a script with lines longer than 128 bytes
+        script = tmp_path / "no_fragment_line_test.py"
+        long_line = "A" * 200  # 200 chars, definitely > 128 bytes
+        script.write_text(
+            f"""
+import sys
+
+# Output a long line that would be fragmented with fixed-size buffering
+sys.stderr.write("Start: {long_line} :End\\n")
+sys.stderr.flush()
+
+# Output another long line
+sys.stderr.write("Line2: {'B' * 150} :Done\\n")
+sys.stderr.flush()
+""",
+        )
+
+        run(
+            [sys.executable, str(script)],
+            log_in_real_time=True,
+            callback=capture_callback,
+        )
+
+        # With line buffering, long lines should not be fragmented
+        # Each line should be in a single chunk
+        assert len(captured_chunks) == 2, (
+            f"Expected 2 chunks (one per line), got {len(captured_chunks)}"
+        )
+
+        # Verify complete lines
+        assert captured_chunks[0].startswith("Start: ")
+        assert captured_chunks[0].endswith(" :End\n")
+        assert "A" * 200 in captured_chunks[0]
+
+        assert captured_chunks[1].startswith("Line2: ")
+        assert captured_chunks[1].endswith(" :Done\n")
+        assert "B" * 150 in captured_chunks[1]
 
 
 class TestRealWorldScenarios:
