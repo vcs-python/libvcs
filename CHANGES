@@ -15,6 +15,13 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+## libvcs 0.35.1 (unreleased)
+
+### Bug fixes
+
+- Fix `run()` output to show streaming progress of commands like `git clone`,
+  this fixes an issue downstream in `vcspull` (#493)
+
 ### Development
 
 - Cursor rules for development loop and git commit messages (#488)
