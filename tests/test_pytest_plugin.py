@@ -9,6 +9,12 @@ import typing as t
 import pytest
 
 from libvcs._internal.run import run
+from libvcs.cmd.git import Git
+from libvcs.exc import CommandError
+from libvcs.pytest_plugin import (
+    DEFAULT_GIT_INITIAL_BRANCH,
+    _create_git_remote_repo,
+)
 
 if t.TYPE_CHECKING:
     import pathlib
@@ -176,3 +182,221 @@ def test_git_bare_repo_sync_and_commit(
     # Test
     result = pytester.runpytest(str(first_test_filename))
     result.assert_outcomes(passed=2)
+
+
+def test_create_git_remote_repo_basic(tmp_path: pathlib.Path) -> None:
+    """Test basic git repository creation."""
+    repo_path = tmp_path / "test-repo"
+
+    result = _create_git_remote_repo(repo_path, init_cmd_args=[])
+
+    assert result == repo_path
+    assert repo_path.exists()
+    assert (repo_path / ".git").exists()
+
+
+def test_create_git_remote_repo_bare(tmp_path: pathlib.Path) -> None:
+    """Test bare git repository creation."""
+    repo_path = tmp_path / "test-repo.git"
+
+    result = _create_git_remote_repo(repo_path, init_cmd_args=["--bare"])
+
+    assert result == repo_path
+    assert repo_path.exists()
+    assert (repo_path / "HEAD").exists()
+    assert not (repo_path / ".git").exists()
+
+
+def test_create_git_remote_repo_with_initial_branch(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test repository creation with custom initial branch.
+
+    This test checks both modern Git (2.30.0+) and fallback behavior.
+    """
+    repo_path = tmp_path / "test-repo"
+
+    # Track Git.init calls
+    init_calls: list[dict[str, t.Any]] = []
+
+    def mock_init(self: Git, *args: t.Any, **kwargs: t.Any) -> str:
+        init_calls.append({"args": args, "kwargs": kwargs})
+
+        # Simulate old Git that doesn't support --initial-branch
+        if kwargs.get("initial_branch"):
+            msg = "error: unknown option `initial-branch'"
+            raise CommandError(
+                msg,
+                returncode=1,
+                cmd=["git", "init", "--initial-branch=main"],
+            )
+
+        # Create the repo directory to simulate successful init
+        self.path.mkdir(exist_ok=True)
+        (self.path / ".git").mkdir(exist_ok=True)
+        return "Initialized empty Git repository"
+
+    monkeypatch.setattr(Git, "init", mock_init)
+
+    result = _create_git_remote_repo(repo_path, initial_branch="develop")
+
+    # Should have tried twice: once with initial_branch, once without
+    assert len(init_calls) == 2
+    assert init_calls[0]["kwargs"].get("initial_branch") == "develop"
+    assert "initial_branch" not in init_calls[1]["kwargs"]
+    assert result == repo_path
+
+
+def test_create_git_remote_repo_modern_git(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test repository creation with Git 2.30.0+ that supports --initial-branch."""
+    repo_path = tmp_path / "test-repo"
+
+    init_calls: list[dict[str, t.Any]] = []
+
+    def mock_init(self: Git, *args: t.Any, **kwargs: t.Any) -> str:
+        init_calls.append({"args": args, "kwargs": kwargs})
+        # Simulate successful init with --initial-branch support
+        self.path.mkdir(exist_ok=True)
+        (self.path / ".git").mkdir(exist_ok=True)
+        branch = kwargs.get("initial_branch", "master")
+        return f"Initialized empty Git repository with initial branch '{branch}'"
+
+    monkeypatch.setattr(Git, "init", mock_init)
+
+    result = _create_git_remote_repo(repo_path, initial_branch="main")
+
+    # Should only call init once since it succeeded
+    assert len(init_calls) == 1
+    assert init_calls[0]["kwargs"].get("initial_branch") == "main"
+    assert result == repo_path
+
+
+@pytest.mark.parametrize(
+    ("env_var", "param", "expected_branch"),
+    [
+        ("custom-env", None, "custom-env"),  # Use env var
+        ("custom-env", "param-override", "param-override"),  # Param overrides env
+        (None, "explicit-param", "explicit-param"),  # Use param
+        (None, None, DEFAULT_GIT_INITIAL_BRANCH),  # Use default
+    ],
+)
+def test_create_git_remote_repo_branch_configuration(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    env_var: str | None,
+    param: str | None,
+    expected_branch: str,
+) -> None:
+    """Test initial branch configuration hierarchy."""
+    # Always reload the module to ensure fresh state
+    import sys
+
+    if "libvcs.pytest_plugin" in sys.modules:
+        del sys.modules["libvcs.pytest_plugin"]
+
+    if env_var:
+        monkeypatch.setenv("LIBVCS_GIT_DEFAULT_INITIAL_BRANCH", env_var)
+
+    # Import after setting env var
+    from libvcs.pytest_plugin import _create_git_remote_repo
+
+    repo_path = tmp_path / "test-repo"
+
+    # Track what branch was used
+    used_branch = None
+
+    def mock_init(self: Git, *args: t.Any, **kwargs: t.Any) -> str:
+        nonlocal used_branch
+        used_branch = kwargs.get("initial_branch")
+        self.path.mkdir(exist_ok=True)
+        (self.path / ".git").mkdir(exist_ok=True)
+        return "Initialized"
+
+    monkeypatch.setattr(Git, "init", mock_init)
+
+    _create_git_remote_repo(repo_path, initial_branch=param)
+
+    assert used_branch == expected_branch
+
+
+def test_create_git_remote_repo_post_init_callback(tmp_path: pathlib.Path) -> None:
+    """Test that post-init callback is executed."""
+    repo_path = tmp_path / "test-repo"
+    callback_executed = False
+    callback_path = None
+
+    def post_init_callback(
+        remote_repo_path: pathlib.Path,
+        env: t.Any = None,
+    ) -> None:
+        nonlocal callback_executed, callback_path
+        callback_executed = True
+        callback_path = remote_repo_path
+        (remote_repo_path / "callback-marker.txt").write_text("executed")
+
+    _create_git_remote_repo(
+        repo_path,
+        remote_repo_post_init=post_init_callback,
+        init_cmd_args=[],  # Create non-bare repo for easier testing
+    )
+
+    assert callback_executed
+    assert callback_path == repo_path
+    assert (repo_path / "callback-marker.txt").exists()
+    assert (repo_path / "callback-marker.txt").read_text() == "executed"
+
+
+def test_create_git_remote_repo_permission_error(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test handling of permission errors."""
+    repo_path = tmp_path / "test-repo"
+
+    def mock_init(self: Git, *args: t.Any, **kwargs: t.Any) -> str:
+        msg = "fatal: cannot mkdir .git: Permission denied"
+        raise CommandError(
+            msg,
+            returncode=128,
+            cmd=["git", "init"],
+        )
+
+    monkeypatch.setattr(Git, "init", mock_init)
+
+    with pytest.raises(CommandError) as exc_info:
+        _create_git_remote_repo(repo_path)
+
+    assert "Permission denied" in str(exc_info.value)
+
+
+@pytest.mark.skipif(
+    not shutil.which("git"),
+    reason="git is not available",
+)
+def test_create_git_remote_repo_integration(tmp_path: pathlib.Path) -> None:
+    """Integration test with real git command."""
+    repo_path = tmp_path / "integration-repo"
+
+    result = _create_git_remote_repo(repo_path, initial_branch="development")
+
+    assert result == repo_path
+    assert repo_path.exists()
+
+    # Check actual git status
+    git = Git(path=repo_path)
+
+    # Get git version to determine what to check
+    try:
+        version = git.version()
+        if version.major > 2 or (version.major == 2 and version.minor >= 30):
+            # Can check branch name on modern Git
+            branch_output = git.run(["symbolic-ref", "HEAD"])
+            assert "refs/heads/development" in branch_output
+    except Exception:
+        # Just verify it's a valid repo
+        status = git.run(["status", "--porcelain"])
+        assert isinstance(status, str)

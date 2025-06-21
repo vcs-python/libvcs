@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import getpass
+import os
 import pathlib
 import random
 import shutil
@@ -300,6 +301,7 @@ class CreateRepoPytestFixtureFn(t.Protocol):
 
 
 DEFAULT_GIT_REMOTE_REPO_CMD_ARGS = ["--bare"]
+DEFAULT_GIT_INITIAL_BRANCH = os.environ.get("LIBVCS_GIT_DEFAULT_INITIAL_BRANCH", "main")
 
 
 def _create_git_remote_repo(
@@ -307,13 +309,47 @@ def _create_git_remote_repo(
     remote_repo_post_init: CreateRepoPostInitFn | None = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
     env: _ENV | None = None,
+    initial_branch: str | None = None,
 ) -> pathlib.Path:
+    """Create a git repository with version-aware initialization.
+
+    Parameters
+    ----------
+    remote_repo_path : pathlib.Path
+        Path where the repository will be created
+    remote_repo_post_init : CreateRepoPostInitFn | None
+        Optional callback to run after repository creation
+    init_cmd_args : InitCmdArgs
+        Additional arguments for git init (e.g., ["--bare"])
+    env : _ENV | None
+        Environment variables to use
+    initial_branch : str | None
+        Name of the initial branch. If None, uses LIBVCS_GIT_DEFAULT_INITIAL_BRANCH
+        environment variable or "main" as default.
+    """
+    from libvcs.cmd.git import Git
+
+    if initial_branch is None:
+        initial_branch = DEFAULT_GIT_INITIAL_BRANCH
+
     if init_cmd_args is None:
         init_cmd_args = []
-    run(
-        ["git", "init", remote_repo_path.stem, *init_cmd_args],
-        cwd=remote_repo_path.parent,
-    )
+
+    # Parse init_cmd_args to determine if --bare is requested
+    bare = "--bare" in init_cmd_args
+
+    # Create the directory
+    remote_repo_path.mkdir(parents=True, exist_ok=True)
+
+    # Create Git instance for the new repository
+    git = Git(path=remote_repo_path)
+
+    try:
+        # Try with --initial-branch (Git 2.30.0+)
+        git.init(initial_branch=initial_branch, bare=bare, check_returncode=True)
+    except exc.CommandError:
+        # Fall back to plain init for older Git versions
+        git.init(bare=bare, check_returncode=True)
 
     if remote_repo_post_init is not None and callable(remote_repo_post_init):
         remote_repo_post_init(remote_repo_path=remote_repo_path, env=env)

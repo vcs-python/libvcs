@@ -24,6 +24,27 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+#### Git version handling API changes (#491)
+
+- `Git.version()` now returns a `Version` object instead of a string
+  
+  Before:
+
+  ```python
+  git = Git(path=path)
+  version_str = git.version()  # returns a string like "2.43.0"
+  ```
+  
+  After:
+
+  ```python
+  git = Git(path=path)
+  version_obj = git.version()  # returns a Version object
+  version_str = ".".join([str(x) for x in (version_obj.major, version_obj.minor, version_obj.micro)])
+  ```
+
+- `GitSync.get_git_version()` continues to return a string for backward compatibility
+
 #### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
 
 - pytest: `git_local_clone` renamed to `example_git_repo`
