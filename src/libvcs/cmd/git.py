@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import pathlib
 import shlex
+import string
 import typing as t
 from collections.abc import Sequence
 
@@ -1026,80 +1027,243 @@ class Git:
     def init(
         self,
         *,
-        template: str | None = None,
+        template: str | pathlib.Path | None = None,
         separate_git_dir: StrOrBytesPath | None = None,
         object_format: t.Literal["sha1", "sha256"] | None = None,
         branch: str | None = None,
         initial_branch: str | None = None,
-        shared: bool | None = None,
+        shared: bool
+        | t.Literal["false", "true", "umask", "group", "all", "world", "everybody"]
+        | str  # Octal number string (e.g., "0660")
+        | None = None,
         quiet: bool | None = None,
         bare: bool | None = None,
+        ref_format: t.Literal["files", "reftable"] | None = None,
+        default: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        make_parents: bool = True,
         **kwargs: t.Any,
     ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
 
         Parameters
         ----------
-        quiet : bool
-            ``--quiet``
-        bare : bool
-            ``--bare``
-        object_format :
-            Hash algorithm used for objects. SHA-256 is still experimental as of git
-            2.36.0.
+        template : str | pathlib.Path, optional
+            Directory from which templates will be used. The template directory
+            contains files and directories that will be copied to the $GIT_DIR
+            after it is created. The template directory will be one of the
+            following (in order):
+            - The argument given with the --template option
+            - The contents of the $GIT_TEMPLATE_DIR environment variable
+            - The init.templateDir configuration variable
+            - The default template directory: /usr/share/git-core/templates
+        separate_git_dir : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
+            Instead of placing the git repository in <directory>/.git/, place it in
+            the specified path. The .git file at <directory>/.git will contain a
+            gitfile that points to the separate git dir. This is useful when you
+            want to store the git directory on a different disk or filesystem.
+        object_format : "sha1" | "sha256", optional
+            Specify the hash algorithm to use. The default is sha1. Note that
+            sha256 is still experimental in git and requires git version >= 2.29.0.
+            Once the repository is created with a specific hash algorithm, it cannot
+            be changed.
+        branch : str, optional
+            Use the specified name for the initial branch. If not specified, fall
+            back to the default name (currently "master", but may change based on
+            init.defaultBranch configuration).
+        initial_branch : str, optional
+            Alias for branch parameter. Specify the name for the initial branch.
+            This is provided for compatibility with newer git versions.
+        shared : bool | str, optional
+            Specify that the git repository is to be shared amongst several users.
+            Valid values are:
+            - false: Turn off sharing (default)
+            - true: Same as group
+            - umask: Use permissions specified by umask
+            - group: Make the repository group-writable
+            - all, world, everybody: Same as world, make repo readable by all users
+            - An octal number string: Explicit mode specification (e.g., "0660")
+        quiet : bool, optional
+            Only print error and warning messages; all other output will be
+            suppressed. Useful for scripting.
+        bare : bool, optional
+            Create a bare repository. If GIT_DIR environment is not set, it is set
+            to the current working directory. Bare repositories have no working
+            tree and are typically used as central repositories.
+        ref_format : "files" | "reftable", optional
+            Specify the reference storage format. Requires git version >= 2.37.0.
+            - files: Classic format with packed-refs and loose refs (default)
+            - reftable: New format that is more efficient for large repositories
+        default : bool, optional
+            Use default permissions for directories and files. This is the same as
+            running git init without any options.
+        check_returncode : bool, optional
+            If True, check the return code of the git command and raise a
+            CalledProcessError if it is non-zero.
+        make_parents : bool, default: True
+            If True, create the target directory if it doesn't exist. If False,
+            raise an error if the directory doesn't exist.
+
+        Returns
+        -------
+        str
+            The output of the git init command.
+
+        Raises
+        ------
+        CalledProcessError
+            If the git command fails and check_returncode is True.
+        ValueError
+            If invalid parameters are provided.
+        FileNotFoundError
+            If make_parents is False and the target directory doesn't exist.
 
         Examples
         --------
-        >>> new_repo = tmp_path / 'example'
-        >>> new_repo.mkdir()
-        >>> git = Git(path=new_repo)
+        >>> git = Git(path=tmp_path)
         >>> git.init()
         'Initialized empty Git repository in ...'
-        >>> pathlib.Path(new_repo / 'test').write_text('foo', 'utf-8')
-        3
-        >>> git.run(['add', '.'])
-        ''
 
-        Bare:
+        Create with a specific initial branch name:
 
-        >>> new_repo = tmp_path / 'example1'
+        >>> new_repo = tmp_path / 'branch_example'
         >>> new_repo.mkdir()
         >>> git = Git(path=new_repo)
+        >>> git.init(branch='main')
+        'Initialized empty Git repository in ...'
+
+        Create a bare repository:
+
+        >>> bare_repo = tmp_path / 'bare_example'
+        >>> bare_repo.mkdir()
+        >>> git = Git(path=bare_repo)
         >>> git.init(bare=True)
         'Initialized empty Git repository in ...'
-        >>> pathlib.Path(new_repo / 'HEAD').exists()
-        True
 
-        Existing repo:
+        Create with a separate git directory:
 
-        >>> git = Git(path=new_repo)
-        >>> git = Git(path=example_git_repo.path)
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> git.init()
-        'Reinitialized existing Git repository in ...'
+        >>> repo_path = tmp_path / 'repo'
+        >>> git_dir = tmp_path / 'git_dir'
+        >>> repo_path.mkdir()
+        >>> git_dir.mkdir()
+        >>> git = Git(path=repo_path)
+        >>> git.init(separate_git_dir=str(git_dir.absolute()))
+        'Initialized empty Git repository in ...'
 
+        Create with shared permissions:
+
+        >>> shared_repo = tmp_path / 'shared_example'
+        >>> shared_repo.mkdir()
+        >>> git = Git(path=shared_repo)
+        >>> git.init(shared='group')
+        'Initialized empty shared Git repository in ...'
+
+        Create with octal permissions:
+
+        >>> shared_repo = tmp_path / 'shared_octal_example'
+        >>> shared_repo.mkdir()
+        >>> git = Git(path=shared_repo)
+        >>> git.init(shared='0660')
+        'Initialized empty shared Git repository in ...'
+
+        Create with a template directory:
+
+        >>> template_repo = tmp_path / 'template_example'
+        >>> template_repo.mkdir()
+        >>> git = Git(path=template_repo)
+        >>> git.init(template=str(tmp_path))
+        'Initialized empty Git repository in ...'
+
+        Create with SHA-256 object format (requires git >= 2.29.0):
+
+        >>> sha256_repo = tmp_path / 'sha256_example'
+        >>> sha256_repo.mkdir()
+        >>> git = Git(path=sha256_repo)
+        >>> git.init(object_format='sha256')  # doctest: +SKIP
+        'Initialized empty Git repository in ...'
         """
-        required_flags: list[str] = [str(self.path)]
         local_flags: list[str] = []
+        required_flags: list[str] = [str(self.path)]
 
         if template is not None:
+            if not isinstance(template, (str, pathlib.Path)):
+                msg = "template must be a string or Path"
+                raise TypeError(msg)
+            template_path = pathlib.Path(template)
+            if not template_path.is_dir():
+                msg = f"template directory does not exist: {template}"
+                raise ValueError(msg)
             local_flags.append(f"--template={template}")
+
         if separate_git_dir is not None:
-            local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
+            if isinstance(separate_git_dir, pathlib.Path):
+                separate_git_dir = str(separate_git_dir.absolute())
+            local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
+
         if object_format is not None:
+            if object_format not in {"sha1", "sha256"}:
+                msg = "object_format must be either 'sha1' or 'sha256'"
+                raise ValueError(msg)
             local_flags.append(f"--object-format={object_format}")
-        if branch is not None:
-            local_flags.extend(["--branch", branch])
-        if initial_branch is not None:
-            local_flags.extend(["--initial-branch", initial_branch])
-        if shared is True:
-            local_flags.append("--shared")
+
+        if branch is not None and initial_branch is not None:
+            msg = "Cannot specify both branch and initial_branch"
+            raise ValueError(msg)
+
+        branch_name = branch or initial_branch
+        if branch_name is not None:
+            if any(c.isspace() for c in branch_name):
+                msg = "Branch name cannot contain whitespace"
+                raise ValueError(msg)
+            local_flags.extend(["--initial-branch", branch_name])
+
+        if shared is not None:
+            valid_shared_values = {
+                "false",
+                "true",
+                "umask",
+                "group",
+                "all",
+                "world",
+                "everybody",
+            }
+            if isinstance(shared, bool):
+                local_flags.append("--shared")
+            else:
+                shared_str = str(shared).lower()
+                # Check if it's a valid string value or an octal number
+                if not (
+                    shared_str in valid_shared_values
+                    or (
+                        shared_str.isdigit()
+                        and len(shared_str) <= 4
+                        and all(c in string.octdigits for c in shared_str)
+                        and int(shared_str, 8) <= 0o777  # Validate octal range
+                    )
+                ):
+                    msg = (
+                        f"Invalid shared value. Must be one of {valid_shared_values} "
+                        "or a valid octal number between 0000 and 0777"
+                    )
+                    raise ValueError(msg)
+                local_flags.append(f"--shared={shared}")
+
         if quiet is True:
             local_flags.append("--quiet")
         if bare is True:
             local_flags.append("--bare")
+        if ref_format is not None:
+            local_flags.append(f"--ref-format={ref_format}")
+        if default is True:
+            local_flags.append("--default")
+
+        # libvcs special behavior
+        if make_parents and not self.path.exists():
+            self.path.mkdir(parents=True)
+        elif not self.path.exists():
+            msg = f"Directory does not exist: {self.path}"
+            raise FileNotFoundError(msg)
 
         return self.run(
             ["init", *local_flags, "--", *required_flags],

@@ -15,6 +15,18 @@ $ pip install --user --upgrade --pre libvcs
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
+### New features
+
+#### cmd: Enhanced Git.init() with comprehensive validation and features (#487)
+
+- Added support for all git init parameters with full validation:
+  - `template`: Support for both string and Path objects with directory validation
+  - `separate_git_dir`: Support for custom git directory locations
+  - `object_format`: SHA-1/SHA-256 hash algorithm selection with validation
+  - `shared`: Extended support for all git-supported sharing modes including octal permissions
+  - `ref_format`: Support for 'files' and 'reftable' formats
+  - `make_parents`: Option to create parent directories automatically
+
 ## libvcs 0.35.1 (2025-06-21)
 
 ### Bug fixes
