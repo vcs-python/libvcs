@@ -22,6 +22,18 @@ from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 
+console_encoding = sys.stdout.encoding
+
+
+def console_to_str(s: bytes) -> str:
+    """From pypa/pip project, pip.backwardwardcompat. License MIT."""
+    try:
+        return s.decode(console_encoding)
+    except UnicodeDecodeError:
+        return s.decode("utf_8")
+    except AttributeError:  # for tests, #13
+        return str(s)
+
 
 if t.TYPE_CHECKING:
     _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
@@ -78,7 +90,7 @@ class CmdLoggingAdapter(_LoggerAdapter):
 class ProgressCallbackProtocol(t.Protocol):
     """Callback to report subprocess communication."""
 
-    def __call__(self, output: t.AnyStr, timestamp: datetime.datetime) -> None:
+    def __call__(self, output: str, timestamp: datetime.datetime) -> None:
         """Process progress for subprocess communication."""
         ...
 
@@ -182,7 +194,7 @@ def run(
         restore_signals=restore_signals,
         start_new_session=start_new_session,
         pass_fds=pass_fds,
-        text=True,
+        text=False,  # Keep in bytes mode to preserve \r properly
         encoding=encoding,
         errors=errors,
         user=user,
@@ -201,29 +213,36 @@ def run(
             sys.stdout.flush()
 
         callback = progress_cb
+
+    # Note: When git detects that stderr is not a TTY (e.g., when piped),
+    # it outputs progress with newlines instead of carriage returns.
+    # This causes each progress update to appear on a new line.
+    # To get proper single-line progress updates, git would need to be
+    # connected to a pseudo-TTY, which would require significant changes
+    # to how subprocess execution is handled.
+
     while code is None:
         code = proc.poll()
 
         if callback and callable(callback) and proc.stderr is not None:
-            line = str(proc.stderr.read(128))
+            line = console_to_str(proc.stderr.read(128))
             if line:
                 callback(output=line, timestamp=datetime.datetime.now())
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now())
 
-    lines = (
-        filter(None, (line.strip() for line in proc.stdout.readlines()))
-        if proc.stdout is not None
-        else []
-    )
-    all_output = "\n".join(lines)
-    if code:
-        stderr_lines = (
-            filter(None, (line.strip() for line in proc.stderr.readlines()))
-            if proc.stderr is not None
-            else []
+    if proc.stdout is not None:
+        lines: t.Iterable[bytes] = filter(
+            None, (line.strip() for line in proc.stdout.readlines())
         )
-        all_output = "".join(stderr_lines)
+        all_output = console_to_str(b"\n".join(lines))
+    else:
+        all_output = ""
+    if code and proc.stderr is not None:
+        stderr_lines: t.Iterable[bytes] = filter(
+            None, (line.strip() for line in proc.stderr.readlines())
+        )
+        all_output = console_to_str(b"".join(stderr_lines))
     output = "".join(all_output)
     if code != 0 and check_returncode:
         raise exc.CommandError(
