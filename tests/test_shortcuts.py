@@ -70,3 +70,11 @@ def test_create_project(
     else:
         repo = create_project(**repo_dict)
         assert isinstance(repo, repo_class)
+
+
+def test_create_project_infer_scp_git(tmp_path: pathlib.Path) -> None:
+    """Test create_project infers Git VCS for SCP-style URLs."""
+    url = "git@github.com:tmux-python/tmuxp.git"
+    path = tmp_path / "tmuxp_repo"
+    repo = create_project(url=url, path=path)
+    assert isinstance(repo, GitSync)

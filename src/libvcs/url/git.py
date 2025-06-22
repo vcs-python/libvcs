@@ -61,6 +61,7 @@ DEFAULT_RULES: list[Rule] = [
         """,
             re.VERBOSE,
         ),
+        is_explicit=True,
     ),
     # ends with .git. Including ones starting with https://
     # e.g. https://github.com/vcs-python/libvcs.git
@@ -77,6 +78,7 @@ DEFAULT_RULES: list[Rule] = [
             re.VERBOSE,
         ),
         defaults={"username": "git"},
+        is_explicit=True,
     ),
     # SCP-style URLs, e.g. git@
 ]
@@ -392,7 +394,7 @@ class GitBaseURL(
         >>> GitBaseURL.is_valid(
         ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
         ... )
-        False
+        True
 
         In this case, check :meth:`GitPipURL.is_valid` or :meth:`GitURL.is_valid`'s
         examples.
@@ -764,7 +766,7 @@ class GitURL(
         >>> GitURL.is_valid(
         ...     url='git@github.com:vcs-python/libvcs.git', is_explicit=True
         ... )
-        False
+        True
 
         You could create a GitHub rule that consider github.com hostnames to be
         exclusively git:
