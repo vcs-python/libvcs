@@ -9,16 +9,20 @@ To install the unreleased libvcs version, see
 $ pip install --user --upgrade --pre libvcs
 ```
 
-## libvcs 0.36.x (unreleased)
+## libvcs 0.37.x (unreleased)
 
-### Iprovements
+<!-- Maintainers, insert changes / features for the next release here -->
+
+_Upcoming changes will be written here._
+
+## libvcs 0.36.0 (2025-06-22)
+
+### Improvements
 
 - Add support for SCP-style Git URLs without requiring `git+ssh://` prefix (#490)
   - URLs like `git@github.com:org/repo.git` are now recognized as Git repositories
   - `create_project()` can now auto-detect VCS type for these URLs
   - Addresses issues reported in [vcspull#49](https://github.com/vcs-python/vcspull/issues/49) and [vcspull#426](https://github.com/vcs-python/vcspull/pull/426)
-
-<!-- Maintainers, insert changes / features for the next release here -->
 
 ## libvcs 0.35.1 (2025-06-21)
 
