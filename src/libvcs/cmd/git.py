@@ -1282,7 +1282,7 @@ class Git:
             pathspec = []
 
         return self.run(
-            ["reset", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            ["reset", *local_flags, *(["--", *pathspec] if pathspec else [])],
             check_returncode=check_returncode,
         )
 
@@ -1419,7 +1419,7 @@ class Git:
             pathspec = []
 
         return self.run(
-            ["checkout", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            ["checkout", *local_flags, *(["--", *pathspec] if pathspec else [])],
             check_returncode=check_returncode,
         )
 
@@ -1553,7 +1553,7 @@ class Git:
             pathspec = []
 
         return self.run(
-            ["status", *local_flags, *(["--", *pathspec] if len(pathspec) else [])],
+            ["status", *local_flags, *(["--", *pathspec] if pathspec else [])],
             check_returncode=check_returncode,
         )
 
