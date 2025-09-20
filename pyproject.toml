@@ -61,8 +61,8 @@ Documentation = "https://libvcs.git-pull.com"
 Repository = "https://github.com/vcs-python/libvcs"
 Changes = "https://github.com/vcs-python/libvcs/blob/master/CHANGES"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   # Docs
   "sphinx",
   "furo",
@@ -90,7 +90,6 @@ dev-dependencies = [
   "mypy",
 ]
 
-[dependency-groups]
 docs = [
   "sphinx",
   "furo",
