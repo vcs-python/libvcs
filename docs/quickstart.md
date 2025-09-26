@@ -4,38 +4,38 @@
 
 ## Installation
 
-For latest official version:
+For the latest official version:
 
 ```console
-$ pip install --user libvcs
+$ python -m pip install libvcs
 ```
 
-Upgrading:
+Upgrading to the latest version:
 
 ```console
-$ pip install --user --upgrade libvcs
+$ python -m pip install --upgrade libvcs
 ```
 
 (developmental-releases)=
 
 ### Developmental releases
 
-New versions of libvcs are published to PyPI as alpha, beta, or release candidates. In their
-versions you will see notification like `a1`, `b1`, and `rc1`, respectively. `1.10.0b4` would mean
-the 4th beta release of `1.10.0` before general availability.
+New versions of libvcs are published to PyPI as alpha, beta, or release candidates. These versions
+are marked with notations like `a1`, `b1`, and `rc1`, respectively. For example, `1.10.0b4` indicates
+the 4th beta release of version `1.10.0` before its general availability.
 
-- [pip]\:
+Installation options:
+
+- Via pip (pre-release versions):
 
   ```console
-  $ pip install --user --upgrade --pre libvcs
+  $ python -m pip install --upgrade --pre libvcs
   ```
 
-via trunk (can break easily):
-
-- [pip]\:
+- Via trunk (development version, may be unstable):
 
   ```console
-  $ pip install --user -e git+https://github.com/vcs-python/libvcs.git#egg=libvcs
+  $ python -m pip install -e git+https://github.com/vcs-python/libvcs.git#egg=libvcs
   ```
 
 [pip]: https://pip.pypa.io/en/stable/
