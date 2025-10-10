@@ -27,6 +27,17 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
+      - name: Test runtime dependencies
+        run: |
+          uv run --no-dev -p python${{ matrix.python-version }} -- python -c '
+          from libvcs import _internal, cmd, data, sync, url, exc, pytest_plugin, logger, __version__
+          from libvcs._internal import dataclasses, module_loading, query_list, run, shortcuts, subprocess, types
+          from libvcs.cmd import git as git_cmd, hg as hg_cmd, svn as svn_cmd
+          from libvcs.sync import git as git_sync, hg as hg_sync, svn as svn_sync
+          from libvcs.url import git as git_url, hg as hg_url, svn as svn_url
+          print("libvcs version:", __version__)
+          '
+
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
