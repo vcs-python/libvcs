@@ -2,11 +2,11 @@
 
 # `pytest` Plugin
 
-With libvcs's pytest plugin for [pytest], you can easily create Git, SVN, and Mercurial repositories on the fly.
+With libvcs's pytest plugin for [pytest], you can easily create Git, Subversion (SVN), and Mercurial repositories on the fly.
 
 ```{seealso} Are you using libvcs?
 
-Looking for more flexibility, correctness, or power? Need different defaults? [Connect with us] on GitHub. We'd love to hear about your use case—APIs won't be stabilized until we're confident everything meets expectations.
+Looking for more flexibility, correctness, or power? Need different defaults? [Connect with us] on GitHub. We'd love to hear about your use case. Our APIs won't be stabilized until we're confident they meet all expectations.
 
 [connect with us]: https://github.com/vcs-python/libvcs/discussions
 ```
@@ -22,14 +22,14 @@ Looking for more flexibility, correctness, or power? Need different defaults? [C
 Install `libvcs` using your preferred Python package manager:
 
 ```console
-$ pip install libvcs
+$ python -m pip install libvcs
 ```
 
-Pytest will automatically detect the plugin, and its fixtures will be available.
+Once installed, pytest will automatically detect the plugin and make its fixtures available.
 
 ## Fixtures
 
-This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api>`. The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache initial repositories, improving performance across tests.
+This pytest plugin provides {ref}`pytest fixtures <pytest:fixtures-api>` that ensure a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache the initial repositories, improving performance across tests.
 
 [session-scoped fixtures]: https://docs.pytest.org/en/8.3.x/how-to/fixtures.html#fixture-scopes
 
@@ -37,26 +37,26 @@ This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api
 
 ## Recommended Fixtures
 
-When the plugin is enabled and `pytest` is run, these overridable fixtures are automatically used:
+When the plugin is enabled and `pytest` is run, the following overridable fixtures are automatically used:
 
 - Create temporary test directories for:
   - `/home/` ({func}`home_path`)
   - `/home/${user}` ({func}`user_path`)
-- Set the home directory:
-  - Patch `$HOME` to point to {func}`user_path` using ({func}`set_home`)
+- Set up the home directory:
+  - Patch `$HOME` to point to {func}`user_path` using {func}`set_home`
 - Create configuration files:
   - `.gitconfig` via {func}`gitconfig`
   - `.hgrc` via {func}`hgconfig`
-- Set default VCS configurations:
+- Configure default VCS settings:
   - Use {func}`hgconfig` for [`HGRCPATH`] via {func}`set_hgconfig`
   - Use {func}`gitconfig` for [`GIT_CONFIG`] via {func}`set_gitconfig`
-- Set default commit names and emails:
+- Set default commit information:
   - Name: {func}`vcs_name`
   - Email: {func}`vcs_email`
-  - User (e.g. _`user <email@tld>`_): {func}`vcs_user`
-  - For git only: {func}`git_commit_envvars`
+  - User (e.g., _`user <email@tld>`_): {func}`vcs_user`
+  - Git-specific: {func}`git_commit_envvars`
 
-These ensure that repositories can be cloned and created without unnecessary warnings.
+These fixtures ensure that repositories can be cloned and created without unnecessary warnings.
 
 [`HGRCPATH`]: https://www.mercurial-scm.org/doc/hg.1.html#:~:text=UNIX%2Dlike%20environments.-,HGRCPATH,-If%20not%20set
 [`GIT_CONFIG`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIG
@@ -65,17 +65,18 @@ These ensure that repositories can be cloned and created without unnecessary war
 
 To configure the above fixtures with `autouse=True`, add them to your `conftest.py` file or test file, depending on the desired scope.
 
-_Why aren't these fixtures added automatically by the plugin?_ This design choice promotes explicitness, adhering to best practices for pytest plugins and Python packages.
+_Why aren't these fixtures added automatically by the plugin?_ This design choice promotes explicitness and adheres to best practices for pytest plugins and Python packages.
 
 ### Setting a Temporary Home Directory
 
-To set a temporary home directory, use the {func}`set_home` fixture with `autouse=True`:
+To set up a temporary home directory, use the {func}`set_home` fixture with `autouse=True`:
 
 ```python
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(set_home: None):
+def setup_home(set_home: None) -> None:
+    """Configure a temporary home directory for testing."""
     pass
 ```
 
@@ -83,12 +84,13 @@ def setup(set_home: None):
 
 #### Git
 
-You can override the default author used in {func}`git_remote_repo` and other
-fixtures via {func}`vcs_name`, {func}`vcs_email`, and {func}`vcs_user`:
+You can override the default author information used in {func}`git_remote_repo` and other
+fixtures by customizing {func}`vcs_name`, {func}`vcs_email`, or {func}`vcs_user`:
 
-```
+```python
 @pytest.fixture(scope="session")
 def vcs_name() -> str:
+    """Provide a custom author name for Git commits."""
     return "My custom name"
 ```
 
@@ -98,29 +100,39 @@ Use the {func}`set_gitconfig` fixture with `autouse=True`:
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(set_gitconfig: None):
+def setup_git(set_gitconfig: None) -> None:
+    """Configure Git settings for testing."""
     pass
 ```
 
-Sometimes, `set_getconfig` via `GIT_CONFIG` doesn't apply as expected. For those
+Sometimes, `set_gitconfig` via `GIT_CONFIG` doesn't apply as expected. For those
 cases, you can use {func}`git_commit_envvars`:
 
 ```python
 import pytest
+from typing import Dict, Any
+from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, git_remote_repo_single_commit_post_init
 
 @pytest.fixture
 def my_git_repo(
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     gitconfig: pathlib.Path,
-    git_commit_envvars: "_ENV",
+    git_commit_envvars: Dict[str, Any],
 ) -> pathlib.Path:
-    """Copy the session-scoped Git repository to a temporary directory."""
+    """Create a fresh Git repository in a temporary directory.
+    
+    This fixture demonstrates how to create a Git repository with custom commit settings.
+    """
     repo_path = create_git_remote_repo()
     git_remote_repo_single_commit_post_init(
         remote_repo_path=repo_path,
         env=git_commit_envvars,
     )
     return repo_path
+```
+
+```{note}
+The `create_git_remote_repo` fixture creates a repository once per test session and reuses it, making copies for individual tests to avoid repeated `git init` operations.
 ```
 
 #### Mercurial
@@ -131,13 +143,14 @@ Use the {func}`set_hgconfig` fixture with `autouse=True`:
 import pytest
 
 @pytest.fixture(autouse=True)
-def setup(set_hgconfig: None):
+def setup_hg(set_hgconfig: None) -> None:
+    """Configure Mercurial settings for testing."""
     pass
 ```
 
 ## Examples
 
-For usage examples, refer to libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests).
+For more usage examples, refer to libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests).
 
 ## API Reference
 
