@@ -14,7 +14,7 @@ detection and parsing of URLs, commanding, and syncing with `git`, `hg`, and `sv
   Python API.
 - **py.test fixtures**: Create temporary local repositories and working copies for testing for unit tests.
 
-_Supports Python 3.9 and above, Git (including AWS CodeCommit), Subversion, and Mercurial._
+_Supports Python 3.10 and above, Git (including AWS CodeCommit), Subversion, and Mercurial._
 
 To **get started**, see the [quickstart guide](https://libvcs.git-pull.com/quickstart.html) for more information.
 

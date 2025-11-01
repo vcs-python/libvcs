@@ -87,7 +87,7 @@ class GitRemote:
 
 
 GitSyncRemoteDict = dict[str, GitRemote]
-GitRemotesArgs = t.Union[None, GitSyncRemoteDict, dict[str, str]]
+GitRemotesArgs = None | GitSyncRemoteDict | dict[str, str]
 
 
 @dataclasses.dataclass
@@ -401,9 +401,9 @@ class GitSync(BaseSync):
             self.log.debug("No git revision set, defaulting to origin/master")
             symref = self.cmd.symbolic_ref(name="HEAD", short=True)
             git_tag = symref.rstrip() if symref else "origin/master"
-        self.log.debug(f"git_tag: {git_tag}")
+        self.log.debug("git_tag: %s", git_tag)
 
-        self.log.info(f"Updating to '{git_tag}'.")
+        self.log.info("Updating to '%s'.", git_tag)
 
         # Get head sha
         try:
@@ -416,14 +416,14 @@ class GitSync(BaseSync):
             self.log.exception("Failed to get the hash for HEAD")
             return
 
-        self.log.debug(f"head_sha: {head_sha}")
+        self.log.debug("head_sha: %s", head_sha)
 
         # If a remote ref is asked for, which can possibly move around,
         # we must always do a fetch and checkout.
         show_ref_output = self.cmd.show_ref(pattern=git_tag, check_returncode=False)
-        self.log.debug(f"show_ref_output: {show_ref_output}")
+        self.log.debug("show_ref_output: %s", show_ref_output)
         is_remote_ref = "remotes" in show_ref_output
-        self.log.debug(f"is_remote_ref: {is_remote_ref}")
+        self.log.debug("is_remote_ref: %s", is_remote_ref)
 
         # show-ref output is in the form "<sha> refs/remotes/<remote>/<tag>"
         # we must strip the remote from the tag.
@@ -441,8 +441,8 @@ class GitSync(BaseSync):
                 raise GitRemoteRefNotFound(git_tag=git_tag, ref_output=show_ref_output)
             git_remote_name = m.group("git_remote_name")
             git_tag = m.group("git_tag")
-        self.log.debug(f"git_remote_name: {git_remote_name}")
-        self.log.debug(f"git_tag: {git_tag}")
+        self.log.debug("git_remote_name: %s", git_remote_name)
+        self.log.debug("git_tag: %s", git_tag)
 
         # This will fail if the tag does not exist (it probably has not
         # been fetched yet).
@@ -456,7 +456,7 @@ class GitSync(BaseSync):
         except exc.CommandError as e:
             error_code = e.returncode if e.returncode is not None else 0
             tag_sha = ""
-        self.log.debug(f"tag_sha: {tag_sha}")
+        self.log.debug("tag_sha: %s", tag_sha)
 
         # Is the hash checkout out what we want?
         somethings_up = (error_code, is_remote_ref, tag_sha != head_sha)
@@ -467,7 +467,7 @@ class GitSync(BaseSync):
         try:
             process = self.cmd.fetch(log_in_real_time=True, check_returncode=True)
         except exc.CommandError:
-            self.log.exception(f"Failed to fetch repository '{url}'")
+            self.log.exception("Failed to fetch repository '%s'", url)
             return
 
         if is_remote_ref:
@@ -493,7 +493,7 @@ class GitSync(BaseSync):
             try:
                 process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
-                self.log.exception(f"Failed to checkout tag: '{git_tag}'")
+                self.log.exception("Failed to checkout tag: '%s'", git_tag)
                 return
 
             # Rebase changes from the remote branch
@@ -537,7 +537,7 @@ class GitSync(BaseSync):
             try:
                 process = self.cmd.checkout(branch=git_tag)
             except exc.CommandError:
-                self.log.exception(f"Failed to checkout tag: '{git_tag}'")
+                self.log.exception("Failed to checkout tag: '%s'", git_tag)
                 return
 
         self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)

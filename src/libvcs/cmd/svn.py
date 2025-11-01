@@ -18,10 +18,10 @@ from libvcs import exc
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 
-DepthLiteral = t.Union[t.Literal["infinity", "empty", "files", "immediates"], None]
-RevisionLiteral = t.Union[t.Literal["HEAD", "BASE", "COMMITTED", "PREV"], None]
+DepthLiteral = t.Literal["infinity", "empty", "files", "immediates"] | None
+RevisionLiteral = t.Literal["HEAD", "BASE", "COMMITTED", "PREV"] | None
 
 
 class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):

@@ -19,7 +19,7 @@ from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
 
 if t.TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
     from libvcs._internal.run import _ENV
 
@@ -270,7 +270,7 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
         return remote_repo_name
 
 
-InitCmdArgs: TypeAlias = t.Optional[list[str]]
+InitCmdArgs: TypeAlias = list[str] | None
 
 
 class CreateRepoPostInitFn(t.Protocol):

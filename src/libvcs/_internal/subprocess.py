@@ -52,7 +52,7 @@ from libvcs._internal.types import StrOrBytesPath
 from .dataclasses import SkipDefaultFieldsReprMixin
 
 if t.TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -66,14 +66,11 @@ class SubprocessCheckOutputError(Exception):
 if sys.platform == "win32":
     _ENV: TypeAlias = Mapping[str, str]
 else:
-    _ENV: TypeAlias = t.Union[
-        Mapping[bytes, StrOrBytesPath],
-        Mapping[str, StrOrBytesPath],
-    ]
-_FILE: TypeAlias = t.Union[None, int, t.IO[t.Any]]
-_TXT: TypeAlias = t.Union[bytes, str]
+    _ENV: TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
+_FILE: TypeAlias = None | int | t.IO[t.Any]
+_TXT: TypeAlias = bytes | str
 #: Command
-_CMD: TypeAlias = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD: TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 
 @dataclasses.dataclass(repr=False)
@@ -191,8 +188,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     start_new_session: bool = False
     pass_fds: t.Any = ()
     umask: int = -1
-    if sys.version_info >= (3, 10):
-        pipesize: int = -1
+    pipesize: int = -1
     user: str | None = None
     group: str | None = None
     extra_groups: list[str] | None = None

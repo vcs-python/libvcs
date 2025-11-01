@@ -13,17 +13,12 @@ import typing as t
 from os import PathLike
 
 if t.TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
-StrPath: TypeAlias = t.Union[str, PathLike[str]]  # stable
+StrPath: TypeAlias = str | PathLike[str]  # stable
 """:class:`os.PathLike` or :class:`str`"""
 
-StrOrBytesPath: TypeAlias = t.Union[
-    str,
-    bytes,
-    PathLike[str],
-    PathLike[bytes],  # stable
-]
+StrOrBytesPath: TypeAlias = str | bytes | PathLike[str] | PathLike[bytes]
 """:class:`os.PathLike`, :class:`str` or :term:`bytes-like object`"""
 
 
