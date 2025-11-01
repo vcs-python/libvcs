@@ -15,6 +15,10 @@ $ pip install --user --upgrade --pre libvcs
 
 _Upcoming changes will be written here._
 
+### Development
+
+- Add Python 3.14 to test matrix (#496)
+
 ## libvcs 0.36.0 (2025-06-22)
 
 ### Improvements
