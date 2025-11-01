@@ -7,11 +7,11 @@ import typing as t
 from libvcs._internal.module_loading import import_string
 
 if t.TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
     from .base import URLProtocol
 
-    ParserLazyMap: TypeAlias = dict[str, t.Union[type[URLProtocol], str]]
+    ParserLazyMap: TypeAlias = dict[str, type[URLProtocol] | str]
     ParserMap: TypeAlias = dict[str, type[URLProtocol]]
 
 DEFAULT_PARSERS: ParserLazyMap = {

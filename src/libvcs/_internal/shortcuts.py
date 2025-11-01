@@ -14,7 +14,7 @@ from libvcs.exc import InvalidVCS
 from libvcs.url import registry as url_tools
 
 if t.TYPE_CHECKING:
-    from typing_extensions import TypeGuard
+    from typing import TypeGuard
 
     from libvcs._internal.run import ProgressCallbackProtocol
     from libvcs._internal.types import StrPath, VCSLiteral

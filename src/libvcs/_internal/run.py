@@ -37,7 +37,7 @@ def console_to_str(s: bytes) -> str:
 
 if t.TYPE_CHECKING:
     _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 else:
     _LoggerAdapter = logging.LoggerAdapter
 
@@ -98,13 +98,10 @@ class ProgressCallbackProtocol(t.Protocol):
 if sys.platform == "win32":
     _ENV: TypeAlias = Mapping[str, str]
 else:
-    _ENV: TypeAlias = t.Union[
-        Mapping[bytes, StrPath],
-        Mapping[str, StrPath],
-    ]
+    _ENV: TypeAlias = Mapping[bytes, StrPath] | Mapping[str, StrPath]
 
 _CMD = t.Union[StrPath, Sequence[StrPath]]
-_FILE: TypeAlias = t.Optional[t.Union[int, t.IO[t.Any]]]
+_FILE: TypeAlias = int | t.IO[t.Any] | None
 
 
 def run(

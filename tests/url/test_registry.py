@@ -13,14 +13,10 @@ from libvcs.url.svn import SvnURL
 
 if t.TYPE_CHECKING:
     from collections.abc import Callable
-
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
     ParserMatchLazy: TypeAlias = Callable[[str], registry.ParserMatch]
-    DetectVCSFixtureExpectedMatch: TypeAlias = t.Union[
-        registry.ParserMatch,
-        ParserMatchLazy,
-    ]
+    DetectVCSFixtureExpectedMatch: TypeAlias = registry.ParserMatch | ParserMatchLazy
 
 
 class DetectVCSFixture(t.NamedTuple):
