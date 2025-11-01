@@ -1,12 +1,17 @@
 # Changelog
 
-To install the unreleased libvcs version, see
-[developmental releases](https://libvcs.git-pull.com/quickstart.html#developmental-releases).
+To install the unreleased libvcs version, see [developmental releases](https://libvcs.git-pull.com/quickstart.html#developmental-releases).
 
 [pip](https://pip.pypa.io/en/stable/):
 
 ```console
 $ pip install --user --upgrade --pre libvcs
+```
+
+[uv](https://docs.astral.sh/uv/):
+
+```console
+$ uv add libvcs --prerelease allow
 ```
 
 ## libvcs 0.37.x (unreleased)
