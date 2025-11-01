@@ -188,8 +188,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     start_new_session: bool = False
     pass_fds: t.Any = ()
     umask: int = -1
-    if sys.version_info >= (3, 10):
-        pipesize: int = -1
+    pipesize: int = -1
     user: str | None = None
     group: str | None = None
     extra_groups: list[str] | None = None

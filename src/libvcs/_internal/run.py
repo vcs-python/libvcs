@@ -100,7 +100,7 @@ if sys.platform == "win32":
 else:
     _ENV: TypeAlias = Mapping[bytes, StrPath] | Mapping[str, StrPath]
 
-_CMD = t.Union[StrPath, Sequence[StrPath]]
+_CMD = StrPath | Sequence[StrPath]
 _FILE: TypeAlias = int | t.IO[t.Any] | None
 
 

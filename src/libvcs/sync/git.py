@@ -87,7 +87,7 @@ class GitRemote:
 
 
 GitSyncRemoteDict = dict[str, GitRemote]
-GitRemotesArgs = t.Union[None, GitSyncRemoteDict, dict[str, str]]
+GitRemotesArgs = None | GitSyncRemoteDict | dict[str, str]
 
 
 @dataclasses.dataclass

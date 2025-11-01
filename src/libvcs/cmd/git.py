@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = t.Union[StrOrBytesPath, Sequence[StrOrBytesPath]]
+_CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 
 class Git:
