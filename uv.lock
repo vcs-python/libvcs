@@ -401,7 +401,7 @@ wheels = [
 
 [[package]]
 name = "libvcs"
-version = "0.36.0"
+version = "0.37.0"
 source = { editable = "." }
 dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },

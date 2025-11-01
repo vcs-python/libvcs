@@ -14,11 +14,13 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.37.x (unreleased)
+## libvcs 0.38.x (unreleased)
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
 _Upcoming changes will be written here._
+
+## libvcs 0.37.0 (2025-11-01)
 
 ### Breaking changes
 
