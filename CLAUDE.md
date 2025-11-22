@@ -223,8 +223,6 @@ why: Explanation of necessity or impact.
 what:
 - Specific technical changes made
 - Focused on a single topic
-
-refs: #issue-number, breaking changes, or relevant links
 ```
 
 Common commit types:
@@ -245,8 +243,6 @@ what:
 - Add port capture to SCP_REGEX pattern
 - Update GitURL.to_url() to include port if specified
 - Add tests for the new functionality
-
-refs: #123
 ```
 
 ## Debugging Tips
