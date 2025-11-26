@@ -7,7 +7,11 @@ import typing as t
 
 import pytest
 
+from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
+
+if t.TYPE_CHECKING:
+    from libvcs.sync.git import GitSync
 
 
 @pytest.mark.parametrize("path_type", [str, pathlib.Path])
@@ -253,3 +257,228 @@ def test_git_init_make_parents(tmp_path: pathlib.Path) -> None:
     repo = git.Git(path=existing_path)
     result = repo.init(make_parents=False)
     assert "Initialized empty Git repository" in result
+
+
+# =============================================================================
+# GitBranchCmd Tests
+# =============================================================================
+
+
+class BranchDeleteFixture(t.NamedTuple):
+    """Test fixture for GitBranchCmd.delete() operations."""
+
+    test_id: str
+    branch_name: str
+    force: bool
+    expect_success: bool
+
+
+BRANCH_DELETE_FIXTURES: list[BranchDeleteFixture] = [
+    BranchDeleteFixture(
+        test_id="delete-merged-branch",
+        branch_name="feature-branch",
+        force=False,
+        expect_success=True,
+    ),
+    BranchDeleteFixture(
+        test_id="delete-branch-force",
+        branch_name="force-delete-branch",
+        force=True,
+        expect_success=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(BranchDeleteFixture._fields),
+    BRANCH_DELETE_FIXTURES,
+    ids=[test.test_id for test in BRANCH_DELETE_FIXTURES],
+)
+def test_branch_delete(
+    git_repo: GitSync,
+    test_id: str,
+    branch_name: str,
+    force: bool,
+    expect_success: bool,
+) -> None:
+    """Test GitBranchCmd.delete() with various scenarios."""
+    # Setup: create and checkout a branch, then switch back
+    git_repo.cmd.branches.create(branch=branch_name)
+    git_repo.cmd.checkout(branch="master")
+
+    # Get branch via Manager
+    branch = git_repo.cmd.branches.get(branch_name=branch_name)
+    assert branch is not None
+
+    # Delete the branch
+    branch.delete(force=force)
+
+    # Verify deletion - get() raises ObjectDoesNotExist when not found
+    with pytest.raises(ObjectDoesNotExist):
+        git_repo.cmd.branches.get(branch_name=branch_name)
+
+
+class BranchRenameFixture(t.NamedTuple):
+    """Test fixture for GitBranchCmd.rename() operations."""
+
+    test_id: str
+    original_name: str
+    new_name: str
+    force: bool
+
+
+BRANCH_RENAME_FIXTURES: list[BranchRenameFixture] = [
+    BranchRenameFixture(
+        test_id="rename-simple",
+        original_name="old-branch",
+        new_name="new-branch",
+        force=False,
+    ),
+    BranchRenameFixture(
+        test_id="rename-with-force",
+        original_name="rename-source",
+        new_name="rename-target",
+        force=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(BranchRenameFixture._fields),
+    BRANCH_RENAME_FIXTURES,
+    ids=[test.test_id for test in BRANCH_RENAME_FIXTURES],
+)
+def test_branch_rename(
+    git_repo: GitSync,
+    test_id: str,
+    original_name: str,
+    new_name: str,
+    force: bool,
+) -> None:
+    """Test GitBranchCmd.rename() with various scenarios."""
+    # Setup: create a branch
+    git_repo.cmd.branches.create(branch=original_name)
+    git_repo.cmd.checkout(branch="master")
+
+    # Get branch and rename
+    branch = git_repo.cmd.branches.get(branch_name=original_name)
+    assert branch is not None
+    branch.rename(new_name, force=force)
+
+    # Verify: old name gone (raises ObjectDoesNotExist), new name exists
+    with pytest.raises(ObjectDoesNotExist):
+        git_repo.cmd.branches.get(branch_name=original_name)
+    assert git_repo.cmd.branches.get(branch_name=new_name) is not None
+
+
+class BranchCopyFixture(t.NamedTuple):
+    """Test fixture for GitBranchCmd.copy() operations."""
+
+    test_id: str
+    source_name: str
+    copy_name: str
+    force: bool
+
+
+BRANCH_COPY_FIXTURES: list[BranchCopyFixture] = [
+    BranchCopyFixture(
+        test_id="copy-simple",
+        source_name="source-branch",
+        copy_name="copied-branch",
+        force=False,
+    ),
+    BranchCopyFixture(
+        test_id="copy-with-force",
+        source_name="copy-source",
+        copy_name="copy-target",
+        force=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(BranchCopyFixture._fields),
+    BRANCH_COPY_FIXTURES,
+    ids=[test.test_id for test in BRANCH_COPY_FIXTURES],
+)
+def test_branch_copy(
+    git_repo: GitSync,
+    test_id: str,
+    source_name: str,
+    copy_name: str,
+    force: bool,
+) -> None:
+    """Test GitBranchCmd.copy() with various scenarios."""
+    # Setup: create a branch
+    git_repo.cmd.branches.create(branch=source_name)
+    git_repo.cmd.checkout(branch="master")
+
+    # Get branch and copy
+    branch = git_repo.cmd.branches.get(branch_name=source_name)
+    assert branch is not None
+    branch.copy(copy_name, force=force)
+
+    # Verify: both branches exist
+    assert git_repo.cmd.branches.get(branch_name=source_name) is not None
+    assert git_repo.cmd.branches.get(branch_name=copy_name) is not None
+
+
+class BranchUpstreamFixture(t.NamedTuple):
+    """Test fixture for GitBranchCmd upstream operations."""
+
+    test_id: str
+    branch_name: str
+    upstream: str
+
+
+BRANCH_UPSTREAM_FIXTURES: list[BranchUpstreamFixture] = [
+    BranchUpstreamFixture(
+        test_id="set-upstream-origin-master",
+        branch_name="tracking-branch",
+        upstream="origin/master",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(BranchUpstreamFixture._fields),
+    BRANCH_UPSTREAM_FIXTURES,
+    ids=[test.test_id for test in BRANCH_UPSTREAM_FIXTURES],
+)
+def test_branch_set_upstream(
+    git_repo: GitSync,
+    test_id: str,
+    branch_name: str,
+    upstream: str,
+) -> None:
+    """Test GitBranchCmd.set_upstream() with various scenarios."""
+    # Setup: create a branch
+    git_repo.cmd.branches.create(branch=branch_name)
+    git_repo.cmd.checkout(branch="master")
+
+    # Get branch and set upstream
+    branch = git_repo.cmd.branches.get(branch_name=branch_name)
+    assert branch is not None
+    result = branch.set_upstream(upstream)
+
+    # Verify: should succeed (output contains confirmation)
+    assert "set up to track" in result.lower() or result == ""
+
+
+def test_branch_unset_upstream(git_repo: GitSync) -> None:
+    """Test GitBranchCmd.unset_upstream()."""
+    branch_name = "untrack-branch"
+
+    # Setup: create a branch and set upstream
+    git_repo.cmd.branches.create(branch=branch_name)
+    git_repo.cmd.checkout(branch="master")
+
+    branch = git_repo.cmd.branches.get(branch_name=branch_name)
+    assert branch is not None
+
+    # Set then unset upstream
+    branch.set_upstream("origin/master")
+    result = branch.unset_upstream()
+
+    # unset_upstream typically returns empty string on success
+    assert result == "" or "upstream" not in result.lower()
