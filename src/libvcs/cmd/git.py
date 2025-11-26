@@ -97,6 +97,7 @@ class Git:
         self.progress_callback = progress_callback
 
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
+        self.submodules = GitSubmoduleManager(path=self.path, cmd=self)
         self.remotes = GitRemoteManager(path=self.path, cmd=self)
         self.stash = GitStashCmd(path=self.path, cmd=self)  # Deprecated: use stashes
         self.stashes = GitStashManager(path=self.path, cmd=self)
@@ -2341,6 +2342,7 @@ class Git:
 
 
 GitSubmoduleCmdCommandLiteral = t.Literal[
+    "add",
     "status",
     "init",
     "deinit",
@@ -2519,6 +2521,1069 @@ class GitSubmoduleCmd:
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
+
+
+@dataclasses.dataclass
+class GitSubmodule:
+    """Represent a git submodule."""
+
+    name: str
+    """Submodule name (from .gitmodules)."""
+
+    path: str
+    """Path to submodule relative to repository root."""
+
+    url: str | None = None
+    """Remote URL for the submodule."""
+
+    sha: str | None = None
+    """Current commit SHA of the submodule."""
+
+    branch: str | None = None
+    """Configured branch for the submodule."""
+
+    status_prefix: str = ""
+    """Status prefix: '-' not initialized, '+' differs, 'U' conflicts."""
+
+    #: Internal: GitSubmoduleEntryCmd for operations on this submodule
+    _cmd: GitSubmoduleEntryCmd | None = dataclasses.field(default=None, repr=False)
+
+    @property
+    def cmd(self) -> GitSubmoduleEntryCmd:
+        """Return command object for this submodule."""
+        if self._cmd is None:
+            msg = "GitSubmodule not created with cmd reference"
+            raise ValueError(msg)
+        return self._cmd
+
+    @property
+    def initialized(self) -> bool:
+        """Check if submodule is initialized."""
+        return self.status_prefix != "-"
+
+
+class GitSubmoduleEntryCmd:
+    """Run commands directly on a specific git submodule."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        submodule_path: str,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-submodule(1) for specific submodule operations.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        submodule_path :
+            Path to the submodule relative to repository root.
+
+        Examples
+        --------
+        >>> GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... )
+        <GitSubmoduleEntryCmd vendor/lib>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.submodule_path = submodule_path
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git submodule entry cmd object."""
+        return f"<GitSubmoduleEntryCmd {self.submodule_path}>"
+
+    def run(
+        self,
+        command: GitSubmoduleCmdCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a specific submodule.
+
+        Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+
+        Parameters
+        ----------
+        command :
+            Submodule command to run.
+        local_flags :
+            Additional flags to pass.
+
+        Examples
+        --------
+        >>> GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).run('status')
+        ''
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["submodule"]
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def init(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Initialize this submodule.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).init()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        return self.run(
+            "init",
+            local_flags=["--", self.submodule_path],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        init: bool = False,
+        force: bool = False,
+        checkout: bool = False,
+        rebase: bool = False,
+        merge: bool = False,
+        recursive: bool = False,
+        remote: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Update this submodule.
+
+        Parameters
+        ----------
+        init :
+            Initialize if not already.
+        force :
+            Discard local changes.
+        checkout :
+            Check out superproject's recorded commit.
+        rebase :
+            Rebase current branch onto commit.
+        merge :
+            Merge commit into current branch.
+        recursive :
+            Recurse into nested submodules.
+        remote :
+            Use remote tracking branch.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).update()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if init:
+            local_flags.append("--init")
+        if force:
+            local_flags.append("--force")
+        if checkout:
+            local_flags.append("--checkout")
+        elif rebase:
+            local_flags.append("--rebase")
+        elif merge:
+            local_flags.append("--merge")
+        if recursive:
+            local_flags.append("--recursive")
+        if remote:
+            local_flags.append("--remote")
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "update",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def deinit(
+        self,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Unregister this submodule.
+
+        Parameters
+        ----------
+        force :
+            Force removal even if has local modifications.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).deinit()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("--force")
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "deinit",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_branch(
+        self,
+        branch: str | None = None,
+        *,
+        default: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Set branch for this submodule.
+
+        Parameters
+        ----------
+        branch :
+            Branch to track.
+        default :
+            Reset to default (remove branch setting).
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).set_branch('main')
+        >>> 'fatal' in result.lower() or 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if default:
+            local_flags.append("--default")
+        elif branch is not None:
+            local_flags.extend(["--branch", branch])
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "set-branch",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_url(
+        self,
+        url: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Set URL for this submodule.
+
+        Parameters
+        ----------
+        url :
+            New URL for the submodule.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).set_url('https://example.com/repo.git')
+        >>> 'fatal' in result.lower() or 'error' in result.lower() or result == ''
+        True
+        """
+        return self.run(
+            "set-url",
+            local_flags=["--", self.submodule_path, url],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def status(
+        self,
+        *,
+        recursive: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Get status of this submodule.
+
+        Parameters
+        ----------
+        recursive :
+            Recurse into nested submodules.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).status()
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "status",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def absorbgitdirs(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Absorb git directory for this submodule.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).absorbgitdirs()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        return self.run(
+            "absorbgitdirs",
+            local_flags=["--", self.submodule_path],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitSubmoduleManager:
+    """Run commands directly related to git submodules of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-submodule(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=tmp_path)
+        <GitSubmoduleManager path=...>
+
+        >>> GitSubmoduleManager(path=tmp_path).run('status')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitSubmoduleManager(path=example_git_repo.path).run('status')
+        ''
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git submodule manager object."""
+        return f"<GitSubmoduleManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitSubmoduleCmdCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's submodules.
+
+        Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+
+        Parameters
+        ----------
+        command :
+            Submodule command to run.
+        local_flags :
+            Additional flags to pass.
+        quiet :
+            Suppress output.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).run('status')
+        ''
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["submodule"]
+
+        if quiet:
+            _cmd.append("--quiet")
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def add(
+        self,
+        repository: str,
+        path: str | None = None,
+        *,
+        branch: str | None = None,
+        force: bool = False,
+        name: str | None = None,
+        depth: int | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Add a new submodule.
+
+        Parameters
+        ----------
+        repository :
+            URL of the repository to add as submodule.
+        path :
+            Path where submodule will be cloned.
+        branch :
+            Branch to track.
+        force :
+            Force add.
+        name :
+            Logical name for the submodule.
+        depth :
+            Shallow clone depth.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).add(
+        ...     'https://github.com/example/repo.git',
+        ...     'vendor/example'
+        ... )
+        >>> 'error' in result.lower() or 'fatal' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if branch is not None:
+            local_flags.extend(["-b", branch])
+        if force:
+            local_flags.append("--force")
+        if name is not None:
+            local_flags.extend(["--name", name])
+        if depth is not None:
+            local_flags.extend(["--depth", str(depth)])
+
+        local_flags.extend(["--", repository])
+        if path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "add",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def init(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Initialize submodules.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s) to initialize.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).init()
+        ''
+        """
+        local_flags: list[str] = ["--"]
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "init",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        init: bool = False,
+        force: bool = False,
+        checkout: bool = False,
+        rebase: bool = False,
+        merge: bool = False,
+        recursive: bool = False,
+        remote: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Update submodules.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s) to update.
+        init :
+            Initialize if not already.
+        force :
+            Discard local changes.
+        checkout :
+            Check out superproject's recorded commit.
+        rebase :
+            Rebase current branch onto commit.
+        merge :
+            Merge commit into current branch.
+        recursive :
+            Recurse into nested submodules.
+        remote :
+            Use remote tracking branch.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).update()
+        ''
+
+        >>> GitSubmoduleManager(path=example_git_repo.path).update(init=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if init:
+            local_flags.append("--init")
+        if force:
+            local_flags.append("--force")
+        if checkout:
+            local_flags.append("--checkout")
+        elif rebase:
+            local_flags.append("--rebase")
+        elif merge:
+            local_flags.append("--merge")
+        if recursive:
+            local_flags.append("--recursive")
+        if remote:
+            local_flags.append("--remote")
+
+        local_flags.append("--")
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "update",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def foreach(
+        self,
+        command: str,
+        *,
+        recursive: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Run command in each submodule.
+
+        Parameters
+        ----------
+        command :
+            Shell command to run.
+        recursive :
+            Recurse into nested submodules.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).foreach(
+        ...     'git status'
+        ... )
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+
+        local_flags.append(command)
+
+        return self.run(
+            "foreach",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def sync(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        recursive: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Sync submodule URLs.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s) to sync.
+        recursive :
+            Recurse into nested submodules.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).sync()
+        ''
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+
+        local_flags.append("--")
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "sync",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def summary(
+        self,
+        *,
+        cached: bool = False,
+        files: bool = False,
+        summary_limit: int | None = None,
+        commit: str | None = None,
+        path: list[str] | str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show commit summary for submodules.
+
+        Parameters
+        ----------
+        cached :
+            Use cached info.
+        files :
+            Compare to working tree.
+        summary_limit :
+            Limit number of commits shown.
+        commit :
+            Commit to compare against.
+        path :
+            Specific submodule path(s).
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).summary()
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = []
+
+        if cached:
+            local_flags.append("--cached")
+        if files:
+            local_flags.append("--files")
+        if summary_limit is not None:
+            local_flags.append(f"--summary-limit={summary_limit}")
+
+        if commit is not None:
+            local_flags.append(commit)
+
+        local_flags.append("--")
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "summary",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def absorbgitdirs(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Absorb git directories into superproject.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s).
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).absorbgitdirs()
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = ["--"]
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "absorbgitdirs",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(
+        self,
+        *,
+        recursive: bool = False,
+        cached: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> list[dict[str, t.Any]]:
+        """Parse submodule status output into structured data.
+
+        Parameters
+        ----------
+        recursive :
+            Include nested submodules.
+        cached :
+            Use cached info.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            List of parsed submodule data.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path)._ls()
+        >>> isinstance(submodules, list)
+        True
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+        if cached:
+            local_flags.append("--cached")
+
+        result = self.run(
+            "status",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+        submodules: list[dict[str, t.Any]] = []
+
+        for line in result.strip().split("\n"):
+            if not line:
+                continue
+
+            # Format: <prefix><sha> <path> (<description>)
+            # Example: -abc1234 vendor/lib (heads/main)
+            # Prefix: - (not init), + (differs), U (conflicts), space (ok)
+            status_prefix = ""
+            if line and line[0] in "-+U ":
+                status_prefix = line[0] if line[0] != " " else ""
+                line = line[1:]
+
+            parts = line.strip().split(" ", 2)
+            if len(parts) >= 2:
+                sha = parts[0]
+                path = parts[1]
+                description = ""
+                if len(parts) > 2:
+                    # Remove parentheses from description
+                    description = parts[2].strip("()")
+
+                # Get additional info from .gitmodules if available
+                submodule_name = path  # Default to path
+                url = None
+                branch = None
+
+                # Try to get name and URL from git config
+                try:
+                    name_result = self.cmd.run(
+                        ["config", "-f", ".gitmodules", f"submodule.{path}.name"],
+                        check_returncode=False,
+                    )
+                    if name_result and "error" not in name_result.lower():
+                        submodule_name = name_result.strip()
+                except Exception:
+                    pass
+
+                try:
+                    url_result = self.cmd.run(
+                        ["config", "-f", ".gitmodules", f"submodule.{path}.url"],
+                        check_returncode=False,
+                    )
+                    if url_result and "error" not in url_result.lower():
+                        url = url_result.strip()
+                except Exception:
+                    pass
+
+                try:
+                    branch_result = self.cmd.run(
+                        ["config", "-f", ".gitmodules", f"submodule.{path}.branch"],
+                        check_returncode=False,
+                    )
+                    if branch_result and "error" not in branch_result.lower():
+                        branch = branch_result.strip()
+                except Exception:
+                    pass
+
+                submodules.append(
+                    {
+                        "name": submodule_name,
+                        "path": path,
+                        "sha": sha,
+                        "url": url,
+                        "branch": branch,
+                        "status_prefix": status_prefix,
+                        "description": description,
+                    }
+                )
+
+        return submodules
+
+    def ls(
+        self,
+        *,
+        recursive: bool = False,
+        cached: bool = False,
+    ) -> QueryList[GitSubmodule]:
+        """List submodules as GitSubmodule objects.
+
+        Parameters
+        ----------
+        recursive :
+            Include nested submodules.
+        cached :
+            Use cached info.
+
+        Returns
+        -------
+        QueryList[GitSubmodule]
+            List of submodules with ORM-like filtering.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path).ls()
+        >>> isinstance(submodules, QueryList)
+        True
+        """
+        submodules_data = self._ls(recursive=recursive, cached=cached)
+        submodules: list[GitSubmodule] = []
+
+        for data in submodules_data:
+            entry_cmd = GitSubmoduleEntryCmd(
+                path=self.path,
+                submodule_path=data["path"],
+                cmd=self.cmd,
+            )
+            submodule = GitSubmodule(
+                name=data["name"],
+                path=data["path"],
+                sha=data["sha"],
+                url=data["url"],
+                branch=data["branch"],
+                status_prefix=data["status_prefix"],
+                _cmd=entry_cmd,
+            )
+            submodules.append(submodule)
+
+        return QueryList(submodules)
+
+    def get(
+        self,
+        path: str | None = None,
+        name: str | None = None,
+        **kwargs: t.Any,
+    ) -> GitSubmodule:
+        """Get a specific submodule.
+
+        Parameters
+        ----------
+        path :
+            Submodule path to find.
+        name :
+            Submodule name to find.
+        **kwargs :
+            Additional filter criteria.
+
+        Returns
+        -------
+        GitSubmodule
+            The matching submodule.
+
+        Raises
+        ------
+        ObjectDoesNotExist
+            If no matching submodule found.
+        MultipleObjectsReturned
+            If multiple submodules match.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path)
+        >>> # submodule = submodules.get(path='vendor/lib')
+        """
+        filters: dict[str, t.Any] = {}
+        if path is not None:
+            filters["path"] = path
+        if name is not None:
+            filters["name"] = name
+        filters.update(kwargs)
+
+        result = self.ls().get(**filters)
+        assert result is not None  # get() raises ObjectDoesNotExist, never returns None
+        return result
+
+    def filter(
+        self,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> QueryList[GitSubmodule]:
+        """Filter submodules.
+
+        Parameters
+        ----------
+        *args :
+            Positional arguments for QueryList.filter().
+        **kwargs :
+            Keyword arguments for filtering (supports Django-style lookups).
+
+        Returns
+        -------
+        QueryList[GitSubmodule]
+            Filtered list of submodules.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path).filter()
+        >>> isinstance(submodules, QueryList)
+        True
+        """
+        return self.ls().filter(*args, **kwargs)
 
 
 GitRemoteCommandLiteral = t.Literal[
@@ -6788,9 +7853,10 @@ class GitReflogManager:
                 check_returncode=True,
                 log_in_real_time=log_in_real_time,
             )
-            return True
         except CommandError:
             return False
+        else:
+            return True
 
     def _ls(
         self,
@@ -6966,7 +8032,9 @@ class GitReflogManager:
             filters["sha"] = sha
         filters.update(kwargs)
 
-        return self.ls().get(**filters)
+        result = self.ls().get(**filters)
+        assert result is not None  # get() raises ObjectDoesNotExist, never returns None
+        return result
 
     def filter(
         self,
