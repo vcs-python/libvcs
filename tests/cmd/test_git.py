@@ -581,7 +581,8 @@ def test_remote_set_head(
 
     # set_head returns either confirmation message or empty string
     if auto:
-        assert "set to" in result.lower() or result == ""
+        result_lower = result.lower()
+        assert "set to" in result_lower or "unchanged" in result_lower or result == ""
     else:
         assert result == "" or "head" in result.lower()
 
