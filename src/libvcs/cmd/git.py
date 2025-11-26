@@ -6893,6 +6893,7 @@ class GitNoteCmd:
             ["notes", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def show(
@@ -7012,6 +7013,7 @@ class GitNoteCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        **kwargs: t.Any,
     ) -> str:
         """Edit the note for this object.
 
@@ -7025,10 +7027,12 @@ class GitNoteCmd:
 
         Examples
         --------
+        Use config to override editor (avoids interactive editor):
+
         >>> result = GitNoteCmd(
         ...     path=example_git_repo.path,
         ...     object_sha='HEAD',
-        ... ).edit(allow_empty=True)
+        ... ).edit(allow_empty=True, config={'core.editor': 'true'})
         >>> 'error' in result.lower() or result == ''
         True
         """
@@ -7044,6 +7048,7 @@ class GitNoteCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def copy(
