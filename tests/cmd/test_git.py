@@ -1441,3 +1441,104 @@ def test_notes_get_ref(git_repo: GitSync) -> None:
     result = git_repo.cmd.notes.get_ref()
     # Should return the ref name or be empty if not set
     assert result == "refs/notes/commits" or result == "" or "notes" in result
+
+
+# GitReflog tests
+
+
+class ReflogShowFixture(t.NamedTuple):
+    """Fixture for git reflog show tests."""
+
+    test_id: str
+    ref: str
+    number: int | None
+
+
+REFLOG_SHOW_FIXTURES: list[ReflogShowFixture] = [
+    ReflogShowFixture(
+        test_id="head-no-limit",
+        ref="HEAD",
+        number=None,
+    ),
+    ReflogShowFixture(
+        test_id="head-limit-5",
+        ref="HEAD",
+        number=5,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(ReflogShowFixture._fields),
+    REFLOG_SHOW_FIXTURES,
+    ids=[test.test_id for test in REFLOG_SHOW_FIXTURES],
+)
+def test_reflog_show(
+    git_repo: GitSync,
+    test_id: str,
+    ref: str,
+    number: int | None,
+) -> None:
+    """Test GitReflogManager.show()."""
+    result = git_repo.cmd.reflog.show(ref=ref, number=number)
+    # Should return reflog output
+    assert isinstance(result, str)
+    assert len(result) > 0
+
+
+def test_reflog_list(git_repo: GitSync) -> None:
+    """Test GitReflogManager.ls()."""
+    entries = git_repo.cmd.reflog.ls()
+    assert isinstance(entries, list)
+    assert len(entries) > 0
+
+    # Each entry should have required fields
+    for entry in entries:
+        assert entry.sha is not None
+        assert entry.refspec is not None
+        assert entry.action is not None
+
+
+def test_reflog_get(git_repo: GitSync) -> None:
+    """Test GitReflogManager.get()."""
+    # Get the first entry (HEAD@{0})
+    entry = git_repo.cmd.reflog.get(refspec="HEAD@{0}")
+    assert entry is not None
+    assert entry.refspec == "HEAD@{0}"
+
+
+def test_reflog_filter(git_repo: GitSync) -> None:
+    """Test GitReflogManager.filter()."""
+    # Filter by action type (commit actions are common)
+    entries = git_repo.cmd.reflog.filter(action="commit")
+    assert isinstance(entries, list)
+    # May or may not have commit actions depending on repo state
+
+
+def test_reflog_entry_show(git_repo: GitSync) -> None:
+    """Test GitReflogEntryCmd.show()."""
+    # Get an entry from the list
+    entries = git_repo.cmd.reflog.ls()
+    assert len(entries) > 0
+
+    # Get the first entry's cmd and show it
+    entry = entries[0]
+    result = entry.cmd.show()
+    assert isinstance(result, str)
+    assert len(result) > 0
+
+
+def test_reflog_exists(git_repo: GitSync) -> None:
+    """Test GitReflogManager.exists()."""
+    # HEAD should always have a reflog
+    assert git_repo.cmd.reflog.exists("HEAD") is True
+
+    # Non-existent ref should return False
+    assert git_repo.cmd.reflog.exists("refs/heads/nonexistent-xyz123456") is False
+
+
+def test_reflog_expire(git_repo: GitSync) -> None:
+    """Test GitReflogManager.expire()."""
+    # Expire with dry_run should succeed
+    result = git_repo.cmd.reflog.expire(dry_run=True)
+    assert result == "" or "error" not in result.lower()
