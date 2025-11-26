@@ -3035,8 +3035,9 @@ class GitSubmoduleManager:
 
         Examples
         --------
+        >>> git_remote_repo = create_git_remote_repo()
         >>> result = GitSubmoduleManager(path=example_git_repo.path).add(
-        ...     'https://github.com/example/repo.git',
+        ...     f'file://{git_remote_repo}',
         ...     'vendor/example'
         ... )
         >>> 'error' in result.lower() or 'fatal' in result.lower() or result == ''
