@@ -3586,6 +3586,154 @@ class GitBranchCmd:
             check_returncode=False,
         )
 
+    def delete(
+        self,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Delete this git branch.
+
+        Parameters
+        ----------
+        force :
+            Use ``-D`` instead of ``-d`` to force deletion.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='nonexistent'
+        ... ).delete()
+        "error: branch 'nonexistent' not found"
+        """
+        flag = "-D" if force else "-d"
+        return self.cmd.run(
+            ["branch", flag, self.branch_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def rename(
+        self,
+        new_name: str,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Rename this git branch.
+
+        Parameters
+        ----------
+        new_name :
+            New name for the branch.
+        force :
+            Use ``-M`` instead of ``-m`` to force rename.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).rename('main')
+        ''
+        """
+        flag = "-M" if force else "-m"
+        return self.cmd.run(
+            ["branch", flag, self.branch_name, new_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def copy(
+        self,
+        new_name: str,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Copy this git branch.
+
+        Parameters
+        ----------
+        new_name :
+            Name for the copied branch.
+        force :
+            Use ``-C`` instead of ``-c`` to force copy.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).copy('master-copy')
+        ''
+        """
+        flag = "-C" if force else "-c"
+        return self.cmd.run(
+            ["branch", flag, self.branch_name, new_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_upstream(
+        self,
+        upstream: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Set the upstream (tracking) branch.
+
+        Parameters
+        ----------
+        upstream :
+            The upstream branch in format ``remote/branch`` (e.g., ``origin/main``).
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).set_upstream('origin/master')
+        "branch 'master' set up to track 'origin/master'."
+        """
+        return self.cmd.run(
+            ["branch", f"--set-upstream-to={upstream}", self.branch_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def unset_upstream(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Remove the upstream (tracking) information.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).unset_upstream()
+        ''
+        """
+        return self.cmd.run(
+            ["branch", "--unset-upstream", self.branch_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
 
 class GitBranchManager:
     """Run commands directly related to git branches of a git repo."""
