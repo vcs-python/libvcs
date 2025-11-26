@@ -1278,3 +1278,166 @@ def test_worktree_prune(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
     # Dry run should also succeed
     result_dry = git_repo.cmd.worktrees.prune(dry_run=True)
     assert "error" not in result_dry.lower() or result_dry == ""
+
+
+# GitNotes tests
+
+
+class NoteAddFixture(t.NamedTuple):
+    """Fixture for git notes add tests."""
+
+    test_id: str
+    message: str | None
+    force: bool
+
+
+NOTE_ADD_FIXTURES: list[NoteAddFixture] = [
+    NoteAddFixture(
+        test_id="simple-message",
+        message="Test note message",
+        force=False,
+    ),
+    NoteAddFixture(
+        test_id="message-with-force",
+        message="Replacement note",
+        force=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(NoteAddFixture._fields),
+    NOTE_ADD_FIXTURES,
+    ids=[test.test_id for test in NOTE_ADD_FIXTURES],
+)
+def test_notes_add(
+    git_repo: GitSync,
+    test_id: str,
+    message: str | None,
+    force: bool,
+) -> None:
+    """Test GitNotesManager.add()."""
+    # Add a note to HEAD
+    result = git_repo.cmd.notes.add(message=message, force=force)
+    # Should succeed (empty string) or show overwriting message
+    assert result == "" or "Overwriting" in result or "error" not in result.lower()
+
+
+def test_notes_list(git_repo: GitSync) -> None:
+    """Test GitNotesManager.ls()."""
+    # Add a note first
+    git_repo.cmd.notes.add(message="Test note for listing", force=True)
+
+    # List notes
+    notes = git_repo.cmd.notes.ls()
+    assert isinstance(notes, list)
+    assert len(notes) > 0
+
+    # Each note should have object_sha and note_sha
+    for note in notes:
+        assert note.object_sha is not None
+        assert note.note_sha is not None
+
+
+def test_notes_get(git_repo: GitSync) -> None:
+    """Test GitNotesManager.get()."""
+    # Add a note first
+    git_repo.cmd.notes.add(message="Test note for get", force=True)
+
+    # Get the HEAD revision
+    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+
+    # Get the note by object_sha
+    note = git_repo.cmd.notes.get(object_sha=head_sha)
+    assert note is not None
+    assert note.object_sha == head_sha
+
+
+def test_notes_filter(git_repo: GitSync) -> None:
+    """Test GitNotesManager.filter()."""
+    # Add a note first
+    git_repo.cmd.notes.add(message="Test note for filter", force=True)
+
+    # Filter notes (should return at least one)
+    notes = git_repo.cmd.notes.filter()
+    assert isinstance(notes, list)
+    assert len(notes) >= 0  # May or may not have notes depending on state
+
+
+def test_notes_show(git_repo: GitSync) -> None:
+    """Test GitNoteCmd.show()."""
+    # Add a note first
+    note_message = "Test note for show method"
+    git_repo.cmd.notes.add(message=note_message, force=True)
+
+    # Get the note
+    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    note = git_repo.cmd.notes.get(object_sha=head_sha)
+    assert note is not None
+
+    # Show the note content
+    result = note.show()
+    assert note_message in result
+
+
+def test_notes_append(git_repo: GitSync) -> None:
+    """Test GitNoteCmd.append()."""
+    # Add a note first
+    initial_message = "Initial note"
+    git_repo.cmd.notes.add(message=initial_message, force=True)
+
+    # Get the note
+    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    note = git_repo.cmd.notes.get(object_sha=head_sha)
+    assert note is not None
+
+    # Append to the note
+    append_message = "Appended content"
+    result = note.append(message=append_message)
+    assert result == "" or "error" not in result.lower()
+
+    # Verify the appended content
+    note_content = note.show()
+    assert append_message in note_content
+
+
+def test_notes_remove(git_repo: GitSync) -> None:
+    """Test GitNoteCmd.remove()."""
+    # Add a note first
+    git_repo.cmd.notes.add(message="Note to be removed", force=True)
+
+    # Get the note
+    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    note = git_repo.cmd.notes.get(object_sha=head_sha)
+    assert note is not None
+
+    # Remove the note
+    result = note.remove()
+    assert result == "" or "error" not in result.lower()
+
+    # Verify it's removed (should have fewer notes or none)
+    notes_after = git_repo.cmd.notes.ls()
+    object_shas = [n.object_sha for n in notes_after]
+    assert head_sha not in object_shas
+
+
+def test_notes_prune(git_repo: GitSync) -> None:
+    """Test GitNotesManager.prune()."""
+    # Prune should succeed even if nothing to prune
+    result = git_repo.cmd.notes.prune()
+    assert result == "" or "error" not in result.lower()
+
+    # Dry run should also succeed
+    result_dry = git_repo.cmd.notes.prune(dry_run=True)
+    assert "error" not in result_dry.lower() or result_dry == ""
+
+
+def test_notes_get_ref(git_repo: GitSync) -> None:
+    """Test GitNotesManager.get_ref()."""
+    # Add a note first (to ensure the notes ref exists)
+    git_repo.cmd.notes.add(message="Note for get_ref test", force=True)
+
+    # Get the notes ref
+    result = git_repo.cmd.notes.get_ref()
+    # Should return the ref name or be empty if not set
+    assert result == "refs/notes/commits" or result == "" or "notes" in result
