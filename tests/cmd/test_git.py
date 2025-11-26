@@ -1097,3 +1097,184 @@ def test_stash_entry_create_branch(git_repo: GitSync) -> None:
     branch_names = [b.branch_name for b in branches]
     # Either branch was created or we're on it
     assert "stash-branch" in branch_names or "master" in branch_names
+
+
+# =============================================================================
+# GitWorktreeManager / GitWorktreeCmd Tests
+# =============================================================================
+
+
+class WorktreeAddFixture(t.NamedTuple):
+    """Test fixture for GitWorktreeManager.add() operations."""
+
+    test_id: str
+    new_branch: str | None
+    detach: bool | None
+
+
+WORKTREE_ADD_FIXTURES: list[WorktreeAddFixture] = [
+    WorktreeAddFixture(
+        test_id="add-worktree-with-new-branch",
+        new_branch="worktree-branch",
+        detach=None,
+    ),
+    WorktreeAddFixture(
+        test_id="add-worktree-detached",
+        new_branch=None,
+        detach=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(WorktreeAddFixture._fields),
+    WORKTREE_ADD_FIXTURES,
+    ids=[test.test_id for test in WORKTREE_ADD_FIXTURES],
+)
+def test_worktree_add(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+    test_id: str,
+    new_branch: str | None,
+    detach: bool | None,
+) -> None:
+    """Test GitWorktreeManager.add() with various scenarios."""
+    worktree_path = tmp_path / f"worktree-{test_id}"
+
+    result = git_repo.cmd.worktrees.add(
+        path=worktree_path,
+        new_branch=new_branch,
+        detach=detach,
+    )
+
+    # Should succeed (output contains "Preparing worktree" or similar)
+    assert "preparing worktree" in result.lower() or worktree_path.exists()
+
+    # Verify worktree was created
+    worktrees = git_repo.cmd.worktrees.ls()
+    worktree_paths = [wt.worktree_path for wt in worktrees]
+    assert str(worktree_path) in worktree_paths
+
+
+def test_worktree_list(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeManager.ls() returns main worktree."""
+    worktrees = git_repo.cmd.worktrees.ls()
+
+    # Should have at least the main worktree
+    assert len(worktrees) >= 1
+
+    # Each worktree should have a path
+    for wt in worktrees:
+        assert wt.worktree_path is not None
+
+
+def test_worktree_get(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeManager.get() retrieves specific worktree."""
+    # Create a worktree first
+    worktree_path = tmp_path / "get-test-worktree"
+    git_repo.cmd.worktrees.add(path=worktree_path, new_branch="get-test-branch")
+
+    # Get the worktree
+    worktree = git_repo.cmd.worktrees.get(worktree_path=str(worktree_path))
+    assert worktree is not None
+    assert worktree.worktree_path == str(worktree_path)
+
+
+def test_worktree_filter(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeManager.filter() with QueryList filtering."""
+    # Create a worktree
+    worktree_path = tmp_path / "filter-test-worktree"
+    git_repo.cmd.worktrees.add(path=worktree_path, new_branch="filter-test-branch")
+
+    # Filter by branch
+    worktrees = git_repo.cmd.worktrees.filter(branch__contains="filter-test")
+    assert len(worktrees) >= 1
+
+
+class WorktreeLockUnlockFixture(t.NamedTuple):
+    """Test fixture for GitWorktreeCmd lock/unlock operations."""
+
+    test_id: str
+    reason: str | None
+
+
+WORKTREE_LOCK_UNLOCK_FIXTURES: list[WorktreeLockUnlockFixture] = [
+    WorktreeLockUnlockFixture(
+        test_id="lock-without-reason",
+        reason=None,
+    ),
+    WorktreeLockUnlockFixture(
+        test_id="lock-with-reason",
+        reason="Testing lock functionality",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(WorktreeLockUnlockFixture._fields),
+    WORKTREE_LOCK_UNLOCK_FIXTURES,
+    ids=[test.test_id for test in WORKTREE_LOCK_UNLOCK_FIXTURES],
+)
+def test_worktree_lock_unlock(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+    test_id: str,
+    reason: str | None,
+) -> None:
+    """Test GitWorktreeCmd.lock() and unlock() operations."""
+    # Create a worktree first
+    worktree_path = tmp_path / f"lock-{test_id}-worktree"
+    git_repo.cmd.worktrees.add(path=worktree_path, new_branch=f"lock-{test_id}-branch")
+
+    # Get the worktree
+    worktree = git_repo.cmd.worktrees.get(worktree_path=str(worktree_path))
+    assert worktree is not None
+
+    # Lock the worktree
+    lock_result = worktree.lock(reason=reason)
+    assert lock_result == "" or "locked" not in lock_result.lower()
+
+    # Verify it's locked
+    worktree_after_lock = git_repo.cmd.worktrees.get(worktree_path=str(worktree_path))
+    assert worktree_after_lock is not None
+    assert worktree_after_lock.locked is True
+
+    # Unlock the worktree
+    unlock_result = worktree.unlock()
+    assert unlock_result == ""
+
+    # Verify it's unlocked
+    worktree_after_unlock = git_repo.cmd.worktrees.get(worktree_path=str(worktree_path))
+    assert worktree_after_unlock is not None
+    assert worktree_after_unlock.locked is False
+
+
+def test_worktree_remove(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeCmd.remove()."""
+    # Create a worktree first
+    worktree_path = tmp_path / "remove-test-worktree"
+    git_repo.cmd.worktrees.add(path=worktree_path, new_branch="remove-test-branch")
+
+    # Get the worktree
+    worktree = git_repo.cmd.worktrees.get(worktree_path=str(worktree_path))
+    assert worktree is not None
+
+    # Remove the worktree
+    result = worktree.remove()
+    assert result == "" or "error" not in result.lower()
+
+    # Verify it's removed
+    worktrees_after = git_repo.cmd.worktrees.ls()
+    worktree_paths = [wt.worktree_path for wt in worktrees_after]
+    assert str(worktree_path) not in worktree_paths
+
+
+def test_worktree_prune(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeManager.prune()."""
+    # Prune should succeed even if nothing to prune
+    result = git_repo.cmd.worktrees.prune()
+    assert result == "" or "prune" not in result.lower()
+
+    # Dry run should also succeed
+    result_dry = git_repo.cmd.worktrees.prune(dry_run=True)
+    assert "error" not in result_dry.lower() or result_dry == ""
