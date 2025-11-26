@@ -33,6 +33,18 @@ Manager (collection-level)              Cmd (per-entity)
 | `get(**kwargs)` | Implemented | Get single branch by filter |
 | `filter(**kwargs)` | Implemented | Filter branches |
 
+#### CLI Flag → Python Parameter Mapping: `ls()` Enhancements
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-a, --all` | `_all: bool` | List all branches (local + remote) |
+| `-r, --remotes` | `remotes: bool` | List remote branches only |
+| `--merged <commit>` | `merged: str \| None` | Filter merged branches |
+| `--no-merged <commit>` | `no_merged: str \| None` | Filter unmerged branches |
+| `-v, --verbose` | `verbose: bool` | Show tracking info |
+| `--contains <commit>` | `contains: str \| None` | Branches containing commit |
+| `--sort=<key>` | `sort: str \| None` | Sort key |
+
 ### GitBranchCmd (Per-entity)
 
 | Method | Status | Description |
@@ -48,6 +60,17 @@ Manager (collection-level)              Cmd (per-entity)
 | `set_upstream(upstream)` | **Missing** | `--set-upstream-to` |
 | `unset_upstream()` | **Missing** | `--unset-upstream` |
 | `track(remote_branch)` | **Missing** | `-t` / `--track` |
+
+#### CLI Flag → Python Parameter Mapping: GitBranchCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `delete()` | `git branch -d/-D` | `force=True` → `-D`, else `-d` |
+| `rename(new_name)` | `git branch -m/-M` | `force=True` → `-M`, else `-m` |
+| `copy(new_name)` | `git branch -c/-C` | `force=True` → `-C`, else `-c` |
+| `set_upstream(upstream)` | `git branch --set-upstream-to=` | `upstream` → `--set-upstream-to={upstream}` |
+| `unset_upstream()` | `git branch --unset-upstream` | None |
+| `track(remote_branch)` | `git branch -t` | `remote_branch` → `-t {remote_branch}` |
 
 ### GitBranchManager Enhancements Needed
 
@@ -98,6 +121,24 @@ Properties: `remote_name`, `fetch_url`, `push_url`
 | `set_head(branch, auto, delete)` | **Missing** | `set-head` |
 | `update(prune)` | **Missing** | `update` |
 
+#### CLI Flag → Python Parameter Mapping: Existing Methods
+
+| Method | Parameters → Flags |
+|--------|-------------------|
+| `rename()` | `progress=True` → `--progress`, `progress=False` → `--no-progress` |
+| `show()` | `verbose=True` → `--verbose`, `no_query_remotes=True` → `-n` |
+| `prune()` | `dry_run=True` → `--dry-run` |
+| `get_url()` | `push=True` → `--push`, `_all=True` → `--all` |
+| `set_url()` | `push=True` → `--push`, `add=True` → `--add`, `delete=True` → `--delete` |
+
+#### CLI Flag → Python Parameter Mapping: Missing Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `set_branches(*branches)` | `git remote set-branches` | `add=True` → `--add`, `branches` → positional |
+| `set_head(branch)` | `git remote set-head` | `auto=True` → `-a`, `delete=True` → `-d`, `branch` → positional |
+| `update()` | `git remote update` | `prune=True` → `-p` |
+
 ---
 
 ## 3. GitStashCmd (Current) → GitStashManager / GitStashEntryCmd (Planned)
@@ -128,11 +169,29 @@ Properties: `remote_name`, `fetch_url`, `push_url`
 | `push(message, path, patch, staged, keep_index, include_untracked)` | **Planned** | Push to stash |
 | `clear()` | **Planned** | Clear all stashes |
 
+#### CLI Flag → Python Parameter Mapping: `push()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-p, --patch` | `patch: bool` | Interactive patch selection |
+| `-S, --staged` | `staged: bool` | Stash only staged changes |
+| `-k, --keep-index` | `keep_index: bool` | Keep index intact |
+| `-u, --include-untracked` | `include_untracked: bool` | Include untracked files |
+| `-a, --all` | `_all: bool` | Include ignored files |
+| `-q, --quiet` | `quiet: bool` | Suppress output |
+| `-m, --message <msg>` | `message: str \| None` | Stash message |
+| `-- <pathspec>` | `path: list[str] \| None` | Limit to paths |
+
 ### Planned GitStashEntryCmd (Per-entity)
 
 Properties: `index: int`, `branch: str`, `message: str`
 
 Parse from: `stash@{0}: On master: my message`
+
+**Parsing pattern**:
+```python
+stash_pattern = r"stash@\{(?P<index>\d+)\}: On (?P<branch>[^:]+): (?P<message>.+)"
+```
 
 | Method | Status | Description |
 |--------|--------|-------------|
@@ -142,6 +201,16 @@ Parse from: `stash@{0}: On master: my message`
 | `pop(index)` | **Planned** | Apply and remove |
 | `drop()` | **Planned** | Delete this stash |
 | `branch(branch_name)` | **Planned** | Create branch from stash |
+
+#### CLI Flag → Python Parameter Mapping: GitStashEntryCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `show()` | `git stash show` | `stat=True` → `--stat`, `patch=True` → `-p`, `include_untracked=True` → `-u` |
+| `apply()` | `git stash apply` | `index=True` → `--index`, `quiet=True` → `-q` |
+| `pop()` | `git stash pop` | `index=True` → `--index`, `quiet=True` → `-q` |
+| `drop()` | `git stash drop` | `quiet=True` → `-q` |
+| `branch(name)` | `git stash branch` | `name` → positional |
 
 ---
 
@@ -173,9 +242,18 @@ Parse from: `stash@{0}: On master: my message`
 | `sync(recursive)` | **Planned** | Sync submodule URLs |
 | `summary(commit, files, cached)` | **Planned** | Summarize changes |
 
+#### CLI Flag → Python Parameter Mapping: GitSubmoduleManager Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `add()` | `git submodule add` | `branch` → `-b`, `force=True` → `-f`, `name` → `--name`, `depth` → `--depth` |
+| `foreach()` | `git submodule foreach` | `recursive=True` → `--recursive` |
+| `sync()` | `git submodule sync` | `recursive=True` → `--recursive` |
+| `summary()` | `git submodule summary` | `cached=True` → `--cached`, `files=True` → `--files`, `summary_limit` → `-n` |
+
 ### Planned GitSubmoduleCmd (Per-entity)
 
-Properties: `name`, `path`, `url`, `branch`
+Properties: `name`, `path`, `url`, `branch`, `sha`
 
 | Method | Status | Description |
 |--------|--------|-------------|
@@ -187,6 +265,18 @@ Properties: `name`, `path`, `url`, `branch`
 | `set_url(url)` | **Planned** | Set URL |
 | `status()` | **Planned** | Show status |
 | `absorbgitdirs()` | **Planned** | Absorb gitdir |
+
+#### CLI Flag → Python Parameter Mapping: GitSubmoduleCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `init()` | `git submodule init` | None |
+| `update()` | `git submodule update` | `init=True` → `--init`, `force=True` → `-f`, `recursive=True` → `--recursive`, `checkout/rebase/merge` → mode flags |
+| `deinit()` | `git submodule deinit` | `force=True` → `-f`, `_all=True` → `--all` |
+| `set_branch(branch)` | `git submodule set-branch` | `branch` → `-b`, `default=True` → `-d` |
+| `set_url(url)` | `git submodule set-url` | `url` → positional |
+| `status()` | `git submodule status` | `recursive=True` → `--recursive` |
+| `absorbgitdirs()` | `git submodule absorbgitdirs` | None |
 
 ---
 
@@ -205,6 +295,29 @@ Properties: `name`, `path`, `url`, `branch`
 | `filter(**kwargs)` | **Planned** | Filter tags |
 | `create(name, ref, message, annotate, sign, force)` | **Planned** | Create tag |
 
+#### CLI Flag → Python Parameter Mapping: `create()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-a, --annotate` | `annotate: bool` | Create annotated tag |
+| `-s, --sign` | `sign: bool` | Create GPG-signed tag |
+| `-u <key-id>` | `local_user: str \| None` | Use specific GPG key |
+| `-f, --force` | `force: bool` | Replace existing tag |
+| `-m <msg>` | `message: str \| None` | Tag message |
+| `-F <file>` | `file: str \| None` | Read message from file |
+
+#### CLI Flag → Python Parameter Mapping: `ls()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-l <pattern>` | `pattern: str \| None` | List tags matching pattern |
+| `--sort=<key>` | `sort: str \| None` | Sort by key |
+| `--contains <commit>` | `contains: str \| None` | Tags containing commit |
+| `--no-contains <commit>` | `no_contains: str \| None` | Tags not containing commit |
+| `--merged <commit>` | `merged: str \| None` | Tags merged into commit |
+| `--no-merged <commit>` | `no_merged: str \| None` | Tags not merged |
+| `-n<num>` | `lines: int \| None` | Print annotation lines |
+
 ### Planned GitTagCmd (Per-entity)
 
 Properties: `tag_name`, `ref`, `message` (for annotated)
@@ -215,6 +328,14 @@ Properties: `tag_name`, `ref`, `message` (for annotated)
 | `show()` | **Planned** | Show tag details |
 | `delete()` | **Planned** | Delete tag (`-d`) |
 | `verify()` | **Planned** | Verify signed tag (`-v`) |
+
+#### CLI Flag → Python Parameter Mapping: GitTagCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `delete()` | `git tag -d` | None |
+| `verify()` | `git tag -v` | None |
+| `show()` | `git show` | (uses git show, not git tag) |
 
 ---
 
@@ -234,6 +355,35 @@ Properties: `tag_name`, `ref`, `message` (for annotated)
 | `add(path, branch, detach, checkout, lock, force)` | **Planned** | Add worktree |
 | `prune(dry_run, verbose, expire)` | **Planned** | Prune worktrees |
 
+#### CLI Flag → Python Parameter Mapping: `add()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-f, --force` | `force: bool` | Force creation |
+| `--detach` | `detach: bool` | Detach HEAD |
+| `--checkout` | `checkout: bool` | Checkout after add |
+| `--lock` | `lock: bool` | Lock worktree |
+| `--reason <string>` | `reason: str \| None` | Lock reason |
+| `-b <branch>` | `new_branch: str \| None` | Create new branch |
+| `-B <branch>` | `new_branch_force: str \| None` | Force create branch |
+| `--orphan` | `orphan: bool` | Create orphan branch |
+| `--track` | `track: bool` | Track remote |
+
+#### CLI Flag → Python Parameter Mapping: `prune()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-n, --dry-run` | `dry_run: bool` | Dry run |
+| `-v, --verbose` | `verbose: bool` | Verbose output |
+| `--expire <time>` | `expire: str \| None` | Expire time |
+
+#### CLI Flag → Python Parameter Mapping: `ls()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-v` | `verbose: bool` | Verbose output |
+| `--porcelain` | `porcelain: bool` | Machine-readable |
+
 ### Planned GitWorktreeCmd (Per-entity)
 
 Properties: `worktree_path`, `branch`, `head`, `locked`, `prunable`
@@ -246,6 +396,16 @@ Properties: `worktree_path`, `branch`, `head`, `locked`, `prunable`
 | `unlock()` | **Planned** | Unlock worktree |
 | `move(new_path)` | **Planned** | Move worktree |
 | `repair()` | **Planned** | Repair worktree |
+
+#### CLI Flag → Python Parameter Mapping: GitWorktreeCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `remove()` | `git worktree remove` | `force=True` → `-f` |
+| `lock()` | `git worktree lock` | `reason` → `--reason` |
+| `unlock()` | `git worktree unlock` | None |
+| `move(new_path)` | `git worktree move` | `force=True` → `-f` |
+| `repair()` | `git worktree repair` | None |
 
 ---
 
@@ -267,6 +427,34 @@ Properties: `worktree_path`, `branch`, `head`, `locked`, `prunable`
 | `merge(notes_ref, strategy, commit, abort, quiet)` | **Planned** | Merge notes |
 | `get_ref()` | **Planned** | Get notes ref |
 
+#### CLI Flag → Python Parameter Mapping: `add()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-f, --force` | `force: bool` | Overwrite existing note |
+| `--allow-empty` | `allow_empty: bool` | Allow empty note |
+| `-m <msg>` | `message: str \| None` | Note message |
+| `-F <file>` | `file: str \| None` | Read message from file |
+| `-c <object>` | `reuse_message: str \| None` | Reuse message from note |
+| `-C <object>` | `reedit_message: str \| None` | Re-edit message |
+
+#### CLI Flag → Python Parameter Mapping: `prune()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-n, --dry-run` | `dry_run: bool` | Dry run |
+| `-v, --verbose` | `verbose: bool` | Verbose output |
+
+#### CLI Flag → Python Parameter Mapping: `merge()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `-s <strategy>` | `strategy: str \| None` | Merge strategy |
+| `--commit` | `commit: bool` | Finalize merge |
+| `--abort` | `abort: bool` | Abort merge |
+| `-q, --quiet` | `quiet: bool` | Quiet mode |
+| `-v, --verbose` | `verbose: bool` | Verbose mode |
+
 ### Planned GitNoteCmd (Per-entity)
 
 Properties: `object`, `note_ref`
@@ -279,6 +467,16 @@ Properties: `object`, `note_ref`
 | `append(message)` | **Planned** | Append to note |
 | `copy(from_object)` | **Planned** | Copy note |
 | `remove()` | **Planned** | Remove note |
+
+#### CLI Flag → Python Parameter Mapping: GitNoteCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `show()` | `git notes show` | None |
+| `edit()` | `git notes edit` | `allow_empty=True` → `--allow-empty` |
+| `append(message)` | `git notes append` | `-m` → message, `-F` → file |
+| `copy(from_object)` | `git notes copy` | `force=True` → `-f` |
+| `remove()` | `git notes remove` | `ignore_missing=True` → `--ignore-missing` |
 
 ---
 
@@ -298,17 +496,58 @@ Properties: `object`, `note_ref`
 | `expire(ref, _all, dry_run, rewrite, updateref, stale_fix, verbose)` | **Planned** | Expire entries |
 | `exists(ref)` | **Planned** | Check if reflog exists |
 
+#### CLI Flag → Python Parameter Mapping: `ls()` / `show()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `<ref>` | `ref: str` | Reference (default: HEAD) |
+| `-n <number>` | `number: int \| None` | Limit entries |
+| `--date=<format>` | `date: str \| None` | Date format |
+
+#### CLI Flag → Python Parameter Mapping: `expire()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `--all` | `_all: bool` | Process all refs |
+| `-n, --dry-run` | `dry_run: bool` | Dry run |
+| `--rewrite` | `rewrite: bool` | Rewrite entries |
+| `--updateref` | `updateref: bool` | Update ref |
+| `--stale-fix` | `stale_fix: bool` | Fix stale entries |
+| `-v, --verbose` | `verbose: bool` | Verbose output |
+| `--expire=<time>` | `expire: str \| None` | Expire unreachable older than |
+| `--expire-unreachable=<time>` | `expire_unreachable: str \| None` | Expire unreachable |
+
+#### CLI Flag → Python Parameter Mapping: `delete()`
+
+| Git CLI Flag | Python Parameter | Description |
+|--------------|------------------|-------------|
+| `--rewrite` | `rewrite: bool` | Rewrite entries |
+| `--updateref` | `updateref: bool` | Update ref |
+| `-n, --dry-run` | `dry_run: bool` | Dry run |
+
 ### Planned GitReflogCmd (Per-entity)
 
 Properties: `ref`, `index`, `action`, `message`, `sha`
 
 Parse from: `abc1234 HEAD@{0}: commit: message`
 
+**Parsing pattern**:
+```python
+reflog_pattern = r"(?P<sha>[a-f0-9]+) (?P<ref>[^@]+)@\{(?P<index>\d+)\}: (?P<action>[^:]+): (?P<message>.+)"
+```
+
 | Method | Status | Description |
 |--------|--------|-------------|
 | `__init__(path, ref, index, action, message, sha, cmd)` | **Planned** | Constructor |
 | `show()` | **Planned** | Show entry details |
 | `delete()` | **Planned** | Delete entry |
+
+#### CLI Flag → Python Parameter Mapping: GitReflogCmd Methods
+
+| Method | Git CLI | Parameters → Flags |
+|--------|---------|-------------------|
+| `show()` | `git reflog show` | (show this entry) |
+| `delete()` | `git reflog delete` | `rewrite=True` → `--rewrite`, `updateref=True` → `--updateref` |
 
 ---
 
