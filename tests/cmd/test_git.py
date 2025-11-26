@@ -623,3 +623,259 @@ def test_remote_update(
 
     # update typically returns "Fetching <remote>" message
     assert "fetching" in result.lower() or result == ""
+
+
+# =============================================================================
+# GitTagCmd / GitTagManager Tests
+# =============================================================================
+
+
+class TagCreateFixture(t.NamedTuple):
+    """Test fixture for GitTagManager.create() operations."""
+
+    test_id: str
+    tag_name: str
+    message: str | None
+    annotate: bool | None
+    ref: str | None
+    force: bool | None
+
+
+TAG_CREATE_FIXTURES: list[TagCreateFixture] = [
+    TagCreateFixture(
+        test_id="create-lightweight-tag",
+        tag_name="lightweight-v1.0",
+        message=None,
+        annotate=None,
+        ref=None,
+        force=None,
+    ),
+    TagCreateFixture(
+        test_id="create-annotated-tag",
+        tag_name="annotated-v1.0",
+        message="Release version 1.0",
+        annotate=None,  # message implies annotated
+        ref=None,
+        force=None,
+    ),
+    TagCreateFixture(
+        test_id="create-tag-explicit-annotate",
+        tag_name="explicit-annotated-v1.0",
+        message="Explicit annotated tag",
+        annotate=True,
+        ref=None,
+        force=None,
+    ),
+    TagCreateFixture(
+        test_id="create-tag-at-ref",
+        tag_name="ref-v1.0",
+        message="Tag at HEAD",
+        annotate=None,
+        ref="HEAD",
+        force=None,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(TagCreateFixture._fields),
+    TAG_CREATE_FIXTURES,
+    ids=[test.test_id for test in TAG_CREATE_FIXTURES],
+)
+def test_tag_create(
+    git_repo: GitSync,
+    test_id: str,
+    tag_name: str,
+    message: str | None,
+    annotate: bool | None,
+    ref: str | None,
+    force: bool | None,
+) -> None:
+    """Test GitTagManager.create() with various scenarios."""
+    result = git_repo.cmd.tags.create(
+        name=tag_name,
+        message=message,
+        annotate=annotate,
+        ref=ref,
+        force=force,
+    )
+
+    # create returns empty string on success
+    assert result == ""
+
+    # Verify tag exists
+    tag = git_repo.cmd.tags.get(tag_name=tag_name)
+    assert tag is not None
+    assert tag.tag_name == tag_name
+
+
+def test_tag_create_force(git_repo: GitSync) -> None:
+    """Test GitTagManager.create() with force flag to replace existing tag."""
+    tag_name = "force-replace-tag"
+
+    # Create initial tag
+    git_repo.cmd.tags.create(name=tag_name, message="Initial tag")
+
+    # Creating same tag without force returns error message
+    result_without_force = git_repo.cmd.tags.create(
+        name=tag_name, message="Replacement tag"
+    )
+    assert "already exists" in result_without_force.lower()
+
+    # Creating same tag with force should succeed
+    result = git_repo.cmd.tags.create(
+        name=tag_name, message="Replacement tag", force=True
+    )
+    # Force update returns "Updated tag" message
+    assert result == "" or "updated tag" in result.lower()
+
+
+class TagDeleteFixture(t.NamedTuple):
+    """Test fixture for GitTagCmd.delete() operations."""
+
+    test_id: str
+    tag_name: str
+    message: str
+
+
+TAG_DELETE_FIXTURES: list[TagDeleteFixture] = [
+    TagDeleteFixture(
+        test_id="delete-lightweight-tag",
+        tag_name="delete-lightweight",
+        message="",  # empty message = lightweight tag
+    ),
+    TagDeleteFixture(
+        test_id="delete-annotated-tag",
+        tag_name="delete-annotated",
+        message="Annotated tag to delete",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(TagDeleteFixture._fields),
+    TAG_DELETE_FIXTURES,
+    ids=[test.test_id for test in TAG_DELETE_FIXTURES],
+)
+def test_tag_delete(
+    git_repo: GitSync,
+    test_id: str,
+    tag_name: str,
+    message: str,
+) -> None:
+    """Test GitTagCmd.delete() with various scenarios."""
+    # Create tag first
+    if message:
+        git_repo.cmd.tags.create(name=tag_name, message=message)
+    else:
+        git_repo.cmd.tags.create(name=tag_name)
+
+    # Get and delete the tag
+    tag = git_repo.cmd.tags.get(tag_name=tag_name)
+    assert tag is not None
+
+    result = tag.delete()
+    assert "deleted tag" in result.lower()
+
+    # Verify tag is gone
+    with pytest.raises(ObjectDoesNotExist):
+        git_repo.cmd.tags.get(tag_name=tag_name)
+
+
+class TagListFixture(t.NamedTuple):
+    """Test fixture for GitTagManager.ls() operations."""
+
+    test_id: str
+    setup_tags: list[str]
+    pattern: str | None
+    expected_min_count: int
+
+
+TAG_LIST_FIXTURES: list[TagListFixture] = [
+    TagListFixture(
+        test_id="list-all-tags",
+        setup_tags=["list-v1.0", "list-v2.0", "list-v3.0"],
+        pattern=None,
+        expected_min_count=3,
+    ),
+    TagListFixture(
+        test_id="list-tags-with-pattern",
+        setup_tags=["pattern-alpha", "pattern-beta", "other-tag"],
+        pattern="pattern-*",
+        expected_min_count=2,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(TagListFixture._fields),
+    TAG_LIST_FIXTURES,
+    ids=[test.test_id for test in TAG_LIST_FIXTURES],
+)
+def test_tag_list(
+    git_repo: GitSync,
+    test_id: str,
+    setup_tags: list[str],
+    pattern: str | None,
+    expected_min_count: int,
+) -> None:
+    """Test GitTagManager.ls() with various scenarios."""
+    # Create setup tags
+    for tag_name in setup_tags:
+        git_repo.cmd.tags.create(name=tag_name, message=f"Tag {tag_name}")
+
+    # List tags
+    tags = git_repo.cmd.tags.ls(pattern=pattern)
+
+    # Verify minimum count
+    assert len(tags) >= expected_min_count
+
+
+def test_tag_filter(git_repo: GitSync) -> None:
+    """Test GitTagManager.filter() with QueryList filtering."""
+    # Create tags with different prefixes
+    git_repo.cmd.tags.create(name="release-1.0", message="Release 1.0")
+    git_repo.cmd.tags.create(name="release-2.0", message="Release 2.0")
+    git_repo.cmd.tags.create(name="beta-1.0", message="Beta 1.0")
+
+    # Filter by prefix
+    release_tags = git_repo.cmd.tags.filter(tag_name__startswith="release-")
+    assert len(release_tags) >= 2
+
+    beta_tags = git_repo.cmd.tags.filter(tag_name__contains="beta")
+    assert len(beta_tags) >= 1
+
+
+def test_tag_show(git_repo: GitSync) -> None:
+    """Test GitTagCmd.show() for annotated tags."""
+    tag_name = "show-test-tag"
+    message = "This is a test tag for show"
+
+    # Create annotated tag
+    git_repo.cmd.tags.create(name=tag_name, message=message)
+
+    # Get tag and show
+    tag = git_repo.cmd.tags.get(tag_name=tag_name)
+    assert tag is not None
+
+    result = tag.show()
+
+    # show output should contain tag name and message
+    assert tag_name in result
+    assert message in result
+
+
+def test_tag_verify_unsigned(git_repo: GitSync) -> None:
+    """Test GitTagCmd.verify() for unsigned/lightweight tags."""
+    tag_name = "verify-unsigned-tag"
+
+    # Create lightweight tag (can't be verified)
+    git_repo.cmd.tags.create(name=tag_name)
+
+    tag = git_repo.cmd.tags.get(tag_name=tag_name)
+    assert tag is not None
+
+    result = tag.verify()
+
+    # verify on unsigned tag should return error message
+    assert "error" in result.lower() or "cannot verify" in result.lower()
