@@ -25,7 +25,8 @@ class Git:
     # Sub-commands
     submodule: GitSubmoduleCmd
     remote: GitRemoteManager
-    stash: GitStashCmd
+    stash: GitStashCmd  # Deprecated: use stashes
+    stashes: GitStashManager
     branch: GitBranchManager
     tags: GitTagManager
 
@@ -76,6 +77,9 @@ class Git:
         >>> git.stash.ls()
         ''
 
+        >>> git.stashes.ls()
+        []
+
         >>> git.tags.create(name='v1.0.0', message='Version 1.0.0')
         ''
 
@@ -93,7 +97,8 @@ class Git:
 
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
         self.remotes = GitRemoteManager(path=self.path, cmd=self)
-        self.stash = GitStashCmd(path=self.path, cmd=self)
+        self.stash = GitStashCmd(path=self.path, cmd=self)  # Deprecated: use stashes
+        self.stashes = GitStashManager(path=self.path, cmd=self)
         self.branches = GitBranchManager(path=self.path, cmd=self)
         self.tags = GitTagManager(path=self.path, cmd=self)
 
@@ -3358,6 +3363,300 @@ GitStashCommandLiteral = t.Literal[
 ]
 
 
+class GitStashEntryCmd:
+    """Run commands directly for a git stash entry on a git repository."""
+
+    index: int
+    branch: str | None
+    message: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        index: int,
+        branch: str | None = None,
+        message: str = "",
+        cmd: Git | None = None,
+    ) -> None:
+        r"""Lite, typed, pythonic wrapper for git-stash(1) per-entry operations.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        index :
+            Stash index (0 = most recent)
+        branch :
+            Branch the stash was created on
+        message :
+            Stash message
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ...     branch='master',
+        ...     message='WIP',
+        ... )
+        <GitStashEntryCmd path=... index=0>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.index = index
+        self.branch = branch
+        self.message = message
+
+    def __repr__(self) -> str:
+        """Representation of a git stash entry."""
+        return f"<GitStashEntryCmd path={self.path} index={self.index}>"
+
+    @property
+    def stash_ref(self) -> str:
+        """Return the stash reference string."""
+        return f"stash@{{{self.index}}}"
+
+    def run(
+        self,
+        command: GitStashCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against a git stash entry.
+
+        Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["stash", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def show(
+        self,
+        *,
+        stat: bool | None = None,
+        patch: bool | None = None,
+        include_untracked: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash show for this stash entry.
+
+        Parameters
+        ----------
+        stat :
+            Show diffstat (--stat)
+        patch :
+            Show patch (-p)
+        include_untracked :
+            Include untracked files (-u)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).show()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if stat is True:
+            local_flags.append("--stat")
+        if patch is True:
+            local_flags.append("-p")
+        if include_untracked is True:
+            local_flags.append("-u")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def apply(
+        self,
+        *,
+        index: bool | None = None,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash apply for this stash entry.
+
+        Apply the stash without removing it from the stash list.
+
+        Parameters
+        ----------
+        index :
+            Try to reinstate not only the working tree but also the index (--index)
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).apply()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if index is True:
+            local_flags.append("--index")
+        if quiet is True:
+            local_flags.append("-q")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "apply",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def pop(
+        self,
+        *,
+        index: bool | None = None,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash pop for this stash entry.
+
+        Apply the stash and remove it from the stash list.
+
+        Parameters
+        ----------
+        index :
+            Try to reinstate not only the working tree but also the index (--index)
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).pop()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if index is True:
+            local_flags.append("--index")
+        if quiet is True:
+            local_flags.append("-q")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "pop",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def drop(
+        self,
+        *,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash drop for this stash entry.
+
+        Remove this stash from the stash list.
+
+        Parameters
+        ----------
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).drop()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("-q")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "drop",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def create_branch(
+        self,
+        branch_name: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash branch for this stash entry.
+
+        Create a new branch from this stash entry and apply the stash.
+
+        Parameters
+        ----------
+        branch_name :
+            Name of the branch to create
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).create_branch('new-branch')
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = [branch_name, self.stash_ref]
+
+        return self.run(
+            "branch",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
 class GitStashCmd:
     """Run commands directly against a git stash storage for a git repo."""
 
@@ -3590,6 +3889,288 @@ class GitStashCmd:
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
+
+
+class GitStashManager:
+    """Run commands directly related to git stashes of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-stash(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitStashManager(path=tmp_path)
+        <GitStashManager path=...>
+
+        >>> GitStashManager(path=tmp_path).run()
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitStashManager(
+        ...     path=example_git_repo.path
+        ... ).run()
+        'No local changes to save'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git stash manager object."""
+        return f"<GitStashManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitStashCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's stash storage.
+
+        Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).run()
+        'No local changes to save'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        return self.cmd.run(
+            ["stash", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def push(
+        self,
+        *,
+        message: str | None = None,
+        path: list[StrPath] | StrPath | None = None,
+        patch: bool | None = None,
+        staged: bool | None = None,
+        keep_index: bool | None = None,
+        include_untracked: bool | None = None,
+        _all: bool | None = None,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash push.
+
+        Save local modifications to a new stash entry.
+
+        Parameters
+        ----------
+        message :
+            Stash message
+        path :
+            Limit stash to specific paths
+        patch :
+            Interactive patch selection (-p)
+        staged :
+            Stash only staged changes (-S)
+        keep_index :
+            Keep index intact (-k)
+        include_untracked :
+            Include untracked files (-u)
+        _all :
+            Include ignored files (-a)
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).push()
+        'No local changes to save'
+
+        >>> GitStashManager(path=example_git_repo.path).push(message='WIP')
+        'No local changes to save'
+        """
+        local_flags: list[str] = []
+        path_flags: list[str] = []
+
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if patch is True:
+            local_flags.append("-p")
+        if staged is True:
+            local_flags.append("-S")
+        if keep_index is True:
+            local_flags.append("-k")
+        if include_untracked is True:
+            local_flags.append("-u")
+        if _all is True:
+            local_flags.append("-a")
+        if quiet is True:
+            local_flags.append("-q")
+
+        if path is not None:
+            if isinstance(path, list):
+                path_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
+            else:
+                path_flags.append(str(pathlib.Path(path).absolute()))
+
+        if path_flags:
+            local_flags.extend(["--", *path_flags])
+
+        return self.run(
+            "push",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def clear(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash clear.
+
+        Remove all stash entries.
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).clear()
+        ''
+        """
+        return self.run(
+            "clear",
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(self) -> list[str]:
+        r"""List stashes (raw output).
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path)._ls()
+        []
+        """
+        result = self.run("list")
+        if not result:
+            return []
+        return result.splitlines()
+
+    def ls(self) -> QueryList[GitStashEntryCmd]:
+        """List stashes.
+
+        Returns a QueryList of GitStashEntryCmd objects.
+
+        Parses stash list format:
+        - ``stash@{0}: On master: message``
+        - ``stash@{0}: WIP on master: commit``
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).ls()
+        []
+        """
+        stash_lines = self._ls()
+
+        # Parse stash list output
+        # Format: stash@{N}: On <branch>: <message>
+        # Or: stash@{N}: WIP on <branch>: <commit_msg>
+        stash_pattern = re.compile(
+            r"""
+            stash@\{(?P<index>\d+)\}:\s+
+            (?:
+                On\s+(?P<branch1>[^:]+):\s+(?P<message1>.+)
+                |
+                WIP\s+on\s+(?P<branch2>[^:]+):\s+(?P<message2>.+)
+            )
+        """,
+            re.VERBOSE,
+        )
+
+        stash_entries: list[GitStashEntryCmd] = []
+        for line in stash_lines:
+            match = stash_pattern.match(line)
+            if match:
+                index = int(match.group("index"))
+                branch = match.group("branch1") or match.group("branch2")
+                message = match.group("message1") or match.group("message2") or ""
+                stash_entries.append(
+                    GitStashEntryCmd(
+                        path=self.path,
+                        index=index,
+                        branch=branch,
+                        message=message,
+                    ),
+                )
+            else:
+                # Fallback: try to parse index at minimum
+                index_match = re.match(r"stash@\{(\d+)\}", line)
+                if index_match:
+                    stash_entries.append(
+                        GitStashEntryCmd(
+                            path=self.path,
+                            index=int(index_match.group(1)),
+                            message=line,
+                        ),
+                    )
+
+        return QueryList(stash_entries)
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitStashEntryCmd | None:
+        """Get stash entry via filter lookup.
+
+        Examples
+        --------
+        >>> GitStashManager(
+        ...     path=example_git_repo.path
+        ... ).get(index=0)
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitStashEntryCmd]:
+        """Get stash entries via filter lookup.
+
+        Examples
+        --------
+        >>> GitStashManager(
+        ...     path=example_git_repo.path
+        ... ).filter(branch__contains='master')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
 
 
 GitBranchCommandLiteral = t.Literal[
