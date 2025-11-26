@@ -27,6 +27,7 @@ class Git:
     remote: GitRemoteManager
     stash: GitStashCmd
     branch: GitBranchManager
+    tags: GitTagManager
 
     def __init__(
         self,
@@ -74,6 +75,12 @@ class Git:
 
         >>> git.stash.ls()
         ''
+
+        >>> git.tags.create(name='v1.0.0', message='Version 1.0.0')
+        ''
+
+        >>> any(t.tag_name == 'v1.0.0' for t in git.tags.ls())
+        True
         """
         #: Directory to check out
         self.path: pathlib.Path
@@ -88,6 +95,7 @@ class Git:
         self.remotes = GitRemoteManager(path=self.path, cmd=self)
         self.stash = GitStashCmd(path=self.path, cmd=self)
         self.branches = GitBranchManager(path=self.path, cmd=self)
+        self.tags = GitTagManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -4056,6 +4064,509 @@ class GitBranchManager:
         >>> GitBranchManager(
         ...     path=example_git_repo.path
         ... ).filter(branch_name__contains='unknown')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+GitTagCommandLiteral = t.Literal[
+    "list",
+    "create",
+    "delete",
+    "verify",
+]
+
+
+class GitTagCmd:
+    """Run commands directly for a git tag on a git repository."""
+
+    tag_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        tag_name: str,
+        cmd: Git | None = None,
+    ) -> None:
+        r"""Lite, typed, pythonic wrapper for git-tag(1).
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        tag_name :
+            Name of tag
+
+        Examples
+        --------
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='v1.0.0',
+        ... )
+        <GitTagCmd path=... tag_name=v1.0.0>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.tag_name = tag_name
+
+    def __repr__(self) -> str:
+        """Representation of a git tag for a git repository."""
+        return f"<GitTagCmd path={self.path} tag_name={self.tag_name}>"
+
+    def run(
+        self,
+        command: GitTagCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against a git tag.
+
+        Wraps `git tag <https://git-scm.com/docs/git-tag>`_.
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='test-tag', message='Test tag'
+        ... )
+        ''
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='test-tag',
+        ... ).run()
+        'test-tag'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["tag", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def delete(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git tag delete.
+
+        Examples
+        --------
+        Create a tag first:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='delete-me', message='Tag to delete'
+        ... )
+        ''
+
+        Now delete it:
+
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='delete-me',
+        ... ).delete()
+        "Deleted tag 'delete-me'..."
+        """
+        local_flags: list[str] = ["-d", self.tag_name]
+
+        return self.run(
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def verify(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git tag verify.
+
+        Verify a GPG-signed tag.
+
+        Examples
+        --------
+        First create a lightweight tag:
+
+        >>> GitTagManager(path=example_git_repo.path).create(name='verify-tag')
+        ''
+
+        Try to verify it (lightweight tags can't be verified):
+
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='verify-tag',
+        ... ).verify()
+        'error: verify-tag: cannot verify a non-tag object...'
+        """
+        local_flags: list[str] = ["-v", self.tag_name]
+
+        return self.run(
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def show(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show tag details using git show.
+
+        Examples
+        --------
+        Create an annotated tag first:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='show-tag', message='Show this tag'
+        ... )
+        ''
+
+        Show the tag:
+
+        >>> print(GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='show-tag',
+        ... ).show())
+        tag show-tag
+        Tagger: ...
+        <BLANKLINE>
+        Show this tag
+        ...
+        """
+        return self.cmd.run(
+            ["show", self.tag_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitTagManager:
+    """Run commands directly related to git tags of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-tag(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitTagManager(path=tmp_path)
+        <GitTagManager path=...>
+
+        >>> GitTagManager(path=tmp_path).run()
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).run()
+        ''
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git tag manager object."""
+        return f"<GitTagManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitTagCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's tags.
+
+        Wraps `git tag <https://git-scm.com/docs/git-tag>`_.
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).run()
+        ''
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["tag", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def create(
+        self,
+        *,
+        name: str,
+        ref: str | None = None,
+        message: str | None = None,
+        annotate: bool | None = None,
+        sign: bool | None = None,
+        local_user: str | None = None,
+        force: bool | None = None,
+        file: StrPath | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git tag create.
+
+        Parameters
+        ----------
+        name :
+            Name of the tag to create
+        ref :
+            Git reference (commit, branch) to tag. Defaults to HEAD.
+        message :
+            Tag message (implies annotated tag)
+        annotate :
+            Create an annotated tag
+        sign :
+            Create a GPG-signed tag
+        local_user :
+            Use specific GPG key for signing
+        force :
+            Replace existing tag
+        file :
+            Read message from file
+
+        Examples
+        --------
+        Create a lightweight tag:
+
+        >>> GitTagManager(path=example_git_repo.path).create(name='lightweight-tag')
+        ''
+
+        Create an annotated tag:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='annotated-tag', message='This is an annotated tag'
+        ... )
+        ''
+
+        Create a tag on a specific commit:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='ref-tag', ref='HEAD', message='Tag at HEAD'
+        ... )
+        ''
+        """
+        local_flags: list[str] = []
+
+        if annotate is True:
+            local_flags.append("-a")
+        if sign is True:
+            local_flags.append("-s")
+        if local_user is not None:
+            local_flags.extend(["-u", local_user])
+        if force is True:
+            local_flags.append("-f")
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if file is not None:
+            local_flags.extend(["-F", str(file)])
+
+        local_flags.append(name)
+
+        if ref is not None:
+            local_flags.append(ref)
+
+        return self.run(
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(
+        self,
+        *,
+        pattern: str | None = None,
+        sort: str | None = None,
+        contains: str | None = None,
+        no_contains: str | None = None,
+        merged: str | None = None,
+        no_merged: str | None = None,
+        lines: int | None = None,
+    ) -> list[str]:
+        r"""List tags (raw output).
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='list-tag-1', message='First tag'
+        ... )
+        ''
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='list-tag-2', message='Second tag'
+        ... )
+        ''
+        >>> 'list-tag-1' in GitTagManager(path=example_git_repo.path)._ls()
+        True
+        """
+        local_flags: list[str] = ["-l"]
+
+        if sort is not None:
+            local_flags.append(f"--sort={sort}")
+        if contains is not None:
+            local_flags.extend(["--contains", contains])
+        if no_contains is not None:
+            local_flags.extend(["--no-contains", no_contains])
+        if merged is not None:
+            local_flags.extend(["--merged", merged])
+        if no_merged is not None:
+            local_flags.extend(["--no-merged", no_merged])
+        if lines is not None:
+            local_flags.append(f"-n{lines}")
+        if pattern is not None:
+            local_flags.append(pattern)
+
+        result = self.run(local_flags=local_flags)
+        if not result:
+            return []
+        return result.splitlines()
+
+    def ls(
+        self,
+        *,
+        pattern: str | None = None,
+        sort: str | None = None,
+        contains: str | None = None,
+        no_contains: str | None = None,
+        merged: str | None = None,
+        no_merged: str | None = None,
+    ) -> QueryList[GitTagCmd]:
+        """List tags.
+
+        Parameters
+        ----------
+        pattern :
+            List tags matching pattern (shell wildcard)
+        sort :
+            Sort by key (e.g., 'version:refname', '-creatordate')
+        contains :
+            Only tags containing the specified commit
+        no_contains :
+            Only tags not containing the specified commit
+        merged :
+            Only tags merged into the specified commit
+        no_merged :
+            Only tags not merged into the specified commit
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='ls-tag', message='Listing tag'
+        ... )
+        ''
+        >>> tags = GitTagManager(path=example_git_repo.path).ls()
+        >>> any(t.tag_name == 'ls-tag' for t in tags)
+        True
+        """
+        tag_names = self._ls(
+            pattern=pattern,
+            sort=sort,
+            contains=contains,
+            no_contains=no_contains,
+            merged=merged,
+            no_merged=no_merged,
+        )
+
+        return QueryList(
+            [GitTagCmd(path=self.path, tag_name=tag_name) for tag_name in tag_names],
+        )
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitTagCmd | None:
+        """Get tag via filter lookup.
+
+        Examples
+        --------
+        Create a tag first:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='get-tag', message='Get this tag'
+        ... )
+        ''
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).get(tag_name='get-tag')
+        <GitTagCmd path=... tag_name=get-tag>
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).get(tag_name='unknown')
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitTagCmd]:
+        """Get tags via filter lookup.
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='filter-tag-a', message='Filter tag A'
+        ... )
+        ''
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='filter-tag-b', message='Filter tag B'
+        ... )
+        ''
+
+        >>> len(GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).filter(tag_name__contains='filter-tag')) >= 2
+        True
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).filter(tag_name__contains='unknown')
         []
         """
         return self.ls().filter(*args, **kwargs)
