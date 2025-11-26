@@ -101,6 +101,7 @@ class Git:
         self.stashes = GitStashManager(path=self.path, cmd=self)
         self.branches = GitBranchManager(path=self.path, cmd=self)
         self.tags = GitTagManager(path=self.path, cmd=self)
+        self.worktrees = GitWorktreeManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -5149,5 +5150,590 @@ class GitTagManager:
         ...     path=example_git_repo.path
         ... ).filter(tag_name__contains='unknown')
         []
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+# =============================================================================
+# Git Worktree Commands
+# =============================================================================
+
+GitWorktreeCommandLiteral = t.Literal[
+    "add",
+    "list",
+    "lock",
+    "move",
+    "prune",
+    "remove",
+    "repair",
+    "unlock",
+]
+
+
+class GitWorktreeCmd:
+    """Run commands directly against a git worktree entry for a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+        worktree_path: str,
+        head: str | None = None,
+        branch: str | None = None,
+        locked: bool = False,
+        prunable: bool = False,
+    ) -> None:
+        """Lite, typed, pythonic wrapper for a git-worktree(1) entry.
+
+        Parameters
+        ----------
+        path :
+            Path to the main git repository.
+        worktree_path :
+            Path to this worktree.
+        head :
+            HEAD commit SHA for this worktree.
+        branch :
+            Branch checked out in this worktree.
+        locked :
+            Whether this worktree is locked.
+        prunable :
+            Whether this worktree is prunable.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/example-worktree',
+        ... )
+        <GitWorktreeCmd path=... worktree_path=/tmp/example-worktree>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.worktree_path = worktree_path
+        self.head = head
+        self.branch = branch
+        self.locked = locked
+        self.prunable = prunable
+
+    def __repr__(self) -> str:
+        """Representation of a git worktree entry."""
+        return f"<GitWorktreeCmd path={self.path} worktree_path={self.worktree_path}>"
+
+    def run(
+        self,
+        command: GitWorktreeCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against a git worktree.
+
+        Wraps `git worktree <https://git-scm.com/docs/git-worktree>`_.
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["worktree", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def remove(
+        self,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Remove this worktree.
+
+        Parameters
+        ----------
+        force :
+            Force removal even if worktree is dirty or locked.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).remove()
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("-f")
+
+        local_flags.append(self.worktree_path)
+
+        return self.run(
+            "remove",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def lock(
+        self,
+        *,
+        reason: str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Lock this worktree.
+
+        Parameters
+        ----------
+        reason :
+            Reason for locking the worktree.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).lock()
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = []
+
+        if reason is not None:
+            local_flags.extend(["--reason", reason])
+
+        local_flags.append(self.worktree_path)
+
+        return self.run(
+            "lock",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def unlock(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Unlock this worktree.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).unlock()
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = [self.worktree_path]
+
+        return self.run(
+            "unlock",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def move(
+        self,
+        new_path: StrPath,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Move this worktree to a new location.
+
+        Parameters
+        ----------
+        new_path :
+            New path for the worktree.
+        force :
+            Force move even if worktree is dirty or locked.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).move('/tmp/new-worktree')
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("-f")
+
+        local_flags.extend([self.worktree_path, str(new_path)])
+
+        return self.run(
+            "move",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def repair(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Repair this worktree.
+
+        Examples
+        --------
+        >>> result = GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).repair()
+        >>> result == '' or 'error' in result
+        True
+        """
+        local_flags: list[str] = [self.worktree_path]
+
+        return self.run(
+            "repair",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitWorktreeManager:
+    """Run commands directly related to git worktrees of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-worktree(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitWorktreeManager(path=tmp_path)
+        <GitWorktreeManager path=...>
+
+        >>> GitWorktreeManager(path=tmp_path).run('list')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> len(GitWorktreeManager(path=example_git_repo.path).run('list')) > 0
+        True
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git worktree manager object."""
+        return f"<GitWorktreeManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitWorktreeCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's worktrees.
+
+        Wraps `git worktree <https://git-scm.com/docs/git-worktree>`_.
+
+        Examples
+        --------
+        >>> len(GitWorktreeManager(path=example_git_repo.path).run('list')) > 0
+        True
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["worktree", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def add(
+        self,
+        path: StrPath,
+        *,
+        commit_ish: str | None = None,
+        force: bool | None = None,
+        detach: bool | None = None,
+        checkout: bool | None = None,
+        lock: bool | None = None,
+        reason: str | None = None,
+        new_branch: str | None = None,
+        new_branch_force: str | None = None,
+        orphan: bool | None = None,
+        track: bool | None = None,
+        guess_remote: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Add a new worktree.
+
+        Parameters
+        ----------
+        path :
+            Path for the new worktree.
+        commit_ish :
+            Commit/branch to checkout in the new worktree.
+        force :
+            Force creation even if path already exists.
+        detach :
+            Detach HEAD in the new worktree.
+        checkout :
+            Checkout commit after creating worktree.
+        lock :
+            Lock the worktree after creation.
+        reason :
+            Reason for locking (requires lock=True).
+        new_branch :
+            Create a new branch (-b).
+        new_branch_force :
+            Force create a new branch (-B).
+        orphan :
+            Create a new orphan branch.
+        track :
+            Set up tracking for the new branch.
+        guess_remote :
+            Guess remote tracking branch.
+
+        Examples
+        --------
+        >>> GitWorktreeManager(path=example_git_repo.path).add(
+        ...     path='/tmp/test-worktree-add', commit_ish='HEAD'
+        ... )
+        "Preparing worktree (detached HEAD ...)..."
+        """
+        local_flags: list[str] = []
+
+        if force is True:
+            local_flags.append("-f")
+        if detach is True:
+            local_flags.append("--detach")
+        if checkout is True:
+            local_flags.append("--checkout")
+        if checkout is False:
+            local_flags.append("--no-checkout")
+        if lock is True:
+            local_flags.append("--lock")
+        if reason is not None:
+            local_flags.extend(["--reason", reason])
+        if new_branch is not None:
+            local_flags.extend(["-b", new_branch])
+        if new_branch_force is not None:
+            local_flags.extend(["-B", new_branch_force])
+        if orphan is True:
+            local_flags.append("--orphan")
+        if track is True:
+            local_flags.append("--track")
+        if track is False:
+            local_flags.append("--no-track")
+        if guess_remote is True:
+            local_flags.append("--guess-remote")
+        if guess_remote is False:
+            local_flags.append("--no-guess-remote")
+
+        local_flags.append(str(path))
+
+        if commit_ish is not None:
+            local_flags.append(commit_ish)
+
+        return self.run(
+            "add",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def prune(
+        self,
+        *,
+        dry_run: bool | None = None,
+        verbose: bool | None = None,
+        expire: str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Prune worktree information.
+
+        Parameters
+        ----------
+        dry_run :
+            Do not remove anything, just report what would be done.
+        verbose :
+            Report all removals.
+        expire :
+            Only expire unused worktrees older than the given time.
+
+        Examples
+        --------
+        >>> GitWorktreeManager(path=example_git_repo.path).prune()
+        ''
+
+        >>> GitWorktreeManager(path=example_git_repo.path).prune(dry_run=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if dry_run is True:
+            local_flags.append("-n")
+        if verbose is True:
+            local_flags.append("-v")
+        if expire is not None:
+            local_flags.extend(["--expire", expire])
+
+        return self.run(
+            "prune",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(
+        self,
+        *,
+        verbose: bool | None = None,
+    ) -> list[str]:
+        """List worktrees (raw output).
+
+        Examples
+        --------
+        >>> len(GitWorktreeManager(path=example_git_repo.path)._ls()) >= 1
+        True
+        """
+        local_flags: list[str] = ["--porcelain"]
+
+        if verbose is True:
+            local_flags.append("-v")
+
+        result = self.run("list", local_flags=local_flags)
+        return result.strip().split("\n\n") if result.strip() else []
+
+    def ls(
+        self,
+        *,
+        verbose: bool | None = None,
+    ) -> QueryList[GitWorktreeCmd]:
+        """List worktrees.
+
+        Returns a QueryList of GitWorktreeCmd objects.
+
+        Parameters
+        ----------
+        verbose :
+            Include additional information.
+
+        Examples
+        --------
+        >>> worktrees = GitWorktreeManager(path=example_git_repo.path).ls()
+        >>> len(worktrees) >= 1
+        True
+        """
+        raw_entries = self._ls(verbose=verbose)
+
+        worktrees: list[GitWorktreeCmd] = []
+        for entry in raw_entries:
+            if not entry:
+                continue
+
+            # Parse porcelain format
+            worktree_path = None
+            head = None
+            branch = None
+            locked = False
+            prunable = False
+
+            for line in entry.split("\n"):
+                if line.startswith("worktree "):
+                    worktree_path = line[9:]
+                elif line.startswith("HEAD "):
+                    head = line[5:]
+                elif line.startswith("branch "):
+                    branch = line[7:]
+                elif line == "locked" or line.startswith("locked "):
+                    locked = True
+                elif line == "prunable" or line.startswith("prunable "):
+                    prunable = True
+
+            if worktree_path is not None:
+                worktrees.append(
+                    GitWorktreeCmd(
+                        path=self.path,
+                        cmd=self.cmd,
+                        worktree_path=worktree_path,
+                        head=head,
+                        branch=branch,
+                        locked=locked,
+                        prunable=prunable,
+                    ),
+                )
+
+        return QueryList(worktrees)
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitWorktreeCmd | None:
+        """Get worktree via filter lookup.
+
+        Examples
+        --------
+        >>> worktrees = GitWorktreeManager(path=example_git_repo.path).ls()
+        >>> if len(worktrees) > 0:
+        ...     wt = GitWorktreeManager(path=example_git_repo.path).get(
+        ...         worktree_path=worktrees[0].worktree_path
+        ...     )
+        ...     wt is not None
+        ... else:
+        ...     True
+        True
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitWorktreeCmd]:
+        """Get worktrees via filter lookup.
+
+        Examples
+        --------
+        >>> len(GitWorktreeManager(path=example_git_repo.path).filter()) >= 0
+        True
         """
         return self.ls().filter(*args, **kwargs)
