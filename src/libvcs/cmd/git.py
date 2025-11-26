@@ -102,6 +102,7 @@ class Git:
         self.branches = GitBranchManager(path=self.path, cmd=self)
         self.tags = GitTagManager(path=self.path, cmd=self)
         self.worktrees = GitWorktreeManager(path=self.path, cmd=self)
+        self.notes = GitNotesManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -5735,5 +5736,609 @@ class GitWorktreeManager:
         --------
         >>> len(GitWorktreeManager(path=example_git_repo.path).filter()) >= 0
         True
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+# =============================================================================
+# Git Notes Commands
+# =============================================================================
+
+GitNotesCommandLiteral = t.Literal[
+    "list",
+    "add",
+    "copy",
+    "append",
+    "edit",
+    "show",
+    "merge",
+    "remove",
+    "prune",
+    "get-ref",
+]
+
+
+class GitNoteCmd:
+    """Run commands directly against a git note for a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+        object_sha: str,
+        note_sha: str | None = None,
+    ) -> None:
+        """Lite, typed, pythonic wrapper for a git-notes(1) entry.
+
+        Parameters
+        ----------
+        path :
+            Path to the git repository.
+        object_sha :
+            SHA of the object this note is attached to.
+        note_sha :
+            SHA of the note blob itself.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... )
+        <GitNoteCmd path=... object_sha=HEAD>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.object_sha = object_sha
+        self.note_sha = note_sha
+
+    def __repr__(self) -> str:
+        """Representation of a git note."""
+        return f"<GitNoteCmd path={self.path} object_sha={self.object_sha}>"
+
+    def run(
+        self,
+        command: GitNotesCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against git notes.
+
+        Wraps `git notes <https://git-scm.com/docs/git-notes>`_.
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["notes", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def show(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show the note for this object.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).show()
+        'error: no note found for object...'
+        """
+        local_flags: list[str] = [self.object_sha]
+
+        return self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def remove(
+        self,
+        *,
+        ignore_missing: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Remove the note for this object.
+
+        Parameters
+        ----------
+        ignore_missing :
+            Don't error if no note exists.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).remove(ignore_missing=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if ignore_missing:
+            local_flags.append("--ignore-missing")
+
+        local_flags.append(self.object_sha)
+
+        return self.run(
+            "remove",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def append(
+        self,
+        *,
+        message: str | None = None,
+        file: StrPath | None = None,
+        allow_empty: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Append to the note for this object.
+
+        Parameters
+        ----------
+        message :
+            Note message to append.
+        file :
+            Read message from file.
+        allow_empty :
+            Allow empty note.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).append(message='Additional note')
+        ''
+        """
+        local_flags: list[str] = []
+
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if file is not None:
+            local_flags.extend(["-F", str(file)])
+        if allow_empty:
+            local_flags.append("--allow-empty")
+
+        local_flags.append(self.object_sha)
+
+        return self.run(
+            "append",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def edit(
+        self,
+        *,
+        allow_empty: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Edit the note for this object.
+
+        Note: This typically opens an editor, so it's mostly useful
+        in non-interactive contexts with GIT_EDITOR set.
+
+        Parameters
+        ----------
+        allow_empty :
+            Allow empty note.
+
+        Examples
+        --------
+        >>> result = GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).edit(allow_empty=True)
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if allow_empty:
+            local_flags.append("--allow-empty")
+
+        local_flags.append(self.object_sha)
+
+        return self.run(
+            "edit",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def copy(
+        self,
+        to_object: str,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Copy this note to another object.
+
+        Parameters
+        ----------
+        to_object :
+            Object to copy the note to.
+        force :
+            Overwrite existing note on target.
+
+        Examples
+        --------
+        >>> result = GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).copy('HEAD', force=True)
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("-f")
+
+        local_flags.extend([self.object_sha, to_object])
+
+        return self.run(
+            "copy",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitNotesManager:
+    """Run commands directly related to git notes of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+        ref: str | None = None,
+    ) -> None:
+        """Wrap some of git-notes(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        ref :
+            Notes ref to use (default: refs/notes/commits).
+
+        Examples
+        --------
+        >>> GitNotesManager(path=tmp_path)
+        <GitNotesManager path=...>
+
+        >>> GitNotesManager(path=tmp_path).run('list')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitNotesManager(path=example_git_repo.path).run('list')
+        ''
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+        self.ref = ref
+
+    def __repr__(self) -> str:
+        """Representation of git notes manager object."""
+        return f"<GitNotesManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitNotesCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's notes.
+
+        Wraps `git notes <https://git-scm.com/docs/git-notes>`_.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).run('list')
+        ''
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+
+        # Add ref option if specified
+        ref_flags: list[str] = []
+        if self.ref is not None:
+            ref_flags.extend(["--ref", self.ref])
+
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["notes", *ref_flags, *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def add(
+        self,
+        object_sha: str = "HEAD",
+        *,
+        message: str | None = None,
+        file: StrPath | None = None,
+        force: bool = False,
+        allow_empty: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Add a note to an object.
+
+        Parameters
+        ----------
+        object_sha :
+            Object to add note to (default: HEAD).
+        message :
+            Note message.
+        file :
+            Read message from file.
+        force :
+            Overwrite existing note.
+        allow_empty :
+            Allow empty note.
+
+        Examples
+        --------
+        >>> result = GitNotesManager(path=example_git_repo.path).add(
+        ...     message='Test note', force=True
+        ... )
+        >>> 'error' in result.lower() or 'Overwriting' in result or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if file is not None:
+            local_flags.extend(["-F", str(file)])
+        if force:
+            local_flags.append("-f")
+        if allow_empty:
+            local_flags.append("--allow-empty")
+
+        local_flags.append(object_sha)
+
+        return self.run(
+            "add",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def prune(
+        self,
+        *,
+        dry_run: bool = False,
+        verbose: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Prune notes for non-existing objects.
+
+        Parameters
+        ----------
+        dry_run :
+            Don't remove, just report.
+        verbose :
+            Report all removed notes.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).prune()
+        ''
+
+        >>> GitNotesManager(path=example_git_repo.path).prune(dry_run=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if dry_run:
+            local_flags.append("-n")
+        if verbose:
+            local_flags.append("-v")
+
+        return self.run(
+            "prune",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def merge(
+        self,
+        notes_ref: str,
+        *,
+        strategy: str | None = None,
+        commit: bool = False,
+        abort: bool = False,
+        quiet: bool = False,
+        verbose: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Merge notes from another ref.
+
+        Parameters
+        ----------
+        notes_ref :
+            Notes ref to merge from.
+        strategy :
+            Merge strategy (manual, ours, theirs, union, cat_sort_uniq).
+        commit :
+            Finalize in-progress merge.
+        abort :
+            Abort in-progress merge.
+        quiet :
+            Suppress output.
+        verbose :
+            Verbose output.
+
+        Examples
+        --------
+        >>> result = GitNotesManager(path=example_git_repo.path).merge(
+        ...     'refs/notes/other'
+        ... )
+        >>> 'error' in result.lower() or 'fatal' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if strategy is not None:
+            local_flags.extend(["-s", strategy])
+        if commit:
+            local_flags.append("--commit")
+        if abort:
+            local_flags.append("--abort")
+        if quiet:
+            local_flags.append("-q")
+        if verbose:
+            local_flags.append("-v")
+
+        local_flags.append(notes_ref)
+
+        return self.run(
+            "merge",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def get_ref(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Get the current notes ref.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).get_ref()
+        'refs/notes/commits'
+        """
+        return self.run(
+            "get-ref",
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(self) -> list[tuple[str, str]]:
+        """List notes (raw output).
+
+        Returns list of (note_sha, object_sha) tuples.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path)._ls()
+        [...]
+        """
+        result = self.run("list")
+        if not result.strip():
+            return []
+
+        notes = []
+        for line in result.strip().splitlines():
+            parts = line.split()
+            if len(parts) >= 2:
+                notes.append((parts[0], parts[1]))
+        return notes
+
+    def ls(self) -> QueryList[GitNoteCmd]:
+        """List notes.
+
+        Returns a QueryList of GitNoteCmd objects.
+
+        Examples
+        --------
+        >>> notes = GitNotesManager(path=example_git_repo.path).ls()
+        >>> isinstance(notes, list)
+        True
+        """
+        raw_notes = self._ls()
+
+        return QueryList(
+            [
+                GitNoteCmd(
+                    path=self.path,
+                    cmd=self.cmd,
+                    object_sha=object_sha,
+                    note_sha=note_sha,
+                )
+                for note_sha, object_sha in raw_notes
+            ],
+        )
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitNoteCmd | None:
+        """Get note via filter lookup.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).get(object_sha='HEAD')
+        Traceback (most recent call last):
+            ...
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitNoteCmd]:
+        """Get notes via filter lookup.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).filter()
+        [...]
         """
         return self.ls().filter(*args, **kwargs)
