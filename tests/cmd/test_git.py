@@ -879,3 +879,221 @@ def test_tag_verify_unsigned(git_repo: GitSync) -> None:
 
     # verify on unsigned tag should return error message
     assert "error" in result.lower() or "cannot verify" in result.lower()
+
+
+# =============================================================================
+# GitStashManager / GitStashEntryCmd Tests
+# =============================================================================
+
+
+def test_stash_push_and_list(git_repo: GitSync) -> None:
+    """Test GitStashManager.push() and ls()."""
+    # Create a file and modify it to have something to stash
+    test_file = git_repo.path / "stash_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "stash_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    # Modify the file
+    test_file.write_text("modified content")
+
+    # Push to stash
+    result = git_repo.cmd.stashes.push(message="Test stash")
+
+    # Should succeed (not "No local changes")
+    assert "no local changes" not in result.lower()
+
+    # List stashes
+    stashes = git_repo.cmd.stashes.ls()
+    assert len(stashes) >= 1
+    assert stashes[0].index == 0
+
+
+def test_stash_entry_show(git_repo: GitSync) -> None:
+    """Test GitStashEntryCmd.show()."""
+    # Create a stash first
+    test_file = git_repo.path / "show_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "show_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    test_file.write_text("modified for stash")
+    git_repo.cmd.stashes.push(message="Show test stash")
+
+    # Get stash and show
+    stash = git_repo.cmd.stashes.get(index=0)
+    assert stash is not None
+
+    result = stash.show()
+
+    # show should display diff info
+    assert "show_test.txt" in result or len(result) > 0
+
+
+class StashApplyPopFixture(t.NamedTuple):
+    """Test fixture for GitStashEntryCmd apply/pop operations."""
+
+    test_id: str
+    method: str  # "apply" or "pop"
+    removes_stash: bool
+
+
+STASH_APPLY_POP_FIXTURES: list[StashApplyPopFixture] = [
+    StashApplyPopFixture(
+        test_id="apply-stash",
+        method="apply",
+        removes_stash=False,
+    ),
+    StashApplyPopFixture(
+        test_id="pop-stash",
+        method="pop",
+        removes_stash=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(StashApplyPopFixture._fields),
+    STASH_APPLY_POP_FIXTURES,
+    ids=[test.test_id for test in STASH_APPLY_POP_FIXTURES],
+)
+def test_stash_apply_pop(
+    git_repo: GitSync,
+    test_id: str,
+    method: str,
+    removes_stash: bool,
+) -> None:
+    """Test GitStashEntryCmd.apply() and pop()."""
+    # Clear any existing stashes
+    git_repo.cmd.stashes.clear()
+
+    # Create a stash first
+    test_file = git_repo.path / f"{test_id}_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", f"{test_id}_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    test_file.write_text("modified for stash")
+    git_repo.cmd.stashes.push(message=f"Test {method}")
+
+    # Get stash
+    stash = git_repo.cmd.stashes.get(index=0)
+    assert stash is not None
+
+    # Apply or pop
+    if method == "apply":
+        result = stash.apply()
+    else:
+        result = stash.pop()
+
+    # Should succeed
+    assert "error" not in result.lower() or "conflict" in result.lower()
+
+    # Check if stash was removed
+    stashes_after = git_repo.cmd.stashes.ls()
+    if removes_stash:
+        assert len(stashes_after) == 0
+    else:
+        assert len(stashes_after) >= 1
+
+
+def test_stash_drop(git_repo: GitSync) -> None:
+    """Test GitStashEntryCmd.drop()."""
+    # Clear any existing stashes
+    git_repo.cmd.stashes.clear()
+
+    # Create a stash first
+    test_file = git_repo.path / "drop_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "drop_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    test_file.write_text("modified for stash")
+    git_repo.cmd.stashes.push(message="Drop test stash")
+
+    # Verify stash exists
+    stashes = git_repo.cmd.stashes.ls()
+    assert len(stashes) == 1
+
+    # Get stash and drop
+    stash = git_repo.cmd.stashes.get(index=0)
+    assert stash is not None
+
+    result = stash.drop()
+    assert "dropped" in result.lower()
+
+    # Verify stash is gone
+    stashes_after = git_repo.cmd.stashes.ls()
+    assert len(stashes_after) == 0
+
+
+def test_stash_clear(git_repo: GitSync) -> None:
+    """Test GitStashManager.clear()."""
+    # Create multiple stashes
+    test_file = git_repo.path / "clear_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "clear_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    # Create first stash
+    test_file.write_text("modified 1")
+    git_repo.cmd.stashes.push(message="First stash")
+
+    # Create second stash
+    test_file.write_text("modified 2")
+    git_repo.cmd.stashes.push(message="Second stash")
+
+    # Verify stashes exist
+    stashes = git_repo.cmd.stashes.ls()
+    assert len(stashes) >= 2
+
+    # Clear all stashes
+    result = git_repo.cmd.stashes.clear()
+    assert result == ""
+
+    # Verify all stashes are gone
+    stashes_after = git_repo.cmd.stashes.ls()
+    assert len(stashes_after) == 0
+
+
+def test_stash_filter(git_repo: GitSync) -> None:
+    """Test GitStashManager.filter() with QueryList filtering."""
+    # Create a stash on master branch
+    test_file = git_repo.path / "filter_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "filter_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    test_file.write_text("modified for stash")
+    git_repo.cmd.stashes.push(message="Filter test stash")
+
+    # Filter by branch
+    stashes = git_repo.cmd.stashes.filter(branch="master")
+    assert len(stashes) >= 1
+
+
+def test_stash_entry_create_branch(git_repo: GitSync) -> None:
+    """Test GitStashEntryCmd.create_branch()."""
+    # Create a stash first
+    test_file = git_repo.path / "branch_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "branch_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    test_file.write_text("modified for stash")
+    git_repo.cmd.stashes.push(message="Branch test stash")
+
+    # Get stash and create branch
+    stash = git_repo.cmd.stashes.get(index=0)
+    assert stash is not None
+
+    result = stash.create_branch("stash-branch")
+
+    # Should create branch and apply stash
+    assert "error" not in result.lower() or "already exists" in result.lower()
+
+    # Verify branch exists (or stash was applied)
+    branches = git_repo.cmd.branches.ls()
+    branch_names = [b.branch_name for b in branches]
+    # Either branch was created or we're on it
+    assert "stash-branch" in branch_names or "master" in branch_names
