@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import pathlib
 import re
@@ -103,6 +104,7 @@ class Git:
         self.tags = GitTagManager(path=self.path, cmd=self)
         self.worktrees = GitWorktreeManager(path=self.path, cmd=self)
         self.notes = GitNotesManager(path=self.path, cmd=self)
+        self.reflog = GitReflogManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -6340,5 +6342,657 @@ class GitNotesManager:
         --------
         >>> GitNotesManager(path=example_git_repo.path).filter()
         [...]
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+GitReflogCommandLiteral = t.Literal[
+    "show",
+    "expire",
+    "delete",
+    "exists",
+]
+
+
+@dataclasses.dataclass
+class GitReflogEntry:
+    """Represent a git reflog entry."""
+
+    sha: str
+    """Commit SHA."""
+
+    refspec: str
+    """Reference specification (e.g., HEAD@{0})."""
+
+    action: str
+    """Action performed (e.g., commit, checkout, merge)."""
+
+    message: str
+    """Commit/action message."""
+
+    #: Internal: GitReflogEntryCmd for operations on this entry
+    _cmd: GitReflogEntryCmd | None = dataclasses.field(default=None, repr=False)
+
+    @property
+    def cmd(self) -> GitReflogEntryCmd:
+        """Return command object for this reflog entry."""
+        if self._cmd is None:
+            msg = "GitReflogEntry not created with cmd reference"
+            raise ValueError(msg)
+        return self._cmd
+
+
+class GitReflogEntryCmd:
+    """Run commands directly on a specific git reflog entry."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        refspec: str,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-reflog(1) for specific entry operations.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        refspec :
+            Reference specification (e.g., HEAD@{0}, master@{2}).
+
+        Examples
+        --------
+        >>> GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... )
+        <GitReflogEntryCmd HEAD@{0}>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.refspec = refspec
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git reflog entry cmd object."""
+        return f"<GitReflogEntryCmd {self.refspec}>"
+
+    def run(
+        self,
+        command: GitReflogCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a specific reflog entry.
+
+        Wraps `git reflog <https://git-scm.com/docs/git-reflog>`_.
+
+        Parameters
+        ----------
+        command :
+            Reflog command to run.
+        local_flags :
+            Additional flags to pass.
+
+        Examples
+        --------
+        >>> GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... ).run('show')
+        '...'
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["reflog"]
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def show(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show this reflog entry.
+
+        Examples
+        --------
+        >>> result = GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... ).show()
+        >>> len(result) > 0
+        True
+        """
+        return self.run(
+            "show",
+            local_flags=["-1", self.refspec],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def delete(
+        self,
+        *,
+        rewrite: bool = False,
+        updateref: bool = False,
+        dry_run: bool = False,
+        verbose: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Delete this reflog entry.
+
+        Parameters
+        ----------
+        rewrite :
+            Adjust subsequent entries to compensate.
+        updateref :
+            Update the ref to the value of the prior entry.
+        dry_run :
+            Don't actually delete, just show what would be deleted.
+        verbose :
+            Print extra information.
+
+        Examples
+        --------
+        >>> result = GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... ).delete(dry_run=True)
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if rewrite:
+            local_flags.append("--rewrite")
+        if updateref:
+            local_flags.append("--updateref")
+        if dry_run:
+            local_flags.append("-n")
+        if verbose:
+            local_flags.append("--verbose")
+
+        local_flags.append(self.refspec)
+
+        return self.run(
+            "delete",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitReflogManager:
+    """Run commands directly related to git reflog of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-reflog(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitReflogManager(path=tmp_path)
+        <GitReflogManager path=...>
+
+        >>> GitReflogManager(path=tmp_path).run('show')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> len(GitReflogManager(path=example_git_repo.path).run('show')) > 0
+        True
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git reflog manager object."""
+        return f"<GitReflogManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitReflogCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's reflog.
+
+        Wraps `git reflog <https://git-scm.com/docs/git-reflog>`_.
+
+        Parameters
+        ----------
+        command :
+            Reflog command to run.
+        local_flags :
+            Additional flags to pass.
+
+        Examples
+        --------
+        >>> len(GitReflogManager(path=example_git_repo.path).run('show')) > 0
+        True
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["reflog"]
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def show(
+        self,
+        ref: str = "HEAD",
+        *,
+        number: int | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show reflog for a ref.
+
+        Parameters
+        ----------
+        ref :
+            Reference to show reflog for (default: HEAD).
+        number :
+            Limit number of entries to show.
+
+        Examples
+        --------
+        >>> result = GitReflogManager(path=example_git_repo.path).show()
+        >>> len(result) > 0
+        True
+
+        >>> result = GitReflogManager(path=example_git_repo.path).show(number=5)
+        >>> len(result) > 0
+        True
+        """
+        local_flags: list[str] = []
+
+        if number is not None:
+            local_flags.extend(["-n", str(number)])
+
+        local_flags.append(ref)
+
+        return self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def expire(
+        self,
+        *,
+        expire: str | None = None,
+        expire_unreachable: str | None = None,
+        rewrite: bool = False,
+        updateref: bool = False,
+        stale_fix: bool = False,
+        dry_run: bool = False,
+        verbose: bool = False,
+        all_refs: bool = False,
+        single_worktree: bool = False,
+        refs: list[str] | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Expire old reflog entries.
+
+        Parameters
+        ----------
+        expire :
+            Expire entries older than this time.
+        expire_unreachable :
+            Expire unreachable entries older than this time.
+        rewrite :
+            Adjust reflog entries as old entries are pruned.
+        updateref :
+            Update ref to pruned value.
+        stale_fix :
+            Prune stale git-hierarchies too.
+        dry_run :
+            Don't actually prune, just report.
+        verbose :
+            Print extra information.
+        all_refs :
+            Process reflogs of all refs.
+        single_worktree :
+            Only process reflogs for current worktree.
+        refs :
+            Specific refs to expire.
+
+        Examples
+        --------
+        >>> result = GitReflogManager(path=example_git_repo.path).expire(
+        ...     dry_run=True
+        ... )
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if expire is not None:
+            local_flags.append(f"--expire={expire}")
+        if expire_unreachable is not None:
+            local_flags.append(f"--expire-unreachable={expire_unreachable}")
+        if rewrite:
+            local_flags.append("--rewrite")
+        if updateref:
+            local_flags.append("--updateref")
+        if stale_fix:
+            local_flags.append("--stale-fix")
+        if dry_run:
+            local_flags.append("--dry-run")
+        if verbose:
+            local_flags.append("--verbose")
+        if all_refs:
+            local_flags.append("--all")
+            if single_worktree:
+                local_flags.append("--single-worktree")
+        if refs is not None:
+            local_flags.extend(refs)
+
+        return self.run(
+            "expire",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def exists(
+        self,
+        ref: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> bool:
+        """Check if a reflog exists for a ref.
+
+        Parameters
+        ----------
+        ref :
+            Reference to check.
+
+        Returns
+        -------
+        bool
+            True if reflog exists, False otherwise.
+
+        Examples
+        --------
+        >>> GitReflogManager(path=example_git_repo.path).exists('HEAD')
+        True
+
+        >>> GitReflogManager(path=example_git_repo.path).exists(
+        ...     'refs/heads/nonexistent-branch-xyz123456'
+        ... )
+        False
+        """
+        from libvcs.exc import CommandError
+
+        try:
+            self.run(
+                "exists",
+                local_flags=[ref],
+                check_returncode=True,
+                log_in_real_time=log_in_real_time,
+            )
+            return True
+        except CommandError:
+            return False
+
+    def _ls(
+        self,
+        ref: str = "HEAD",
+        *,
+        number: int | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> list[dict[str, str]]:
+        """Parse reflog output into structured data.
+
+        Parameters
+        ----------
+        ref :
+            Reference to list reflog for.
+        number :
+            Limit number of entries.
+
+        Returns
+        -------
+        list[dict[str, str]]
+            List of parsed reflog entries.
+
+        Examples
+        --------
+        >>> entries = GitReflogManager(path=example_git_repo.path)._ls()
+        >>> len(entries) > 0
+        True
+        """
+        local_flags: list[str] = []
+
+        if number is not None:
+            local_flags.extend(["-n", str(number)])
+
+        local_flags.append(ref)
+
+        result = self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+        entries: list[dict[str, str]] = []
+        for line in result.strip().split("\n"):
+            if not line:
+                continue
+            # Format: <sha> <refspec>: <action>: <message>
+            # Example: d17245c HEAD@{0}: commit: tests/cmd...
+            parts = line.split(" ", 2)
+            if len(parts) >= 2:
+                sha = parts[0]
+                rest = parts[1] if len(parts) == 2 else f"{parts[1]} {parts[2]}"
+                # Split refspec from action:message
+                if ":" in rest:
+                    refspec_end = rest.index(":")
+                    refspec = rest[:refspec_end]
+                    action_message = rest[refspec_end + 1 :].strip()
+                    # Split action from message
+                    if ":" in action_message:
+                        action_end = action_message.index(":")
+                        action = action_message[:action_end].strip()
+                        message = action_message[action_end + 1 :].strip()
+                    else:
+                        action = action_message
+                        message = ""
+                else:
+                    refspec = rest
+                    action = ""
+                    message = ""
+
+                entries.append(
+                    {
+                        "sha": sha,
+                        "refspec": refspec,
+                        "action": action,
+                        "message": message,
+                    }
+                )
+
+        return entries
+
+    def ls(
+        self,
+        ref: str = "HEAD",
+        *,
+        number: int | None = None,
+    ) -> QueryList[GitReflogEntry]:
+        """List reflog entries as GitReflogEntry objects.
+
+        Parameters
+        ----------
+        ref :
+            Reference to list reflog for.
+        number :
+            Limit number of entries.
+
+        Returns
+        -------
+        QueryList[GitReflogEntry]
+            List of reflog entries with ORM-like filtering.
+
+        Examples
+        --------
+        >>> entries = GitReflogManager(path=example_git_repo.path).ls()
+        >>> isinstance(entries, QueryList)
+        True
+        >>> len(entries) > 0
+        True
+        """
+        entries_data = self._ls(ref=ref, number=number)
+        entries: list[GitReflogEntry] = []
+
+        for data in entries_data:
+            entry_cmd = GitReflogEntryCmd(
+                path=self.path,
+                refspec=data["refspec"],
+                cmd=self.cmd,
+            )
+            entry = GitReflogEntry(
+                sha=data["sha"],
+                refspec=data["refspec"],
+                action=data["action"],
+                message=data["message"],
+                _cmd=entry_cmd,
+            )
+            entries.append(entry)
+
+        return QueryList(entries)
+
+    def get(
+        self,
+        refspec: str | None = None,
+        sha: str | None = None,
+        **kwargs: t.Any,
+    ) -> GitReflogEntry:
+        """Get a specific reflog entry.
+
+        Parameters
+        ----------
+        refspec :
+            Reference specification to find.
+        sha :
+            SHA to find.
+        **kwargs :
+            Additional filter criteria.
+
+        Returns
+        -------
+        GitReflogEntry
+            The matching reflog entry.
+
+        Raises
+        ------
+        ObjectDoesNotExist
+            If no matching entry found.
+        MultipleObjectsReturned
+            If multiple entries match.
+
+        Examples
+        --------
+        >>> entry = GitReflogManager(path=example_git_repo.path).get(
+        ...     refspec='HEAD@{0}'
+        ... )
+        >>> entry.refspec
+        'HEAD@{0}'
+        """
+        filters: dict[str, t.Any] = {}
+        if refspec is not None:
+            filters["refspec"] = refspec
+        if sha is not None:
+            filters["sha"] = sha
+        filters.update(kwargs)
+
+        return self.ls().get(**filters)
+
+    def filter(
+        self,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> QueryList[GitReflogEntry]:
+        """Filter reflog entries.
+
+        Parameters
+        ----------
+        *args :
+            Positional arguments for QueryList.filter().
+        **kwargs :
+            Keyword arguments for filtering (supports Django-style lookups).
+
+        Returns
+        -------
+        QueryList[GitReflogEntry]
+            Filtered list of reflog entries.
+
+        Examples
+        --------
+        >>> entries = GitReflogManager(path=example_git_repo.path).filter(
+        ...     action='commit'
+        ... )
+        >>> isinstance(entries, QueryList)
+        True
         """
         return self.ls().filter(*args, **kwargs)
