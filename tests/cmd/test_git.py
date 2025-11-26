@@ -981,10 +981,7 @@ def test_stash_apply_pop(
     assert stash is not None
 
     # Apply or pop
-    if method == "apply":
-        result = stash.apply()
-    else:
-        result = stash.pop()
+    result = stash.apply() if method == "apply" else stash.pop()
 
     # Should succeed
     assert "error" not in result.lower() or "conflict" in result.lower()
