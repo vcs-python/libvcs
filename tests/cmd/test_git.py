@@ -482,3 +482,144 @@ def test_branch_unset_upstream(git_repo: GitSync) -> None:
 
     # unset_upstream typically returns empty string on success
     assert result == "" or "upstream" not in result.lower()
+
+
+# =============================================================================
+# GitRemoteCmd Tests
+# =============================================================================
+
+
+class RemoteSetBranchesFixture(t.NamedTuple):
+    """Test fixture for GitRemoteCmd.set_branches() operations."""
+
+    test_id: str
+    branches: tuple[str, ...]
+    add: bool
+
+
+REMOTE_SET_BRANCHES_FIXTURES: list[RemoteSetBranchesFixture] = [
+    RemoteSetBranchesFixture(
+        test_id="set-single-branch",
+        branches=("master",),
+        add=False,
+    ),
+    RemoteSetBranchesFixture(
+        test_id="set-multiple-branches",
+        branches=("master", "develop"),
+        add=False,
+    ),
+    RemoteSetBranchesFixture(
+        test_id="add-branch",
+        branches=("feature",),
+        add=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(RemoteSetBranchesFixture._fields),
+    REMOTE_SET_BRANCHES_FIXTURES,
+    ids=[test.test_id for test in REMOTE_SET_BRANCHES_FIXTURES],
+)
+def test_remote_set_branches(
+    git_repo: GitSync,
+    test_id: str,
+    branches: tuple[str, ...],
+    add: bool,
+) -> None:
+    """Test GitRemoteCmd.set_branches() with various scenarios."""
+    remote = git_repo.cmd.remotes.get(remote_name="origin")
+    assert remote is not None
+
+    # set_branches should succeed without error
+    result = remote.set_branches(*branches, add=add)
+    assert result == ""
+
+
+class RemoteSetHeadFixture(t.NamedTuple):
+    """Test fixture for GitRemoteCmd.set_head() operations."""
+
+    test_id: str
+    branch: str | None
+    auto: bool
+    delete: bool
+
+
+REMOTE_SET_HEAD_FIXTURES: list[RemoteSetHeadFixture] = [
+    RemoteSetHeadFixture(
+        test_id="set-head-auto",
+        branch=None,
+        auto=True,
+        delete=False,
+    ),
+    RemoteSetHeadFixture(
+        test_id="set-head-explicit",
+        branch="master",
+        auto=False,
+        delete=False,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(RemoteSetHeadFixture._fields),
+    REMOTE_SET_HEAD_FIXTURES,
+    ids=[test.test_id for test in REMOTE_SET_HEAD_FIXTURES],
+)
+def test_remote_set_head(
+    git_repo: GitSync,
+    test_id: str,
+    branch: str | None,
+    auto: bool,
+    delete: bool,
+) -> None:
+    """Test GitRemoteCmd.set_head() with various scenarios."""
+    remote = git_repo.cmd.remotes.get(remote_name="origin")
+    assert remote is not None
+
+    result = remote.set_head(branch, auto=auto, delete=delete)
+
+    # set_head returns either confirmation message or empty string
+    if auto:
+        assert "set to" in result.lower() or result == ""
+    else:
+        assert result == "" or "head" in result.lower()
+
+
+class RemoteUpdateFixture(t.NamedTuple):
+    """Test fixture for GitRemoteCmd.update() operations."""
+
+    test_id: str
+    prune: bool
+
+
+REMOTE_UPDATE_FIXTURES: list[RemoteUpdateFixture] = [
+    RemoteUpdateFixture(
+        test_id="update-simple",
+        prune=False,
+    ),
+    RemoteUpdateFixture(
+        test_id="update-with-prune",
+        prune=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(RemoteUpdateFixture._fields),
+    REMOTE_UPDATE_FIXTURES,
+    ids=[test.test_id for test in REMOTE_UPDATE_FIXTURES],
+)
+def test_remote_update(
+    git_repo: GitSync,
+    test_id: str,
+    prune: bool,
+) -> None:
+    """Test GitRemoteCmd.update() with various scenarios."""
+    remote = git_repo.cmd.remotes.get(remote_name="origin")
+    assert remote is not None
+
+    result = remote.update(prune=prune)
+
+    # update typically returns "Fetching <remote>" message
+    assert "fetching" in result.lower() or result == ""
