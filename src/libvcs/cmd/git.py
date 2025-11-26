@@ -2900,6 +2900,152 @@ class GitRemoteCmd:
             log_in_real_time=log_in_real_time,
         )
 
+    def set_branches(
+        self,
+        *branches: str,
+        add: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote set-branches.
+
+        Configure remote tracking branches for the remote.
+
+        Parameters
+        ----------
+        *branches :
+            Branch names to track.
+        add :
+            Add to existing tracked branches instead of replacing.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_branches('master')
+        ''
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_branches('master', 'develop', add=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if add:
+            local_flags.append("--add")
+
+        local_flags.append(self.remote_name)
+        local_flags.extend(branches)
+
+        return self.run(
+            "set-branches",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_head(
+        self,
+        branch: str | None = None,
+        *,
+        auto: bool = False,
+        delete: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote set-head.
+
+        Set or delete the default branch (HEAD) for the remote.
+
+        Parameters
+        ----------
+        branch :
+            Branch name to set as HEAD. Required unless auto or delete is True.
+        auto :
+            Query the remote to determine HEAD automatically.
+        delete :
+            Delete the remote HEAD reference.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_head(auto=True)
+        'origin/HEAD set to master'
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_head('master')
+        ''
+        """
+        local_flags: list[str] = [self.remote_name]
+
+        if auto:
+            local_flags.append("-a")
+        elif delete:
+            local_flags.append("-d")
+        elif branch is not None:
+            local_flags.append(branch)
+
+        return self.run(
+            "set-head",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        prune: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote update.
+
+        Fetch updates for the remote.
+
+        Parameters
+        ----------
+        prune :
+            Prune remote-tracking branches no longer on remote.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).update()
+        'Fetching origin...'
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).update(prune=True)
+        'Fetching origin...'
+        """
+        local_flags: list[str] = []
+
+        if prune:
+            local_flags.append("-p")
+
+        local_flags.append(self.remote_name)
+
+        return self.run(
+            "update",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
 
 GitRemoteManagerLiteral = t.Literal[
     "--verbose",
