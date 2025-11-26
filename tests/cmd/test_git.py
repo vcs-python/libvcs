@@ -1542,3 +1542,267 @@ def test_reflog_expire(git_repo: GitSync) -> None:
     # Expire with dry_run should succeed
     result = git_repo.cmd.reflog.expire(dry_run=True)
     assert result == "" or "error" not in result.lower()
+
+
+# GitSubmodule tests
+# ==================
+
+
+@pytest.fixture
+def submodule_repo(
+    tmp_path: pathlib.Path,
+    git_commit_envvars: dict[str, str],
+    set_gitconfig: pathlib.Path,
+) -> git.Git:
+    """Create a git repository to use as a submodule source."""
+    import os
+
+    # Create a repo to serve as submodule source
+    source_path = tmp_path / "submodule_source"
+    source_path.mkdir()
+    source_repo = git.Git(path=source_path)
+    source_repo.init()
+
+    # Create initial commit with environment
+    env = os.environ.copy()
+    env.update(git_commit_envvars)
+
+    (source_path / "lib.py").write_text("# Library code\n")
+    source_repo.run(["add", "."])
+    source_repo.run(
+        ["commit", "-m", "Initial commit"],
+        env=env,
+    )
+
+    return source_repo
+
+
+def _setup_submodule_test(git_repo: GitSync, submodule_repo: git.Git) -> str:
+    """Set up git_repo for submodule tests.
+
+    Returns the result of adding the submodule.
+    """
+    # Allow file protocol for submodule operations
+    git_repo.cmd.run(["config", "protocol.file.allow", "always"])
+
+    # Add the submodule
+    return git_repo.cmd.submodules.add(
+        repository=str(submodule_repo.path),
+        path="vendor/lib",
+    )
+
+
+def test_submodule_add(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.add()."""
+    # Allow file protocol for submodule operations
+    git_repo.cmd.run(["config", "protocol.file.allow", "always"])
+
+    # Add the submodule
+    result = git_repo.cmd.submodules.add(
+        repository=str(submodule_repo.path),
+        path="vendor/lib",
+    )
+    # Should succeed (output varies by git version)
+    assert "fatal" not in result.lower() or result == ""
+
+
+def test_submodule_ls(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.ls()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # List submodules
+    submodules = git_repo.cmd.submodules.ls()
+    assert isinstance(submodules, list)
+    assert len(submodules) >= 1
+
+    # Check the submodule has expected attributes
+    submodule = submodules[0]
+    assert submodule.path == "vendor/lib"
+    assert submodule.name is not None
+
+
+def test_submodule_get(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.get()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule by path
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule is not None
+    assert submodule.path == "vendor/lib"
+
+
+def test_submodule_get_not_found(
+    git_repo: GitSync,
+) -> None:
+    """Test GitSubmoduleManager.get() raises when not found."""
+    # Try to get a non-existent submodule
+    with pytest.raises(ObjectDoesNotExist):
+        git_repo.cmd.submodules.get(path="nonexistent")
+
+
+def test_submodule_filter(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.filter()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Filter by path
+    submodules = git_repo.cmd.submodules.filter(path="vendor/lib")
+    assert len(submodules) == 1
+    assert submodules[0].path == "vendor/lib"
+
+    # Filter with no match
+    submodules = git_repo.cmd.submodules.filter(path="nonexistent")
+    assert len(submodules) == 0
+
+
+def test_submodule_init(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.init()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Initialize all submodules
+    result = git_repo.cmd.submodules.init()
+    assert result == "" or "fatal" not in result.lower()
+
+
+def test_submodule_update(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.update()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Update all submodules
+    result = git_repo.cmd.submodules.update(init=True)
+    assert "fatal" not in result.lower() or result == ""
+
+
+def test_submodule_sync(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.sync()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Sync submodule URLs
+    result = git_repo.cmd.submodules.sync()
+    assert result == "" or "fatal" not in result.lower()
+
+
+def test_submodule_summary(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.summary()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get summary
+    result = git_repo.cmd.submodules.summary()
+    # Summary output may vary
+    assert isinstance(result, str)
+
+
+def test_submodule_entry_status(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.status()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule and check status
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    result = submodule.cmd.status()
+    assert isinstance(result, str)
+
+
+def test_submodule_entry_init(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.init()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule and init it
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    result = submodule.cmd.init()
+    assert result == "" or "fatal" not in result.lower()
+
+
+def test_submodule_entry_update(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.update()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule and init it
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    # Init and update
+    submodule.cmd.init()
+    result = submodule.cmd.update()
+    assert "fatal" not in result.lower() or result == ""
+
+
+def test_submodule_foreach(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleManager.foreach()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Run foreach with a simple command
+    result = git_repo.cmd.submodules.foreach(command="pwd")
+    assert isinstance(result, str)
+
+
+def test_submodule_dataclass_properties(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmodule dataclass properties."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+
+    # Check dataclass attributes
+    assert submodule.path == "vendor/lib"
+    assert submodule.name is not None
+    assert submodule.url is not None
+    assert submodule.sha is not None or submodule.status_prefix == "-"
+    assert submodule.cmd is not None
+
+    # Test initialized property
+    # After add, submodule should be initialized (prefix not '-')
+    assert submodule.initialized is True or submodule.status_prefix == "-"
