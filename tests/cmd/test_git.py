@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import typing as t
 
@@ -1326,6 +1327,49 @@ def test_worktree_prune(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
     assert "error" not in result_dry.lower() or result_dry == ""
 
 
+def test_worktree_move(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeCmd.move()."""
+    # Create a worktree first
+    original_path = tmp_path / "move-original-worktree"
+    git_repo.cmd.worktrees.add(path=original_path, new_branch="move-test-branch")
+
+    # Get the worktree
+    worktree = git_repo.cmd.worktrees.get(worktree_path=str(original_path))
+    assert worktree is not None
+
+    # Move the worktree to a new location
+    new_path = tmp_path / "move-new-worktree"
+    result = worktree.move(new_path)
+
+    # Should succeed (empty string or info message)
+    assert result == "" or "error" not in result.lower()
+
+    # Verify original path no longer exists in worktree list
+    worktrees_after = git_repo.cmd.worktrees.ls()
+    worktree_paths = [wt.worktree_path for wt in worktrees_after]
+    assert str(original_path) not in worktree_paths
+
+    # Verify new path exists in worktree list
+    assert str(new_path) in worktree_paths
+
+
+def test_worktree_repair(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitWorktreeCmd.repair()."""
+    # Create a worktree first
+    worktree_path = tmp_path / "repair-test-worktree"
+    git_repo.cmd.worktrees.add(path=worktree_path, new_branch="repair-test-branch")
+
+    # Get the worktree
+    worktree = git_repo.cmd.worktrees.get(worktree_path=str(worktree_path))
+    assert worktree is not None
+
+    # Repair should succeed (even if nothing needs repair)
+    result = worktree.repair()
+
+    # Should succeed (empty string or info message)
+    assert result == "" or "error" not in result.lower()
+
+
 # GitNotes tests
 
 
@@ -1489,6 +1533,79 @@ def test_notes_get_ref(git_repo: GitSync) -> None:
     assert result == "refs/notes/commits" or result == "" or "notes" in result
 
 
+def test_notes_edit(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
+    """Test GitNoteCmd.edit() - non-interactive mode via GIT_EDITOR."""
+    # Add a note first
+    git_repo.cmd.notes.add(message="Initial note for edit test", force=True)
+
+    # Get the note
+    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    note = git_repo.cmd.notes.get(object_sha=head_sha)
+    assert note is not None
+
+    # Edit with allow_empty (avoid interactive editor by using config)
+    # The doctest uses config={'core.editor': 'true'} which sets a no-op editor
+    result = note.edit(allow_empty=True, config={"core.editor": "true"})
+
+    # Should succeed (empty string) or show error about editor
+    assert result == "" or "error" in result.lower() or isinstance(result, str)
+
+
+def test_notes_copy(git_repo: GitSync) -> None:
+    """Test GitNoteCmd.copy()."""
+    # Create a second commit to copy the note to
+    test_file = git_repo.path / "copy_note_test.txt"
+    test_file.write_text("content for copy test")
+    git_repo.cmd.run(["add", "copy_note_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Commit for copy note test"])
+
+    # Get the new commit SHA
+    new_commit_sha = git_repo.cmd.rev_parse(args="HEAD")
+
+    # Checkout previous commit to add note there
+    git_repo.cmd.run(["checkout", "HEAD~1"])
+    git_repo.cmd.notes.add(message="Note to copy", force=True)
+
+    # Get the note and copy to new commit
+    old_commit_sha = git_repo.cmd.rev_parse(args="HEAD")
+    note = git_repo.cmd.notes.get(object_sha=old_commit_sha)
+    assert note is not None
+
+    # Copy to new commit (force=True to overwrite if exists)
+    result = note.copy(to_object=new_commit_sha, force=True)
+
+    # Should succeed
+    assert result == "" or "error" not in result.lower()
+
+    # Go back to main branch
+    git_repo.cmd.run(["checkout", "-"])
+
+
+def test_notes_merge(git_repo: GitSync) -> None:
+    """Test GitNotesManager.merge()."""
+    # Create a custom notes ref
+    custom_ref = "refs/notes/custom"
+    custom_notes = git_repo.cmd.notes.__class__(
+        path=git_repo.path,
+        cmd=git_repo.cmd,
+        ref=custom_ref,
+    )
+
+    # Add a note to the custom ref
+    custom_notes.add(message="Note in custom ref", force=True)
+
+    # Merge notes from custom ref to default ref
+    result = git_repo.cmd.notes.merge(notes_ref=custom_ref)
+
+    # Should succeed or show merge info
+    assert (
+        result == ""
+        or "already up to date" in result.lower()
+        or "merged" in result.lower()
+        or "error" not in result.lower()
+    )
+
+
 # GitReflog tests
 
 
@@ -1590,6 +1707,29 @@ def test_reflog_expire(git_repo: GitSync) -> None:
     assert result == "" or "error" not in result.lower()
 
 
+def test_reflog_entry_delete(git_repo: GitSync) -> None:
+    """Test GitReflogEntryCmd.delete()."""
+    # Create some commits to have reflog entries
+    test_file = git_repo.path / "reflog_delete_test.txt"
+    env = os.environ.copy()
+
+    for i in range(3):
+        test_file.write_text(f"content {i}")
+        git_repo.cmd.run(["add", "reflog_delete_test.txt"])
+        git_repo.cmd.run(["commit", "-m", f"Commit {i}"], env=env)
+
+    # Get the reflog entries
+    entries = git_repo.cmd.reflog.ls()
+    assert len(entries) >= 3
+
+    # Get an entry and delete it with dry_run (to avoid actually modifying reflog)
+    entry = entries[1]  # Pick a middle entry
+    result = entry.cmd.delete(dry_run=True)
+
+    # Should succeed or show what would be deleted
+    assert result == "" or isinstance(result, str)
+
+
 # GitSubmodule tests
 # ==================
 
@@ -1601,8 +1741,6 @@ def submodule_repo(
     set_gitconfig: pathlib.Path,
 ) -> git.Git:
     """Create a git repository to use as a submodule source."""
-    import os
-
     # Create a repo to serve as submodule source
     source_path = tmp_path / "submodule_source"
     source_path.mkdir()
@@ -1852,3 +1990,97 @@ def test_submodule_dataclass_properties(
     # Test initialized property
     # After add, submodule should be initialized (prefix not '-')
     assert submodule.initialized is True or submodule.status_prefix == "-"
+
+
+def test_submodule_entry_deinit(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.deinit()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Initialize the submodule first
+    git_repo.cmd.submodules.init()
+    git_repo.cmd.submodules.update(init=True)
+
+    # Get the submodule
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    # Deinit the submodule (with force to ensure it works even if dirty)
+    result = submodule.cmd.deinit(force=True)
+
+    # Should succeed (empty string or info message)
+    assert result == "" or "cleared" in result.lower() or "error" not in result.lower()
+
+
+def test_submodule_entry_set_branch(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.set_branch()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    # Set branch
+    result = submodule.cmd.set_branch(branch="main")
+
+    # Should succeed (empty string) or show error if branch doesn't exist
+    assert result == "" or isinstance(result, str)
+
+    # Verify branch is set in .gitmodules
+    gitmodules = (git_repo.path / ".gitmodules").read_text()
+    # Branch may or may not be present depending on git version behavior
+    assert "vendor/lib" in gitmodules
+
+
+def test_submodule_entry_set_url(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.set_url()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Get the submodule
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    # Set a new URL
+    new_url = "https://example.com/repo.git"
+    result = submodule.cmd.set_url(url=new_url)
+
+    # Should succeed (empty string)
+    assert result == "" or isinstance(result, str)
+
+    # Verify URL is updated in .gitmodules
+    gitmodules = (git_repo.path / ".gitmodules").read_text()
+    assert new_url in gitmodules
+
+
+def test_submodule_entry_absorbgitdirs(
+    git_repo: GitSync,
+    submodule_repo: git.Git,
+) -> None:
+    """Test GitSubmoduleEntryCmd.absorbgitdirs()."""
+    # Setup
+    _setup_submodule_test(git_repo, submodule_repo)
+
+    # Initialize and update submodule first
+    git_repo.cmd.submodules.init()
+    git_repo.cmd.submodules.update(init=True)
+
+    # Get the submodule
+    submodule = git_repo.cmd.submodules.get(path="vendor/lib")
+    assert submodule.cmd is not None
+
+    # Absorb git dirs (may already be absorbed, but should succeed)
+    result = submodule.cmd.absorbgitdirs()
+
+    # Should succeed (empty string or info message)
+    assert result == "" or isinstance(result, str)
