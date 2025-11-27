@@ -70,6 +70,7 @@ class Git:
         ''
 
         # Additional tests
+
         >>> git.remotes.get(remote_name='my_remote').remove()
         ''
         >>> git.remotes.show()

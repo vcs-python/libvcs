@@ -1,19 +1,19 @@
-# `stash`
+# `reflog`
 
-For `git-stash(1)`.
+For `git-reflog(1)`.
 
 ```{eval-rst}
-.. autoclass:: libvcs.cmd.git.GitStashManager
+.. autoclass:: libvcs.cmd.git.GitReflogManager
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoclass:: libvcs.cmd.git.GitStashEntryCmd
+.. autoclass:: libvcs.cmd.git.GitReflogEntryCmd
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoclass:: libvcs.cmd.git.GitStashCmd
+.. autoclass:: libvcs.cmd.git.GitReflogEntry
    :members:
    :show-inheritance:
    :undoc-members:
