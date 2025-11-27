@@ -526,6 +526,11 @@ def test_branch_ls_filters(git_repo: GitSync) -> None:
     sorted_branches = git_repo.cmd.branches.ls(sort="refname")
     assert isinstance(sorted_branches, list)
 
+    # Test with --verbose (should still extract branch names correctly)
+    verbose_branches = git_repo.cmd.branches.ls(verbose=True)
+    assert isinstance(verbose_branches, list)
+    assert any(b.branch_name == "master" for b in verbose_branches)
+
 
 # =============================================================================
 # GitRemoteCmd Tests
