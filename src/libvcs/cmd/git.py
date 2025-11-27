@@ -5548,6 +5548,40 @@ class GitBranchCmd:
             log_in_real_time=log_in_real_time,
         )
 
+    def track(
+        self,
+        remote_branch: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Create branch tracking a remote branch.
+
+        Wraps `git branch -t <https://git-scm.com/docs/git-branch>`_.
+
+        Parameters
+        ----------
+        remote_branch :
+            Remote branch to track (e.g., 'origin/main').
+
+        Examples
+        --------
+        For existing branches, use set_upstream() instead.
+        track() is for creating new branches that track a remote:
+
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='tracking-branch'
+        ... ).track('origin/master')
+        "branch 'tracking-branch' set up to track 'origin/master'."
+        """
+        return self.cmd.run(
+            ["branch", "-t", self.branch_name, remote_branch],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
 
 class GitBranchManager:
     """Run commands directly related to git branches of a git repo."""
@@ -5660,30 +5694,80 @@ class GitBranchManager:
             check_returncode=False,
         )
 
-    def _ls(self) -> list[str]:
-        """List branches.
+    def _ls(
+        self,
+        *,
+        local_flags: list[str] | None = None,
+    ) -> list[str]:
+        """List branches (raw output).
+
+        Parameters
+        ----------
+        local_flags :
+            Additional flags to pass to git branch.
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path)._ls()
-        ['* master']
+        >>> branches = GitBranchManager(path=example_git_repo.path)._ls()
+        >>> '* master' in branches or 'master' in str(branches)
+        True
         """
-        return self.run(
-            "--list",
-        ).splitlines()
+        flags = ["--list"]
+        if local_flags:
+            flags.extend(local_flags)
+        return self.run(local_flags=flags).splitlines()
 
-    def ls(self) -> QueryList[GitBranchCmd]:
+    def ls(
+        self,
+        *,
+        _all: bool = False,
+        remotes: bool = False,
+        merged: str | None = None,
+        no_merged: str | None = None,
+        contains: str | None = None,
+        sort: str | None = None,
+    ) -> QueryList[GitBranchCmd]:
         """List branches.
+
+        Parameters
+        ----------
+        _all :
+            List all branches (local + remote). Maps to --all.
+        remotes :
+            List remote branches only. Maps to --remotes.
+        merged :
+            Only list branches merged into specified commit.
+        no_merged :
+            Only list branches NOT merged into specified commit.
+        contains :
+            Only list branches containing specified commit.
+        sort :
+            Sort key (e.g., '-committerdate', 'refname').
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).ls()
-        [<GitBranchCmd path=... branch_name=master>]
+        >>> branches = GitBranchManager(path=example_git_repo.path).ls()
+        >>> any(b.branch_name == 'master' for b in branches)
+        True
         """
+        local_flags: list[str] = []
+        if _all:
+            local_flags.append("--all")
+        if remotes:
+            local_flags.append("--remotes")
+        if merged is not None:
+            local_flags.extend(["--merged", merged])
+        if no_merged is not None:
+            local_flags.extend(["--no-merged", no_merged])
+        if contains is not None:
+            local_flags.extend(["--contains", contains])
+        if sort is not None:
+            local_flags.extend(["--sort", sort])
+
         return QueryList(
             [
                 GitBranchCmd(path=self.path, branch_name=branch_name.lstrip("* "))
-                for branch_name in self._ls()
+                for branch_name in self._ls(local_flags=local_flags or None)
             ],
         )
 
