@@ -484,6 +484,49 @@ def test_branch_unset_upstream(git_repo: GitSync) -> None:
     assert result == "" or "upstream" not in result.lower()
 
 
+def test_branch_track(git_repo: GitSync) -> None:
+    """Test GitBranchCmd.track()."""
+    branch_name = "tracking-test-branch"
+
+    branch = git.GitBranchCmd(path=git_repo.path, branch_name=branch_name)
+    result = branch.track("origin/master")
+
+    # Should create branch tracking origin/master
+    assert "set up to track" in result.lower()
+
+    # Verify branch was created
+    branches = git_repo.cmd.branches.ls()
+    branch_names = [b.branch_name for b in branches]
+    assert branch_name in branch_names
+
+
+def test_branch_ls_filters(git_repo: GitSync) -> None:
+    """Test GitBranchManager.ls() with filter parameters."""
+    # Test basic ls
+    branches = git_repo.cmd.branches.ls()
+    assert len(branches) >= 1
+    assert any(b.branch_name == "master" for b in branches)
+
+    # Test with --all (includes remote-tracking branches)
+    all_branches = git_repo.cmd.branches.ls(_all=True)
+    assert len(all_branches) >= len(branches)
+
+    # Test with --merged (branches merged into HEAD)
+    merged = git_repo.cmd.branches.ls(merged="HEAD")
+    assert isinstance(merged, list)
+    # master should be merged into HEAD
+    assert any(b.branch_name == "master" for b in merged)
+
+    # Test with --contains (branches containing HEAD commit)
+    contains = git_repo.cmd.branches.ls(contains="HEAD")
+    assert isinstance(contains, list)
+    assert any(b.branch_name == "master" for b in contains)
+
+    # Test with --sort
+    sorted_branches = git_repo.cmd.branches.ls(sort="refname")
+    assert isinstance(sorted_branches, list)
+
+
 # =============================================================================
 # GitRemoteCmd Tests
 # =============================================================================
