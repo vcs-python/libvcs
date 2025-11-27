@@ -4829,9 +4829,18 @@ class GitStashCmd:
         check_returncode: bool | None = None,
         **kwargs: t.Any,
     ) -> str:
-        """Git stash update.
+        """Push changes to the stash.
 
-        TODO: Fill-in
+        Wraps `git stash push <https://git-scm.com/docs/git-stash>`_.
+
+        Parameters
+        ----------
+        path :
+            Limit stash to specific path(s).
+        patch :
+            Interactively select hunks to stash.
+        staged :
+            Stash only staged changes.
 
         Examples
         --------
