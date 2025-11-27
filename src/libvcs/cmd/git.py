@@ -5726,6 +5726,7 @@ class GitBranchManager:
         no_merged: str | None = None,
         contains: str | None = None,
         sort: str | None = None,
+        verbose: bool = False,
     ) -> QueryList[GitBranchCmd]:
         """List branches.
 
@@ -5743,6 +5744,8 @@ class GitBranchManager:
             Only list branches containing specified commit.
         sort :
             Sort key (e.g., '-committerdate', 'refname').
+        verbose :
+            Show sha1 and commit subject line for each head. Maps to --verbose.
 
         Examples
         --------
@@ -5763,11 +5766,22 @@ class GitBranchManager:
             local_flags.extend(["--contains", contains])
         if sort is not None:
             local_flags.extend(["--sort", sort])
+        if verbose:
+            local_flags.append("--verbose")
+
+        def extract_branch_name(line: str) -> str:
+            """Extract branch name from output line (handles verbose output)."""
+            # Strip leading "* " or "  " marker
+            name = line.lstrip("* ")
+            # With --verbose, format is: "name  sha1 message" - take first token
+            if verbose:
+                name = name.split()[0] if name.split() else name
+            return name
 
         return QueryList(
             [
-                GitBranchCmd(path=self.path, branch_name=branch_name.lstrip("* "))
-                for branch_name in self._ls(local_flags=local_flags or None)
+                GitBranchCmd(path=self.path, branch_name=extract_branch_name(line))
+                for line in self._ls(local_flags=local_flags or None)
             ],
         )
 
