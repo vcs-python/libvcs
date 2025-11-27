@@ -5889,7 +5889,7 @@ class GitTagCmd:
         ...     path=example_git_repo.path,
         ...     tag_name='test-tag',
         ... ).run()
-        'test-tag'
+        '...test-tag...'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
         if command is not None:
@@ -6030,10 +6030,11 @@ class GitTagManager:
         >>> GitTagManager(path=tmp_path).run()
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitTagManager(
-        ...     path=example_git_repo.path
-        ... ).run()
+        >>> mgr = GitTagManager(path=example_git_repo.path)
+        >>> mgr.create(name='init-doctest-tag', message='For doctest')
         ''
+        >>> mgr.run()
+        '...init-doctest-tag...'
         """
         #: Directory to check out
         self.path: pathlib.Path
@@ -6064,8 +6065,11 @@ class GitTagManager:
 
         Examples
         --------
-        >>> GitTagManager(path=example_git_repo.path).run()
+        >>> mgr = GitTagManager(path=example_git_repo.path)
+        >>> mgr.create(name='run-doctest-tag', message='For doctest')
         ''
+        >>> mgr.run()
+        '...run-doctest-tag...'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
         if command is not None:
