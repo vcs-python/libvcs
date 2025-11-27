@@ -20,6 +20,59 @@ $ uv add libvcs --prerelease allow
 
 _Upcoming changes will be written here._
 
+### New features
+
+#### cmd: Manager/Cmd pattern for git subcommands (#465)
+
+New architecture for git subcommands that returns typed objects instead of raw strings:
+
+- **Manager classes** handle collection-level operations (`ls()`, `get()`, `filter()`, `add()`/`create()`)
+- **Cmd classes** handle per-entity operations (`show()`, `remove()`, `rename()`)
+- All `ls()` methods return `QueryList` for chainable filtering
+
+New subcommand managers accessible via `Git` instance:
+
+- {attr}`Git.branches <libvcs.cmd.git.Git.branches>` -> {class}`~libvcs.cmd.git.GitBranchManager`
+- {attr}`Git.remotes <libvcs.cmd.git.Git.remotes>` -> {class}`~libvcs.cmd.git.GitRemoteManager`
+- {attr}`Git.stashes <libvcs.cmd.git.Git.stashes>` -> {class}`~libvcs.cmd.git.GitStashManager`
+- {attr}`Git.tags <libvcs.cmd.git.Git.tags>` -> {class}`~libvcs.cmd.git.GitTagManager`
+- {attr}`Git.worktrees <libvcs.cmd.git.Git.worktrees>` -> {class}`~libvcs.cmd.git.GitWorktreeManager`
+- {attr}`Git.notes <libvcs.cmd.git.Git.notes>` -> {class}`~libvcs.cmd.git.GitNotesManager`
+- {attr}`Git.submodules <libvcs.cmd.git.Git.submodules>` -> {class}`~libvcs.cmd.git.GitSubmoduleManager`
+- {attr}`Git.reflog <libvcs.cmd.git.Git.reflog>` -> {class}`~libvcs.cmd.git.GitReflogManager`
+
+Example usage:
+
+```python
+git = Git(path="/path/to/repo")
+
+# List all branches, filter remote ones
+remote_branches = git.branches.ls(remotes=True)
+
+# Get a specific tag
+tag = git.tags.get(tag_name="v1.0.0")
+tag.delete()
+
+# Create a new branch and switch to it
+git.branches.create("feature-branch")
+```
+
+#### cmd: Enhanced Git.init() (#465)
+
+- Added `ref_format` parameter for `--ref-format` (files/reftable)
+- Added `make_parents` parameter to auto-create parent directories
+- Improved parameter validation with clear error messages
+- Extended `shared` parameter to support octal permissions (e.g., "0660")
+
+### Documentation
+
+- Add API documentation for all new Manager/Cmd classes (#465)
+- Split git subcommand documentation into separate pages: branch, tag, worktree, notes, reflog
+
+### Tests
+
+- Comprehensive test coverage for all new Manager/Cmd classes (#465)
+
 ## libvcs 0.37.0 (2025-11-01)
 
 ### Breaking changes
