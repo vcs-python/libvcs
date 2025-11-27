@@ -54,12 +54,12 @@ Manager (collection-level)              Cmd (per-entity)
 | `run(command, local_flags, quiet, cached)` | Implemented | Run git branch command |
 | `checkout()` | Implemented | Checkout this branch |
 | `create()` | Implemented | Create this branch |
-| `delete(force)` | **Missing** | `-d` / `-D` |
-| `rename(new_name, force)` | **Missing** | `-m` / `-M` |
-| `copy(new_name, force)` | **Missing** | `-c` / `-C` |
-| `set_upstream(upstream)` | **Missing** | `--set-upstream-to` |
-| `unset_upstream()` | **Missing** | `--unset-upstream` |
-| `track(remote_branch)` | **Missing** | `-t` / `--track` |
+| `delete(force)` | Implemented | `-d` / `-D` |
+| `rename(new_name, force)` | Implemented | `-m` / `-M` |
+| `copy(new_name, force)` | Implemented | `-c` / `-C` |
+| `set_upstream(upstream)` | Implemented | `--set-upstream-to` |
+| `unset_upstream()` | Implemented | `--unset-upstream` |
+| `track(remote_branch)` | Implemented | `-t` / `--track` |
 
 #### CLI Flag → Python Parameter Mapping: GitBranchCmd Methods
 
@@ -72,15 +72,15 @@ Manager (collection-level)              Cmd (per-entity)
 | `unset_upstream()` | `git branch --unset-upstream` | None |
 | `track(remote_branch)` | `git branch -t` | `remote_branch` → `-t {remote_branch}` |
 
-### GitBranchManager Enhancements Needed
+### GitBranchManager Enhancements
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| `--all` support | **Missing** | List all branches (local + remote) |
-| `--remotes` support | **Missing** | List remote branches only |
-| `--merged` filter | **Missing** | Filter merged branches |
-| `--no-merged` filter | **Missing** | Filter unmerged branches |
-| `--verbose` support | **Missing** | Show tracking info |
+| `--all` support | Implemented | List all branches (local + remote) |
+| `--remotes` support | Implemented | List remote branches only |
+| `--merged` filter | Implemented | Filter merged branches |
+| `--no-merged` filter | Implemented | Filter unmerged branches |
+| `--verbose` support | Implemented | Show tracking info |
 
 ---
 
@@ -117,9 +117,9 @@ Properties: `remote_name`, `fetch_url`, `push_url`
 | `prune(dry_run)` | Implemented | Prune stale branches |
 | `get_url(push, _all)` | Implemented | Get remote URL |
 | `set_url(url, old_url, push, add, delete)` | Implemented | Set remote URL |
-| `set_branches(*branches, add)` | **Missing** | `set-branches` |
-| `set_head(branch, auto, delete)` | **Missing** | `set-head` |
-| `update(prune)` | **Missing** | `update` |
+| `set_branches(*branches, add)` | Implemented | `set-branches` |
+| `set_head(branch, auto, delete)` | Implemented | `set-head` |
+| `update(prune)` | Implemented | `update` |
 
 #### CLI Flag → Python Parameter Mapping: Existing Methods
 
@@ -131,7 +131,7 @@ Properties: `remote_name`, `fetch_url`, `push_url`
 | `get_url()` | `push=True` → `--push`, `_all=True` → `--all` |
 | `set_url()` | `push=True` → `--push`, `add=True` → `--add`, `delete=True` → `--delete` |
 
-#### CLI Flag → Python Parameter Mapping: Missing Methods
+#### CLI Flag → Python Parameter Mapping: Additional Methods
 
 | Method | Git CLI | Parameters → Flags |
 |--------|---------|-------------------|
@@ -141,9 +141,9 @@ Properties: `remote_name`, `fetch_url`, `push_url`
 
 ---
 
-## 3. GitStashCmd (Current) → GitStashManager / GitStashEntryCmd (Planned)
+## 3. GitStashManager / GitStashEntryCmd
 
-**Pattern Status**: Not implemented - needs refactoring
+**Pattern Status**: Implemented
 
 ### Current GitStashCmd
 
@@ -161,13 +161,13 @@ Properties: `remote_name`, `fetch_url`, `push_url`
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, cmd)` | **Planned** | Constructor |
-| `run(command, local_flags)` | **Planned** | Run git stash command |
-| `ls()` | **Planned** | Returns `QueryList[GitStashEntryCmd]` |
-| `get(**kwargs)` | **Planned** | Get single stash by filter |
-| `filter(**kwargs)` | **Planned** | Filter stashes |
-| `push(message, path, patch, staged, keep_index, include_untracked)` | **Planned** | Push to stash |
-| `clear()` | **Planned** | Clear all stashes |
+| `__init__(path, cmd)` | Implemented | Constructor |
+| `run(command, local_flags)` | Implemented | Run git stash command |
+| `ls()` | Implemented | Returns `QueryList[GitStashEntryCmd]` |
+| `get(**kwargs)` | Implemented | Get single stash by filter |
+| `filter(**kwargs)` | Implemented | Filter stashes |
+| `push(message, path, patch, staged, keep_index, include_untracked)` | Implemented | Push to stash |
+| `clear()` | Implemented | Clear all stashes |
 
 #### CLI Flag → Python Parameter Mapping: `push()`
 
@@ -195,12 +195,12 @@ stash_pattern = r"stash@\{(?P<index>\d+)\}: On (?P<branch>[^:]+): (?P<message>.+
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, index, branch, message, cmd)` | **Planned** | Constructor |
-| `show(stat, patch)` | **Planned** | Show stash diff |
-| `apply(index)` | **Planned** | Apply without removing |
-| `pop(index)` | **Planned** | Apply and remove |
-| `drop()` | **Planned** | Delete this stash |
-| `branch(branch_name)` | **Planned** | Create branch from stash |
+| `__init__(path, index, branch, message, cmd)` | Implemented | Constructor |
+| `show(stat, patch)` | Implemented | Show stash diff |
+| `apply(index)` | Implemented | Apply without removing |
+| `pop(index)` | Implemented | Apply and remove |
+| `drop()` | Implemented | Delete this stash |
+| `branch(branch_name)` | Implemented | Create branch from stash |
 
 #### CLI Flag → Python Parameter Mapping: GitStashEntryCmd Methods
 
@@ -216,7 +216,7 @@ stash_pattern = r"stash@\{(?P<index>\d+)\}: On (?P<branch>[^:]+): (?P<message>.+
 
 ## 4. GitSubmoduleCmd (Current) → GitSubmoduleManager / GitSubmoduleCmd (Planned)
 
-**Pattern Status**: Not implemented - needs refactoring
+**Pattern Status**: Implemented
 
 ### Current GitSubmoduleCmd
 
@@ -232,15 +232,15 @@ stash_pattern = r"stash@\{(?P<index>\d+)\}: On (?P<branch>[^:]+): (?P<message>.+
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, cmd)` | **Planned** | Constructor |
-| `run(command, local_flags)` | **Planned** | Run git submodule command |
-| `ls()` | **Planned** | Returns `QueryList[GitSubmoduleCmd]` |
-| `get(**kwargs)` | **Planned** | Get single submodule by filter |
-| `filter(**kwargs)` | **Planned** | Filter submodules |
-| `add(url, path, branch, name, force)` | **Planned** | Add submodule |
-| `foreach(command, recursive)` | **Planned** | Execute in each submodule |
-| `sync(recursive)` | **Planned** | Sync submodule URLs |
-| `summary(commit, files, cached)` | **Planned** | Summarize changes |
+| `__init__(path, cmd)` | Implemented | Constructor |
+| `run(command, local_flags)` | Implemented | Run git submodule command |
+| `ls()` | Implemented | Returns `QueryList[GitSubmoduleCmd]` |
+| `get(**kwargs)` | Implemented | Get single submodule by filter |
+| `filter(**kwargs)` | Implemented | Filter submodules |
+| `add(url, path, branch, name, force)` | Implemented | Add submodule |
+| `foreach(command, recursive)` | Implemented | Execute in each submodule |
+| `sync(recursive)` | Implemented | Sync submodule URLs |
+| `summary(commit, files, cached)` | Implemented | Summarize changes |
 
 #### CLI Flag → Python Parameter Mapping: GitSubmoduleManager Methods
 
@@ -257,14 +257,14 @@ Properties: `name`, `path`, `url`, `branch`, `sha`
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, name, submodule_path, url, branch, cmd)` | **Planned** | Constructor |
-| `init()` | **Planned** | Initialize this submodule |
-| `update(init, force, checkout, rebase, merge, recursive)` | **Planned** | Update this submodule |
-| `deinit(force)` | **Planned** | Unregister submodule |
-| `set_branch(branch)` | **Planned** | Set branch |
-| `set_url(url)` | **Planned** | Set URL |
-| `status()` | **Planned** | Show status |
-| `absorbgitdirs()` | **Planned** | Absorb gitdir |
+| `__init__(path, name, submodule_path, url, branch, cmd)` | Implemented | Constructor |
+| `init()` | Implemented | Initialize this submodule |
+| `update(init, force, checkout, rebase, merge, recursive)` | Implemented | Update this submodule |
+| `deinit(force)` | Implemented | Unregister submodule |
+| `set_branch(branch)` | Implemented | Set branch |
+| `set_url(url)` | Implemented | Set URL |
+| `status()` | Implemented | Show status |
+| `absorbgitdirs()` | Implemented | Absorb gitdir |
 
 #### CLI Flag → Python Parameter Mapping: GitSubmoduleCmd Methods
 
@@ -282,18 +282,18 @@ Properties: `name`, `path`, `url`, `branch`, `sha`
 
 ## 5. GitTagManager / GitTagCmd (New)
 
-**Pattern Status**: Not implemented
+**Pattern Status**: Implemented
 
 ### Planned GitTagManager (Collection-level)
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, cmd)` | **Planned** | Constructor |
-| `run(command, local_flags)` | **Planned** | Run git tag command |
-| `ls(pattern, sort, contains, no_contains, merged, no_merged)` | **Planned** | Returns `QueryList[GitTagCmd]` |
-| `get(**kwargs)` | **Planned** | Get single tag by filter |
-| `filter(**kwargs)` | **Planned** | Filter tags |
-| `create(name, ref, message, annotate, sign, force)` | **Planned** | Create tag |
+| `__init__(path, cmd)` | Implemented | Constructor |
+| `run(command, local_flags)` | Implemented | Run git tag command |
+| `ls(pattern, sort, contains, no_contains, merged, no_merged)` | Implemented | Returns `QueryList[GitTagCmd]` |
+| `get(**kwargs)` | Implemented | Get single tag by filter |
+| `filter(**kwargs)` | Implemented | Filter tags |
+| `create(name, ref, message, annotate, sign, force)` | Implemented | Create tag |
 
 #### CLI Flag → Python Parameter Mapping: `create()`
 
@@ -324,10 +324,10 @@ Properties: `tag_name`, `ref`, `message` (for annotated)
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, tag_name, ref, message, cmd)` | **Planned** | Constructor |
-| `show()` | **Planned** | Show tag details |
-| `delete()` | **Planned** | Delete tag (`-d`) |
-| `verify()` | **Planned** | Verify signed tag (`-v`) |
+| `__init__(path, tag_name, ref, message, cmd)` | Implemented | Constructor |
+| `show()` | Implemented | Show tag details |
+| `delete()` | Implemented | Delete tag (`-d`) |
+| `verify()` | Implemented | Verify signed tag (`-v`) |
 
 #### CLI Flag → Python Parameter Mapping: GitTagCmd Methods
 
@@ -341,19 +341,19 @@ Properties: `tag_name`, `ref`, `message` (for annotated)
 
 ## 6. GitWorktreeManager / GitWorktreeCmd (New)
 
-**Pattern Status**: Not implemented
+**Pattern Status**: Implemented
 
 ### Planned GitWorktreeManager (Collection-level)
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, cmd)` | **Planned** | Constructor |
-| `run(command, local_flags)` | **Planned** | Run git worktree command |
-| `ls()` | **Planned** | Returns `QueryList[GitWorktreeCmd]` |
-| `get(**kwargs)` | **Planned** | Get single worktree by filter |
-| `filter(**kwargs)` | **Planned** | Filter worktrees |
-| `add(path, branch, detach, checkout, lock, force)` | **Planned** | Add worktree |
-| `prune(dry_run, verbose, expire)` | **Planned** | Prune worktrees |
+| `__init__(path, cmd)` | Implemented | Constructor |
+| `run(command, local_flags)` | Implemented | Run git worktree command |
+| `ls()` | Implemented | Returns `QueryList[GitWorktreeCmd]` |
+| `get(**kwargs)` | Implemented | Get single worktree by filter |
+| `filter(**kwargs)` | Implemented | Filter worktrees |
+| `add(path, branch, detach, checkout, lock, force)` | Implemented | Add worktree |
+| `prune(dry_run, verbose, expire)` | Implemented | Prune worktrees |
 
 #### CLI Flag → Python Parameter Mapping: `add()`
 
@@ -390,12 +390,12 @@ Properties: `worktree_path`, `branch`, `head`, `locked`, `prunable`
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, worktree_path, branch, head, locked, prunable, cmd)` | **Planned** | Constructor |
-| `remove(force)` | **Planned** | Remove worktree |
-| `lock(reason)` | **Planned** | Lock worktree |
-| `unlock()` | **Planned** | Unlock worktree |
-| `move(new_path)` | **Planned** | Move worktree |
-| `repair()` | **Planned** | Repair worktree |
+| `__init__(path, worktree_path, branch, head, locked, prunable, cmd)` | Implemented | Constructor |
+| `remove(force)` | Implemented | Remove worktree |
+| `lock(reason)` | Implemented | Lock worktree |
+| `unlock()` | Implemented | Unlock worktree |
+| `move(new_path)` | Implemented | Move worktree |
+| `repair()` | Implemented | Repair worktree |
 
 #### CLI Flag → Python Parameter Mapping: GitWorktreeCmd Methods
 
@@ -411,21 +411,21 @@ Properties: `worktree_path`, `branch`, `head`, `locked`, `prunable`
 
 ## 7. GitNotesManager / GitNoteCmd (New)
 
-**Pattern Status**: Not implemented
+**Pattern Status**: Implemented
 
 ### Planned GitNotesManager (Collection-level)
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, cmd)` | **Planned** | Constructor |
-| `run(command, local_flags)` | **Planned** | Run git notes command |
-| `ls(ref)` | **Planned** | Returns `QueryList[GitNoteCmd]` |
-| `get(**kwargs)` | **Planned** | Get single note by filter |
-| `filter(**kwargs)` | **Planned** | Filter notes |
-| `add(object, message, file, force, allow_empty)` | **Planned** | Add note |
-| `prune(dry_run, verbose)` | **Planned** | Prune notes |
-| `merge(notes_ref, strategy, commit, abort, quiet)` | **Planned** | Merge notes |
-| `get_ref()` | **Planned** | Get notes ref |
+| `__init__(path, cmd)` | Implemented | Constructor |
+| `run(command, local_flags)` | Implemented | Run git notes command |
+| `ls(ref)` | Implemented | Returns `QueryList[GitNoteCmd]` |
+| `get(**kwargs)` | Implemented | Get single note by filter |
+| `filter(**kwargs)` | Implemented | Filter notes |
+| `add(object, message, file, force, allow_empty)` | Implemented | Add note |
+| `prune(dry_run, verbose)` | Implemented | Prune notes |
+| `merge(notes_ref, strategy, commit, abort, quiet)` | Implemented | Merge notes |
+| `get_ref()` | Implemented | Get notes ref |
 
 #### CLI Flag → Python Parameter Mapping: `add()`
 
@@ -461,12 +461,12 @@ Properties: `object`, `note_ref`
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, object, note_ref, cmd)` | **Planned** | Constructor |
-| `show()` | **Planned** | Show note |
-| `edit()` | **Planned** | Edit note (non-interactive) |
-| `append(message)` | **Planned** | Append to note |
-| `copy(from_object)` | **Planned** | Copy note |
-| `remove()` | **Planned** | Remove note |
+| `__init__(path, object, note_ref, cmd)` | Implemented | Constructor |
+| `show()` | Implemented | Show note |
+| `edit()` | Implemented | Edit note (non-interactive) |
+| `append(message)` | Implemented | Append to note |
+| `copy(from_object)` | Implemented | Copy note |
+| `remove()` | Implemented | Remove note |
 
 #### CLI Flag → Python Parameter Mapping: GitNoteCmd Methods
 
@@ -482,19 +482,19 @@ Properties: `object`, `note_ref`
 
 ## 8. GitReflogManager / GitReflogCmd (New)
 
-**Pattern Status**: Not implemented
+**Pattern Status**: Implemented
 
 ### Planned GitReflogManager (Collection-level)
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, cmd)` | **Planned** | Constructor |
-| `run(command, local_flags)` | **Planned** | Run git reflog command |
-| `ls(ref)` | **Planned** | Returns `QueryList[GitReflogCmd]` |
-| `get(**kwargs)` | **Planned** | Get single entry by filter |
-| `filter(**kwargs)` | **Planned** | Filter entries |
-| `expire(ref, _all, dry_run, rewrite, updateref, stale_fix, verbose)` | **Planned** | Expire entries |
-| `exists(ref)` | **Planned** | Check if reflog exists |
+| `__init__(path, cmd)` | Implemented | Constructor |
+| `run(command, local_flags)` | Implemented | Run git reflog command |
+| `ls(ref)` | Implemented | Returns `QueryList[GitReflogCmd]` |
+| `get(**kwargs)` | Implemented | Get single entry by filter |
+| `filter(**kwargs)` | Implemented | Filter entries |
+| `expire(ref, _all, dry_run, rewrite, updateref, stale_fix, verbose)` | Implemented | Expire entries |
+| `exists(ref)` | Implemented | Check if reflog exists |
 
 #### CLI Flag → Python Parameter Mapping: `ls()` / `show()`
 
@@ -538,9 +538,9 @@ reflog_pattern = r"(?P<sha>[a-f0-9]+) (?P<ref>[^@]+)@\{(?P<index>\d+)\}: (?P<act
 
 | Method | Status | Description |
 |--------|--------|-------------|
-| `__init__(path, ref, index, action, message, sha, cmd)` | **Planned** | Constructor |
-| `show()` | **Planned** | Show entry details |
-| `delete()` | **Planned** | Delete entry |
+| `__init__(path, ref, index, action, message, sha, cmd)` | Implemented | Constructor |
+| `show()` | Implemented | Show entry details |
+| `delete()` | Implemented | Delete entry |
 
 #### CLI Flag → Python Parameter Mapping: GitReflogCmd Methods
 
