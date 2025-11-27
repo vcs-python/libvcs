@@ -1,14 +1,14 @@
-# `remote`
+# `notes`
 
-For `git-remote(1)`.
+For `git-notes(1)`.
 
 ```{eval-rst}
-.. autoclass:: libvcs.cmd.git.GitRemoteManager
+.. autoclass:: libvcs.cmd.git.GitNotesManager
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoclass:: libvcs.cmd.git.GitRemoteCmd
+.. autoclass:: libvcs.cmd.git.GitNoteCmd
    :members:
    :show-inheritance:
    :undoc-members:

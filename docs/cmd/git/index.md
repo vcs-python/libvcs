@@ -13,6 +13,11 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 submodule
 remote
 stash
+branch
+tag
+worktree
+notes
+reflog
 ```
 
 ```{eval-rst}
@@ -21,6 +26,23 @@ stash
    :show-inheritance:
    :undoc-members:
    :exclude-members: GitSubmoduleCmd,
+     GitSubmoduleManager,
+     GitSubmodule,
+     GitSubmoduleEntryCmd,
      GitRemoteCmd,
-     GitStashCmd
+     GitRemoteManager,
+     GitStashCmd,
+     GitStashManager,
+     GitStashEntryCmd,
+     GitBranchCmd,
+     GitBranchManager,
+     GitTagCmd,
+     GitTagManager,
+     GitWorktreeCmd,
+     GitWorktreeManager,
+     GitNoteCmd,
+     GitNotesManager,
+     GitReflogEntry,
+     GitReflogEntryCmd,
+     GitReflogManager
 ```

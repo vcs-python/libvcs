@@ -1,14 +1,14 @@
-# `remote`
+# `tag`
 
-For `git-remote(1)`.
+For `git-tag(1)`.
 
 ```{eval-rst}
-.. autoclass:: libvcs.cmd.git.GitRemoteManager
+.. autoclass:: libvcs.cmd.git.GitTagManager
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoclass:: libvcs.cmd.git.GitRemoteCmd
+.. autoclass:: libvcs.cmd.git.GitTagCmd
    :members:
    :show-inheritance:
    :undoc-members:
