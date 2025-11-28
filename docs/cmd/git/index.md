@@ -6,6 +6,51 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 [`salt.modules.git`](https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.git.html),
 [`ansible.builtin.git`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)_
 
+## Manager/Cmd Pattern
+
+libvcs provides a **Manager/Cmd pattern** for git subcommands:
+
+- **Manager** classes (`git.branches`, `git.tags`, etc.) handle collection-level operations
+- **Cmd** classes represent individual entities with mutation methods
+
+```
+Git instance
+├── branches: GitBranchManager
+│   ├── ls() -> QueryList[GitBranchCmd]
+│   ├── get() -> GitBranchCmd
+│   └── create()
+├── tags: GitTagManager
+├── remotes: GitRemoteManager
+├── stashes: GitStashManager
+├── worktrees: GitWorktreeManager
+├── notes: GitNotesManager
+├── submodules: GitSubmoduleManager
+└── reflog: GitReflogManager
+```
+
+### Quick Example
+
+```python
+from libvcs.cmd.git import Git
+
+git = Git(path='/path/to/repo')
+
+# List all branches
+branches = git.branches.ls()
+
+# Filter to remote branches only
+remote_branches = git.branches.ls(remotes=True)
+
+# Get a specific branch and rename it
+branch = git.branches.get(branch_name='old-name')
+branch.rename('new-name')
+
+# Create and manage tags
+git.tags.create(name='v1.0.0', message='Release 1.0')
+tag = git.tags.get(tag_name='v1.0.0')
+tag.delete()
+```
+
 ```{toctree}
 :caption: Subcommands
 :maxdepth: 1
@@ -13,6 +58,11 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 submodule
 remote
 stash
+branch
+tag
+worktree
+notes
+reflog
 ```
 
 ```{eval-rst}
@@ -21,6 +71,23 @@ stash
    :show-inheritance:
    :undoc-members:
    :exclude-members: GitSubmoduleCmd,
+     GitSubmoduleManager,
+     GitSubmodule,
+     GitSubmoduleEntryCmd,
      GitRemoteCmd,
-     GitStashCmd
+     GitRemoteManager,
+     GitStashCmd,
+     GitStashManager,
+     GitStashEntryCmd,
+     GitBranchCmd,
+     GitBranchManager,
+     GitTagCmd,
+     GitTagManager,
+     GitWorktreeCmd,
+     GitWorktreeManager,
+     GitNoteCmd,
+     GitNotesManager,
+     GitReflogEntry,
+     GitReflogEntryCmd,
+     GitReflogManager
 ```
