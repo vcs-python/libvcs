@@ -91,6 +91,31 @@ git.clone(url='https://github.com/vcs-python/libvcs.git')
 Above: [`libvcs.cmd.git.Git`](https://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git) using
 [`Git.clone()`](http://libvcs.git-pull.com/cmd/git.html#libvcs.cmd.git.Git.clone).
 
+### Manage Branches, Tags, and More
+
+Work with git subcommands using typed Python objects:
+
+```python
+from libvcs.cmd.git import Git
+
+git = Git(path='/path/to/repo')
+
+# Branches
+branches = git.branches.ls()              # List all branches
+git.branches.create('feature-branch')     # Create a branch
+
+# Tags
+git.tags.create(name='v1.0.0', message='Release')
+tags = git.tags.ls()
+
+# Remotes
+remotes = git.remotes.ls()
+remote = git.remotes.get(remote_name='origin')
+remote.prune()
+```
+
+See the [Manager/Cmd pattern documentation](https://libvcs.git-pull.com/cmd/git/index.html) for more.
+
 ## Repository Synchronization
 
 Synchronize your repositories using the
