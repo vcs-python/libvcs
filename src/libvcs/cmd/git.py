@@ -1066,7 +1066,6 @@ class Git:
         quiet: bool | None = None,
         bare: bool | None = None,
         ref_format: t.Literal["files", "reftable"] | None = None,
-        default: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
         make_parents: bool = True,
@@ -1122,9 +1121,6 @@ class Git:
             Specify the reference storage format. Requires git version >= 2.37.0.
             - files: Classic format with packed-refs and loose refs (default)
             - reftable: New format that is more efficient for large repositories
-        default : bool, optional
-            Use default permissions for directories and files. This is the same as
-            running git init without any options.
         check_returncode : bool, optional
             If True, check the return code of the git command and raise a
             CalledProcessError if it is non-zero.
@@ -1284,8 +1280,6 @@ class Git:
             local_flags.append("--bare")
         if ref_format is not None:
             local_flags.append(f"--ref-format={ref_format}")
-        if default is True:
-            local_flags.append("--default")
 
         # libvcs special behavior
         if make_parents and not self.path.exists():
