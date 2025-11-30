@@ -125,6 +125,137 @@ With the Manager/Cmd pattern, you get typed objects:
 ...     print(f"{tag.tag_name}")
 ```
 
+## Working with Remotes
+
+Add and configure remote repositories:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.remotes.add(name='upstream', url='https://github.com/vcs-python/libvcs.git')
+''
+>>> remotes = git.remotes.ls()
+>>> len(remotes) >= 1
+True
+```
+
+Get a remote and update its URL:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.remotes.add(name='backup', url='https://example.com/old.git')
+''
+>>> remote = git.remotes.get(remote_name='backup')
+>>> remote.remote_name
+'backup'
+>>> remote.set_url(url='https://example.com/new.git')
+''
+```
+
+## Branch Operations
+
+Beyond creating and deleting, branches support rename and upstream tracking:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.branches.create(branch='old-name')
+''
+>>> branch = git.branches.get(branch_name='old-name')
+>>> branch.rename('new-name')  # doctest: +ELLIPSIS
+''
+```
+
+Copy a branch:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.branches.create(branch='source-branch')
+''
+>>> branch = git.branches.get(branch_name='source-branch')
+>>> branch.copy('copied-branch')  # doctest: +ELLIPSIS
+''
+```
+
+## Stash Workflow
+
+Save work in progress and restore it later:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> # Push returns message (or "No local changes to save")
+>>> git.stashes.push(message='WIP: feature work')  # doctest: +ELLIPSIS
+'...'
+```
+
+List and inspect stashes:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> stashes = git.stashes.ls()
+>>> isinstance(stashes, list)
+True
+```
+
+## Worktree Management
+
+Create additional working directories for parallel development:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> worktrees = git.worktrees.ls()
+>>> len(worktrees) >= 1  # Main worktree always exists
+True
+```
+
+## Notes
+
+Attach metadata to commits:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.notes.add(message='Reviewed by Alice')
+''
+```
+
+## Filtering with ls() Parameters
+
+Manager `ls()` methods accept parameters to narrow results:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> # All local branches
+>>> local = git.branches.ls()
+>>> isinstance(local, list)
+True
+>>> # Branches merged into HEAD
+>>> merged = git.branches.ls(merged='HEAD')
+>>> isinstance(merged, list)
+True
+```
+
+## Error Handling
+
+When `get()` finds no match, it raises `ObjectDoesNotExist`:
+
+```python
+>>> from libvcs.cmd.git import Git
+>>> from libvcs._internal.query_list import ObjectDoesNotExist
+>>> git = Git(path=example_git_repo.path)
+>>> try:
+...     git.branches.get(branch_name='nonexistent-branch-xyz')
+... except ObjectDoesNotExist:
+...     print('Branch not found')
+Branch not found
+```
+
 ## When to Use
 
 | Use Case | Approach |
