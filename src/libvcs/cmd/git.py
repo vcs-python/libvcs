@@ -3811,7 +3811,7 @@ class GitRemoteCmd:
         local_flags: list[str] = []
         required_flags: list[str] = [self.remote_name]
 
-        if verbose is not None:
+        if verbose is True:
             local_flags.append("--verbose")
 
         if no_query_remotes:
@@ -4305,7 +4305,7 @@ class GitRemoteManager:
         if name is not None:
             required_flags.append(name)
 
-        if verbose is not None:
+        if verbose is True:
             local_flags.append("--verbose")
 
         if no_query_remotes:
