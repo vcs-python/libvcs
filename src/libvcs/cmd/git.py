@@ -602,7 +602,7 @@ class Git:
         fork_point: bool | None = None,
         no_fork_point: bool | None = None,
         whitespace: str | None = None,
-        no_whitespace: bool | None = None,
+        ignore_whitespace: bool | None = None,
         commit_date_is_author_date: bool | None = None,
         ignore_date: bool | None = None,
         root: bool | None = None,
@@ -712,10 +712,10 @@ class Git:
         if no_stat:
             local_flags.append("--no-stat")
 
-        if whitespace:
-            local_flags.append("--whitespace")
-        if no_whitespace:
-            local_flags.append("--no-whitespace")
+        if whitespace is not None:
+            local_flags.append(f"--whitespace={whitespace}")
+        if ignore_whitespace:
+            local_flags.append("--ignore-whitespace")
 
         if rerere_autoupdate:
             local_flags.append("--rerere-autoupdate")
