@@ -2005,6 +2005,148 @@ def test_notes_merge(git_repo: GitSync) -> None:
     )
 
 
+class NoteCustomRefFixture(t.NamedTuple):
+    """Fixture for testing GitNoteCmd ref propagation from GitNotesManager."""
+
+    test_id: str
+    ref: str
+    message: str
+
+
+NOTE_CUSTOM_REF_FIXTURES: list[NoteCustomRefFixture] = [
+    NoteCustomRefFixture(
+        test_id="custom-ref-basic",
+        ref="custom-notes",
+        message="Note in custom ref",
+    ),
+    NoteCustomRefFixture(
+        test_id="custom-ref-review",
+        ref="review",
+        message="Code review note",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(NoteCustomRefFixture._fields),
+    NOTE_CUSTOM_REF_FIXTURES,
+    ids=[test.test_id for test in NOTE_CUSTOM_REF_FIXTURES],
+)
+def test_notes_custom_ref_propagation(
+    git_repo: GitSync,
+    test_id: str,
+    ref: str,
+    message: str,
+) -> None:
+    """Test that GitNoteCmd objects from ls() inherit the manager's custom ref.
+
+    This verifies commit eda818c which fixed GitNoteCmd to receive the ref
+    from GitNotesManager, allowing show/remove operations to work on
+    custom note refs instead of always targeting refs/notes/commits.
+    """
+    # Create a manager with custom ref
+    custom_notes = git_repo.cmd.notes.__class__(
+        path=git_repo.path,
+        cmd=git_repo.cmd,
+        ref=ref,
+    )
+
+    # Add a note to the custom ref
+    custom_notes.add(message=message, force=True)
+
+    # List notes from the custom ref manager
+    notes = custom_notes.ls()
+    assert len(notes) > 0, "Expected at least one note in custom ref"
+
+    # Key assertion: The GitNoteCmd should have the ref attribute set
+    note = notes[0]
+    assert note.ref == ref, f"Expected note.ref={ref!r}, got {note.ref!r}"
+
+    # Verify show() works with the custom ref (uses --ref flag internally)
+    content = note.show()
+    assert message in content, f"Expected {message!r} in note content"
+
+    # Verify isolation: note should NOT appear in default ref
+    default_notes = git_repo.cmd.notes.ls()
+    default_object_shas = [n.object_sha for n in default_notes]
+    assert note.object_sha not in default_object_shas, (
+        "Note should not appear in default ref"
+    )
+
+
+class RemoteUrlSpaceFixture(t.NamedTuple):
+    """Fixture for testing GitRemoteManager.ls() with URLs containing spaces."""
+
+    test_id: str
+    remote_name: str
+    path_suffix: str
+
+
+REMOTE_URL_SPACE_FIXTURES: list[RemoteUrlSpaceFixture] = [
+    RemoteUrlSpaceFixture(
+        test_id="single-space",
+        remote_name="spacey",
+        path_suffix="path with space",
+    ),
+    RemoteUrlSpaceFixture(
+        test_id="multiple-spaces",
+        remote_name="spacier",
+        path_suffix="foo bar baz",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(RemoteUrlSpaceFixture._fields),
+    REMOTE_URL_SPACE_FIXTURES,
+    ids=[test.test_id for test in REMOTE_URL_SPACE_FIXTURES],
+)
+def test_remote_url_with_spaces(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+    test_id: str,
+    remote_name: str,
+    path_suffix: str,
+) -> None:
+    r"""Test that GitRemoteManager.ls() correctly parses URLs containing spaces.
+
+    This verifies commit cb42d4a which fixed the regex pattern to handle
+    paths with spaces instead of silently dropping them.
+
+    Git outputs remotes as: <name>\t<url> (fetch|push)
+    where the URL is printed literally without escaping spaces.
+    """
+    # Create a remote repo path with spaces
+    remote_path = tmp_path / path_suffix
+    remote_path.mkdir(parents=True)
+
+    # Initialize a bare git repo at that path
+    git.Git(path=remote_path).init(bare=True)
+
+    # Add remote with the space-containing path
+    git_repo.cmd.remotes.add(name=remote_name, url=str(remote_path))
+
+    # List remotes
+    remotes = git_repo.cmd.remotes.ls()
+
+    # Find our remote by name
+    matching = [r for r in remotes if r.remote_name == remote_name]
+    assert len(matching) == 1, f"Expected to find remote {remote_name!r}"
+
+    remote = matching[0]
+
+    # Key assertions: URL should contain the space and match the full path
+    assert remote.fetch_url is not None, "Expected fetch_url to be set"
+    assert remote.push_url is not None, "Expected push_url to be set"
+    assert " " in remote.fetch_url, "Expected space in fetch_url"
+    assert remote.fetch_url == str(remote_path), (
+        f"Expected fetch_url={str(remote_path)!r}, got {remote.fetch_url!r}"
+    )
+    assert remote.push_url == str(remote_path), (
+        f"Expected push_url={str(remote_path)!r}, got {remote.push_url!r}"
+    )
+
+
 # GitReflog tests
 
 
