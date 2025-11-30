@@ -243,7 +243,7 @@ class Git:
 
             def stringify(v: t.Any) -> str:
                 if isinstance(v, bool):
-                    return "true" if True else "false"
+                    return "true" if v else "false"
                 if not isinstance(v, str):
                     return str(v)
                 return v
