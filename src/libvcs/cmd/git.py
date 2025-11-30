@@ -4179,7 +4179,7 @@ class GitRemoteManager:
         >>> GitRemoteManager(path=tmp_path)
         <GitRemoteManager path=...>
 
-        >>> GitRemoteManager(path=tmp_path).run(quiet=True)
+        >>> GitRemoteManager(path=tmp_path).run(check_returncode=False)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitRemoteManager(
