@@ -25,11 +25,15 @@ class Git:
 
     # Sub-commands
     submodule: GitSubmoduleCmd
-    remote: GitRemoteManager
+    submodules: GitSubmoduleManager
+    remotes: GitRemoteManager
     stash: GitStashCmd  # Deprecated: use stashes
     stashes: GitStashManager
-    branch: GitBranchManager
+    branches: GitBranchManager
     tags: GitTagManager
+    worktrees: GitWorktreeManager
+    notes: GitNotesManager
+    reflog: GitReflogManager
 
     def __init__(
         self,
