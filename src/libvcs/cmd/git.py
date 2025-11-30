@@ -4255,6 +4255,12 @@ class GitRemoteManager:
         local_flags: list[str] = []
         required_flags: list[str] = [name, url]
 
+        if fetch is True:
+            local_flags.append("-f")
+        if track is not None:
+            local_flags.extend(["-t", track])
+        if master is not None:
+            local_flags.extend(["-m", master])
         if mirror is not None:
             if isinstance(mirror, str):
                 assert any(f for f in ["push", "fetch"])
