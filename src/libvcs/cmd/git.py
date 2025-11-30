@@ -5257,21 +5257,6 @@ class GitStashManager:
         return self.ls().filter(*args, **kwargs)
 
 
-GitBranchCommandLiteral = t.Literal[
-    # "create",  # checkout -b
-    # "checkout",  # checkout
-    "--list",
-    "move",  # branch -m, or branch -M with force
-    "copy",  # branch -c, or branch -C with force
-    "delete",  # branch -d, or branch -D /ith force
-    "set_upstream",
-    "unset_upstream",
-    "track",
-    "no_track",
-    "edit_description",
-]
-
-
 class GitBranchCmd:
     """Run commands directly against a git branch for a git repo."""
 
@@ -5330,11 +5315,10 @@ class GitBranchCmd:
 
     def run(
         self,
-        command: GitBranchCommandLiteral | None = None,
         local_flags: list[str] | None = None,
         *,
         quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
+        cached: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -5353,8 +5337,6 @@ class GitBranchCmd:
         '* master'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
-        if command is not None:
-            local_flags.insert(0, command)
 
         if quiet is True:
             local_flags.append("--quiet")
@@ -5642,11 +5624,10 @@ class GitBranchManager:
 
     def run(
         self,
-        command: GitBranchCommandLiteral | None = None,
         local_flags: list[str] | None = None,
         *,
         quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
+        cached: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -5662,8 +5643,6 @@ class GitBranchManager:
         '* master'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
-        if command is not None:
-            local_flags.insert(0, command)
 
         if quiet is True:
             local_flags.append("--quiet")
