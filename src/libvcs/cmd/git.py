@@ -4377,11 +4377,13 @@ class GitRemoteManager:
         remote_str = self._ls()
         remote_pattern = re.compile(
             r"""
+            ^                       # Start of line
             (?P<name>\S+)           # Remote name: one or more non-whitespace characters
-            \s+                     # One or more whitespace characters
-            (?P<url>\S+)            # URL: one or more non-whitespace characters
+            \s+                     # One or more whitespace characters (tab separator)
+            (?P<url>.+?)            # URL: any characters (non-greedy) - supports spaces
             \s+                     # One or more whitespace characters
             \((?P<cmd_type>fetch|push)\)  # 'fetch' or 'push' in parentheses
+            $                       # End of line
         """,
             re.VERBOSE | re.MULTILINE,
         )
