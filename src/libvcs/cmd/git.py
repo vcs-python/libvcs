@@ -236,8 +236,8 @@ class Git:
         if C is not None:
             if not isinstance(C, list):
                 C = [C]
-            C = [str(c) for c in C]
-            cli_args.extend(["-C", C])
+            for c in C:
+                cli_args.extend(["-C", str(c)])
         if config is not None:
             assert isinstance(config, dict)
 
