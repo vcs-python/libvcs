@@ -101,6 +101,66 @@ def test_git_init_shared(tmp_path: pathlib.Path) -> None:
     assert "Initialized empty shared Git repository" in result
 
 
+class InitSharedFixture(t.NamedTuple):
+    """Test fixture for Git.init() shared parameter behavior."""
+
+    test_id: str
+    shared: bool | str | None
+    expect_shared_repo: bool  # True = "shared Git repository" in output
+
+
+INIT_SHARED_FIXTURES: list[InitSharedFixture] = [
+    InitSharedFixture(
+        test_id="shared-true-passes-flag",
+        shared=True,
+        expect_shared_repo=True,
+    ),
+    InitSharedFixture(
+        test_id="shared-false-omits-flag",
+        shared=False,
+        expect_shared_repo=False,  # Key: shared=False should NOT pass --shared
+    ),
+    InitSharedFixture(
+        test_id="shared-none-omits-flag",
+        shared=None,
+        expect_shared_repo=False,
+    ),
+    InitSharedFixture(
+        test_id="shared-group-passes-value",
+        shared="group",
+        expect_shared_repo=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(InitSharedFixture._fields),
+    INIT_SHARED_FIXTURES,
+    ids=[test.test_id for test in INIT_SHARED_FIXTURES],
+)
+def test_git_init_shared_boolean_behavior(
+    tmp_path: pathlib.Path,
+    test_id: str,
+    shared: bool | str | None,
+    expect_shared_repo: bool,
+) -> None:
+    """Test Git.init() shared parameter behavior.
+
+    Verifies commit 03b124c: shared=False should NOT pass --shared flag.
+    """
+    repo_dir = tmp_path / f"init_{test_id}"
+    repo_dir.mkdir()
+    repo = git.Git(path=repo_dir)
+
+    result = repo.init(shared=shared)
+
+    # Check for "shared Git repository" in output (not just "shared" - matches path)
+    if expect_shared_repo:
+        assert "shared git repository" in result.lower()
+    else:
+        assert "shared git repository" not in result.lower()
+
+
 def test_git_init_quiet(tmp_path: pathlib.Path) -> None:
     """Test git init with quiet flag."""
     repo = git.Git(path=tmp_path)
