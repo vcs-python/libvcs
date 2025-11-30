@@ -250,6 +250,8 @@ class Git:
 
             for k, v in config.items():
                 cli_args.extend(["--config", f"{k}={stringify(v)}"])
+        if config_env is not None:
+            cli_args.append(f"--config-env={config_env}")
         if git_dir is not None:
             cli_args.extend(["--git-dir", str(git_dir)])
         if work_tree is not None:
