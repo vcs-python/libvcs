@@ -1256,7 +1256,9 @@ class Git:
                 "everybody",
             }
             if isinstance(shared, bool):
-                local_flags.append("--shared")
+                if shared:
+                    local_flags.append("--shared")
+                # shared=False means no --shared flag (same as None)
             else:
                 shared_str = str(shared).lower()
                 # Check if it's a valid string value or an octal number
