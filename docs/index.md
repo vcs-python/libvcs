@@ -9,6 +9,7 @@
 :hidden:
 
 quickstart
+topics/index
 url/index
 cmd/index
 sync/index
