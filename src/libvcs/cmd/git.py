@@ -423,8 +423,6 @@ class Git:
         reftag: t.Any | None = None,
         deepen: str | None = None,
         depth: str | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
         upload_pack: str | None = None,
         shallow_since: str | None = None,
         shallow_exclude: str | None = None,
@@ -496,10 +494,6 @@ class Git:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
-        if branch is not None:
-            local_flags.extend(["--branch", branch])
-        if origin is not None:
-            local_flags.extend(["--origin", origin])
         if upload_pack is not None:
             local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
@@ -780,8 +774,6 @@ class Git:
         repository: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
         upload_pack: str | None = None,
         shallow_since: str | None = None,
         shallow_exclude: str | None = None,
@@ -975,10 +967,6 @@ class Git:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
-        if branch is not None:
-            local_flags.extend(["--branch", branch])
-        if origin is not None:
-            local_flags.extend(["--origin", origin])
         if upload_pack is not None:
             local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
