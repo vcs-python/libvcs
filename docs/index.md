@@ -1,7 +1,9 @@
 (index)=
 
-```{include} ../README.md
+# libvcs
 
+```{include} ../README.md
+:start-after: </div>
 ```
 
 ```{toctree}
