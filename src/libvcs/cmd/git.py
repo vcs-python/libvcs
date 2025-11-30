@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import pathlib
+import re
 import shlex
+import string
 import typing as t
 from collections.abc import Sequence
 
+from libvcs._internal.query_list import QueryList
 from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
@@ -21,8 +25,15 @@ class Git:
 
     # Sub-commands
     submodule: GitSubmoduleCmd
-    remote: GitRemoteCmd
-    stash: GitStashCmd
+    submodules: GitSubmoduleManager
+    remotes: GitRemoteManager
+    stash: GitStashCmd  # Deprecated: use stashes
+    stashes: GitStashManager
+    branches: GitBranchManager
+    tags: GitTagManager
+    worktrees: GitWorktreeManager
+    notes: GitNotesManager
+    reflog: GitReflogManager
 
     def __init__(
         self,
@@ -45,15 +56,15 @@ class Git:
 
         Subcommands:
 
-        >>> git.remote.show()
+        >>> git.remotes.show()
         'origin'
 
-        >>> git.remote.add(
+        >>> git.remotes.add(
         ...     name='my_remote', url=f'file:///dev/null'
         ... )
         ''
 
-        >>> git.remote.show()
+        >>> git.remotes.show()
         'my_remote\norigin'
 
         >>> git.stash.save(message="Message")
@@ -63,13 +74,23 @@ class Git:
         ''
 
         # Additional tests
-        >>> git.remote.remove(name='my_remote')
+
+        >>> git.remotes.get(remote_name='my_remote').remove()
         ''
-        >>> git.remote.show()
+        >>> git.remotes.show()
         'origin'
 
         >>> git.stash.ls()
         ''
+
+        >>> git.stashes.ls()
+        []
+
+        >>> git.tags.create(name='v1.0.0', message='Version 1.0.0')
+        ''
+
+        >>> any(t.tag_name == 'v1.0.0' for t in git.tags.ls())
+        True
         """
         #: Directory to check out
         self.path: pathlib.Path
@@ -81,8 +102,15 @@ class Git:
         self.progress_callback = progress_callback
 
         self.submodule = GitSubmoduleCmd(path=self.path, cmd=self)
-        self.remote = GitRemoteCmd(path=self.path, cmd=self)
-        self.stash = GitStashCmd(path=self.path, cmd=self)
+        self.submodules = GitSubmoduleManager(path=self.path, cmd=self)
+        self.remotes = GitRemoteManager(path=self.path, cmd=self)
+        self.stash = GitStashCmd(path=self.path, cmd=self)  # Deprecated: use stashes
+        self.stashes = GitStashManager(path=self.path, cmd=self)
+        self.branches = GitBranchManager(path=self.path, cmd=self)
+        self.tags = GitTagManager(path=self.path, cmd=self)
+        self.worktrees = GitWorktreeManager(path=self.path, cmd=self)
+        self.notes = GitNotesManager(path=self.path, cmd=self)
+        self.reflog = GitReflogManager(path=self.path, cmd=self)
 
     def __repr__(self) -> str:
         """Representation of Git repo command object."""
@@ -208,20 +236,22 @@ class Git:
         if C is not None:
             if not isinstance(C, list):
                 C = [C]
-            C = [str(c) for c in C]
-            cli_args.extend(["-C", C])
+            for c in C:
+                cli_args.extend(["-C", str(c)])
         if config is not None:
             assert isinstance(config, dict)
 
             def stringify(v: t.Any) -> str:
                 if isinstance(v, bool):
-                    return "true" if True else "false"
+                    return "true" if v else "false"
                 if not isinstance(v, str):
                     return str(v)
                 return v
 
             for k, v in config.items():
                 cli_args.extend(["--config", f"{k}={stringify(v)}"])
+        if config_env is not None:
+            cli_args.append(f"--config-env={config_env}")
         if git_dir is not None:
             cli_args.extend(["--git-dir", str(git_dir)])
         if work_tree is not None:
@@ -323,7 +353,7 @@ class Git:
         if template is not None:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
-            local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
+            local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
         if (_filter := kwargs.pop("_filter", None)) is not None:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
@@ -341,7 +371,7 @@ class Git:
         if reference is not None:
             local_flags.extend(["--reference", reference])
         if reference_if_able is not None:
-            local_flags.extend(["--reference", reference_if_able])
+            local_flags.extend(["--reference-if-able", reference_if_able])
         if server_option is not None:
             local_flags.append(f"--server-option={server_option}")
         if jobs is not None:
@@ -393,8 +423,6 @@ class Git:
         reftag: t.Any | None = None,
         deepen: str | None = None,
         depth: str | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
         upload_pack: str | None = None,
         shallow_since: str | None = None,
         shallow_exclude: str | None = None,
@@ -466,10 +494,8 @@ class Git:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
-        if branch is not None:
-            local_flags.extend(["--branch", branch])
-        if origin is not None:
-            local_flags.extend(["--origin", origin])
+        if deepen is not None:
+            local_flags.append(f"--deepen={deepen}")
         if upload_pack is not None:
             local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
@@ -528,6 +554,22 @@ class Git:
             local_flags.append("--no-tags")
         if no_recurse_submodules:
             local_flags.append("--no-recurse-submodules")
+        if recurse_submodules is not None:
+            if isinstance(recurse_submodules, bool):
+                if recurse_submodules:
+                    local_flags.append("--recurse-submodules")
+            else:
+                local_flags.append(f"--recurse-submodules={recurse_submodules}")
+        if recurse_submodules_default is not None:
+            if isinstance(recurse_submodules_default, bool):
+                if recurse_submodules_default:
+                    local_flags.append("--recurse-submodules-default=yes")
+            else:
+                local_flags.append(
+                    f"--recurse-submodules-default={recurse_submodules_default}"
+                )
+        if negotiation_tip is not None:
+            local_flags.append(f"--negotiation-tip={negotiation_tip}")
         if set_upstream:
             local_flags.append("--set-upstream")
         if update_head_ok:
@@ -560,7 +602,7 @@ class Git:
         fork_point: bool | None = None,
         no_fork_point: bool | None = None,
         whitespace: str | None = None,
-        no_whitespace: bool | None = None,
+        ignore_whitespace: bool | None = None,
         commit_date_is_author_date: bool | None = None,
         ignore_date: bool | None = None,
         root: bool | None = None,
@@ -670,15 +712,15 @@ class Git:
         if no_stat:
             local_flags.append("--no-stat")
 
-        if whitespace:
-            local_flags.append("--whitespace")
-        if no_whitespace:
-            local_flags.append("--no-whitespace")
+        if whitespace is not None:
+            local_flags.append(f"--whitespace={whitespace}")
+        if ignore_whitespace:
+            local_flags.append("--ignore-whitespace")
 
         if rerere_autoupdate:
             local_flags.append("--rerere-autoupdate")
         if no_rerere_autoupdate:
-            local_flags.append("--no-rerwre-autoupdate")
+            local_flags.append("--no-rerere-autoupdate")
 
         if reapply_cherry_picks:
             local_flags.append("--reapply-cherry-picks")
@@ -750,8 +792,6 @@ class Git:
         repository: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
-        branch: str | None = None,
-        origin: str | None = None,
         upload_pack: str | None = None,
         shallow_since: str | None = None,
         shallow_exclude: str | None = None,
@@ -907,9 +947,9 @@ class Git:
         if no_edit:
             local_flags.append("--no-edit")
         if sign_off:
-            local_flags.append("--sign_off")
+            local_flags.append("--signoff")
         if no_sign_off:
-            local_flags.append("--no-sign_off")
+            local_flags.append("--no-signoff")
         if stat:
             local_flags.append("--stat")
         if no_stat:
@@ -945,10 +985,8 @@ class Git:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
-        if branch is not None:
-            local_flags.extend(["--branch", branch])
-        if origin is not None:
-            local_flags.extend(["--origin", origin])
+        if deepen is not None:
+            local_flags.append(f"--deepen={deepen}")
         if upload_pack is not None:
             local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
@@ -1007,6 +1045,22 @@ class Git:
             local_flags.append("--no-tags")
         if no_recurse_submodules:
             local_flags.append("--no-recurse-submodules")
+        if recurse_submodules is not None:
+            if isinstance(recurse_submodules, bool):
+                if recurse_submodules:
+                    local_flags.append("--recurse-submodules")
+            else:
+                local_flags.append(f"--recurse-submodules={recurse_submodules}")
+        if recurse_submodules_default is not None:
+            if isinstance(recurse_submodules_default, bool):
+                if recurse_submodules_default:
+                    local_flags.append("--recurse-submodules-default=yes")
+            else:
+                local_flags.append(
+                    f"--recurse-submodules-default={recurse_submodules_default}"
+                )
+        if negotiation_tip is not None:
+            local_flags.append(f"--negotiation-tip={negotiation_tip}")
         if set_upstream:
             local_flags.append("--set-upstream")
         if update_head_ok:
@@ -1026,80 +1080,239 @@ class Git:
     def init(
         self,
         *,
-        template: str | None = None,
+        template: str | pathlib.Path | None = None,
         separate_git_dir: StrOrBytesPath | None = None,
         object_format: t.Literal["sha1", "sha256"] | None = None,
         branch: str | None = None,
         initial_branch: str | None = None,
-        shared: bool | None = None,
+        shared: bool
+        | t.Literal["false", "true", "umask", "group", "all", "world", "everybody"]
+        | str  # Octal number string (e.g., "0660")
+        | None = None,
         quiet: bool | None = None,
         bare: bool | None = None,
+        ref_format: t.Literal["files", "reftable"] | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        make_parents: bool = True,
         **kwargs: t.Any,
     ) -> str:
         """Create empty repo. Wraps `git init <https://git-scm.com/docs/git-init>`_.
 
         Parameters
         ----------
-        quiet : bool
-            ``--quiet``
-        bare : bool
-            ``--bare``
-        object_format :
-            Hash algorithm used for objects. SHA-256 is still experimental as of git
-            2.36.0.
+        template : str | pathlib.Path, optional
+            Directory from which templates will be used. The template directory
+            contains files and directories that will be copied to the $GIT_DIR
+            after it is created. The template directory will be one of the
+            following (in order):
+            - The argument given with the --template option
+            - The contents of the $GIT_TEMPLATE_DIR environment variable
+            - The init.templateDir configuration variable
+            - The default template directory: /usr/share/git-core/templates
+        separate_git_dir : :attr:`libvcs._internal.types.StrOrBytesPath`, optional
+            Instead of placing the git repository in <directory>/.git/, place it in
+            the specified path. The .git file at <directory>/.git will contain a
+            gitfile that points to the separate git dir. This is useful when you
+            want to store the git directory on a different disk or filesystem.
+        object_format : "sha1" | "sha256", optional
+            Specify the hash algorithm to use. The default is sha1. Note that
+            sha256 is still experimental in git and requires git version >= 2.29.0.
+            Once the repository is created with a specific hash algorithm, it cannot
+            be changed.
+        branch : str, optional
+            Use the specified name for the initial branch. If not specified, fall
+            back to the default name (currently "master", but may change based on
+            init.defaultBranch configuration).
+        initial_branch : str, optional
+            Alias for branch parameter. Specify the name for the initial branch.
+            This is provided for compatibility with newer git versions.
+        shared : bool | str, optional
+            Specify that the git repository is to be shared amongst several users.
+            Valid values are:
+            - false: Turn off sharing (default)
+            - true: Same as group
+            - umask: Use permissions specified by umask
+            - group: Make the repository group-writable
+            - all, world, everybody: Same as world, make repo readable by all users
+            - An octal number string: Explicit mode specification (e.g., "0660")
+        quiet : bool, optional
+            Only print error and warning messages; all other output will be
+            suppressed. Useful for scripting.
+        bare : bool, optional
+            Create a bare repository. If GIT_DIR environment is not set, it is set
+            to the current working directory. Bare repositories have no working
+            tree and are typically used as central repositories.
+        ref_format : "files" | "reftable", optional
+            Specify the reference storage format. Requires git version >= 2.37.0.
+            - files: Classic format with packed-refs and loose refs (default)
+            - reftable: New format that is more efficient for large repositories
+        check_returncode : bool, optional
+            If True, check the return code of the git command and raise a
+            CalledProcessError if it is non-zero.
+        make_parents : bool, default: True
+            If True, create the target directory if it doesn't exist. If False,
+            raise an error if the directory doesn't exist.
+
+        Returns
+        -------
+        str
+            The output of the git init command.
+
+        Raises
+        ------
+        CalledProcessError
+            If the git command fails and check_returncode is True.
+        ValueError
+            If invalid parameters are provided.
+        FileNotFoundError
+            If make_parents is False and the target directory doesn't exist.
 
         Examples
         --------
-        >>> new_repo = tmp_path / 'example'
-        >>> new_repo.mkdir()
-        >>> git = Git(path=new_repo)
+        >>> git = Git(path=tmp_path)
         >>> git.init()
         'Initialized empty Git repository in ...'
-        >>> pathlib.Path(new_repo / 'test').write_text('foo', 'utf-8')
-        3
-        >>> git.run(['add', '.'])
-        ''
 
-        Bare:
+        Create with a specific initial branch name:
 
-        >>> new_repo = tmp_path / 'example1'
+        >>> new_repo = tmp_path / 'branch_example'
         >>> new_repo.mkdir()
         >>> git = Git(path=new_repo)
+        >>> git.init(branch='main')
+        'Initialized empty Git repository in ...'
+
+        Create a bare repository:
+
+        >>> bare_repo = tmp_path / 'bare_example'
+        >>> bare_repo.mkdir()
+        >>> git = Git(path=bare_repo)
         >>> git.init(bare=True)
         'Initialized empty Git repository in ...'
-        >>> pathlib.Path(new_repo / 'HEAD').exists()
-        True
 
-        Existing repo:
+        Create with a separate git directory:
 
-        >>> git = Git(path=new_repo)
-        >>> git = Git(path=example_git_repo.path)
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> git.init()
-        'Reinitialized existing Git repository in ...'
+        >>> repo_path = tmp_path / 'repo'
+        >>> git_dir = tmp_path / 'git_dir'
+        >>> repo_path.mkdir()
+        >>> git_dir.mkdir()
+        >>> git = Git(path=repo_path)
+        >>> git.init(separate_git_dir=str(git_dir.absolute()))
+        'Initialized empty Git repository in ...'
 
+        Create with shared permissions:
+
+        >>> shared_repo = tmp_path / 'shared_example'
+        >>> shared_repo.mkdir()
+        >>> git = Git(path=shared_repo)
+        >>> git.init(shared='group')
+        'Initialized empty shared Git repository in ...'
+
+        Create with octal permissions:
+
+        >>> shared_repo = tmp_path / 'shared_octal_example'
+        >>> shared_repo.mkdir()
+        >>> git = Git(path=shared_repo)
+        >>> git.init(shared='0660')
+        'Initialized empty shared Git repository in ...'
+
+        Create with a template directory:
+
+        >>> template_repo = tmp_path / 'template_example'
+        >>> template_repo.mkdir()
+        >>> git = Git(path=template_repo)
+        >>> git.init(template=str(tmp_path))
+        'Initialized empty Git repository in ...'
+
+        Create with SHA-256 object format (requires git >= 2.29.0):
+
+        >>> sha256_repo = tmp_path / 'sha256_example'
+        >>> sha256_repo.mkdir()
+        >>> git = Git(path=sha256_repo)
+        >>> git.init(object_format='sha256')  # doctest: +SKIP
+        'Initialized empty Git repository in ...'
         """
-        required_flags: list[str] = [str(self.path)]
         local_flags: list[str] = []
+        required_flags: list[str] = [str(self.path)]
 
         if template is not None:
+            if not isinstance(template, (str, pathlib.Path)):
+                msg = "template must be a string or Path"
+                raise TypeError(msg)
+            template_path = pathlib.Path(template)
+            if not template_path.is_dir():
+                msg = f"template directory does not exist: {template}"
+                raise ValueError(msg)
             local_flags.append(f"--template={template}")
+
         if separate_git_dir is not None:
-            local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
+            if isinstance(separate_git_dir, pathlib.Path):
+                separate_git_dir = str(separate_git_dir.absolute())
+            local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
+
         if object_format is not None:
+            if object_format not in {"sha1", "sha256"}:
+                msg = "object_format must be either 'sha1' or 'sha256'"
+                raise ValueError(msg)
             local_flags.append(f"--object-format={object_format}")
-        if branch is not None:
-            local_flags.extend(["--branch", branch])
-        if initial_branch is not None:
-            local_flags.extend(["--initial-branch", initial_branch])
-        if shared is True:
-            local_flags.append("--shared")
+
+        if branch is not None and initial_branch is not None:
+            msg = "Cannot specify both branch and initial_branch"
+            raise ValueError(msg)
+
+        branch_name = branch or initial_branch
+        if branch_name is not None:
+            if any(c.isspace() for c in branch_name):
+                msg = "Branch name cannot contain whitespace"
+                raise ValueError(msg)
+            local_flags.extend(["--initial-branch", branch_name])
+
+        if shared is not None:
+            valid_shared_values = {
+                "false",
+                "true",
+                "umask",
+                "group",
+                "all",
+                "world",
+                "everybody",
+            }
+            if isinstance(shared, bool):
+                if shared:
+                    local_flags.append("--shared")
+                # shared=False means no --shared flag (same as None)
+            else:
+                shared_str = str(shared).lower()
+                # Check if it's a valid string value or an octal number
+                if not (
+                    shared_str in valid_shared_values
+                    or (
+                        shared_str.isdigit()
+                        and len(shared_str) <= 4
+                        and all(c in string.octdigits for c in shared_str)
+                        and int(shared_str, 8) <= 0o777  # Validate octal range
+                    )
+                ):
+                    msg = (
+                        f"Invalid shared value. Must be one of {valid_shared_values} "
+                        "or a valid octal number between 0000 and 0777"
+                    )
+                    raise ValueError(msg)
+                local_flags.append(f"--shared={shared}")
+
         if quiet is True:
             local_flags.append("--quiet")
         if bare is True:
             local_flags.append("--bare")
+        if ref_format is not None:
+            local_flags.append(f"--ref-format={ref_format}")
+
+        # libvcs special behavior
+        if make_parents and not self.path.exists():
+            self.path.mkdir(parents=True)
+        elif not self.path.exists():
+            msg = f"Directory does not exist: {self.path}"
+            raise FileNotFoundError(msg)
 
         return self.run(
             ["init", *local_flags, "--", *required_flags],
@@ -2156,6 +2369,7 @@ class Git:
 
 
 GitSubmoduleCmdCommandLiteral = t.Literal[
+    "add",
     "status",
     "init",
     "deinit",
@@ -2238,6 +2452,7 @@ class GitSubmoduleCmd:
             ["submodule", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def init(
@@ -2336,6 +2551,1070 @@ class GitSubmoduleCmd:
         )
 
 
+@dataclasses.dataclass
+class GitSubmodule:
+    """Represent a git submodule."""
+
+    name: str
+    """Submodule name (from .gitmodules)."""
+
+    path: str
+    """Path to submodule relative to repository root."""
+
+    url: str | None = None
+    """Remote URL for the submodule."""
+
+    sha: str | None = None
+    """Current commit SHA of the submodule."""
+
+    branch: str | None = None
+    """Configured branch for the submodule."""
+
+    status_prefix: str = ""
+    """Status prefix: '-' not initialized, '+' differs, 'U' conflicts."""
+
+    #: Internal: GitSubmoduleEntryCmd for operations on this submodule
+    _cmd: GitSubmoduleEntryCmd | None = dataclasses.field(default=None, repr=False)
+
+    @property
+    def cmd(self) -> GitSubmoduleEntryCmd:
+        """Return command object for this submodule."""
+        if self._cmd is None:
+            msg = "GitSubmodule not created with cmd reference"
+            raise ValueError(msg)
+        return self._cmd
+
+    @property
+    def initialized(self) -> bool:
+        """Check if submodule is initialized."""
+        return self.status_prefix != "-"
+
+
+class GitSubmoduleEntryCmd:
+    """Run commands directly on a specific git submodule."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        submodule_path: str,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-submodule(1) for specific submodule operations.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        submodule_path :
+            Path to the submodule relative to repository root.
+
+        Examples
+        --------
+        >>> GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... )
+        <GitSubmoduleEntryCmd vendor/lib>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.submodule_path = submodule_path
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git submodule entry cmd object."""
+        return f"<GitSubmoduleEntryCmd {self.submodule_path}>"
+
+    def run(
+        self,
+        command: GitSubmoduleCmdCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a specific submodule.
+
+        Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+
+        Parameters
+        ----------
+        command :
+            Submodule command to run.
+        local_flags :
+            Additional flags to pass.
+
+        Examples
+        --------
+        >>> GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).run('status')
+        ''
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["submodule"]
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def init(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Initialize this submodule.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).init()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        return self.run(
+            "init",
+            local_flags=["--", self.submodule_path],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        init: bool = False,
+        force: bool = False,
+        checkout: bool = False,
+        rebase: bool = False,
+        merge: bool = False,
+        recursive: bool = False,
+        remote: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Update this submodule.
+
+        Parameters
+        ----------
+        init :
+            Initialize if not already.
+        force :
+            Discard local changes.
+        checkout :
+            Check out superproject's recorded commit.
+        rebase :
+            Rebase current branch onto commit.
+        merge :
+            Merge commit into current branch.
+        recursive :
+            Recurse into nested submodules.
+        remote :
+            Use remote tracking branch.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).update()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if init:
+            local_flags.append("--init")
+        if force:
+            local_flags.append("--force")
+        if checkout:
+            local_flags.append("--checkout")
+        elif rebase:
+            local_flags.append("--rebase")
+        elif merge:
+            local_flags.append("--merge")
+        if recursive:
+            local_flags.append("--recursive")
+        if remote:
+            local_flags.append("--remote")
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "update",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def deinit(
+        self,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Unregister this submodule.
+
+        Parameters
+        ----------
+        force :
+            Force removal even if has local modifications.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).deinit()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("--force")
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "deinit",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_branch(
+        self,
+        branch: str | None = None,
+        *,
+        default: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Set branch for this submodule.
+
+        Parameters
+        ----------
+        branch :
+            Branch to track.
+        default :
+            Reset to default (remove branch setting).
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).set_branch('main')
+        >>> 'fatal' in result.lower() or 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if default:
+            local_flags.append("--default")
+        elif branch is not None:
+            local_flags.extend(["--branch", branch])
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "set-branch",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_url(
+        self,
+        url: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Set URL for this submodule.
+
+        Parameters
+        ----------
+        url :
+            New URL for the submodule.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).set_url('https://example.com/repo.git')
+        >>> 'fatal' in result.lower() or 'error' in result.lower() or result == ''
+        True
+        """
+        return self.run(
+            "set-url",
+            local_flags=["--", self.submodule_path, url],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def status(
+        self,
+        *,
+        recursive: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Get status of this submodule.
+
+        Parameters
+        ----------
+        recursive :
+            Recurse into nested submodules.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).status()
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+
+        local_flags.extend(["--", self.submodule_path])
+
+        return self.run(
+            "status",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def absorbgitdirs(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Absorb git directory for this submodule.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     submodule_path='vendor/lib',
+        ... ).absorbgitdirs()
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        return self.run(
+            "absorbgitdirs",
+            local_flags=["--", self.submodule_path],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitSubmoduleManager:
+    """Run commands directly related to git submodules of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-submodule(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=tmp_path)
+        <GitSubmoduleManager path=...>
+
+        >>> GitSubmoduleManager(path=tmp_path).run('status')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitSubmoduleManager(path=example_git_repo.path).run('status')
+        ''
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git submodule manager object."""
+        return f"<GitSubmoduleManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitSubmoduleCmdCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's submodules.
+
+        Wraps `git submodule <https://git-scm.com/docs/git-submodule>`_.
+
+        Parameters
+        ----------
+        command :
+            Submodule command to run.
+        local_flags :
+            Additional flags to pass.
+        quiet :
+            Suppress output.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).run('status')
+        ''
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["submodule"]
+
+        if quiet:
+            _cmd.append("--quiet")
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def add(
+        self,
+        repository: str,
+        path: str | None = None,
+        *,
+        branch: str | None = None,
+        force: bool = False,
+        name: str | None = None,
+        depth: int | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Add a new submodule.
+
+        Parameters
+        ----------
+        repository :
+            URL of the repository to add as submodule.
+        path :
+            Path where submodule will be cloned.
+        branch :
+            Branch to track.
+        force :
+            Force add.
+        name :
+            Logical name for the submodule.
+        depth :
+            Shallow clone depth.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).add(
+        ...     f'file://{git_remote_repo}',
+        ...     'vendor/example'
+        ... )
+        >>> 'error' in result.lower() or 'fatal' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if branch is not None:
+            local_flags.extend(["-b", branch])
+        if force:
+            local_flags.append("--force")
+        if name is not None:
+            local_flags.extend(["--name", name])
+        if depth is not None:
+            local_flags.extend(["--depth", str(depth)])
+
+        local_flags.extend(["--", repository])
+        if path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "add",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def init(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Initialize submodules.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s) to initialize.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).init()
+        ''
+        """
+        local_flags: list[str] = ["--"]
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "init",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        init: bool = False,
+        force: bool = False,
+        checkout: bool = False,
+        rebase: bool = False,
+        merge: bool = False,
+        recursive: bool = False,
+        remote: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Update submodules.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s) to update.
+        init :
+            Initialize if not already.
+        force :
+            Discard local changes.
+        checkout :
+            Check out superproject's recorded commit.
+        rebase :
+            Rebase current branch onto commit.
+        merge :
+            Merge commit into current branch.
+        recursive :
+            Recurse into nested submodules.
+        remote :
+            Use remote tracking branch.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).update()
+        ''
+
+        >>> GitSubmoduleManager(path=example_git_repo.path).update(init=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if init:
+            local_flags.append("--init")
+        if force:
+            local_flags.append("--force")
+        if checkout:
+            local_flags.append("--checkout")
+        elif rebase:
+            local_flags.append("--rebase")
+        elif merge:
+            local_flags.append("--merge")
+        if recursive:
+            local_flags.append("--recursive")
+        if remote:
+            local_flags.append("--remote")
+
+        local_flags.append("--")
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "update",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def foreach(
+        self,
+        command: str,
+        *,
+        recursive: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Run command in each submodule.
+
+        Parameters
+        ----------
+        command :
+            Shell command to run.
+        recursive :
+            Recurse into nested submodules.
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).foreach(
+        ...     'git status'
+        ... )
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+
+        local_flags.append(command)
+
+        return self.run(
+            "foreach",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def sync(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        recursive: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Sync submodule URLs.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s) to sync.
+        recursive :
+            Recurse into nested submodules.
+
+        Examples
+        --------
+        >>> GitSubmoduleManager(path=example_git_repo.path).sync()
+        ''
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+
+        local_flags.append("--")
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "sync",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def summary(
+        self,
+        *,
+        cached: bool = False,
+        files: bool = False,
+        summary_limit: int | None = None,
+        commit: str | None = None,
+        path: list[str] | str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show commit summary for submodules.
+
+        Parameters
+        ----------
+        cached :
+            Use cached info.
+        files :
+            Compare to working tree.
+        summary_limit :
+            Limit number of commits shown.
+        commit :
+            Commit to compare against.
+        path :
+            Specific submodule path(s).
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).summary()
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = []
+
+        if cached:
+            local_flags.append("--cached")
+        if files:
+            local_flags.append("--files")
+        if summary_limit is not None:
+            local_flags.append(f"--summary-limit={summary_limit}")
+
+        if commit is not None:
+            local_flags.append(commit)
+
+        local_flags.append("--")
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "summary",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def absorbgitdirs(
+        self,
+        *,
+        path: list[str] | str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Absorb git directories into superproject.
+
+        Parameters
+        ----------
+        path :
+            Specific submodule path(s).
+
+        Examples
+        --------
+        >>> result = GitSubmoduleManager(path=example_git_repo.path).absorbgitdirs()
+        >>> isinstance(result, str)
+        True
+        """
+        local_flags: list[str] = ["--"]
+
+        if isinstance(path, list):
+            local_flags.extend(path)
+        elif path is not None:
+            local_flags.append(path)
+
+        return self.run(
+            "absorbgitdirs",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(
+        self,
+        *,
+        recursive: bool = False,
+        cached: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> list[dict[str, t.Any]]:
+        """Parse submodule status output into structured data.
+
+        Parameters
+        ----------
+        recursive :
+            Include nested submodules.
+        cached :
+            Use cached info.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            List of parsed submodule data.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path)._ls()
+        >>> isinstance(submodules, list)
+        True
+        """
+        local_flags: list[str] = []
+
+        if recursive:
+            local_flags.append("--recursive")
+        if cached:
+            local_flags.append("--cached")
+
+        result = self.run(
+            "status",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+        submodules: list[dict[str, t.Any]] = []
+
+        for line in result.strip().split("\n"):
+            if not line:
+                continue
+
+            # Format: <prefix><sha> <path> (<description>)
+            # Example: -abc1234 vendor/lib (heads/main)
+            # Prefix: - (not init), + (differs), U (conflicts), space (ok)
+            status_prefix = ""
+            if line and line[0] in "-+U ":
+                status_prefix = line[0] if line[0] != " " else ""
+                line = line[1:]
+
+            parts = line.strip().split(" ", 2)
+            if len(parts) >= 2:
+                sha = parts[0]
+                path = parts[1]
+                description = ""
+                if len(parts) > 2:
+                    # Remove parentheses from description
+                    description = parts[2].strip("()")
+
+                # Get additional info from .gitmodules if available
+                submodule_name = path  # Default to path
+                url = None
+                branch = None
+
+                # Try to get name and URL from git config
+                try:
+                    name_result = self.cmd.run(
+                        ["config", "-f", ".gitmodules", f"submodule.{path}.name"],
+                        check_returncode=False,
+                    )
+                    if name_result and "error" not in name_result.lower():
+                        submodule_name = name_result.strip()
+                except Exception:
+                    pass
+
+                try:
+                    url_result = self.cmd.run(
+                        ["config", "-f", ".gitmodules", f"submodule.{path}.url"],
+                        check_returncode=False,
+                    )
+                    if url_result and "error" not in url_result.lower():
+                        url = url_result.strip()
+                except Exception:
+                    pass
+
+                try:
+                    branch_result = self.cmd.run(
+                        ["config", "-f", ".gitmodules", f"submodule.{path}.branch"],
+                        check_returncode=False,
+                    )
+                    if branch_result and "error" not in branch_result.lower():
+                        branch = branch_result.strip()
+                except Exception:
+                    pass
+
+                submodules.append(
+                    {
+                        "name": submodule_name,
+                        "path": path,
+                        "sha": sha,
+                        "url": url,
+                        "branch": branch,
+                        "status_prefix": status_prefix,
+                        "description": description,
+                    }
+                )
+
+        return submodules
+
+    def ls(
+        self,
+        *,
+        recursive: bool = False,
+        cached: bool = False,
+    ) -> QueryList[GitSubmodule]:
+        """List submodules as GitSubmodule objects.
+
+        Parameters
+        ----------
+        recursive :
+            Include nested submodules.
+        cached :
+            Use cached info.
+
+        Returns
+        -------
+        QueryList[GitSubmodule]
+            List of submodules with ORM-like filtering.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path).ls()
+        >>> isinstance(submodules, QueryList)
+        True
+        """
+        submodules_data = self._ls(recursive=recursive, cached=cached)
+        submodules: list[GitSubmodule] = []
+
+        for data in submodules_data:
+            entry_cmd = GitSubmoduleEntryCmd(
+                path=self.path,
+                submodule_path=data["path"],
+                cmd=self.cmd,
+            )
+            submodule = GitSubmodule(
+                name=data["name"],
+                path=data["path"],
+                sha=data["sha"],
+                url=data["url"],
+                branch=data["branch"],
+                status_prefix=data["status_prefix"],
+                _cmd=entry_cmd,
+            )
+            submodules.append(submodule)
+
+        return QueryList(submodules)
+
+    def get(
+        self,
+        path: str | None = None,
+        name: str | None = None,
+        **kwargs: t.Any,
+    ) -> GitSubmodule:
+        """Get a specific submodule.
+
+        Parameters
+        ----------
+        path :
+            Submodule path to find.
+        name :
+            Submodule name to find.
+        **kwargs :
+            Additional filter criteria.
+
+        Returns
+        -------
+        GitSubmodule
+            The matching submodule.
+
+        Raises
+        ------
+        ObjectDoesNotExist
+            If no matching submodule found.
+        MultipleObjectsReturned
+            If multiple submodules match.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path)
+        >>> # submodule = submodules.get(path='vendor/lib')
+        """
+        filters: dict[str, t.Any] = {}
+        if path is not None:
+            filters["path"] = path
+        if name is not None:
+            filters["name"] = name
+        filters.update(kwargs)
+
+        result = self.ls().get(**filters)
+        assert result is not None  # get() raises ObjectDoesNotExist, never returns None
+        return result
+
+    def filter(
+        self,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> QueryList[GitSubmodule]:
+        """Filter submodules.
+
+        Parameters
+        ----------
+        *args :
+            Positional arguments for QueryList.filter().
+        **kwargs :
+            Keyword arguments for filtering (supports Django-style lookups).
+
+        Returns
+        -------
+        QueryList[GitSubmodule]
+            Filtered list of submodules.
+
+        Examples
+        --------
+        >>> submodules = GitSubmoduleManager(path=example_git_repo.path).filter()
+        >>> isinstance(submodules, QueryList)
+        True
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
 GitRemoteCommandLiteral = t.Literal[
     "add",
     "rename",
@@ -2356,23 +3635,46 @@ GitRemoteCommandLiteral = t.Literal[
 class GitRemoteCmd:
     """Run commands directly for a git remote on a git repository."""
 
-    def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
+    remote_name: str
+    fetch_url: str | None
+    push_url: str | None
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        remote_name: str,
+        fetch_url: str | None = None,
+        push_url: str | None = None,
+        cmd: Git | None = None,
+    ) -> None:
         r"""Lite, typed, pythonic wrapper for git-remote(1).
 
         Parameters
         ----------
         path :
             Operates as PATH in the corresponding git subcommand.
+        remote_name :
+            Name of remote
 
         Examples
         --------
-        >>> GitRemoteCmd(path=tmp_path)
-        <GitRemoteCmd path=...>
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin',
+        ... )
+        <GitRemoteCmd path=... remote_name=...>
 
-        >>> GitRemoteCmd(path=tmp_path).run(verbose=True)
+        >>> GitRemoteCmd(
+        ...     path=tmp_path,
+        ...     remote_name='origin',
+        ... ).run(verbose=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
-        >>> GitRemoteCmd(path=example_git_repo.path).run(verbose=True)
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin',
+        ... ).run(verbose=True)
         'origin\tfile:///...'
         """
         #: Directory to check out
@@ -2384,9 +3686,13 @@ class GitRemoteCmd:
 
         self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
 
+        self.remote_name = remote_name
+        self.fetch_url = fetch_url
+        self.push_url = push_url
+
     def __repr__(self) -> str:
         """Representation of a git remote for a git repository."""
-        return f"<GitRemoteCmd path={self.path}>"
+        return f"<GitRemoteCmd path={self.path} remote_name={self.remote_name}>"
 
     def run(
         self,
@@ -2405,9 +3711,15 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(path=example_git_repo.path).run()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='master',
+        ... ).run()
         'origin'
-        >>> GitRemoteCmd(path=example_git_repo.path).run(verbose=True)
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='master',
+        ... ).run(verbose=True)
         'origin\tfile:///...'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -2421,45 +3733,7 @@ class GitRemoteCmd:
             ["remote", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
-        )
-
-    def add(
-        self,
-        *,
-        name: str,
-        url: str,
-        fetch: bool | None = None,
-        track: str | None = None,
-        master: str | None = None,
-        mirror: t.Literal["push", "fetch"] | bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote add.
-
-        Examples
-        --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=example_git_repo.path).add(
-        ...     name='my_remote', url=f'file://{git_remote_repo}'
-        ... )
-        ''
-        """
-        local_flags: list[str] = []
-        required_flags: list[str] = [name, url]
-
-        if mirror is not None:
-            if isinstance(mirror, str):
-                assert any(f for f in ["push", "fetch"])
-                local_flags.extend(["--mirror", mirror])
-            if isinstance(mirror, bool) and mirror:
-                local_flags.append("--mirror")
-        return self.run(
-            "add",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def rename(
@@ -2478,10 +3752,14 @@ class GitRemoteCmd:
         --------
         >>> git_remote_repo = create_git_remote_repo()
         >>> GitRemoteCmd(
-        ...     path=example_git_repo.path
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin',
         ... ).rename(old='origin', new='new_name')
         ''
-        >>> GitRemoteCmd(path=example_git_repo.path).run()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin',
+        ... ).run()
         'new_name'
         """
         local_flags: list[str] = []
@@ -2502,7 +3780,6 @@ class GitRemoteCmd:
     def remove(
         self,
         *,
-        name: str,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -2511,17 +3788,513 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(path=example_git_repo.path).remove(name='origin')
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin',
+        ... ).remove()
         ''
-        >>> GitRemoteCmd(path=example_git_repo.path).run()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin',
+        ... ).run()
         ''
         """
         local_flags: list[str] = []
-        required_flags: list[str] = [name]
+        required_flags: list[str] = [self.remote_name]
 
         return self.run(
             "remove",
             local_flags=local_flags + required_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def show(
+        self,
+        *,
+        verbose: bool | None = None,
+        no_query_remotes: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote show.
+
+        Examples
+        --------
+        >>> print(
+        ...     GitRemoteCmd(
+        ...         path=example_git_repo.path,
+        ...         remote_name='origin',
+        ...     ).show()
+        ... )
+        * remote origin
+        Fetch URL: ...
+        Push  URL: ...
+        HEAD branch: master
+        Remote branch:
+        master tracked...
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [self.remote_name]
+
+        if verbose is True:
+            local_flags.append("--verbose")
+
+        if no_query_remotes:
+            local_flags.append("-n")
+
+        return self.run(
+            "show",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def prune(
+        self,
+        *,
+        dry_run: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote prune.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).prune()
+        ''
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).prune(dry_run=True)
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [self.remote_name]
+
+        if dry_run:
+            local_flags.append("--dry-run")
+
+        return self.run(
+            "prune",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def get_url(
+        self,
+        *,
+        push: bool | None = None,
+        _all: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote get-url.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).get_url()
+        'file:///...'
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).get_url(push=True)
+        'file:///...'
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).get_url(_all=True)
+        'file:///...'
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [self.remote_name]
+
+        if push:
+            local_flags.append("--push")
+        if _all:
+            local_flags.append("--all")
+
+        return self.run(
+            "get-url",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_url(
+        self,
+        *,
+        url: str,
+        old_url: str | None = None,
+        push: bool | None = None,
+        add: bool | None = None,
+        delete: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote set-url.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_url(
+        ...     url='http://localhost'
+        ... )
+        ''
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_url(
+        ...     url='http://localhost',
+        ...     push=True
+        ... )
+        ''
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_url(
+        ...     url='http://localhost',
+        ...     add=True
+        ... )
+        ''
+
+        >>> current_url = GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).get_url()
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_url(
+        ...     url=current_url,
+        ...     delete=True
+        ... )
+        'fatal: Will not delete all non-push URLs'
+
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [self.remote_name, url]
+        if old_url is not None:
+            required_flags.append(old_url)
+
+        if push:
+            local_flags.append("--push")
+        if add:
+            local_flags.append("--add")
+        if delete:
+            local_flags.append("--delete")
+
+        return self.run(
+            "set-url",
+            local_flags=[*local_flags, "--", *required_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_branches(
+        self,
+        *branches: str,
+        add: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote set-branches.
+
+        Configure remote tracking branches for the remote.
+
+        Parameters
+        ----------
+        *branches :
+            Branch names to track.
+        add :
+            Add to existing tracked branches instead of replacing.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_branches('master')
+        ''
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_branches('master', 'develop', add=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if add:
+            local_flags.append("--add")
+
+        local_flags.append(self.remote_name)
+        local_flags.extend(branches)
+
+        return self.run(
+            "set-branches",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_head(
+        self,
+        branch: str | None = None,
+        *,
+        auto: bool = False,
+        delete: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote set-head.
+
+        Set or delete the default branch (HEAD) for the remote.
+
+        Parameters
+        ----------
+        branch :
+            Branch name to set as HEAD. Required unless auto or delete is True.
+        auto :
+            Query the remote to determine HEAD automatically.
+        delete :
+            Delete the remote HEAD reference.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_head(auto=True)
+        'origin/HEAD set to master'
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).set_head('master')
+        ''
+        """
+        local_flags: list[str] = [self.remote_name]
+
+        if auto:
+            local_flags.append("-a")
+        elif delete:
+            local_flags.append("-d")
+        elif branch is not None:
+            local_flags.append(branch)
+
+        return self.run(
+            "set-head",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def update(
+        self,
+        *,
+        prune: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote update.
+
+        Fetch updates for the remote.
+
+        Parameters
+        ----------
+        prune :
+            Prune remote-tracking branches no longer on remote.
+
+        Examples
+        --------
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).update()
+        'Fetching origin...'
+
+        >>> GitRemoteCmd(
+        ...     path=example_git_repo.path,
+        ...     remote_name='origin'
+        ... ).update(prune=True)
+        'Fetching origin...'
+        """
+        local_flags: list[str] = []
+
+        if prune:
+            local_flags.append("-p")
+
+        local_flags.append(self.remote_name)
+
+        return self.run(
+            "update",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+GitRemoteManagerLiteral = t.Literal[
+    "--verbose",
+    "add",
+    "rename",
+    "remove",
+    "set-branches",
+    "set-head",
+    "set-branch",
+    "get-url",
+    "set-url",
+    "set-url --add",
+    "set-url --delete",
+    "prune",
+    "show",
+    "update",
+]
+
+
+class GitRemoteManager:
+    """Run commands directly related to git remotes of a git repo."""
+
+    remote_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-remote(1), git-checkout(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitRemoteManager(path=tmp_path)
+        <GitRemoteManager path=...>
+
+        >>> GitRemoteManager(path=tmp_path).run(check_returncode=False)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitRemoteManager(
+        ...     path=example_git_repo.path
+        ... ).run()
+        'origin'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git remote manager object."""
+        return f"<GitRemoteManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitRemoteManagerLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's remotes.
+
+        Wraps `git remote <https://git-scm.com/docs/git-remote>`_.
+
+        Examples
+        --------
+        >>> GitRemoteManager(path=example_git_repo.path).run()
+        'origin'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["remote", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def add(
+        self,
+        *,
+        name: str,
+        url: str,
+        fetch: bool | None = None,
+        track: str | None = None,
+        master: str | None = None,
+        mirror: t.Literal["push", "fetch"] | bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git remote add.
+
+        Examples
+        --------
+        >>> git_remote_repo = create_git_remote_repo()
+        >>> GitRemoteManager(path=example_git_repo.path).add(
+        ...     name='my_remote',
+        ...     url=f'file://{git_remote_repo}'
+        ... )
+        ''
+        """
+        local_flags: list[str] = []
+        required_flags: list[str] = [name, url]
+
+        if fetch is True:
+            local_flags.append("-f")
+        if track is not None:
+            local_flags.extend(["-t", track])
+        if master is not None:
+            local_flags.extend(["-m", master])
+        if mirror is not None:
+            if isinstance(mirror, str):
+                if mirror not in ("push", "fetch"):
+                    msg = "mirror must be 'push' or 'fetch'"
+                    raise ValueError(msg)
+                local_flags.append(f"--mirror={mirror}")
+            elif mirror is True:
+                local_flags.append("--mirror")
+        return self.run(
+            "add",
+            local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2540,8 +4313,18 @@ class GitRemoteCmd:
 
         Examples
         --------
-        >>> GitRemoteCmd(path=example_git_repo.path).show()
+        >>> GitRemoteManager(path=example_git_repo.path).show()
         'origin'
+
+        For the example below, add a remote:
+        >>> GitRemoteManager(path=example_git_repo.path).add(
+        ...     name='my_remote', url=f'file:///dev/null'
+        ... )
+        ''
+
+        Retrieve a list of remote names:
+        >>> GitRemoteManager(path=example_git_repo.path).show().splitlines()
+        ['my_remote', 'origin']
         """
         local_flags: list[str] = []
         required_flags: list[str] = []
@@ -2549,10 +4332,10 @@ class GitRemoteCmd:
         if name is not None:
             required_flags.append(name)
 
-        if verbose is not None:
+        if verbose is True:
             local_flags.append("--verbose")
 
-        if no_query_remotes is not None or no_query_remotes:
+        if no_query_remotes:
             local_flags.append("-n")
 
         return self.run(
@@ -2562,145 +4345,117 @@ class GitRemoteCmd:
             log_in_real_time=log_in_real_time,
         )
 
-    def prune(
-        self,
-        *,
-        name: str,
-        dry_run: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote prune.
+    def _ls(self) -> str:
+        r"""List remotes (raw output).
 
         Examples
         --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=example_git_repo.path).prune(name='origin')
-        ''
-
-        >>> GitRemoteCmd(path=example_git_repo.path).prune(name='origin', dry_run=True)
-        ''
+        >>> GitRemoteManager(path=example_git_repo.path)._ls()
+        'origin\tfile:///... (fetch)\norigin\tfile:///... (push)'
         """
-        local_flags: list[str] = []
-        required_flags: list[str] = [name]
-
-        if dry_run:
-            local_flags.append("--dry-run")
-
         return self.run(
-            "prune",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
+            "--verbose",
         )
 
-    def get_url(
-        self,
-        *,
-        name: str,
-        push: bool | None = None,
-        _all: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote get-url.
+    def ls(self) -> QueryList[GitRemoteCmd]:
+        """List remotes.
 
         Examples
         --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin')
-        'file:///...'
+        >>> GitRemoteManager(path=example_git_repo.path).ls()
+        [<GitRemoteCmd path=... remote_name=origin>]
 
-        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin', push=True)
-        'file:///...'
+        For the example below, add a remote:
+        >>> GitRemoteManager(path=example_git_repo.path).add(
+        ...     name='my_remote', url=f'file:///dev/null'
+        ... )
+        ''
 
-        >>> GitRemoteCmd(path=example_git_repo.path).get_url(name='origin', _all=True)
-        'file:///...'
+        >>> GitRemoteManager(path=example_git_repo.path).ls()
+        [<GitRemoteCmd path=... remote_name=my_remote>,
+         <GitRemoteCmd path=... remote_name=origin>]
         """
-        local_flags: list[str] = []
-        required_flags: list[str] = [name]
-
-        if push:
-            local_flags.append("--push")
-        if _all:
-            local_flags.append("--all")
-
-        return self.run(
-            "get-url",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
+        remote_str = self._ls()
+        remote_pattern = re.compile(
+            r"""
+            ^                       # Start of line
+            (?P<name>\S+)           # Remote name: one or more non-whitespace characters
+            \s+                     # One or more whitespace characters (tab separator)
+            (?P<url>.+?)            # URL: any characters (non-greedy) - supports spaces
+            \s+                     # One or more whitespace characters
+            \((?P<cmd_type>fetch|push)\)  # 'fetch' or 'push' in parentheses
+            $                       # End of line
+        """,
+            re.VERBOSE | re.MULTILINE,
         )
 
-    def set_url(
-        self,
-        *,
-        name: str,
-        url: str,
-        old_url: str | None = None,
-        push: bool | None = None,
-        add: bool | None = None,
-        delete: bool | None = None,
-        # Pass-through to run()
-        log_in_real_time: bool = False,
-        check_returncode: bool | None = None,
-    ) -> str:
-        """Git remote set-url.
+        remotes: dict[str, dict[str, str | None]] = {}
+
+        for match_obj in remote_pattern.finditer(remote_str):
+            name = match_obj.group("name")
+            url = match_obj.group("url")
+            cmd_type = match_obj.group("cmd_type")
+
+            if name not in remotes:
+                remotes[name] = {}
+
+            remotes[name][cmd_type] = url
+
+        remote_cmds: list[GitRemoteCmd] = []
+        for name, urls in remotes.items():
+            fetch_url = urls.get("fetch")
+            push_url = urls.get("push")
+            remote_cmds.append(
+                GitRemoteCmd(
+                    path=self.path,
+                    remote_name=name,
+                    fetch_url=fetch_url,
+                    push_url=push_url,
+                ),
+            )
+
+        return QueryList(remote_cmds)
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitRemoteCmd | None:
+        """Get remote via filter lookup.
 
         Examples
         --------
-        >>> git_remote_repo = create_git_remote_repo()
-        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
-        ...     name='origin',
-        ...     url='http://localhost'
-        ... )
-        ''
+        >>> GitRemoteManager(
+        ...     path=example_git_repo.path
+        ... ).get(remote_name='origin')
+        <GitRemoteCmd path=... remote_name=origin>
 
-        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
-        ...     name='origin',
-        ...     url='http://localhost',
-        ...     push=True
-        ... )
-        ''
-
-        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
-        ...     name='origin',
-        ...     url='http://localhost',
-        ...     add=True
-        ... )
-        ''
-
-        >>> current_url = GitRemoteCmd(
-        ...     path=example_git_repo.path,
-        ... ).get_url(name='origin')
-        >>> GitRemoteCmd(path=example_git_repo.path).set_url(
-        ...     name='origin',
-        ...     url=current_url,
-        ...     delete=True
-        ... )
-        'fatal: Will not delete all non-push URLs'
-
+        >>> GitRemoteManager(
+        ...     path=example_git_repo.path
+        ... ).get(remote_name='unknown')
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
         """
-        local_flags: list[str] = []
-        required_flags: list[str] = [name, url]
-        if old_url is not None:
-            required_flags.append(old_url)
+        return self.ls().get(*args, **kwargs)
 
-        if push:
-            local_flags.append("--push")
-        if add:
-            local_flags.append("--add")
-        if delete:
-            local_flags.append("--delete")
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitRemoteCmd]:
+        """Get remotes via filter lookup.
 
-        return self.run(
-            "set-url",
-            local_flags=[*local_flags, "--", *required_flags],
-            check_returncode=check_returncode,
-            log_in_real_time=log_in_real_time,
-        )
+        Examples
+        --------
+        >>> GitRemoteManager(
+        ...     path=example_git_repo.path
+        ... ).filter(remote_name__contains='origin')
+        [<GitRemoteCmd path=... remote_name=origin>]
+
+        >>> GitRemoteManager(
+        ...     path=example_git_repo.path
+        ... ).filter(remote_name__contains='unknown')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
 
 
 GitStashCommandLiteral = t.Literal[
@@ -2716,6 +4471,301 @@ GitStashCommandLiteral = t.Literal[
     "create",
     "store",
 ]
+
+
+class GitStashEntryCmd:
+    """Run commands directly for a git stash entry on a git repository."""
+
+    index: int
+    branch: str | None
+    message: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        index: int,
+        branch: str | None = None,
+        message: str = "",
+        cmd: Git | None = None,
+    ) -> None:
+        r"""Lite, typed, pythonic wrapper for git-stash(1) per-entry operations.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        index :
+            Stash index (0 = most recent)
+        branch :
+            Branch the stash was created on
+        message :
+            Stash message
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ...     branch='master',
+        ...     message='WIP',
+        ... )
+        <GitStashEntryCmd path=... index=0>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.index = index
+        self.branch = branch
+        self.message = message
+
+    def __repr__(self) -> str:
+        """Representation of a git stash entry."""
+        return f"<GitStashEntryCmd path={self.path} index={self.index}>"
+
+    @property
+    def stash_ref(self) -> str:
+        """Return the stash reference string."""
+        return f"stash@{{{self.index}}}"
+
+    def run(
+        self,
+        command: GitStashCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against a git stash entry.
+
+        Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["stash", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def show(
+        self,
+        *,
+        stat: bool | None = None,
+        patch: bool | None = None,
+        include_untracked: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash show for this stash entry.
+
+        Parameters
+        ----------
+        stat :
+            Show diffstat (--stat)
+        patch :
+            Show patch (-p)
+        include_untracked :
+            Include untracked files (-u)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).show()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if stat is True:
+            local_flags.append("--stat")
+        if patch is True:
+            local_flags.append("-p")
+        if include_untracked is True:
+            local_flags.append("-u")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def apply(
+        self,
+        *,
+        index: bool | None = None,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash apply for this stash entry.
+
+        Apply the stash without removing it from the stash list.
+
+        Parameters
+        ----------
+        index :
+            Try to reinstate not only the working tree but also the index (--index)
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).apply()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if index is True:
+            local_flags.append("--index")
+        if quiet is True:
+            local_flags.append("-q")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "apply",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def pop(
+        self,
+        *,
+        index: bool | None = None,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash pop for this stash entry.
+
+        Apply the stash and remove it from the stash list.
+
+        Parameters
+        ----------
+        index :
+            Try to reinstate not only the working tree but also the index (--index)
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).pop()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if index is True:
+            local_flags.append("--index")
+        if quiet is True:
+            local_flags.append("-q")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "pop",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def drop(
+        self,
+        *,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash drop for this stash entry.
+
+        Remove this stash from the stash list.
+
+        Parameters
+        ----------
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).drop()
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = []
+
+        if quiet is True:
+            local_flags.append("-q")
+
+        local_flags.append(self.stash_ref)
+
+        return self.run(
+            "drop",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def create_branch(
+        self,
+        branch_name: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash branch for this stash entry.
+
+        Create a new branch from this stash entry and apply the stash.
+
+        Parameters
+        ----------
+        branch_name :
+            Name of the branch to create
+
+        Examples
+        --------
+        >>> GitStashEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     index=0,
+        ... ).create_branch('new-branch')
+        'error: stash@{0} is not a valid reference'
+        """
+        local_flags: list[str] = [branch_name, self.stash_ref]
+
+        return self.run(
+            "branch",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
 
 
 class GitStashCmd:
@@ -2759,7 +4809,6 @@ class GitStashCmd:
         local_flags: list[str] | None = None,
         *,
         quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -2780,8 +4829,6 @@ class GitStashCmd:
 
         if quiet is True:
             local_flags.append("--quiet")
-        if cached is True:
-            local_flags.append("--cached")
 
         return self.cmd.run(
             ["stash", *local_flags],
@@ -2820,9 +4867,18 @@ class GitStashCmd:
         check_returncode: bool | None = None,
         **kwargs: t.Any,
     ) -> str:
-        """Git stash update.
+        """Push changes to the stash.
 
-        TODO: Fill-in
+        Wraps `git stash push <https://git-scm.com/docs/git-stash>`_.
+
+        Parameters
+        ----------
+        path :
+            Limit stash to specific path(s).
+        patch :
+            Interactively select hunks to stash.
+        staged :
+            Stash only staged changes.
 
         Examples
         --------
@@ -2836,9 +4892,9 @@ class GitStashCmd:
         required_flags: list[str] = []
 
         if isinstance(path, list):
-            required_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
-        elif isinstance(path, pathlib.Path):
-            required_flags.append(str(pathlib.Path(path).absolute()))
+            required_flags.extend(str(p) for p in path)
+        elif path is not None:
+            required_flags.append(str(path))
 
         if patch is True:
             local_flags.append("--patch")
@@ -2871,31 +4927,29 @@ class GitStashCmd:
         'No stash entries found.'
 
         >>> GitStashCmd(path=example_git_repo.path).pop(stash=0)
-        'error: refs/stash@{0} is not a valid reference'
+        'error: stash@{0} is not a valid reference'
 
         >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, index=True)
-        'error: refs/stash@{1} is not a valid reference'
+        'error: stash@{1} is not a valid reference'
 
         >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, quiet=True)
-        'error: refs/stash@{1} is not a valid reference'
+        'error: stash@{1} is not a valid reference'
 
         >>> GitStashCmd(path=example_git_repo.path).push(path='.')
         'No local changes to save'
         """
         local_flags: list[str] = []
-        stash_flags: list[str] = []
-
-        if stash is not None:
-            stash_flags.extend(["--", str(stash)])
 
         if index is True:
             local_flags.append("--index")
         if quiet is True:
             local_flags.append("--quiet")
+        if stash is not None:
+            local_flags.append(f"stash@{{{stash}}}")
 
         return self.run(
             "pop",
-            local_flags=local_flags + stash_flags,
+            local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
@@ -2950,3 +5004,3254 @@ class GitStashCmd:
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
+
+
+class GitStashManager:
+    """Run commands directly related to git stashes of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-stash(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitStashManager(path=tmp_path)
+        <GitStashManager path=...>
+
+        >>> GitStashManager(path=tmp_path).run()
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitStashManager(
+        ...     path=example_git_repo.path
+        ... ).run()
+        'No local changes to save'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git stash manager object."""
+        return f"<GitStashManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitStashCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's stash storage.
+
+        Wraps `git stash <https://git-scm.com/docs/git-stash>`_.
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).run()
+        'No local changes to save'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        return self.cmd.run(
+            ["stash", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def push(
+        self,
+        *,
+        message: str | None = None,
+        path: list[StrPath] | StrPath | None = None,
+        patch: bool | None = None,
+        staged: bool | None = None,
+        keep_index: bool | None = None,
+        include_untracked: bool | None = None,
+        _all: bool | None = None,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash push.
+
+        Save local modifications to a new stash entry.
+
+        Parameters
+        ----------
+        message :
+            Stash message
+        path :
+            Limit stash to specific paths
+        patch :
+            Interactive patch selection (-p)
+        staged :
+            Stash only staged changes (-S)
+        keep_index :
+            Keep index intact (-k)
+        include_untracked :
+            Include untracked files (-u)
+        _all :
+            Include ignored files (-a)
+        quiet :
+            Suppress output (-q)
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).push()
+        'No local changes to save'
+
+        >>> GitStashManager(path=example_git_repo.path).push(message='WIP')
+        'No local changes to save'
+        """
+        local_flags: list[str] = []
+        path_flags: list[str] = []
+
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if patch is True:
+            local_flags.append("-p")
+        if staged is True:
+            local_flags.append("-S")
+        if keep_index is True:
+            local_flags.append("-k")
+        if include_untracked is True:
+            local_flags.append("-u")
+        if _all is True:
+            local_flags.append("-a")
+        if quiet is True:
+            local_flags.append("-q")
+
+        if path is not None:
+            if isinstance(path, list):
+                path_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
+            else:
+                path_flags.append(str(pathlib.Path(path).absolute()))
+
+        if path_flags:
+            local_flags.extend(["--", *path_flags])
+
+        return self.run(
+            "push",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def clear(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git stash clear.
+
+        Remove all stash entries.
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).clear()
+        ''
+        """
+        return self.run(
+            "clear",
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(self) -> list[str]:
+        r"""List stashes (raw output).
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path)._ls()
+        []
+        """
+        result = self.run("list")
+        if not result:
+            return []
+        return result.splitlines()
+
+    def ls(self) -> QueryList[GitStashEntryCmd]:
+        """List stashes.
+
+        Returns a QueryList of GitStashEntryCmd objects.
+
+        Parses stash list format:
+        - ``stash@{0}: On master: message``
+        - ``stash@{0}: WIP on master: commit``
+
+        Examples
+        --------
+        >>> GitStashManager(path=example_git_repo.path).ls()
+        []
+        """
+        stash_lines = self._ls()
+
+        # Parse stash list output
+        # Format: stash@{N}: On <branch>: <message>
+        # Or: stash@{N}: WIP on <branch>: <commit_msg>
+        stash_pattern = re.compile(
+            r"""
+            stash@\{(?P<index>\d+)\}:\s+
+            (?:
+                On\s+(?P<branch1>[^:]+):\s+(?P<message1>.+)
+                |
+                WIP\s+on\s+(?P<branch2>[^:]+):\s+(?P<message2>.+)
+            )
+        """,
+            re.VERBOSE,
+        )
+
+        stash_entries: list[GitStashEntryCmd] = []
+        for line in stash_lines:
+            match = stash_pattern.match(line)
+            if match:
+                index = int(match.group("index"))
+                branch = match.group("branch1") or match.group("branch2")
+                message = match.group("message1") or match.group("message2") or ""
+                stash_entries.append(
+                    GitStashEntryCmd(
+                        path=self.path,
+                        index=index,
+                        branch=branch,
+                        message=message,
+                    ),
+                )
+            else:
+                # Fallback: try to parse index at minimum
+                index_match = re.match(r"stash@\{(\d+)\}", line)
+                if index_match:
+                    stash_entries.append(
+                        GitStashEntryCmd(
+                            path=self.path,
+                            index=int(index_match.group(1)),
+                            message=line,
+                        ),
+                    )
+
+        return QueryList(stash_entries)
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitStashEntryCmd | None:
+        """Get stash entry via filter lookup.
+
+        Examples
+        --------
+        >>> GitStashManager(
+        ...     path=example_git_repo.path
+        ... ).get(index=0)
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitStashEntryCmd]:
+        """Get stash entries via filter lookup.
+
+        Examples
+        --------
+        >>> GitStashManager(
+        ...     path=example_git_repo.path
+        ... ).filter(branch__contains='master')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+class GitBranchCmd:
+    """Run commands directly against a git branch for a git repo."""
+
+    branch_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        branch_name: str,
+        cmd: Git | None = None,
+    ) -> None:
+        """Lite, typed, pythonic wrapper for git-branch(1).
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        branch_name:
+            Name of branch.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=tmp_path,
+        ...     branch_name='master'
+        ... )
+        <GitBranchCmd path=... branch_name=master>
+
+        >>> GitBranchCmd(
+        ...     path=tmp_path,
+        ...     branch_name='master'
+        ... ).run(quiet=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).run(quiet=True)
+        '* master'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.branch_name = branch_name
+
+    def __repr__(self) -> str:
+        """Representation of git branch command object."""
+        return f"<GitBranchCmd path={self.path} branch_name={self.branch_name}>"
+
+    def run(
+        self,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's branch.
+
+        Wraps `git branch <https://git-scm.com/docs/git-branch>`_.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).run()
+        '* master'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        return self.cmd.run(
+            ["branch", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def checkout(self) -> str:
+        """Git branch checkout.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).checkout()
+        "Your branch is up to date with 'origin/master'."
+        """
+        return self.cmd.run(
+            [
+                "checkout",
+                *[self.branch_name],
+            ],
+        )
+
+    def create(
+        self,
+        *,
+        checkout: bool = False,
+    ) -> str:
+        """Create a git branch.
+
+        Parameters
+        ----------
+        checkout :
+            If True, also checkout the newly created branch.
+            Defaults to False (create only, don't switch HEAD).
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).create()
+        "fatal: a branch named 'master' already exists"
+        """
+        result = self.cmd.run(
+            ["branch", self.branch_name],
+            check_returncode=False,
+        )
+        if checkout and "fatal" not in result.lower():
+            self.cmd.run(["checkout", self.branch_name])
+        return result
+
+    def delete(
+        self,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Delete this git branch.
+
+        Parameters
+        ----------
+        force :
+            Use ``-D`` instead of ``-d`` to force deletion.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='nonexistent'
+        ... ).delete()
+        "error: branch 'nonexistent' not found"
+        """
+        flag = "-D" if force else "-d"
+        return self.cmd.run(
+            ["branch", flag, self.branch_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def rename(
+        self,
+        new_name: str,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Rename this git branch.
+
+        Parameters
+        ----------
+        new_name :
+            New name for the branch.
+        force :
+            Use ``-M`` instead of ``-m`` to force rename.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).rename('main')
+        ''
+        """
+        flag = "-M" if force else "-m"
+        return self.cmd.run(
+            ["branch", flag, self.branch_name, new_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def copy(
+        self,
+        new_name: str,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Copy this git branch.
+
+        Parameters
+        ----------
+        new_name :
+            Name for the copied branch.
+        force :
+            Use ``-C`` instead of ``-c`` to force copy.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).copy('master-copy')
+        ''
+        """
+        flag = "-C" if force else "-c"
+        return self.cmd.run(
+            ["branch", flag, self.branch_name, new_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def set_upstream(
+        self,
+        upstream: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Set the upstream (tracking) branch.
+
+        Parameters
+        ----------
+        upstream :
+            The upstream branch in format ``remote/branch`` (e.g., ``origin/main``).
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).set_upstream('origin/master')
+        "branch 'master' set up to track 'origin/master'."
+        """
+        return self.cmd.run(
+            ["branch", f"--set-upstream-to={upstream}", self.branch_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def unset_upstream(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Remove the upstream (tracking) information.
+
+        Examples
+        --------
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='master'
+        ... ).unset_upstream()
+        ''
+        """
+        return self.cmd.run(
+            ["branch", "--unset-upstream", self.branch_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def track(
+        self,
+        remote_branch: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Create branch tracking a remote branch.
+
+        Wraps `git branch -t <https://git-scm.com/docs/git-branch>`_.
+
+        Parameters
+        ----------
+        remote_branch :
+            Remote branch to track (e.g., 'origin/main').
+
+        Examples
+        --------
+        For existing branches, use set_upstream() instead.
+        track() is for creating new branches that track a remote:
+
+        >>> GitBranchCmd(
+        ...     path=example_git_repo.path,
+        ...     branch_name='tracking-branch'
+        ... ).track('origin/master')
+        "branch 'tracking-branch' set up to track 'origin/master'."
+        """
+        return self.cmd.run(
+            ["branch", "-t", self.branch_name, remote_branch],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitBranchManager:
+    """Run commands directly related to git branches of a git repo."""
+
+    branch_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-branch(1), git-checkout(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=tmp_path)
+        <GitBranchManager path=...>
+
+        >>> GitBranchManager(path=tmp_path).run(quiet=True)
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitBranchManager(
+        ...     path=example_git_repo.path).run(quiet=True)
+        '* master'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git branch manager object."""
+        return f"<GitBranchManager path={self.path}>"
+
+    def run(
+        self,
+        local_flags: list[str] | None = None,
+        *,
+        quiet: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's branches.
+
+        Wraps `git branch <https://git-scm.com/docs/git-branch>`_.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=example_git_repo.path).run()
+        '* master'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+
+        if quiet is True:
+            local_flags.append("--quiet")
+
+        return self.cmd.run(
+            ["branch", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def checkout(self, *, branch: str) -> str:
+        """Git branch checkout.
+
+        Examples
+        --------
+        >>> GitBranchManager(path=example_git_repo.path).checkout(branch='master')
+        "Your branch is up to date with 'origin/master'."
+        """
+        return self.cmd.run(
+            [
+                "checkout",
+                *[branch],
+            ],
+        )
+
+    def create(
+        self,
+        *,
+        branch: str,
+        checkout: bool = False,
+    ) -> str:
+        """Create a git branch.
+
+        Parameters
+        ----------
+        branch :
+            Name of the branch to create.
+        checkout :
+            If True, also checkout the newly created branch.
+            Defaults to False (create only, don't switch HEAD).
+
+        Examples
+        --------
+        >>> GitBranchManager(path=example_git_repo.path).create(branch='master')
+        "fatal: a branch named 'master' already exists"
+        """
+        result = self.cmd.run(
+            ["branch", branch],
+            check_returncode=False,
+        )
+        if checkout and "fatal" not in result.lower():
+            self.cmd.run(["checkout", branch])
+        return result
+
+    def _ls(
+        self,
+        *,
+        local_flags: list[str] | None = None,
+    ) -> list[str]:
+        """List branches (raw output).
+
+        Parameters
+        ----------
+        local_flags :
+            Additional flags to pass to git branch.
+
+        Examples
+        --------
+        >>> branches = GitBranchManager(path=example_git_repo.path)._ls()
+        >>> '* master' in branches or 'master' in str(branches)
+        True
+        """
+        flags = ["--list"]
+        if local_flags:
+            flags.extend(local_flags)
+        return self.run(local_flags=flags).splitlines()
+
+    def ls(
+        self,
+        *,
+        _all: bool = False,
+        remotes: bool = False,
+        merged: str | None = None,
+        no_merged: str | None = None,
+        contains: str | None = None,
+        sort: str | None = None,
+        verbose: bool = False,
+    ) -> QueryList[GitBranchCmd]:
+        """List branches.
+
+        Parameters
+        ----------
+        _all :
+            List all branches (local + remote). Maps to --all.
+        remotes :
+            List remote branches only. Maps to --remotes.
+        merged :
+            Only list branches merged into specified commit.
+        no_merged :
+            Only list branches NOT merged into specified commit.
+        contains :
+            Only list branches containing specified commit.
+        sort :
+            Sort key (e.g., '-committerdate', 'refname').
+        verbose :
+            Show sha1 and commit subject line for each head. Maps to --verbose.
+
+        Examples
+        --------
+        >>> branches = GitBranchManager(path=example_git_repo.path).ls()
+        >>> any(b.branch_name == 'master' for b in branches)
+        True
+        """
+        local_flags: list[str] = []
+        if _all:
+            local_flags.append("--all")
+        if remotes:
+            local_flags.append("--remotes")
+        if merged is not None:
+            local_flags.extend(["--merged", merged])
+        if no_merged is not None:
+            local_flags.extend(["--no-merged", no_merged])
+        if contains is not None:
+            local_flags.extend(["--contains", contains])
+        if sort is not None:
+            local_flags.extend(["--sort", sort])
+        if verbose:
+            local_flags.append("--verbose")
+
+        def extract_branch_name(line: str) -> str:
+            """Extract branch name from output line (handles verbose output)."""
+            # Strip leading "* " or "  " marker
+            name = line.lstrip("* ")
+            # With --verbose, format is: "name  sha1 message" - take first token
+            if verbose:
+                name = name.split()[0] if name.split() else name
+            return name
+
+        return QueryList(
+            [
+                GitBranchCmd(path=self.path, branch_name=extract_branch_name(line))
+                for line in self._ls(local_flags=local_flags or None)
+            ],
+        )
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitBranchCmd | None:
+        """Get branch via filter lookup.
+
+        Examples
+        --------
+        >>> GitBranchManager(
+        ...     path=example_git_repo.path
+        ... ).get(branch_name='master')
+        <GitBranchCmd path=... branch_name=master>
+
+        >>> GitBranchManager(
+        ...     path=example_git_repo.path
+        ... ).get(branch_name='unknown')
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitBranchCmd]:
+        """Get branches via filter lookup.
+
+        Examples
+        --------
+        >>> GitBranchManager(
+        ...     path=example_git_repo.path
+        ... ).filter(branch_name__contains='master')
+        [<GitBranchCmd path=... branch_name=master>]
+
+        >>> GitBranchManager(
+        ...     path=example_git_repo.path
+        ... ).filter(branch_name__contains='unknown')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+GitTagCommandLiteral = t.Literal[
+    "list",
+    "create",
+    "delete",
+    "verify",
+]
+
+
+class GitTagCmd:
+    """Run commands directly for a git tag on a git repository."""
+
+    tag_name: str
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        tag_name: str,
+        cmd: Git | None = None,
+    ) -> None:
+        r"""Lite, typed, pythonic wrapper for git-tag(1).
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        tag_name :
+            Name of tag
+
+        Examples
+        --------
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='v1.0.0',
+        ... )
+        <GitTagCmd path=... tag_name=v1.0.0>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.tag_name = tag_name
+
+    def __repr__(self) -> str:
+        """Representation of a git tag for a git repository."""
+        return f"<GitTagCmd path={self.path} tag_name={self.tag_name}>"
+
+    def run(
+        self,
+        command: GitTagCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against a git tag.
+
+        Wraps `git tag <https://git-scm.com/docs/git-tag>`_.
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='test-tag', message='Test tag'
+        ... )
+        ''
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='test-tag',
+        ... ).run()
+        '...test-tag...'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["tag", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def delete(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git tag delete.
+
+        Examples
+        --------
+        Create a tag first:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='delete-me', message='Tag to delete'
+        ... )
+        ''
+
+        Now delete it:
+
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='delete-me',
+        ... ).delete()
+        "Deleted tag 'delete-me'..."
+        """
+        local_flags: list[str] = ["-d", self.tag_name]
+
+        return self.run(
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def verify(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git tag verify.
+
+        Verify a GPG-signed tag.
+
+        Examples
+        --------
+        First create a lightweight tag:
+
+        >>> GitTagManager(path=example_git_repo.path).create(name='verify-tag')
+        ''
+
+        Try to verify it (lightweight tags can't be verified):
+
+        >>> GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='verify-tag',
+        ... ).verify()
+        'error: verify-tag: cannot verify a non-tag object...'
+        """
+        local_flags: list[str] = ["-v", self.tag_name]
+
+        return self.run(
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def show(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show tag details using git show.
+
+        Examples
+        --------
+        Create an annotated tag first:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='show-tag', message='Show this tag'
+        ... )
+        ''
+
+        Show the tag:
+
+        >>> print(GitTagCmd(
+        ...     path=example_git_repo.path,
+        ...     tag_name='show-tag',
+        ... ).show())
+        tag show-tag
+        Tagger: ...
+        <BLANKLINE>
+        Show this tag
+        ...
+        """
+        return self.cmd.run(
+            ["show", self.tag_name],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitTagManager:
+    """Run commands directly related to git tags of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-tag(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitTagManager(path=tmp_path)
+        <GitTagManager path=...>
+
+        >>> GitTagManager(path=tmp_path).run()
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> mgr = GitTagManager(path=example_git_repo.path)
+        >>> mgr.create(name='init-doctest-tag', message='For doctest')
+        ''
+        >>> mgr.run()
+        '...init-doctest-tag...'
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git tag manager object."""
+        return f"<GitTagManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitTagCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's tags.
+
+        Wraps `git tag <https://git-scm.com/docs/git-tag>`_.
+
+        Examples
+        --------
+        >>> mgr = GitTagManager(path=example_git_repo.path)
+        >>> mgr.create(name='run-doctest-tag', message='For doctest')
+        ''
+        >>> mgr.run()
+        '...run-doctest-tag...'
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["tag", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def create(
+        self,
+        *,
+        name: str,
+        ref: str | None = None,
+        message: str | None = None,
+        annotate: bool | None = None,
+        sign: bool | None = None,
+        local_user: str | None = None,
+        force: bool | None = None,
+        file: StrPath | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Git tag create.
+
+        Parameters
+        ----------
+        name :
+            Name of the tag to create
+        ref :
+            Git reference (commit, branch) to tag. Defaults to HEAD.
+        message :
+            Tag message (implies annotated tag)
+        annotate :
+            Create an annotated tag
+        sign :
+            Create a GPG-signed tag
+        local_user :
+            Use specific GPG key for signing
+        force :
+            Replace existing tag
+        file :
+            Read message from file
+
+        Examples
+        --------
+        Create a lightweight tag:
+
+        >>> GitTagManager(path=example_git_repo.path).create(name='lightweight-tag')
+        ''
+
+        Create an annotated tag:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='annotated-tag', message='This is an annotated tag'
+        ... )
+        ''
+
+        Create a tag on a specific commit:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='ref-tag', ref='HEAD', message='Tag at HEAD'
+        ... )
+        ''
+        """
+        local_flags: list[str] = []
+
+        if annotate is True:
+            local_flags.append("-a")
+        if sign is True:
+            local_flags.append("-s")
+        if local_user is not None:
+            local_flags.extend(["-u", local_user])
+        if force is True:
+            local_flags.append("-f")
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if file is not None:
+            local_flags.extend(["-F", str(file)])
+
+        local_flags.append(name)
+
+        if ref is not None:
+            local_flags.append(ref)
+
+        return self.run(
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(
+        self,
+        *,
+        pattern: str | None = None,
+        sort: str | None = None,
+        contains: str | None = None,
+        no_contains: str | None = None,
+        merged: str | None = None,
+        no_merged: str | None = None,
+        lines: int | None = None,
+    ) -> list[str]:
+        r"""List tags (raw output).
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='list-tag-1', message='First tag'
+        ... )
+        ''
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='list-tag-2', message='Second tag'
+        ... )
+        ''
+        >>> 'list-tag-1' in GitTagManager(path=example_git_repo.path)._ls()
+        True
+        """
+        local_flags: list[str] = ["-l"]
+
+        if sort is not None:
+            local_flags.append(f"--sort={sort}")
+        if contains is not None:
+            local_flags.extend(["--contains", contains])
+        if no_contains is not None:
+            local_flags.extend(["--no-contains", no_contains])
+        if merged is not None:
+            local_flags.extend(["--merged", merged])
+        if no_merged is not None:
+            local_flags.extend(["--no-merged", no_merged])
+        if lines is not None:
+            local_flags.append(f"-n{lines}")
+        if pattern is not None:
+            local_flags.append(pattern)
+
+        result = self.run(local_flags=local_flags)
+        if not result:
+            return []
+        return result.splitlines()
+
+    def ls(
+        self,
+        *,
+        pattern: str | None = None,
+        sort: str | None = None,
+        contains: str | None = None,
+        no_contains: str | None = None,
+        merged: str | None = None,
+        no_merged: str | None = None,
+    ) -> QueryList[GitTagCmd]:
+        """List tags.
+
+        Parameters
+        ----------
+        pattern :
+            List tags matching pattern (shell wildcard)
+        sort :
+            Sort by key (e.g., 'version:refname', '-creatordate')
+        contains :
+            Only tags containing the specified commit
+        no_contains :
+            Only tags not containing the specified commit
+        merged :
+            Only tags merged into the specified commit
+        no_merged :
+            Only tags not merged into the specified commit
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='ls-tag', message='Listing tag'
+        ... )
+        ''
+        >>> tags = GitTagManager(path=example_git_repo.path).ls()
+        >>> any(t.tag_name == 'ls-tag' for t in tags)
+        True
+        """
+        tag_names = self._ls(
+            pattern=pattern,
+            sort=sort,
+            contains=contains,
+            no_contains=no_contains,
+            merged=merged,
+            no_merged=no_merged,
+        )
+
+        return QueryList(
+            [GitTagCmd(path=self.path, tag_name=tag_name) for tag_name in tag_names],
+        )
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitTagCmd | None:
+        """Get tag via filter lookup.
+
+        Examples
+        --------
+        Create a tag first:
+
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='get-tag', message='Get this tag'
+        ... )
+        ''
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).get(tag_name='get-tag')
+        <GitTagCmd path=... tag_name=get-tag>
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).get(tag_name='unknown')
+        Traceback (most recent call last):
+            exec(compile(example.source, filename, "single",
+            ...
+            return self.ls().get(*args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "..._internal/query_list.py", line ..., in get
+            raise ObjectDoesNotExist
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitTagCmd]:
+        """Get tags via filter lookup.
+
+        Examples
+        --------
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='filter-tag-a', message='Filter tag A'
+        ... )
+        ''
+        >>> GitTagManager(path=example_git_repo.path).create(
+        ...     name='filter-tag-b', message='Filter tag B'
+        ... )
+        ''
+
+        >>> len(GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).filter(tag_name__contains='filter-tag')) >= 2
+        True
+
+        >>> GitTagManager(
+        ...     path=example_git_repo.path
+        ... ).filter(tag_name__contains='unknown')
+        []
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+# =============================================================================
+# Git Worktree Commands
+# =============================================================================
+
+GitWorktreeCommandLiteral = t.Literal[
+    "add",
+    "list",
+    "lock",
+    "move",
+    "prune",
+    "remove",
+    "repair",
+    "unlock",
+]
+
+
+class GitWorktreeCmd:
+    """Run commands directly against a git worktree entry for a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+        worktree_path: str,
+        head: str | None = None,
+        branch: str | None = None,
+        locked: bool = False,
+        prunable: bool = False,
+    ) -> None:
+        """Lite, typed, pythonic wrapper for a git-worktree(1) entry.
+
+        Parameters
+        ----------
+        path :
+            Path to the main git repository.
+        worktree_path :
+            Path to this worktree.
+        head :
+            HEAD commit SHA for this worktree.
+        branch :
+            Branch checked out in this worktree.
+        locked :
+            Whether this worktree is locked.
+        prunable :
+            Whether this worktree is prunable.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/example-worktree',
+        ... )
+        <GitWorktreeCmd path=... worktree_path=/tmp/example-worktree>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.worktree_path = worktree_path
+        self.head = head
+        self.branch = branch
+        self.locked = locked
+        self.prunable = prunable
+
+    def __repr__(self) -> str:
+        """Representation of a git worktree entry."""
+        return f"<GitWorktreeCmd path={self.path} worktree_path={self.worktree_path}>"
+
+    def run(
+        self,
+        command: GitWorktreeCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against a git worktree.
+
+        Wraps `git worktree <https://git-scm.com/docs/git-worktree>`_.
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["worktree", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def remove(
+        self,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Remove this worktree.
+
+        Parameters
+        ----------
+        force :
+            Force removal even if worktree is dirty or locked.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).remove()
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("-f")
+
+        local_flags.append(self.worktree_path)
+
+        return self.run(
+            "remove",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def lock(
+        self,
+        *,
+        reason: str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Lock this worktree.
+
+        Parameters
+        ----------
+        reason :
+            Reason for locking the worktree.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).lock()
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = []
+
+        if reason is not None:
+            local_flags.extend(["--reason", reason])
+
+        local_flags.append(self.worktree_path)
+
+        return self.run(
+            "lock",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def unlock(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Unlock this worktree.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).unlock()
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = [self.worktree_path]
+
+        return self.run(
+            "unlock",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def move(
+        self,
+        new_path: StrPath,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Move this worktree to a new location.
+
+        Parameters
+        ----------
+        new_path :
+            New path for the worktree.
+        force :
+            Force move even if worktree is dirty or locked.
+
+        Examples
+        --------
+        >>> GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).move('/tmp/new-worktree')
+        "fatal: '/tmp/nonexistent-worktree' is not a working tree"
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("-f")
+
+        local_flags.extend([self.worktree_path, str(new_path)])
+
+        return self.run(
+            "move",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def repair(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Repair this worktree.
+
+        Examples
+        --------
+        >>> result = GitWorktreeCmd(
+        ...     path=example_git_repo.path,
+        ...     worktree_path='/tmp/nonexistent-worktree',
+        ... ).repair()
+        >>> result == '' or 'error' in result
+        True
+        """
+        local_flags: list[str] = [self.worktree_path]
+
+        return self.run(
+            "repair",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitWorktreeManager:
+    """Run commands directly related to git worktrees of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-worktree(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitWorktreeManager(path=tmp_path)
+        <GitWorktreeManager path=...>
+
+        >>> GitWorktreeManager(path=tmp_path).run('list')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> len(GitWorktreeManager(path=example_git_repo.path).run('list')) > 0
+        True
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git worktree manager object."""
+        return f"<GitWorktreeManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitWorktreeCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's worktrees.
+
+        Wraps `git worktree <https://git-scm.com/docs/git-worktree>`_.
+
+        Examples
+        --------
+        >>> len(GitWorktreeManager(path=example_git_repo.path).run('list')) > 0
+        True
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["worktree", *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def add(
+        self,
+        path: StrPath,
+        *,
+        commit_ish: str | None = None,
+        force: bool | None = None,
+        detach: bool | None = None,
+        checkout: bool | None = None,
+        lock: bool | None = None,
+        reason: str | None = None,
+        new_branch: str | None = None,
+        new_branch_force: str | None = None,
+        orphan: bool | None = None,
+        track: bool | None = None,
+        guess_remote: bool | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Add a new worktree.
+
+        Parameters
+        ----------
+        path :
+            Path for the new worktree.
+        commit_ish :
+            Commit/branch to checkout in the new worktree.
+        force :
+            Force creation even if path already exists.
+        detach :
+            Detach HEAD in the new worktree.
+        checkout :
+            Checkout commit after creating worktree.
+        lock :
+            Lock the worktree after creation.
+        reason :
+            Reason for locking (requires lock=True).
+        new_branch :
+            Create a new branch (-b).
+        new_branch_force :
+            Force create a new branch (-B).
+        orphan :
+            Create a new orphan branch.
+        track :
+            Set up tracking for the new branch.
+        guess_remote :
+            Guess remote tracking branch.
+
+        Examples
+        --------
+        >>> GitWorktreeManager(path=example_git_repo.path).add(
+        ...     path='/tmp/test-worktree-add', commit_ish='HEAD'
+        ... )
+        "Preparing worktree (detached HEAD ...)..."
+        """
+        local_flags: list[str] = []
+
+        if force is True:
+            local_flags.append("-f")
+        if detach is True:
+            local_flags.append("--detach")
+        if checkout is True:
+            local_flags.append("--checkout")
+        if checkout is False:
+            local_flags.append("--no-checkout")
+        if lock is True:
+            local_flags.append("--lock")
+        if reason is not None:
+            local_flags.extend(["--reason", reason])
+        if new_branch is not None:
+            local_flags.extend(["-b", new_branch])
+        if new_branch_force is not None:
+            local_flags.extend(["-B", new_branch_force])
+        if orphan is True:
+            local_flags.append("--orphan")
+        if track is True:
+            local_flags.append("--track")
+        if track is False:
+            local_flags.append("--no-track")
+        if guess_remote is True:
+            local_flags.append("--guess-remote")
+        if guess_remote is False:
+            local_flags.append("--no-guess-remote")
+
+        local_flags.append(str(path))
+
+        if commit_ish is not None:
+            local_flags.append(commit_ish)
+
+        return self.run(
+            "add",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def prune(
+        self,
+        *,
+        dry_run: bool | None = None,
+        verbose: bool | None = None,
+        expire: str | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Prune worktree information.
+
+        Parameters
+        ----------
+        dry_run :
+            Do not remove anything, just report what would be done.
+        verbose :
+            Report all removals.
+        expire :
+            Only expire unused worktrees older than the given time.
+
+        Examples
+        --------
+        >>> GitWorktreeManager(path=example_git_repo.path).prune()
+        ''
+
+        >>> GitWorktreeManager(path=example_git_repo.path).prune(dry_run=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if dry_run is True:
+            local_flags.append("-n")
+        if verbose is True:
+            local_flags.append("-v")
+        if expire is not None:
+            local_flags.extend(["--expire", expire])
+
+        return self.run(
+            "prune",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(
+        self,
+        *,
+        verbose: bool | None = None,
+    ) -> list[str]:
+        """List worktrees (raw output).
+
+        Examples
+        --------
+        >>> len(GitWorktreeManager(path=example_git_repo.path)._ls()) >= 1
+        True
+        """
+        local_flags: list[str] = ["--porcelain"]
+
+        if verbose is True:
+            local_flags.append("-v")
+
+        result = self.run("list", local_flags=local_flags)
+        return result.strip().split("\n\n") if result.strip() else []
+
+    def ls(
+        self,
+        *,
+        verbose: bool | None = None,
+    ) -> QueryList[GitWorktreeCmd]:
+        """List worktrees.
+
+        Returns a QueryList of GitWorktreeCmd objects.
+
+        Parameters
+        ----------
+        verbose :
+            Include additional information.
+
+        Examples
+        --------
+        >>> worktrees = GitWorktreeManager(path=example_git_repo.path).ls()
+        >>> len(worktrees) >= 1
+        True
+        """
+        raw_entries = self._ls(verbose=verbose)
+
+        worktrees: list[GitWorktreeCmd] = []
+        for entry in raw_entries:
+            if not entry:
+                continue
+
+            # Parse porcelain format
+            worktree_path = None
+            head = None
+            branch = None
+            locked = False
+            prunable = False
+
+            for line in entry.split("\n"):
+                if line.startswith("worktree "):
+                    worktree_path = line[9:]
+                elif line.startswith("HEAD "):
+                    head = line[5:]
+                elif line.startswith("branch "):
+                    branch = line[7:]
+                elif line == "locked" or line.startswith("locked "):
+                    locked = True
+                elif line == "prunable" or line.startswith("prunable "):
+                    prunable = True
+
+            if worktree_path is not None:
+                worktrees.append(
+                    GitWorktreeCmd(
+                        path=self.path,
+                        cmd=self.cmd,
+                        worktree_path=worktree_path,
+                        head=head,
+                        branch=branch,
+                        locked=locked,
+                        prunable=prunable,
+                    ),
+                )
+
+        return QueryList(worktrees)
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitWorktreeCmd | None:
+        """Get worktree via filter lookup.
+
+        Examples
+        --------
+        >>> worktrees = GitWorktreeManager(path=example_git_repo.path).ls()
+        >>> if len(worktrees) > 0:
+        ...     wt = GitWorktreeManager(path=example_git_repo.path).get(
+        ...         worktree_path=worktrees[0].worktree_path
+        ...     )
+        ...     wt is not None
+        ... else:
+        ...     True
+        True
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitWorktreeCmd]:
+        """Get worktrees via filter lookup.
+
+        Examples
+        --------
+        >>> len(GitWorktreeManager(path=example_git_repo.path).filter()) >= 0
+        True
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+# =============================================================================
+# Git Notes Commands
+# =============================================================================
+
+GitNotesCommandLiteral = t.Literal[
+    "list",
+    "add",
+    "copy",
+    "append",
+    "edit",
+    "show",
+    "merge",
+    "remove",
+    "prune",
+    "get-ref",
+]
+
+
+class GitNoteCmd:
+    """Run commands directly against a git note for a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+        object_sha: str,
+        note_sha: str | None = None,
+        ref: str | None = None,
+    ) -> None:
+        """Lite, typed, pythonic wrapper for a git-notes(1) entry.
+
+        Parameters
+        ----------
+        path :
+            Path to the git repository.
+        object_sha :
+            SHA of the object this note is attached to.
+        note_sha :
+            SHA of the note blob itself.
+        ref :
+            Notes ref to use (default: refs/notes/commits).
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... )
+        <GitNoteCmd path=... object_sha=HEAD>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+        self.object_sha = object_sha
+        self.note_sha = note_sha
+        self.ref = ref
+
+    def __repr__(self) -> str:
+        """Representation of a git note."""
+        return f"<GitNoteCmd path={self.path} object_sha={self.object_sha}>"
+
+    def run(
+        self,
+        command: GitNotesCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        r"""Run command against git notes.
+
+        Wraps `git notes <https://git-scm.com/docs/git-notes>`_.
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+
+        # Add ref option if specified
+        ref_flags: list[str] = []
+        if self.ref is not None:
+            ref_flags.extend(["--ref", self.ref])
+
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["notes", *ref_flags, *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def show(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show the note for this object.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).show()
+        'error: no note found for object...'
+        """
+        local_flags: list[str] = [self.object_sha]
+
+        return self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def remove(
+        self,
+        *,
+        ignore_missing: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Remove the note for this object.
+
+        Parameters
+        ----------
+        ignore_missing :
+            Don't error if no note exists.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).remove(ignore_missing=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if ignore_missing:
+            local_flags.append("--ignore-missing")
+
+        local_flags.append(self.object_sha)
+
+        return self.run(
+            "remove",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def append(
+        self,
+        *,
+        message: str | None = None,
+        file: StrPath | None = None,
+        allow_empty: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Append to the note for this object.
+
+        Parameters
+        ----------
+        message :
+            Note message to append.
+        file :
+            Read message from file.
+        allow_empty :
+            Allow empty note.
+
+        Examples
+        --------
+        >>> GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).append(message='Additional note')
+        ''
+        """
+        local_flags: list[str] = []
+
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if file is not None:
+            local_flags.extend(["-F", str(file)])
+        if allow_empty:
+            local_flags.append("--allow-empty")
+
+        local_flags.append(self.object_sha)
+
+        return self.run(
+            "append",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def edit(
+        self,
+        *,
+        allow_empty: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Edit the note for this object.
+
+        Note: This typically opens an editor, so it's mostly useful
+        in non-interactive contexts with GIT_EDITOR set.
+
+        Parameters
+        ----------
+        allow_empty :
+            Allow empty note.
+
+        Examples
+        --------
+        Use config to override editor (avoids interactive editor):
+
+        >>> result = GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).edit(allow_empty=True, config={'core.editor': 'true'})
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if allow_empty:
+            local_flags.append("--allow-empty")
+
+        local_flags.append(self.object_sha)
+
+        return self.run(
+            "edit",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def copy(
+        self,
+        to_object: str,
+        *,
+        force: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Copy this note to another object.
+
+        Parameters
+        ----------
+        to_object :
+            Object to copy the note to.
+        force :
+            Overwrite existing note on target.
+
+        Examples
+        --------
+        >>> result = GitNoteCmd(
+        ...     path=example_git_repo.path,
+        ...     object_sha='HEAD',
+        ... ).copy('HEAD', force=True)
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if force:
+            local_flags.append("-f")
+
+        local_flags.extend([self.object_sha, to_object])
+
+        return self.run(
+            "copy",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitNotesManager:
+    """Run commands directly related to git notes of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+        ref: str | None = None,
+    ) -> None:
+        """Wrap some of git-notes(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        ref :
+            Notes ref to use (default: refs/notes/commits).
+
+        Examples
+        --------
+        >>> GitNotesManager(path=tmp_path)
+        <GitNotesManager path=...>
+
+        >>> GitNotesManager(path=tmp_path).run('list')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> GitNotesManager(path=example_git_repo.path).run('list')
+        ''
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+        self.ref = ref
+
+    def __repr__(self) -> str:
+        """Representation of git notes manager object."""
+        return f"<GitNotesManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitNotesCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's notes.
+
+        Wraps `git notes <https://git-scm.com/docs/git-notes>`_.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).run('list')
+        ''
+        """
+        local_flags = local_flags if isinstance(local_flags, list) else []
+
+        # Add ref option if specified
+        ref_flags: list[str] = []
+        if self.ref is not None:
+            ref_flags.extend(["--ref", self.ref])
+
+        if command is not None:
+            local_flags.insert(0, command)
+
+        return self.cmd.run(
+            ["notes", *ref_flags, *local_flags],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def add(
+        self,
+        object_sha: str = "HEAD",
+        *,
+        message: str | None = None,
+        file: StrPath | None = None,
+        force: bool = False,
+        allow_empty: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Add a note to an object.
+
+        Parameters
+        ----------
+        object_sha :
+            Object to add note to (default: HEAD).
+        message :
+            Note message.
+        file :
+            Read message from file.
+        force :
+            Overwrite existing note.
+        allow_empty :
+            Allow empty note.
+
+        Examples
+        --------
+        >>> result = GitNotesManager(path=example_git_repo.path).add(
+        ...     message='Test note', force=True
+        ... )
+        >>> 'error' in result.lower() or 'Overwriting' in result or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if message is not None:
+            local_flags.extend(["-m", message])
+        if file is not None:
+            local_flags.extend(["-F", str(file)])
+        if force:
+            local_flags.append("-f")
+        if allow_empty:
+            local_flags.append("--allow-empty")
+
+        local_flags.append(object_sha)
+
+        return self.run(
+            "add",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def prune(
+        self,
+        *,
+        dry_run: bool = False,
+        verbose: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Prune notes for non-existing objects.
+
+        Parameters
+        ----------
+        dry_run :
+            Don't remove, just report.
+        verbose :
+            Report all removed notes.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).prune()
+        ''
+
+        >>> GitNotesManager(path=example_git_repo.path).prune(dry_run=True)
+        ''
+        """
+        local_flags: list[str] = []
+
+        if dry_run:
+            local_flags.append("-n")
+        if verbose:
+            local_flags.append("-v")
+
+        return self.run(
+            "prune",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def merge(
+        self,
+        notes_ref: str | None = None,
+        *,
+        strategy: str | None = None,
+        commit: bool = False,
+        abort: bool = False,
+        quiet: bool = False,
+        verbose: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Merge notes from another ref.
+
+        Git notes merge has three mutually exclusive forms:
+
+        1. ``git notes merge [-s <strategy>] <notes-ref>`` - Start a merge
+        2. ``git notes merge --commit`` - Finalize in-progress merge
+        3. ``git notes merge --abort`` - Abort in-progress merge
+
+        Parameters
+        ----------
+        notes_ref :
+            Notes ref to merge from. Required for starting a merge,
+            must be None when using commit or abort.
+        strategy :
+            Merge strategy (manual, ours, theirs, union, cat_sort_uniq).
+            Only valid when starting a merge with notes_ref.
+        commit :
+            Finalize in-progress merge. Cannot be combined with abort or notes_ref.
+        abort :
+            Abort in-progress merge. Cannot be combined with commit or notes_ref.
+        quiet :
+            Suppress output.
+        verbose :
+            Verbose output.
+
+        Examples
+        --------
+        >>> result = GitNotesManager(path=example_git_repo.path).merge(
+        ...     'refs/notes/other'
+        ... )
+        >>> 'error' in result.lower() or 'fatal' in result.lower() or result == ''
+        True
+        """
+        # Validate mutual exclusivity
+        if commit and abort:
+            msg = "Cannot specify both commit and abort"
+            raise ValueError(msg)
+
+        if commit or abort:
+            if notes_ref is not None:
+                msg = "Cannot specify notes_ref with --commit or --abort"
+                raise ValueError(msg)
+            if strategy is not None:
+                msg = "Cannot specify strategy with --commit or --abort"
+                raise ValueError(msg)
+        elif notes_ref is None:
+            msg = "notes_ref is required when not using --commit or --abort"
+            raise ValueError(msg)
+
+        local_flags: list[str] = []
+
+        if strategy is not None:
+            local_flags.extend(["-s", strategy])
+        if commit:
+            local_flags.append("--commit")
+        if abort:
+            local_flags.append("--abort")
+        if quiet:
+            local_flags.append("-q")
+        if verbose:
+            local_flags.append("-v")
+
+        if notes_ref is not None:
+            local_flags.append(notes_ref)
+
+        return self.run(
+            "merge",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def get_ref(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Get the current notes ref.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).get_ref()
+        'refs/notes/commits'
+        """
+        return self.run(
+            "get-ref",
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def _ls(self) -> list[tuple[str, str]]:
+        """List notes (raw output).
+
+        Returns list of (note_sha, object_sha) tuples.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path)._ls()
+        [...]
+        """
+        result = self.run("list")
+        if not result.strip():
+            return []
+
+        notes = []
+        for line in result.strip().splitlines():
+            parts = line.split()
+            if len(parts) >= 2:
+                notes.append((parts[0], parts[1]))
+        return notes
+
+    def ls(self) -> QueryList[GitNoteCmd]:
+        """List notes.
+
+        Returns a QueryList of GitNoteCmd objects.
+
+        Examples
+        --------
+        >>> notes = GitNotesManager(path=example_git_repo.path).ls()
+        >>> isinstance(notes, list)
+        True
+        """
+        raw_notes = self._ls()
+
+        return QueryList(
+            [
+                GitNoteCmd(
+                    path=self.path,
+                    cmd=self.cmd,
+                    object_sha=object_sha,
+                    note_sha=note_sha,
+                    ref=self.ref,
+                )
+                for note_sha, object_sha in raw_notes
+            ],
+        )
+
+    def get(self, *args: t.Any, **kwargs: t.Any) -> GitNoteCmd | None:
+        """Get note via filter lookup.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).get(object_sha='HEAD')
+        Traceback (most recent call last):
+            ...
+        libvcs._internal.query_list.ObjectDoesNotExist
+        """
+        return self.ls().get(*args, **kwargs)
+
+    def filter(self, *args: t.Any, **kwargs: t.Any) -> list[GitNoteCmd]:
+        """Get notes via filter lookup.
+
+        Examples
+        --------
+        >>> GitNotesManager(path=example_git_repo.path).filter()
+        [...]
+        """
+        return self.ls().filter(*args, **kwargs)
+
+
+GitReflogCommandLiteral = t.Literal[
+    "show",
+    "expire",
+    "delete",
+    "exists",
+]
+
+
+@dataclasses.dataclass
+class GitReflogEntry:
+    """Represent a git reflog entry."""
+
+    sha: str
+    """Commit SHA."""
+
+    refspec: str
+    """Reference specification (e.g., HEAD@{0})."""
+
+    action: str
+    """Action performed (e.g., commit, checkout, merge)."""
+
+    message: str
+    """Commit/action message."""
+
+    #: Internal: GitReflogEntryCmd for operations on this entry
+    _cmd: GitReflogEntryCmd | None = dataclasses.field(default=None, repr=False)
+
+    @property
+    def cmd(self) -> GitReflogEntryCmd:
+        """Return command object for this reflog entry."""
+        if self._cmd is None:
+            msg = "GitReflogEntry not created with cmd reference"
+            raise ValueError(msg)
+        return self._cmd
+
+
+class GitReflogEntryCmd:
+    """Run commands directly on a specific git reflog entry."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        refspec: str,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-reflog(1) for specific entry operations.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+        refspec :
+            Reference specification (e.g., HEAD@{0}, master@{2}).
+
+        Examples
+        --------
+        >>> GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... )
+        <GitReflogEntryCmd HEAD@{0}>
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.refspec = refspec
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git reflog entry cmd object."""
+        return f"<GitReflogEntryCmd {self.refspec}>"
+
+    def run(
+        self,
+        command: GitReflogCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a specific reflog entry.
+
+        Wraps `git reflog <https://git-scm.com/docs/git-reflog>`_.
+
+        Parameters
+        ----------
+        command :
+            Reflog command to run.
+        local_flags :
+            Additional flags to pass.
+
+        Examples
+        --------
+        >>> GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... ).run('show')
+        '...'
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["reflog"]
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def show(
+        self,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show this reflog entry.
+
+        Examples
+        --------
+        >>> result = GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... ).show()
+        >>> len(result) > 0
+        True
+        """
+        return self.run(
+            "show",
+            local_flags=["-1", self.refspec],
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def delete(
+        self,
+        *,
+        rewrite: bool = False,
+        updateref: bool = False,
+        dry_run: bool = False,
+        verbose: bool = False,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Delete this reflog entry.
+
+        Parameters
+        ----------
+        rewrite :
+            Adjust subsequent entries to compensate.
+        updateref :
+            Update the ref to the value of the prior entry.
+        dry_run :
+            Don't actually delete, just show what would be deleted.
+        verbose :
+            Print extra information.
+
+        Examples
+        --------
+        >>> result = GitReflogEntryCmd(
+        ...     path=example_git_repo.path,
+        ...     refspec='HEAD@{0}',
+        ... ).delete(dry_run=True)
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if rewrite:
+            local_flags.append("--rewrite")
+        if updateref:
+            local_flags.append("--updateref")
+        if dry_run:
+            local_flags.append("-n")
+        if verbose:
+            local_flags.append("--verbose")
+
+        local_flags.append(self.refspec)
+
+        return self.run(
+            "delete",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+
+class GitReflogManager:
+    """Run commands directly related to git reflog of a git repo."""
+
+    def __init__(
+        self,
+        *,
+        path: StrPath,
+        cmd: Git | None = None,
+    ) -> None:
+        """Wrap some of git-reflog(1), manager.
+
+        Parameters
+        ----------
+        path :
+            Operates as PATH in the corresponding git subcommand.
+
+        Examples
+        --------
+        >>> GitReflogManager(path=tmp_path)
+        <GitReflogManager path=...>
+
+        >>> GitReflogManager(path=tmp_path).run('show')
+        'fatal: not a git repository (or any of the parent directories): .git'
+
+        >>> len(GitReflogManager(path=example_git_repo.path).run('show')) > 0
+        True
+        """
+        #: Directory to check out
+        self.path: pathlib.Path
+        if isinstance(path, pathlib.Path):
+            self.path = path
+        else:
+            self.path = pathlib.Path(path)
+
+        self.cmd = cmd if isinstance(cmd, Git) else Git(path=self.path)
+
+    def __repr__(self) -> str:
+        """Representation of git reflog manager object."""
+        return f"<GitReflogManager path={self.path}>"
+
+    def run(
+        self,
+        command: GitReflogCommandLiteral | None = None,
+        local_flags: list[str] | None = None,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+        **kwargs: t.Any,
+    ) -> str:
+        """Run a command against a git repository's reflog.
+
+        Wraps `git reflog <https://git-scm.com/docs/git-reflog>`_.
+
+        Parameters
+        ----------
+        command :
+            Reflog command to run.
+        local_flags :
+            Additional flags to pass.
+
+        Examples
+        --------
+        >>> len(GitReflogManager(path=example_git_repo.path).run('show')) > 0
+        True
+        """
+        local_flags = local_flags if local_flags is not None else []
+        _cmd: list[str] = ["reflog"]
+
+        if command is not None:
+            _cmd.append(command)
+
+        _cmd.extend(local_flags)
+
+        return self.cmd.run(
+            _cmd,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+            **kwargs,
+        )
+
+    def show(
+        self,
+        ref: str = "HEAD",
+        *,
+        number: int | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Show reflog for a ref.
+
+        Parameters
+        ----------
+        ref :
+            Reference to show reflog for (default: HEAD).
+        number :
+            Limit number of entries to show.
+
+        Examples
+        --------
+        >>> result = GitReflogManager(path=example_git_repo.path).show()
+        >>> len(result) > 0
+        True
+
+        >>> result = GitReflogManager(path=example_git_repo.path).show(number=5)
+        >>> len(result) > 0
+        True
+        """
+        local_flags: list[str] = []
+
+        if number is not None:
+            local_flags.extend(["-n", str(number)])
+
+        local_flags.append(ref)
+
+        return self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def expire(
+        self,
+        *,
+        expire: str | None = None,
+        expire_unreachable: str | None = None,
+        rewrite: bool = False,
+        updateref: bool = False,
+        stale_fix: bool = False,
+        dry_run: bool = False,
+        verbose: bool = False,
+        all_refs: bool = False,
+        single_worktree: bool = False,
+        refs: list[str] | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> str:
+        """Expire old reflog entries.
+
+        Parameters
+        ----------
+        expire :
+            Expire entries older than this time.
+        expire_unreachable :
+            Expire unreachable entries older than this time.
+        rewrite :
+            Adjust reflog entries as old entries are pruned.
+        updateref :
+            Update ref to pruned value.
+        stale_fix :
+            Prune stale git-hierarchies too.
+        dry_run :
+            Don't actually prune, just report.
+        verbose :
+            Print extra information.
+        all_refs :
+            Process reflogs of all refs.
+        single_worktree :
+            Only process reflogs for current worktree.
+        refs :
+            Specific refs to expire.
+
+        Examples
+        --------
+        >>> result = GitReflogManager(path=example_git_repo.path).expire(
+        ...     dry_run=True
+        ... )
+        >>> 'error' in result.lower() or result == ''
+        True
+        """
+        local_flags: list[str] = []
+
+        if expire is not None:
+            local_flags.append(f"--expire={expire}")
+        if expire_unreachable is not None:
+            local_flags.append(f"--expire-unreachable={expire_unreachable}")
+        if rewrite:
+            local_flags.append("--rewrite")
+        if updateref:
+            local_flags.append("--updateref")
+        if stale_fix:
+            local_flags.append("--stale-fix")
+        if dry_run:
+            local_flags.append("--dry-run")
+        if verbose:
+            local_flags.append("--verbose")
+        if all_refs:
+            local_flags.append("--all")
+            if single_worktree:
+                local_flags.append("--single-worktree")
+        if refs is not None:
+            local_flags.extend(refs)
+
+        return self.run(
+            "expire",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+    def exists(
+        self,
+        ref: str,
+        *,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> bool:
+        """Check if a reflog exists for a ref.
+
+        Parameters
+        ----------
+        ref :
+            Reference to check.
+
+        Returns
+        -------
+        bool
+            True if reflog exists, False otherwise.
+
+        Examples
+        --------
+        >>> GitReflogManager(path=example_git_repo.path).exists('HEAD')
+        True
+
+        >>> GitReflogManager(path=example_git_repo.path).exists(
+        ...     'refs/heads/nonexistent-branch-xyz123456'
+        ... )
+        False
+        """
+        from libvcs.exc import CommandError
+
+        try:
+            self.run(
+                "exists",
+                local_flags=[ref],
+                check_returncode=True,
+                log_in_real_time=log_in_real_time,
+            )
+        except CommandError:
+            return False
+        else:
+            return True
+
+    def _ls(
+        self,
+        ref: str = "HEAD",
+        *,
+        number: int | None = None,
+        # Pass-through to run()
+        log_in_real_time: bool = False,
+        check_returncode: bool | None = None,
+    ) -> list[dict[str, str]]:
+        """Parse reflog output into structured data.
+
+        Parameters
+        ----------
+        ref :
+            Reference to list reflog for.
+        number :
+            Limit number of entries.
+
+        Returns
+        -------
+        list[dict[str, str]]
+            List of parsed reflog entries.
+
+        Examples
+        --------
+        >>> entries = GitReflogManager(path=example_git_repo.path)._ls()
+        >>> len(entries) > 0
+        True
+        """
+        local_flags: list[str] = []
+
+        if number is not None:
+            local_flags.extend(["-n", str(number)])
+
+        local_flags.append(ref)
+
+        result = self.run(
+            "show",
+            local_flags=local_flags,
+            check_returncode=check_returncode,
+            log_in_real_time=log_in_real_time,
+        )
+
+        entries: list[dict[str, str]] = []
+        for line in result.strip().split("\n"):
+            if not line:
+                continue
+            # Format: <sha> <refspec>: <action>: <message>
+            # Example: d17245c HEAD@{0}: commit: tests/cmd...
+            parts = line.split(" ", 2)
+            if len(parts) >= 2:
+                sha = parts[0]
+                rest = parts[1] if len(parts) == 2 else f"{parts[1]} {parts[2]}"
+                # Split refspec from action:message
+                if ":" in rest:
+                    refspec_end = rest.index(":")
+                    refspec = rest[:refspec_end]
+                    action_message = rest[refspec_end + 1 :].strip()
+                    # Split action from message
+                    if ":" in action_message:
+                        action_end = action_message.index(":")
+                        action = action_message[:action_end].strip()
+                        message = action_message[action_end + 1 :].strip()
+                    else:
+                        action = action_message
+                        message = ""
+                else:
+                    refspec = rest
+                    action = ""
+                    message = ""
+
+                entries.append(
+                    {
+                        "sha": sha,
+                        "refspec": refspec,
+                        "action": action,
+                        "message": message,
+                    }
+                )
+
+        return entries
+
+    def ls(
+        self,
+        ref: str = "HEAD",
+        *,
+        number: int | None = None,
+    ) -> QueryList[GitReflogEntry]:
+        """List reflog entries as GitReflogEntry objects.
+
+        Parameters
+        ----------
+        ref :
+            Reference to list reflog for.
+        number :
+            Limit number of entries.
+
+        Returns
+        -------
+        QueryList[GitReflogEntry]
+            List of reflog entries with ORM-like filtering.
+
+        Examples
+        --------
+        >>> entries = GitReflogManager(path=example_git_repo.path).ls()
+        >>> isinstance(entries, QueryList)
+        True
+        >>> len(entries) > 0
+        True
+        """
+        entries_data = self._ls(ref=ref, number=number)
+        entries: list[GitReflogEntry] = []
+
+        for data in entries_data:
+            entry_cmd = GitReflogEntryCmd(
+                path=self.path,
+                refspec=data["refspec"],
+                cmd=self.cmd,
+            )
+            entry = GitReflogEntry(
+                sha=data["sha"],
+                refspec=data["refspec"],
+                action=data["action"],
+                message=data["message"],
+                _cmd=entry_cmd,
+            )
+            entries.append(entry)
+
+        return QueryList(entries)
+
+    def get(
+        self,
+        refspec: str | None = None,
+        sha: str | None = None,
+        **kwargs: t.Any,
+    ) -> GitReflogEntry:
+        """Get a specific reflog entry.
+
+        Parameters
+        ----------
+        refspec :
+            Reference specification to find.
+        sha :
+            SHA to find.
+        **kwargs :
+            Additional filter criteria.
+
+        Returns
+        -------
+        GitReflogEntry
+            The matching reflog entry.
+
+        Raises
+        ------
+        ObjectDoesNotExist
+            If no matching entry found.
+        MultipleObjectsReturned
+            If multiple entries match.
+
+        Examples
+        --------
+        >>> entry = GitReflogManager(path=example_git_repo.path).get(
+        ...     refspec='HEAD@{0}'
+        ... )
+        >>> entry.refspec
+        'HEAD@{0}'
+        """
+        filters: dict[str, t.Any] = {}
+        if refspec is not None:
+            filters["refspec"] = refspec
+        if sha is not None:
+            filters["sha"] = sha
+        filters.update(kwargs)
+
+        result = self.ls().get(**filters)
+        assert result is not None  # get() raises ObjectDoesNotExist, never returns None
+        return result
+
+    def filter(
+        self,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> QueryList[GitReflogEntry]:
+        """Filter reflog entries.
+
+        Parameters
+        ----------
+        *args :
+            Positional arguments for QueryList.filter().
+        **kwargs :
+            Keyword arguments for filtering (supports Django-style lookups).
+
+        Returns
+        -------
+        QueryList[GitReflogEntry]
+            Filtered list of reflog entries.
+
+        Examples
+        --------
+        >>> entries = GitReflogManager(path=example_git_repo.path).filter(
+        ...     action='commit'
+        ... )
+        >>> isinstance(entries, QueryList)
+        True
+        """
+        return self.ls().filter(*args, **kwargs)
