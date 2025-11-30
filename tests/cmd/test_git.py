@@ -1190,6 +1190,57 @@ def test_stash_push_and_list(git_repo: GitSync) -> None:
     assert stashes[0].index == 0
 
 
+def test_stash_cmd_push_path_types(git_repo: GitSync) -> None:
+    """Test GitStashCmd.push() handles all path types.
+
+    Verifies commit ece0d80: str paths were silently ignored.
+    Tests str, pathlib.Path, and list path argument types.
+    """
+    # Use unique filenames with timestamp to avoid rerun conflicts
+    import time
+
+    ts = str(int(time.time() * 1000000))[-6:]
+    test_filename = f"stash_path_{ts}.txt"
+    other_filename = f"stash_other_{ts}.txt"
+    test_file = git_repo.path / test_filename
+    other_file = git_repo.path / other_filename
+
+    test_file.write_text("initial content")
+    other_file.write_text("other initial")
+    git_repo.cmd.run(["add", test_filename, other_filename])
+    git_repo.cmd.run(["commit", "-m", f"Add stash path test files {ts}"])
+
+    stash_cmd = git.GitStashCmd(path=git_repo.path)
+
+    # Test 1: str path - should only stash the specified file
+    test_file.write_text("modified for str test")
+    other_file.write_text("other modified 1")
+    result = stash_cmd.push(path=test_filename)
+    assert "fatal" not in result.lower()
+    # other_file should still be modified (not stashed)
+    assert "other modified 1" in other_file.read_text()
+    stash = git_repo.cmd.stashes.get(index=0)
+    assert stash is not None
+    stash.pop()
+
+    # Test 2: pathlib.Path - should only stash the specified file
+    test_file.write_text("modified for pathlib test")
+    other_file.write_text("other modified 2")
+    result = stash_cmd.push(path=pathlib.Path(test_filename))
+    assert "fatal" not in result.lower()
+    assert "other modified 2" in other_file.read_text()
+    stash = git_repo.cmd.stashes.get(index=0)
+    assert stash is not None
+    stash.pop()
+
+    # Test 3: list path - should only stash the specified file
+    test_file.write_text("modified for list test")
+    other_file.write_text("other modified 3")
+    result = stash_cmd.push(path=[test_filename])
+    assert "fatal" not in result.lower()
+    assert "other modified 3" in other_file.read_text()
+
+
 def test_stash_entry_show(git_repo: GitSync) -> None:
     """Test GitStashEntryCmd.show()."""
     # Create a stash first
