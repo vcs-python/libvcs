@@ -12,6 +12,7 @@ from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
 
 if t.TYPE_CHECKING:
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
     from libvcs.sync.git import GitSync
 
 
@@ -904,6 +905,77 @@ def test_remote_manager_show_no_query_remotes(
     assert isinstance(result, str)
     # Result should contain remote name info
     assert "origin" in result.lower() or "fetch" in result.lower()
+
+
+class RemoteAddParamFixture(t.NamedTuple):
+    """Test fixture for GitRemoteManager.add() parameter wiring."""
+
+    test_id: str
+    fetch: bool | None
+    track: str | None
+    master: str | None
+
+
+REMOTE_ADD_PARAM_FIXTURES: list[RemoteAddParamFixture] = [
+    RemoteAddParamFixture(
+        test_id="fetch-only",
+        fetch=True,
+        track=None,
+        master=None,
+    ),
+    RemoteAddParamFixture(
+        test_id="track-branch",
+        fetch=None,
+        track="master",
+        master=None,
+    ),
+    RemoteAddParamFixture(
+        test_id="master-branch",
+        fetch=None,
+        track=None,
+        master="master",
+    ),
+    # Note: fetch=True with track requires the tracked branch to exist.
+    # We test track and master separately since their flag wiring is independent.
+]
+
+
+@pytest.mark.parametrize(
+    list(RemoteAddParamFixture._fields),
+    REMOTE_ADD_PARAM_FIXTURES,
+    ids=[test.test_id for test in REMOTE_ADD_PARAM_FIXTURES],
+)
+def test_remote_manager_add_params(
+    git_repo: GitSync,
+    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    test_id: str,
+    fetch: bool | None,
+    track: str | None,
+    master: str | None,
+) -> None:
+    """Test GitRemoteManager.add() parameter wiring.
+
+    Verifies commit 5c00880: fetch, track, master params were not wired.
+    """
+    remote_repo = create_git_remote_repo()
+    remote_name = f"test_remote_{test_id.replace('-', '_')}"
+
+    # Add remote with params - should not error
+    result = git_repo.cmd.remotes.add(
+        name=remote_name,
+        url=f"file://{remote_repo}",
+        fetch=fetch,
+        track=track,
+        master=master,
+    )
+
+    # Should succeed (empty string or no fatal error)
+    assert "fatal" not in result.lower()
+
+    # Verify remote was added
+    remotes = git_repo.cmd.remotes.ls()
+    remote_names = [r.remote_name for r in remotes]
+    assert remote_name in remote_names
 
 
 # =============================================================================
