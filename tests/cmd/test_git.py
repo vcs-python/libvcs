@@ -1215,6 +1215,51 @@ def test_stash_apply_pop(
         assert len(stashes_after) >= 1
 
 
+def test_stash_pop_by_specific_index(git_repo: GitSync) -> None:
+    """Test GitStashEntryCmd.pop() with specific stash index.
+
+    Verifies commit 12065f6: pop() uses stash@{N} format instead of
+    pathspec separator (-- N) which caused 'is not a valid reference' errors.
+
+    Note: git stash uses LIFO ordering:
+    - stash@{0} = most recent
+    - stash@{1} = second most recent
+    - stash@{2} = oldest
+    """
+    # Clear any existing stashes
+    git_repo.cmd.stashes.clear()
+
+    # Create a tracked file
+    test_file = git_repo.path / "stash_pop_index_test.txt"
+    test_file.write_text("initial content")
+    git_repo.cmd.run(["add", "stash_pop_index_test.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add test file"])
+
+    # Create multiple stashes
+    # Note: stash@{0} is most recent, stash@{2} is oldest
+    for msg in ["oldest", "middle", "newest"]:
+        test_file.write_text(f"modified for {msg}")
+        git_repo.cmd.stashes.push(message=msg)
+
+    # Verify we have 3 stashes
+    stashes = git_repo.cmd.stashes.ls()
+    assert len(stashes) == 3
+
+    # Pop stash@{1} (the middle one)
+    # This tests that the stash@{N} format works correctly
+    middle_stash = git_repo.cmd.stashes.get(index=1)
+    assert middle_stash is not None
+    assert "middle" in middle_stash.message
+
+    # Pop should NOT produce "is not a valid reference" error
+    result = middle_stash.pop()
+    assert "is not a valid reference" not in result.lower()
+
+    # Verify we now have 2 stashes
+    stashes_after = git_repo.cmd.stashes.ls()
+    assert len(stashes_after) == 2
+
+
 def test_stash_drop(git_repo: GitSync) -> None:
     """Test GitStashEntryCmd.drop()."""
     # Clear any existing stashes
