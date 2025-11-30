@@ -30,6 +30,25 @@ It powers [vcspull](https://github.com/vcs-python/vcspull) and simplifies VCS in
 pip install libvcs
 ```
 
+With [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv add libvcs
+```
+
+Try it interactively:
+
+```bash
+uvx --with libvcs ipython
+```
+
+Tip: libvcs is pre-1.0. Pin a version range in projects to avoid surprises:
+
+```toml
+# pyproject.toml
+dependencies = ["libvcs>=0.37,<0.38"]
+```
+
 ## Usage
 
 ### 1. Synchronize Repositories
