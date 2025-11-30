@@ -2384,7 +2384,7 @@ GitSubmoduleCmdCommandLiteral = t.Literal[
 
 
 class GitSubmoduleCmd:
-    """Run submodule commands in a git repository."""
+    """Run git submodule commands (low-level, use GitSubmoduleManager for traversal)."""
 
     def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
         """Lite, typed, pythonic wrapper for git-submodule(1).
@@ -2591,7 +2591,7 @@ class GitSubmodule:
 
 
 class GitSubmoduleEntryCmd:
-    """Run commands directly on a specific git submodule."""
+    """Run git commands targeting a specific submodule."""
 
     def __init__(
         self,
@@ -2945,7 +2945,7 @@ class GitSubmoduleEntryCmd:
 
 
 class GitSubmoduleManager:
-    """Run commands directly related to git submodules of a git repo."""
+    """Traverse and manage git submodules with ORM-like filtering via QueryList."""
 
     def __init__(
         self,
@@ -3633,7 +3633,7 @@ GitRemoteCommandLiteral = t.Literal[
 
 
 class GitRemoteCmd:
-    """Run commands directly for a git remote on a git repository."""
+    """Run git commands targeting a specific remote."""
 
     remote_name: str
     fetch_url: str | None
@@ -4178,7 +4178,7 @@ GitRemoteManagerLiteral = t.Literal[
 
 
 class GitRemoteManager:
-    """Run commands directly related to git remotes of a git repo."""
+    """Traverse and manage git remotes with ORM-like filtering via QueryList."""
 
     remote_name: str
 
@@ -4474,7 +4474,7 @@ GitStashCommandLiteral = t.Literal[
 
 
 class GitStashEntryCmd:
-    """Run commands directly for a git stash entry on a git repository."""
+    """Run git commands targeting a specific stash entry."""
 
     index: int
     branch: str | None
@@ -4769,7 +4769,7 @@ class GitStashEntryCmd:
 
 
 class GitStashCmd:
-    """Run commands directly against a git stash storage for a git repo."""
+    """Run git stash commands (low-level, use GitStashManager for traversal)."""
 
     def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
         """Lite, typed, pythonic wrapper for git-stash(1).
@@ -5007,7 +5007,7 @@ class GitStashCmd:
 
 
 class GitStashManager:
-    """Run commands directly related to git stashes of a git repo."""
+    """Traverse and manage git stashes with ORM-like filtering via QueryList."""
 
     def __init__(
         self,
@@ -5290,7 +5290,7 @@ class GitStashManager:
 
 
 class GitBranchCmd:
-    """Run commands directly against a git branch for a git repo."""
+    """Run git commands targeting a specific branch."""
 
     branch_name: str
 
@@ -5610,7 +5610,7 @@ class GitBranchCmd:
 
 
 class GitBranchManager:
-    """Run commands directly related to git branches of a git repo."""
+    """Traverse and manage git branches with ORM-like filtering via QueryList."""
 
     branch_name: str
 
@@ -5869,7 +5869,7 @@ GitTagCommandLiteral = t.Literal[
 
 
 class GitTagCmd:
-    """Run commands directly for a git tag on a git repository."""
+    """Run git commands targeting a specific tag."""
 
     tag_name: str
 
@@ -6055,7 +6055,7 @@ class GitTagCmd:
 
 
 class GitTagManager:
-    """Run commands directly related to git tags of a git repo."""
+    """Traverse and manage git tags with ORM-like filtering via QueryList."""
 
     def __init__(
         self,
@@ -6386,7 +6386,7 @@ GitWorktreeCommandLiteral = t.Literal[
 
 
 class GitWorktreeCmd:
-    """Run commands directly against a git worktree entry for a git repo."""
+    """Run git commands targeting a specific worktree."""
 
     def __init__(
         self,
@@ -6637,7 +6637,7 @@ class GitWorktreeCmd:
 
 
 class GitWorktreeManager:
-    """Run commands directly related to git worktrees of a git repo."""
+    """Traverse and manage git worktrees with ORM-like filtering via QueryList."""
 
     def __init__(
         self,
@@ -6975,7 +6975,7 @@ GitNotesCommandLiteral = t.Literal[
 
 
 class GitNoteCmd:
-    """Run commands directly against a git note for a git repo."""
+    """Run git commands targeting a specific note."""
 
     def __init__(
         self,
@@ -7253,7 +7253,7 @@ class GitNoteCmd:
 
 
 class GitNotesManager:
-    """Run commands directly related to git notes of a git repo."""
+    """Traverse and manage git notes with ORM-like filtering via QueryList."""
 
     def __init__(
         self,
@@ -7639,7 +7639,7 @@ class GitReflogEntry:
 
 
 class GitReflogEntryCmd:
-    """Run commands directly on a specific git reflog entry."""
+    """Run git commands targeting a specific reflog entry."""
 
     def __init__(
         self,
@@ -7803,7 +7803,7 @@ class GitReflogEntryCmd:
 
 
 class GitReflogManager:
-    """Run commands directly related to git reflog of a git repo."""
+    """Traverse and manage git reflog entries with ORM-like filtering via QueryList."""
 
     def __init__(
         self,

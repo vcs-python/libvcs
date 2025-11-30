@@ -76,7 +76,7 @@ print(f"Current revision: {repo.get_revision()}")
 ```
 
 ### 2. Command Abstraction
-Access the full power of the underlying CLI tools without parsing string output manually.
+Traverse repository entities intuitively with ORM-like filtering, then run targeted commands against them.
 
 [**Learn more about Command Abstraction**](https://libvcs.git-pull.com/cmd/)
 
@@ -87,18 +87,16 @@ from libvcs.cmd.git import Git
 # Initialize the wrapper
 git = Git(path=pathlib.Path.cwd() / 'libvcs')
 
-# Run commands intuitively
+# Run commands directly
 git.clone(url='https://github.com/vcs-python/libvcs.git')
 git.checkout(ref='master')
 
-# Branch management
+# Traverse branches with ORM-like filtering
 git.branches.create('feature/new-gui')
-print(git.branches.ls())  # List all branches
+print(git.branches.ls())  # Returns QueryList for filtering
 
-# Remote management
+# Target specific entities with contextual commands
 git.remotes.set_url(name='origin', url='git@github.com:vcs-python/libvcs.git')
-
-# Tag management
 git.tags.create(name='v1.0.0', message='Release version 1.0.0')
 ```
 

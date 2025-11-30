@@ -2,19 +2,19 @@
 
 # Traversing Git Repos
 
-libvcs provides **Manager** and **Cmd** classes for navigating the "object graph"
-of your git repository. These aren't just convenient abstractions—they're also
-simulacra of the git commands themselves, giving you typed Python objects instead
-of raw strings.
+libvcs provides **Managers** and **Commands** for intuitively traversing and
+navigating entities in a git repository—branches, tags, remotes, stashes, and
+more—with ORM-like convenience via {class}`~libvcs._internal.query_list.QueryList`.
 
 ## Overview
 
 The pattern consists of two types of classes:
 
-- **Manager** classes handle collection-level operations (`ls()`, `get()`,
-  `filter()`, `add()`/`create()`)
-- **Cmd** classes handle per-entity operations (`show()`, `remove()`,
-  `rename()`)
+- **Managers** (`git.branches`, `git.tags`, etc.) let you traverse repository
+  entities intuitively, listing, filtering, and retrieving them with ORM-like
+  convenience
+- **Commands** are contextual ways to run git commands against a specific target
+  entity (e.g., delete a branch, rename a tag, set a remote's URL)
 
 ```
 Git instance
@@ -103,7 +103,7 @@ Cmd objects have methods for mutating or inspecting that entity:
 
 ### Before: Parsing Strings
 
-Without the Manager/Cmd pattern, you'd parse raw output:
+Without Managers and Commands, you'd parse raw output:
 
 ```python
 >>> from libvcs.cmd.git import Git
@@ -115,7 +115,7 @@ Without the Manager/Cmd pattern, you'd parse raw output:
 
 ### After: Typed Objects
 
-With the Manager/Cmd pattern, you get typed objects:
+With Managers and Commands, you get typed objects:
 
 ```python
 >>> from libvcs.cmd.git import Git

@@ -6,12 +6,13 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 [`salt.modules.git`](https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.git.html),
 [`ansible.builtin.git`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)_
 
-## Manager/Cmd Pattern
+## Managers and Commands
 
-libvcs provides a **Manager/Cmd pattern** for git subcommands:
+libvcs provides **Managers** and **Commands** for git subcommands:
 
-- **Manager** classes (`git.branches`, `git.tags`, etc.) handle collection-level operations
-- **Cmd** classes represent individual entities with mutation methods
+- **Managers** (`git.branches`, `git.tags`, etc.) let you traverse repository
+  entities intuitively with ORM-like filtering via QueryList
+- **Commands** are contextual ways to run git commands against a specific target entity
 
 ```
 Git instance
