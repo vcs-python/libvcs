@@ -2452,6 +2452,7 @@ class GitSubmoduleCmd:
             ["submodule", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def init(
@@ -4555,6 +4556,7 @@ class GitStashEntryCmd:
             ["stash", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def show(
@@ -5077,6 +5079,7 @@ class GitStashManager:
             ["stash", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def push(
@@ -5943,6 +5946,7 @@ class GitTagCmd:
             ["tag", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def delete(
@@ -6123,6 +6127,7 @@ class GitTagManager:
             ["tag", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def create(
@@ -6460,6 +6465,7 @@ class GitWorktreeCmd:
             ["worktree", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def remove(
@@ -6697,6 +6703,7 @@ class GitWorktreeManager:
             ["worktree", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def add(
