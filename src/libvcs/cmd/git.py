@@ -4903,19 +4903,17 @@ class GitStashCmd:
         'No local changes to save'
         """
         local_flags: list[str] = []
-        stash_flags: list[str] = []
-
-        if stash is not None:
-            stash_flags.extend(["--", str(stash)])
 
         if index is True:
             local_flags.append("--index")
         if quiet is True:
             local_flags.append("--quiet")
+        if stash is not None:
+            local_flags.append(f"stash@{{{stash}}}")
 
         return self.run(
             "pop",
-            local_flags=local_flags + stash_flags,
+            local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
         )
