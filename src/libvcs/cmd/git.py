@@ -371,7 +371,7 @@ class Git:
         if reference is not None:
             local_flags.extend(["--reference", reference])
         if reference_if_able is not None:
-            local_flags.extend(["--reference", reference_if_able])
+            local_flags.extend(["--reference-if-able", reference_if_able])
         if server_option is not None:
             local_flags.append(f"--server-option={server_option}")
         if jobs is not None:
