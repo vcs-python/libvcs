@@ -5385,8 +5385,18 @@ class GitBranchCmd:
             ],
         )
 
-    def create(self) -> str:
+    def create(
+        self,
+        *,
+        checkout: bool = False,
+    ) -> str:
         """Create a git branch.
+
+        Parameters
+        ----------
+        checkout :
+            If True, also checkout the newly created branch.
+            Defaults to False (create only, don't switch HEAD).
 
         Examples
         --------
@@ -5396,14 +5406,13 @@ class GitBranchCmd:
         ... ).create()
         "fatal: a branch named 'master' already exists"
         """
-        return self.cmd.run(
-            [
-                "checkout",
-                *["-b", self.branch_name],
-            ],
-            # Pass-through to run()
+        result = self.cmd.run(
+            ["branch", self.branch_name],
             check_returncode=False,
         )
+        if checkout and "fatal" not in result.lower():
+            self.cmd.run(["checkout", self.branch_name])
+        return result
 
     def delete(
         self,
@@ -5682,22 +5691,34 @@ class GitBranchManager:
             ],
         )
 
-    def create(self, *, branch: str) -> str:
+    def create(
+        self,
+        *,
+        branch: str,
+        checkout: bool = False,
+    ) -> str:
         """Create a git branch.
+
+        Parameters
+        ----------
+        branch :
+            Name of the branch to create.
+        checkout :
+            If True, also checkout the newly created branch.
+            Defaults to False (create only, don't switch HEAD).
 
         Examples
         --------
         >>> GitBranchManager(path=example_git_repo.path).create(branch='master')
         "fatal: a branch named 'master' already exists"
         """
-        return self.cmd.run(
-            [
-                "checkout",
-                *["-b", branch],
-            ],
-            # Pass-through to run()
+        result = self.cmd.run(
+            ["branch", branch],
             check_returncode=False,
         )
+        if checkout and "fatal" not in result.lower():
+            self.cmd.run(["checkout", branch])
+        return result
 
     def _ls(
         self,
