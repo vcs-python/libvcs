@@ -4265,9 +4265,11 @@ class GitRemoteManager:
             local_flags.extend(["-m", master])
         if mirror is not None:
             if isinstance(mirror, str):
-                assert any(f for f in ["push", "fetch"])
-                local_flags.extend(["--mirror", mirror])
-            if isinstance(mirror, bool) and mirror:
+                if mirror not in ("push", "fetch"):
+                    msg = "mirror must be 'push' or 'fetch'"
+                    raise ValueError(msg)
+                local_flags.append(f"--mirror={mirror}")
+            elif mirror is True:
                 local_flags.append("--mirror")
         return self.run(
             "add",
