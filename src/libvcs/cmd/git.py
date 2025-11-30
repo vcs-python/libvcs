@@ -7383,7 +7383,7 @@ class GitNotesManager:
 
     def merge(
         self,
-        notes_ref: str,
+        notes_ref: str | None = None,
         *,
         strategy: str | None = None,
         commit: bool = False,
@@ -7396,16 +7396,24 @@ class GitNotesManager:
     ) -> str:
         """Merge notes from another ref.
 
+        Git notes merge has three mutually exclusive forms:
+
+        1. ``git notes merge [-s <strategy>] <notes-ref>`` - Start a merge
+        2. ``git notes merge --commit`` - Finalize in-progress merge
+        3. ``git notes merge --abort`` - Abort in-progress merge
+
         Parameters
         ----------
         notes_ref :
-            Notes ref to merge from.
+            Notes ref to merge from. Required for starting a merge,
+            must be None when using commit or abort.
         strategy :
             Merge strategy (manual, ours, theirs, union, cat_sort_uniq).
+            Only valid when starting a merge with notes_ref.
         commit :
-            Finalize in-progress merge.
+            Finalize in-progress merge. Cannot be combined with abort or notes_ref.
         abort :
-            Abort in-progress merge.
+            Abort in-progress merge. Cannot be combined with commit or notes_ref.
         quiet :
             Suppress output.
         verbose :
@@ -7419,6 +7427,22 @@ class GitNotesManager:
         >>> 'error' in result.lower() or 'fatal' in result.lower() or result == ''
         True
         """
+        # Validate mutual exclusivity
+        if commit and abort:
+            msg = "Cannot specify both commit and abort"
+            raise ValueError(msg)
+
+        if commit or abort:
+            if notes_ref is not None:
+                msg = "Cannot specify notes_ref with --commit or --abort"
+                raise ValueError(msg)
+            if strategy is not None:
+                msg = "Cannot specify strategy with --commit or --abort"
+                raise ValueError(msg)
+        elif notes_ref is None:
+            msg = "notes_ref is required when not using --commit or --abort"
+            raise ValueError(msg)
+
         local_flags: list[str] = []
 
         if strategy is not None:
@@ -7432,7 +7456,8 @@ class GitNotesManager:
         if verbose:
             local_flags.append("-v")
 
-        local_flags.append(notes_ref)
+        if notes_ref is not None:
+            local_flags.append(notes_ref)
 
         return self.run(
             "merge",
