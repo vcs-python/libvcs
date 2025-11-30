@@ -1,12 +1,15 @@
-# libvcs
-
-[![Python Package](https://img.shields.io/pypi/v/libvcs.svg)](https://pypi.org/project/libvcs/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/libvcs.svg)](https://pypi.org/project/libvcs/)
-[![CI Status](https://github.com/vcs-python/libvcs/actions/workflows/tests.yml/badge.svg)](https://github.com/vcs-python/libvcs/actions)
-[![Code Coverage](https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg)](https://codecov.io/gh/vcs-python/libvcs)
-[![License](https://img.shields.io/github/license/vcs-python/libvcs.svg)](https://github.com/vcs-python/libvcs/blob/master/LICENSE)
-
-> **The Swiss Army Knife for Version Control Systems in Python.**
+<div align="center">
+  <a href="https://libvcs.git-pull.com/"><img src="https://raw.githubusercontent.com/vcs-python/libvcs/master/docs/_static/img/libvcs.svg" alt="libvcs logo" height="120"></a>
+  <h1>libvcs</h1>
+  <p><strong>The Swiss Army Knife for Version Control Systems in Python.</strong></p>
+  <p>
+    <a href="https://pypi.org/project/libvcs/"><img src="https://img.shields.io/pypi/v/libvcs.svg" alt="PyPI version"></a>
+    <a href="https://pypi.org/project/libvcs/"><img src="https://img.shields.io/pypi/pyversions/libvcs.svg" alt="Python versions"></a>
+    <a href="https://github.com/vcs-python/libvcs/actions"><img src="https://github.com/vcs-python/libvcs/actions/workflows/tests.yml/badge.svg" alt="Tests status"></a>
+    <a href="https://codecov.io/gh/vcs-python/libvcs"><img src="https://codecov.io/gh/vcs-python/libvcs/branch/master/graph/badge.svg" alt="Coverage"></a>
+    <a href="https://github.com/vcs-python/libvcs/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vcs-python/libvcs.svg" alt="License"></a>
+  </p>
+</div>
 
 **libvcs** provides a unified, [typed](https://docs.python.org/3/library/typing.html), and pythonic interface for managing Git, Mercurial, and Subversion repositories. Whether you're building a deployment tool, a developer utility, or just need to clone a repo in a script, libvcs handles the heavy lifting.
 
