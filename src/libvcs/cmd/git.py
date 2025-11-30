@@ -4858,9 +4858,9 @@ class GitStashCmd:
         required_flags: list[str] = []
 
         if isinstance(path, list):
-            required_flags.extend(str(pathlib.Path(p).absolute()) for p in path)
-        elif isinstance(path, pathlib.Path):
-            required_flags.append(str(pathlib.Path(path).absolute()))
+            required_flags.extend(str(p) for p in path)
+        elif path is not None:
+            required_flags.append(str(path))
 
         if patch is True:
             local_flags.append("--patch")
