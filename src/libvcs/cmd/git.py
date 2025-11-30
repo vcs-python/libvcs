@@ -6975,6 +6975,7 @@ class GitNoteCmd:
         cmd: Git | None = None,
         object_sha: str,
         note_sha: str | None = None,
+        ref: str | None = None,
     ) -> None:
         """Lite, typed, pythonic wrapper for a git-notes(1) entry.
 
@@ -6986,6 +6987,8 @@ class GitNoteCmd:
             SHA of the object this note is attached to.
         note_sha :
             SHA of the note blob itself.
+        ref :
+            Notes ref to use (default: refs/notes/commits).
 
         Examples
         --------
@@ -7006,6 +7009,7 @@ class GitNoteCmd:
 
         self.object_sha = object_sha
         self.note_sha = note_sha
+        self.ref = ref
 
     def __repr__(self) -> str:
         """Representation of a git note."""
@@ -7026,11 +7030,17 @@ class GitNoteCmd:
         Wraps `git notes <https://git-scm.com/docs/git-notes>`_.
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
+
+        # Add ref option if specified
+        ref_flags: list[str] = []
+        if self.ref is not None:
+            ref_flags.extend(["--ref", self.ref])
+
         if command is not None:
             local_flags.insert(0, command)
 
         return self.cmd.run(
-            ["notes", *local_flags],
+            ["notes", *ref_flags, *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
             **kwargs,
@@ -7554,6 +7564,7 @@ class GitNotesManager:
                     cmd=self.cmd,
                     object_sha=object_sha,
                     note_sha=note_sha,
+                    ref=self.ref,
                 )
                 for note_sha, object_sha in raw_notes
             ],
