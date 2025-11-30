@@ -675,6 +675,74 @@ def test_remote_update(
     assert "fetching" in result.lower() or result == ""
 
 
+class RemoteShowNoQueryRemotesFixture(t.NamedTuple):
+    """Test fixture for GitRemoteCmd.show() no_query_remotes parameter."""
+
+    test_id: str
+    no_query_remotes: bool | None
+    expect_n_flag: bool
+
+
+REMOTE_SHOW_NO_QUERY_REMOTES_FIXTURES: list[RemoteShowNoQueryRemotesFixture] = [
+    RemoteShowNoQueryRemotesFixture(
+        test_id="no-query-remotes-none",
+        no_query_remotes=None,
+        expect_n_flag=False,
+    ),
+    RemoteShowNoQueryRemotesFixture(
+        test_id="no-query-remotes-true",
+        no_query_remotes=True,
+        expect_n_flag=True,
+    ),
+    RemoteShowNoQueryRemotesFixture(
+        test_id="no-query-remotes-false",
+        no_query_remotes=False,
+        expect_n_flag=False,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(RemoteShowNoQueryRemotesFixture._fields),
+    REMOTE_SHOW_NO_QUERY_REMOTES_FIXTURES,
+    ids=[test.test_id for test in REMOTE_SHOW_NO_QUERY_REMOTES_FIXTURES],
+)
+def test_remote_cmd_show_no_query_remotes(
+    git_repo: GitSync,
+    test_id: str,
+    no_query_remotes: bool | None,
+    expect_n_flag: bool,
+) -> None:
+    """Test GitRemoteCmd.show() with no_query_remotes parameter."""
+    remote = git_repo.cmd.remotes.get(remote_name="origin")
+    assert remote is not None
+
+    # show() should succeed without error
+    result = remote.show(no_query_remotes=no_query_remotes)
+    assert isinstance(result, str)
+    # Result should contain remote name info
+    assert "origin" in result.lower() or "fetch" in result.lower()
+
+
+@pytest.mark.parametrize(
+    list(RemoteShowNoQueryRemotesFixture._fields),
+    REMOTE_SHOW_NO_QUERY_REMOTES_FIXTURES,
+    ids=[test.test_id for test in REMOTE_SHOW_NO_QUERY_REMOTES_FIXTURES],
+)
+def test_remote_manager_show_no_query_remotes(
+    git_repo: GitSync,
+    test_id: str,
+    no_query_remotes: bool | None,
+    expect_n_flag: bool,
+) -> None:
+    """Test GitRemoteManager.show() with no_query_remotes parameter."""
+    # show() should succeed without error
+    result = git_repo.cmd.remotes.show(name="origin", no_query_remotes=no_query_remotes)
+    assert isinstance(result, str)
+    # Result should contain remote name info
+    assert "origin" in result.lower() or "fetch" in result.lower()
+
+
 # =============================================================================
 # GitTagCmd / GitTagManager Tests
 # =============================================================================
