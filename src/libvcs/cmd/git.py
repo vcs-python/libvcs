@@ -3813,7 +3813,7 @@ class GitRemoteCmd:
         if verbose is not None:
             local_flags.append("--verbose")
 
-        if no_query_remotes is not None or no_query_remotes:
+        if no_query_remotes:
             local_flags.append("-n")
 
         return self.run(
@@ -4298,7 +4298,7 @@ class GitRemoteManager:
         if verbose is not None:
             local_flags.append("--verbose")
 
-        if no_query_remotes is not None or no_query_remotes:
+        if no_query_remotes:
             local_flags.append("-n")
 
         return self.run(
