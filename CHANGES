@@ -14,20 +14,22 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.38.x (unreleased)
+## libvcs 0.39.x (unreleased)
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
 _Upcoming changes will be written here._
 
+## libvcs 0.38.0 (2025-11-30)
+
 ### New features
 
-#### cmd: Manager/Cmd pattern for git subcommands (#465)
+#### Additional git subcommands (#465)
 
 New architecture for git subcommands that returns typed objects instead of raw strings:
 
-- **Manager classes** handle collection-level operations (`ls()`, `get()`, `filter()`, `add()`/`create()`)
-- **Cmd classes** handle per-entity operations (`show()`, `remove()`, `rename()`)
+- **Traversal** handle collection-level operations (`ls()`, `get()`, `filter()`, `add()`/`create()`)
+- **Commands** handle per-entity operations (`show()`, `remove()`, `rename()`)
 - All `ls()` methods return `QueryList` for chainable filtering
 
 New subcommand managers accessible via `Git` instance:
