@@ -4773,7 +4773,6 @@ class GitStashCmd:
         local_flags: list[str] | None = None,
         *,
         quiet: bool | None = None,
-        cached: bool | None = None,  # Only when no command entered and status
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -4794,8 +4793,6 @@ class GitStashCmd:
 
         if quiet is True:
             local_flags.append("--quiet")
-        if cached is True:
-            local_flags.append("--cached")
 
         return self.cmd.run(
             ["stash", *local_flags],
@@ -5318,7 +5315,6 @@ class GitBranchCmd:
         local_flags: list[str] | None = None,
         *,
         quiet: bool | None = None,
-        cached: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -5340,8 +5336,6 @@ class GitBranchCmd:
 
         if quiet is True:
             local_flags.append("--quiet")
-        if cached is True:
-            local_flags.append("--cached")
 
         return self.cmd.run(
             ["branch", *local_flags],
@@ -5627,7 +5621,6 @@ class GitBranchManager:
         local_flags: list[str] | None = None,
         *,
         quiet: bool | None = None,
-        cached: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -5646,8 +5639,6 @@ class GitBranchManager:
 
         if quiet is True:
             local_flags.append("--quiet")
-        if cached is True:
-            local_flags.append("--cached")
 
         return self.cmd.run(
             ["branch", *local_flags],
