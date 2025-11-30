@@ -947,9 +947,9 @@ class Git:
         if no_edit:
             local_flags.append("--no-edit")
         if sign_off:
-            local_flags.append("--sign_off")
+            local_flags.append("--signoff")
         if no_sign_off:
-            local_flags.append("--no-sign_off")
+            local_flags.append("--no-signoff")
         if stat:
             local_flags.append("--stat")
         if no_stat:
