@@ -353,7 +353,7 @@ class Git:
         if template is not None:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
-            local_flags.append(f"--separate-git-dir={separate_git_dir!r}")
+            local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
         if (_filter := kwargs.pop("_filter", None)) is not None:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
