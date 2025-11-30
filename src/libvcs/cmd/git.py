@@ -494,6 +494,8 @@ class Git:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
+        if deepen is not None:
+            local_flags.append(f"--deepen={deepen}")
         if upload_pack is not None:
             local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
@@ -552,6 +554,22 @@ class Git:
             local_flags.append("--no-tags")
         if no_recurse_submodules:
             local_flags.append("--no-recurse-submodules")
+        if recurse_submodules is not None:
+            if isinstance(recurse_submodules, bool):
+                if recurse_submodules:
+                    local_flags.append("--recurse-submodules")
+            else:
+                local_flags.append(f"--recurse-submodules={recurse_submodules}")
+        if recurse_submodules_default is not None:
+            if isinstance(recurse_submodules_default, bool):
+                if recurse_submodules_default:
+                    local_flags.append("--recurse-submodules-default=yes")
+            else:
+                local_flags.append(
+                    f"--recurse-submodules-default={recurse_submodules_default}"
+                )
+        if negotiation_tip is not None:
+            local_flags.append(f"--negotiation-tip={negotiation_tip}")
         if set_upstream:
             local_flags.append("--set-upstream")
         if update_head_ok:
@@ -967,6 +985,8 @@ class Git:
             local_flags.append(f"--filter={_filter}")
         if depth is not None:
             local_flags.extend(["--depth", depth])
+        if deepen is not None:
+            local_flags.append(f"--deepen={deepen}")
         if upload_pack is not None:
             local_flags.extend(["--upload-pack", upload_pack])
         if shallow_since is not None:
@@ -1025,6 +1045,22 @@ class Git:
             local_flags.append("--no-tags")
         if no_recurse_submodules:
             local_flags.append("--no-recurse-submodules")
+        if recurse_submodules is not None:
+            if isinstance(recurse_submodules, bool):
+                if recurse_submodules:
+                    local_flags.append("--recurse-submodules")
+            else:
+                local_flags.append(f"--recurse-submodules={recurse_submodules}")
+        if recurse_submodules_default is not None:
+            if isinstance(recurse_submodules_default, bool):
+                if recurse_submodules_default:
+                    local_flags.append("--recurse-submodules-default=yes")
+            else:
+                local_flags.append(
+                    f"--recurse-submodules-default={recurse_submodules_default}"
+                )
+        if negotiation_tip is not None:
+            local_flags.append(f"--negotiation-tip={negotiation_tip}")
         if set_upstream:
             local_flags.append("--set-upstream")
         if update_head_ok:
