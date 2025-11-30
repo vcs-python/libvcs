@@ -75,6 +75,9 @@ print(git.branches.ls())  # List all branches
 
 # Remote management
 git.remotes.set_url(name='origin', url='git@github.com:vcs-python/libvcs.git')
+
+# Tag management
+git.tags.create(name='v1.0.0', message='Release version 1.0.0')
 ```
 
 ### 3. URL Parsing
@@ -84,6 +87,9 @@ Stop writing regex for Git URLs. Let `libvcs` handle the edge cases.
 
 ```python
 from libvcs.url.git import GitURL
+
+# Validate URLs
+GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')  # True
 
 # Parse complex URLs
 url = GitURL(url='git@github.com:vcs-python/libvcs.git')
@@ -126,7 +132,7 @@ def test_my_git_tool(
 ## Project Information
 
 - **Python Support**: 3.10+
-- **VCS Support**: Git, Mercurial (hg), Subversion (svn)
+- **VCS Support**: Git (including AWS CodeCommit), Mercurial (hg), Subversion (svn)
 - **License**: MIT
 
 ## Links & Resources
