@@ -4891,13 +4891,13 @@ class GitStashCmd:
         'No stash entries found.'
 
         >>> GitStashCmd(path=example_git_repo.path).pop(stash=0)
-        'error: refs/stash@{0} is not a valid reference'
+        'error: stash@{0} is not a valid reference'
 
         >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, index=True)
-        'error: refs/stash@{1} is not a valid reference'
+        'error: stash@{1} is not a valid reference'
 
         >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, quiet=True)
-        'error: refs/stash@{1} is not a valid reference'
+        'error: stash@{1} is not a valid reference'
 
         >>> GitStashCmd(path=example_git_repo.path).push(path='.')
         'No local changes to save'

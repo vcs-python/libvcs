@@ -533,6 +533,109 @@ def test_branch_ls_filters(git_repo: GitSync) -> None:
     assert any(b.branch_name == "master" for b in verbose_branches)
 
 
+class BranchCreateFixture(t.NamedTuple):
+    """Test fixture for GitBranchCmd.create() and GitBranchManager.create()."""
+
+    test_id: str
+    checkout: bool
+    expect_switch: bool
+
+
+BRANCH_CREATE_FIXTURES: list[BranchCreateFixture] = [
+    BranchCreateFixture(
+        test_id="create-without-checkout",
+        checkout=False,
+        expect_switch=False,
+    ),
+    BranchCreateFixture(
+        test_id="create-with-checkout",
+        checkout=True,
+        expect_switch=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(BranchCreateFixture._fields),
+    BRANCH_CREATE_FIXTURES,
+    ids=[test.test_id for test in BRANCH_CREATE_FIXTURES],
+)
+def test_branch_cmd_create_checkout_parameter(
+    git_repo: GitSync,
+    test_id: str,
+    checkout: bool,
+    expect_switch: bool,
+) -> None:
+    """Test GitBranchCmd.create() checkout parameter behavior.
+
+    Verifies commit 4b8a0f7: create() uses 'git branch' instead of 'checkout -b',
+    and only switches HEAD when checkout=True.
+    """
+    branch_name = f"test-create-{test_id}"
+
+    # Record current branch before creating
+    current_before = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+
+    # Create branch using GitBranchCmd
+    branch_cmd = git.GitBranchCmd(path=git_repo.path, branch_name=branch_name)
+    result = branch_cmd.create(checkout=checkout)
+
+    # Should succeed (empty string or no fatal error)
+    assert "fatal" not in result.lower() or "already exists" in result.lower()
+
+    # Verify branch was created
+    branches = git_repo.cmd.branches.ls()
+    branch_names = [b.branch_name for b in branches]
+    assert branch_name in branch_names
+
+    # Check if HEAD switched
+    current_after = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+    if expect_switch:
+        assert current_after == branch_name
+    else:
+        assert current_after == current_before
+
+
+@pytest.mark.parametrize(
+    list(BranchCreateFixture._fields),
+    BRANCH_CREATE_FIXTURES,
+    ids=[test.test_id for test in BRANCH_CREATE_FIXTURES],
+)
+def test_branch_manager_create_checkout_parameter(
+    git_repo: GitSync,
+    test_id: str,
+    checkout: bool,
+    expect_switch: bool,
+) -> None:
+    """Test GitBranchManager.create() checkout parameter behavior.
+
+    Verifies commit 4b8a0f7: create() uses 'git branch' instead of 'checkout -b',
+    and only switches HEAD when checkout=True.
+    """
+    branch_name = f"test-mgr-create-{test_id}"
+
+    # Record current branch before creating
+    current_before = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+
+    # Create branch using GitBranchManager
+    result = git_repo.cmd.branches.create(branch=branch_name, checkout=checkout)
+
+    # Should succeed (empty string or no fatal error)
+    assert "fatal" not in result.lower() or "already exists" in result.lower()
+
+    # Verify branch was created
+    branches = git_repo.cmd.branches.ls()
+    branch_names = [b.branch_name for b in branches]
+    assert branch_name in branch_names
+
+    # Check if HEAD switched
+    current_after = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+    if expect_switch:
+        assert current_after == branch_name
+    else:
+        assert current_after == current_before
+
+
 # =============================================================================
 # GitRemoteCmd Tests
 # =============================================================================
