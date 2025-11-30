@@ -720,7 +720,7 @@ class Git:
         if rerere_autoupdate:
             local_flags.append("--rerere-autoupdate")
         if no_rerere_autoupdate:
-            local_flags.append("--no-rerwre-autoupdate")
+            local_flags.append("--no-rerere-autoupdate")
 
         if reapply_cherry_picks:
             local_flags.append("--reapply-cherry-picks")
