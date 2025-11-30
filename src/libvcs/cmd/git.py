@@ -3712,6 +3712,7 @@ class GitRemoteCmd:
             ["remote", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def rename(
@@ -4226,6 +4227,7 @@ class GitRemoteManager:
             ["remote", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def add(
@@ -5347,6 +5349,7 @@ class GitBranchCmd:
             ["branch", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def checkout(self) -> str:
@@ -5650,6 +5653,7 @@ class GitBranchManager:
             ["branch", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def checkout(self, *, branch: str) -> str:
@@ -7284,6 +7288,7 @@ class GitNotesManager:
             ["notes", *ref_flags, *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def add(
