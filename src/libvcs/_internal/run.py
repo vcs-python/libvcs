@@ -157,12 +157,12 @@ def run(
         subprocess in real time instead of when the process finishes.
 
     check_returncode : bool
-        Indicate whether a `libvcs.exc.CommandError` should be raised if return code is
+        Indicate whether a ``libvcs.exc.CommandError`` should be raised if return code is
         different from 0.
 
     callback : ProgressCallbackProtocol
         callback to return output as a command executes, accepts a function signature
-        of `(output, timestamp)`. Example usage::
+        of ``(output, timestamp)``. Example usage::
 
             def progress_cb(output, timestamp):
                 sys.stdout.write(output)
@@ -171,7 +171,7 @@ def run(
 
     Upcoming changes
     ----------------
-    When minimum python >= 3.10, `pipesize: int = -1` will be added after `umask`.
+    When minimum python >= 3.10, pipesize: int = -1 will be added after umask.
     """
     proc = subprocess.Popen(
         args,
