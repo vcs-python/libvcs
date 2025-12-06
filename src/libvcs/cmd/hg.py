@@ -308,7 +308,7 @@ class Hg:
     ) -> str:
         """Update working directory.
 
-        Wraps `hg update <https://www.mercurial-scm.org/doc/hg.1.html#pull>`_.
+        Wraps `hg pull <https://www.mercurial-scm.org/doc/hg.1.html#pull>`_.
 
         Examples
         --------

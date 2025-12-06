@@ -1,4 +1,4 @@
-"""Internal :term:`type annotations <annotation>`.
+"""Internal type annotations.
 
 Notes
 -----
@@ -12,14 +12,11 @@ from __future__ import annotations
 import typing as t
 from os import PathLike
 
-if t.TYPE_CHECKING:
-    from typing import TypeAlias
-
-StrPath: TypeAlias = str | PathLike[str]  # stable
+StrPath: t.TypeAlias = str | PathLike[str]  # stable
 """:class:`os.PathLike` or :class:`str`"""
 
-StrOrBytesPath: TypeAlias = str | bytes | PathLike[str] | PathLike[bytes]
-""":class:`os.PathLike`, :class:`str` or :term:`bytes-like object`"""
+StrOrBytesPath: t.TypeAlias = str | bytes | PathLike[str] | PathLike[bytes]
+""":class:`os.PathLike`, :class:`str` or bytes-like object"""
 
 
 VCSLiteral = t.Literal["git", "svn", "hg"]

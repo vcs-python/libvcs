@@ -51,10 +51,6 @@ from libvcs._internal.types import StrOrBytesPath
 
 from .dataclasses import SkipDefaultFieldsReprMixin
 
-if t.TYPE_CHECKING:
-    from typing import TypeAlias
-
-
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
 
@@ -64,91 +60,18 @@ class SubprocessCheckOutputError(Exception):
 
 
 if sys.platform == "win32":
-    _ENV: TypeAlias = Mapping[str, str]
+    _ENV: t.TypeAlias = Mapping[str, str]
 else:
-    _ENV: TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
-_FILE: TypeAlias = None | int | t.IO[t.Any]
-_TXT: TypeAlias = bytes | str
+    _ENV: t.TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
+_FILE: t.TypeAlias = None | int | t.IO[t.Any]
+_TXT: t.TypeAlias = bytes | str
 #: Command
-_CMD: TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
+_CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 
 @dataclasses.dataclass(repr=False)
 class SubprocessCommand(SkipDefaultFieldsReprMixin):
     """Wraps a :mod:`subprocess` request. Inspect, mutate, control before invocation.
-
-    Attributes
-    ----------
-    args : _CMD
-        A string, or a sequence of program arguments.
-
-    bufsize : int
-        supplied as the buffering argument to the open() function when creating the
-        stdin/stdout/stderr pipe file objects
-
-    executable : Optional[StrOrBytesPath]
-        A replacement program to execute.
-
-    stdin : _FILE
-        standard output for executed program
-
-    stdout :
-        standard output for executed program
-
-    stderr :
-        standard output for executed program
-
-    close_fds : Controls closing or inheriting of file descriptors.
-
-    shell : If true, the command will be executed through the shell.
-
-    cwd : Sets the current directory before the child is executed.
-
-    env : Defines the environment variables for the new process.
-
-    text :
-        If ``True``, decode stdin, stdout and stderr using the given encoding (if set)
-        or the system default otherwise.
-
-    universal_newlines :
-        Alias of text, provided for backwards compatibility.
-
-    startupinfo :
-        Windows only
-
-    creationflags :
-        Windows only
-
-    preexec_fn :
-        (POSIX only) An object to be called in the child process just before the child
-        is executed.
-
-    restore_signals :
-        POSIX only
-
-    start_new_session :
-        POSIX only
-
-    group :
-        POSIX only
-
-    extra_groups :
-        POSIX only
-
-    user :
-        POSIX only
-
-    umask :
-        POSIX only
-
-    pass_fds :
-        POSIX only
-
-    encoding :
-        Text mode encoding to use for file objects stdin, stdout and stderr.
-
-    errors :
-        Text mode error handling to use for file objects stdin, stdout and stderr.
 
     Examples
     --------

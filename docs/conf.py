@@ -110,6 +110,8 @@ issue_url_tpl = about["__github__"] + "/issues/{issue_id}"
 # sphinx.ext.autodoc
 autoclass_content = "both"
 autodoc_member_order = "bysource"
+# Don't show class signature with the class' name.
+autodoc_class_signature = "separated"
 toc_object_entries_show_parents = "hide"
 autodoc_default_options = {
     "undoc-members": True,
@@ -120,7 +122,9 @@ autodoc_default_options = {
 }
 
 # sphinx-autodoc-typehints
-autodoc_typehints = "description"  # show type hints in doc body instead of signature
+# Automatically extract typehints when specified and place them in
+# descriptions of the relevant function/method.
+autodoc_typehints = "description"
 simplify_optional_unions = True
 
 # sphinx.ext.napoleon
@@ -150,6 +154,18 @@ intersphinx_mapping = {
     "vcspull": ("https://vcspull.git-pull.com/", None),
     "gp-libs": ("https://gp-libs.git-pull.com/", None),
 }
+
+# Keep network lookups fast and quiet when inventories are slow or unreachable.
+intersphinx_timeout = 1
+
+# sphinx-autodoc-typehints
+# Suppress warnings for forward references that can't be resolved
+# (types in TYPE_CHECKING blocks used for circular import avoidance)
+suppress_warnings = [
+    "intersphinx",
+    "intersphinx.inventory",
+    "sphinx_autodoc_typehints.forward_reference",
+]
 
 
 def linkcode_resolve(domain: str, info: dict[str, str]) -> None | str:

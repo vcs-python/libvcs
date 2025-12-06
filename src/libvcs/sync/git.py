@@ -25,15 +25,13 @@ import typing as t
 from urllib import parse as urlparse
 
 from libvcs import exc
+from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
 from libvcs.sync.base import (
     BaseSync,
     VCSLocation,
     convert_pip_url as base_convert_pip_url,
 )
-
-if t.TYPE_CHECKING:
-    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 

@@ -10,14 +10,10 @@ from __future__ import annotations
 import typing as t
 
 from libvcs import GitSync, HgSync, SvnSync, exc
+from libvcs._internal.run import ProgressCallbackProtocol
+from libvcs._internal.types import StrPath, VCSLiteral
 from libvcs.exc import InvalidVCS
 from libvcs.url import registry as url_tools
-
-if t.TYPE_CHECKING:
-    from typing import TypeGuard
-
-    from libvcs._internal.run import ProgressCallbackProtocol
-    from libvcs._internal.types import StrPath, VCSLiteral
 
 
 class VCSNoMatchFoundForUrl(exc.LibVCSException):
@@ -131,7 +127,7 @@ def create_project(
 
         assert vcs_matches[0].vcs is not None
 
-        def is_vcs(val: t.Any) -> TypeGuard[VCSLiteral]:
+        def is_vcs(val: t.Any) -> t.TypeGuard[VCSLiteral]:
             return isinstance(val, str) and val in {"git", "hg", "svn"}
 
         if is_vcs(vcs_matches[0].vcs):

@@ -13,15 +13,10 @@ import typing as t
 import pytest
 
 from libvcs import exc
-from libvcs._internal.run import run
+from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
-
-if t.TYPE_CHECKING:
-    from typing import TypeAlias
-
-    from libvcs._internal.run import _ENV
 
 
 class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
@@ -270,7 +265,7 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
         return remote_repo_name
 
 
-InitCmdArgs: TypeAlias = list[str] | None
+InitCmdArgs: t.TypeAlias = list[str] | None
 
 
 class CreateRepoPostInitFn(t.Protocol):

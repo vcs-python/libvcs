@@ -6,13 +6,10 @@ import typing as t
 
 from libvcs._internal.module_loading import import_string
 
-if t.TYPE_CHECKING:
-    from typing import TypeAlias
+from .base import URLProtocol
 
-    from .base import URLProtocol
-
-    ParserLazyMap: TypeAlias = dict[str, type[URLProtocol] | str]
-    ParserMap: TypeAlias = dict[str, type[URLProtocol]]
+ParserLazyMap: t.TypeAlias = dict[str, type[URLProtocol] | str]
+ParserMap: t.TypeAlias = dict[str, type[URLProtocol]]
 
 DEFAULT_PARSERS: ParserLazyMap = {
     "git": "libvcs.url.git.GitURL",

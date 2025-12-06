@@ -155,11 +155,6 @@ class HgBaseURL(
 ):
     """Mercurial repository location. Parses URLs on initialization.
 
-    Attributes
-    ----------
-    rule : str
-        name of the :class:`~libvcs.url.base.Rule`
-
     Examples
     --------
     >>> HgBaseURL(url='https://hg.mozilla.org/mozilla-central/')

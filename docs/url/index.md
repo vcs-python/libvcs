@@ -243,8 +243,9 @@ in {mod}`urlparse` (undocumented).
 
 From there, `GitURL` can be used downstream directly by other projects.
 
-In our case, `libvcs`s' own {ref}`cmd` and {ref}`projects`, as well as a {ref}`vcspull:index`
-configuration, will be able to detect and accept various URL patterns.
+In our case, `libvcs`s' own {ref}`cmd` and {ref}`projects`, as well as a
+[vcspull configuration](https://vcspull.git-pull.com/), will be able to detect and accept various
+URL patterns.
 
 ### Matchers: Defaults
 
@@ -254,10 +255,6 @@ When a match occurs, its `defaults` will fill in non-matched groups.
 
 When registering new matchers, higher `weight`s are checked first. If it's a valid regex grouping,
 it will be picked.
-
-[^api-unstable]: Provisional API only
-
-    It's not determined if Location will be mutable or if modifications will return a new object.
 
 ## Explore
 

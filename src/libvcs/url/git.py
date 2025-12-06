@@ -322,11 +322,6 @@ class GitBaseURL(
 
     - Compatibility checking: :meth:`GitBaseURL.is_valid()`
     - URLs compatible with ``git(1)``: :meth:`GitBaseURL.to_url()`
-
-    Attributes
-    ----------
-    rule : str
-        name of the :class:`~libvcs.url.base.Rule`
     """
 
     url: str

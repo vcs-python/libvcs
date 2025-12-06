@@ -11,10 +11,6 @@ Looking for more flexibility, correctness, or power? Need different defaults? [C
 [connect with us]: https://github.com/vcs-python/libvcs/discussions
 ```
 
-```{module} libvcs.pytest_plugin
-
-```
-
 [pytest]: https://docs.pytest.org/
 
 ## Usage
@@ -29,7 +25,7 @@ Pytest will automatically detect the plugin, and its fixtures will be available.
 
 ## Fixtures
 
-This pytest plugin works by providing {ref}`pytest fixtures <pytest:fixtures-api>`. The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache initial repositories, improving performance across tests.
+This pytest plugin works by providing [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html). The plugin's fixtures ensure that a fresh Git, Subversion, or Mercurial repository is available for each test. It utilizes [session-scoped fixtures] to cache initial repositories, improving performance across tests.
 
 [session-scoped fixtures]: https://docs.pytest.org/en/8.3.x/how-to/fixtures.html#fixture-scopes
 
