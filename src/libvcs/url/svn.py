@@ -174,11 +174,6 @@ class SvnBaseURL(
 
     - Compatibility checking: :meth:`SvnBaseURL.is_valid()`
     - URLs compatible with ``svn(1)``: :meth:`SvnBaseURL.to_url()`
-
-    Attributes
-    ----------
-    rule : str
-        name of the :class:`~libvcs.url.base.Rule`
     """
 
     url: str
