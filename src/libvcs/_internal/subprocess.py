@@ -51,9 +51,6 @@ from libvcs._internal.types import StrOrBytesPath
 
 from .dataclasses import SkipDefaultFieldsReprMixin
 
-if t.TYPE_CHECKING:
-    from typing import TypeAlias
-
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
@@ -64,13 +61,13 @@ class SubprocessCheckOutputError(Exception):
 
 
 if sys.platform == "win32":
-    _ENV: TypeAlias = Mapping[str, str]
+    _ENV: t.TypeAlias = Mapping[str, str]
 else:
-    _ENV: TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
-_FILE: TypeAlias = None | int | t.IO[t.Any]
-_TXT: TypeAlias = bytes | str
+    _ENV: t.TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
+_FILE: t.TypeAlias = None | int | t.IO[t.Any]
+_TXT: t.TypeAlias = bytes | str
 #: Command
-_CMD: TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
+_CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 
 @dataclasses.dataclass(repr=False)
