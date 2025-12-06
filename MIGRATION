@@ -24,11 +24,11 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
-#### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
+### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
 
 - pytest: `git_local_clone` renamed to `example_git_repo`
 
-#### Commands: Listing method renamed (#466)
+### Commands: Listing method renamed (#466)
 
 - `libvcs.cmd.git.GitCmd._list()` -> `libvcs.cmd.git.Git.ls()`
 - `libvcs.cmd.svn.Svn._list()` -> `libvcs.cmd.svn.Svn.ls()`
