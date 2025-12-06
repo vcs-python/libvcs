@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import dataclasses
 import typing as t
+from _collections_abc import dict_values
+from collections.abc import Iterator
+from re import Pattern
 
 from libvcs._internal.dataclasses import SkipDefaultFieldsReprMixin
-
-if t.TYPE_CHECKING:
-    from _collections_abc import dict_values
-    from collections.abc import Iterator
-    from re import Pattern
 
 
 class URLProtocol(t.Protocol):

@@ -13,15 +13,10 @@ import typing as t
 import pytest
 
 from libvcs import exc
-from libvcs._internal.run import run
+from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
-
-if t.TYPE_CHECKING:
-    from typing import TypeAlias
-
-    from libvcs._internal.run import _ENV
 
 
 class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):

@@ -8,16 +8,13 @@ This is an internal API not covered by versioning policy.
 from __future__ import annotations
 
 import typing as t
+from typing import TypeGuard
 
 from libvcs import GitSync, HgSync, SvnSync, exc
+from libvcs._internal.run import ProgressCallbackProtocol
+from libvcs._internal.types import StrPath, VCSLiteral
 from libvcs.exc import InvalidVCS
 from libvcs.url import registry as url_tools
-
-if t.TYPE_CHECKING:
-    from typing import TypeGuard
-
-    from libvcs._internal.run import ProgressCallbackProtocol
-    from libvcs._internal.types import StrPath, VCSLiteral
 
 
 class VCSNoMatchFoundForUrl(exc.LibVCSException):

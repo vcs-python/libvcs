@@ -13,6 +13,8 @@ from operator import attrgetter
 
 if t.TYPE_CHECKING:
     from _typeshed import DataclassInstance
+else:
+    DataclassInstance = object
 
 
 class SkipDefaultFieldsReprMixin:

@@ -31,9 +31,7 @@ from libvcs.sync.base import (
     VCSLocation,
     convert_pip_url as base_convert_pip_url,
 )
-
-if t.TYPE_CHECKING:
-    from libvcs._internal.types import StrPath
+from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 

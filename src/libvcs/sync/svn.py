@@ -21,12 +21,10 @@ import pathlib
 import re
 import typing as t
 
+from libvcs._internal.types import StrPath
 from libvcs.cmd.svn import Svn
 
 from .base import BaseSync
-
-if t.TYPE_CHECKING:
-    from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 

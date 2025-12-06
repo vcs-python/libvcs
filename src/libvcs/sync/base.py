@@ -9,9 +9,7 @@ from collections.abc import Sequence
 from urllib import parse as urlparse
 
 from libvcs._internal.run import _CMD, CmdLoggingAdapter, ProgressCallbackProtocol, run
-
-if t.TYPE_CHECKING:
-    from libvcs._internal.types import StrPath
+from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
 

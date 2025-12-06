@@ -1,4 +1,4 @@
-"""Internal :term:`type annotations <annotation>`.
+"""Internal type annotations.
 
 Notes
 -----
@@ -19,7 +19,7 @@ StrPath: TypeAlias = str | PathLike[str]  # stable
 """:class:`os.PathLike` or :class:`str`"""
 
 StrOrBytesPath: TypeAlias = str | bytes | PathLike[str] | PathLike[bytes]
-""":class:`os.PathLike`, :class:`str` or :term:`bytes-like object`"""
+""":class:`os.PathLike`, :class:`str` or bytes-like object"""
 
 
 VCSLiteral = t.Literal["git", "svn", "hg"]
