@@ -151,6 +151,10 @@ intersphinx_mapping = {
     "gp-libs": ("https://gp-libs.git-pull.com/", None),
 }
 
+# Keep network lookups fast and quiet when inventories are slow or unreachable.
+intersphinx_timeout = 1
+suppress_warnings = ["intersphinx", "intersphinx.inventory"]
+
 
 def linkcode_resolve(domain: str, info: dict[str, str]) -> None | str:
     """
