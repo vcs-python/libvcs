@@ -20,6 +20,10 @@ $ uv add libvcs --prerelease allow
 
 _Upcoming changes will be written here._
 
+### Documentation (#498)
+
+Fix doctree warnings and broken references
+
 ## libvcs 0.38.0 (2025-11-30)
 
 ### New features
