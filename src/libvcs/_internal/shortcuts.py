@@ -8,7 +8,6 @@ This is an internal API not covered by versioning policy.
 from __future__ import annotations
 
 import typing as t
-from typing import TypeGuard
 
 from libvcs import GitSync, HgSync, SvnSync, exc
 from libvcs._internal.run import ProgressCallbackProtocol
@@ -128,7 +127,7 @@ def create_project(
 
         assert vcs_matches[0].vcs is not None
 
-        def is_vcs(val: t.Any) -> TypeGuard[VCSLiteral]:
+        def is_vcs(val: t.Any) -> t.TypeGuard[VCSLiteral]:
             return isinstance(val, str) and val in {"git", "hg", "svn"}
 
         if is_vcs(vcs_matches[0].vcs):
