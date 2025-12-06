@@ -157,8 +157,8 @@ def run(
         subprocess in real time instead of when the process finishes.
 
     check_returncode : bool
-        Indicate whether a ``libvcs.exc.CommandError`` should be raised if return code is
-        different from 0.
+        Indicate whether a ``libvcs.exc.CommandError`` should be raised if return
+        code is different from 0.
 
     callback : ProgressCallbackProtocol
         callback to return output as a command executes, accepts a function signature

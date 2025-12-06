@@ -51,7 +51,6 @@ from libvcs._internal.types import StrOrBytesPath
 
 from .dataclasses import SkipDefaultFieldsReprMixin
 
-
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
 

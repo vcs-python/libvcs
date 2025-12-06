@@ -265,7 +265,7 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
         return remote_repo_name
 
 
-InitCmdArgs: TypeAlias = list[str] | None
+InitCmdArgs: t.TypeAlias = list[str] | None
 
 
 class CreateRepoPostInitFn(t.Protocol):

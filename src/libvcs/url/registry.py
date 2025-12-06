@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing as t
 
 from libvcs._internal.module_loading import import_string
+
 from .base import URLProtocol
 
 ParserLazyMap: t.TypeAlias = dict[str, type[URLProtocol] | str]
