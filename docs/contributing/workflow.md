@@ -18,7 +18,7 @@ $ cd libvcs
 $ uv install -E "docs test coverage lint"
 ```
 
-Makefile commands prefixed with `watch_` will watch files and rerun.
+Justfile commands prefixed with `watch-` will watch files and rerun.
 
 ## Tests
 
@@ -26,7 +26,7 @@ Makefile commands prefixed with `watch_` will watch files and rerun.
 $ uv run py.test
 ```
 
-Helpers: `make test` Rerun tests on file change: `make watch_test` (requires [entr(1)])
+Helpers: `just test` Rerun tests on file change: `just watch-test` (requires [entr(1)])
 
 ## Documentation
 
@@ -34,20 +34,19 @@ Default preview server: http://localhost:8068
 
 [sphinx-autobuild] will automatically build the docs, watch for file changes and launch a server.
 
-From home directory: `make start_docs` From inside `docs/`: `make start`
+From home directory: `just start-docs` From inside `docs/`: `just start`
 
 [sphinx-autobuild]: https://github.com/executablebooks/sphinx-autobuild
 
 ### Manual documentation (the hard way)
 
-`cd docs/` and `make html` to build. `make serve` to start http server.
+`cd docs/` and `just html` to build. `just serve` to start http server.
 
-Helpers: `make build_docs`, `make serve_docs`
+Helpers: `just build-docs`, `just serve-docs`
 
-Rebuild docs on file change: `make watch_docs` (requires [entr(1)])
+Rebuild docs on file change: `just watch-docs` (requires [entr(1)])
 
-Rebuild docs and run server via one terminal: `make dev_docs` (requires above, and a `make(1)` with
-`-J` support, e.g. GNU Make)
+Rebuild docs and run server via one terminal: `just dev-docs`
 
 ## Formatting / linting
 
@@ -71,10 +70,10 @@ $ ruff check .
 
 ````
 
-````{tab} make
+````{tab} just
 
 ```console
-$ make ruff
+$ just ruff
 ```
 
 ````
@@ -82,7 +81,7 @@ $ make ruff
 ````{tab} Watch
 
 ```console
-$ make watch_ruff
+$ just watch-ruff
 ```
 
 requires [`entr(1)`].
@@ -125,10 +124,10 @@ $ ruff format .
 
 ````
 
-````{tab} make
+````{tab} just
 
 ```console
-$ make ruff_format
+$ just ruff-format
 ```
 
 ````
@@ -153,10 +152,10 @@ $ mypy .
 
 ````
 
-````{tab} make
+````{tab} just
 
 ```console
-$ make mypy
+$ just mypy
 ```
 
 ````
@@ -164,44 +163,7 @@ $ make mypy
 ````{tab} Watch
 
 ```console
-$ make watch_mypy
-```
-
-requires [`entr(1)`].
-````
-
-### mypy
-
-[mypy] is used for static type checking.
-
-````{tab} Command
-
-uv:
-
-```console
-$ uv run mypy .
-```
-
-If you setup manually:
-
-```console
-$ mypy .
-```
-
-````
-
-````{tab} make
-
-```console
-$ make mypy
-```
-
-````
-
-````{tab} Watch
-
-```console
-$ make watch_mypy
+$ just watch-mypy
 ```
 
 requires [`entr(1)`].
