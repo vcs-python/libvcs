@@ -20,6 +20,13 @@ $ uv add libvcs --prerelease allow
 
 _Upcoming changes will be written here._
 
+### Development
+
+#### Makefile -> Justfile (#500)
+
+- Migrate from `Makefile` to `justfile` for running development tasks
+- Update documentation to reference `just` commands
+
 ### Documentation
 
 - Migrate docs deployment to AWS OIDC authentication and AWS CLI
