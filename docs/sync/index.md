@@ -14,6 +14,16 @@ versions.
 
 :::
 
+## Async Variants
+
+Async equivalents are available in `libvcs.sync._async`:
+
+- {class}`~libvcs.sync._async.git.AsyncGitSync` - Async git repository management
+- {class}`~libvcs.sync._async.hg.AsyncHgSync` - Async mercurial repository management
+- {class}`~libvcs.sync._async.svn.AsyncSvnSync` - Async subversion repository management
+
+See {doc}`/topics/asyncio` for usage patterns.
+
 ```{toctree}
 :caption: API
 
