@@ -39,12 +39,14 @@ class AsyncSvn:
 
     Examples
     --------
-    >>> import asyncio
     >>> async def example():
-    ...     svn = AsyncSvn(path="/path/to/working-copy")
-    ...     info = await svn.info()
-    ...     return info
-    >>> # asyncio.run(example())
+    ...     repo_path = tmp_path / 'svn_wc'
+    ...     svn = AsyncSvn(path=repo_path)
+    ...     url = f'file://{create_svn_remote_repo()}'
+    ...     await svn.checkout(url=url)
+    ...     return (repo_path / '.svn').exists()
+    >>> asyncio.run(example())
+    True
     """
 
     progress_callback: AsyncProgressCallbackProtocol | None = None

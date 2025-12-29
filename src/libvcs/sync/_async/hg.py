@@ -25,15 +25,14 @@ class AsyncHgSync(AsyncBaseSync):
 
     Examples
     --------
-    >>> import asyncio
     >>> async def example():
-    ...     repo = AsyncHgSync(
-    ...         url="https://hg.example.com/repo",
-    ...         path="/tmp/myrepo",
-    ...     )
+    ...     url = f'file://{create_hg_remote_repo()}'
+    ...     repo_path = tmp_path / 'hg_sync_repo'
+    ...     repo = AsyncHgSync(url=url, path=repo_path)
     ...     await repo.obtain()
-    ...     await repo.update_repo()
-    >>> # asyncio.run(example())
+    ...     return (repo_path / '.hg').exists()
+    >>> asyncio.run(example())
+    True
     """
 
     bin_name = "hg"

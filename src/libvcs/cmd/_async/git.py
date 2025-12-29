@@ -36,12 +36,13 @@ class AsyncGit:
 
     Examples
     --------
-    >>> import asyncio
     >>> async def example():
-    ...     git = AsyncGit(path="/path/to/repo")
+    ...     git = AsyncGit(path=tmp_path)
+    ...     await git.run(['init'])
     ...     status = await git.status()
-    ...     return status
-    >>> # asyncio.run(example())
+    ...     return 'On branch' in status or 'No commits yet' in status
+    >>> asyncio.run(example())
+    True
     """
 
     progress_callback: AsyncProgressCallbackProtocol | None = None
@@ -128,11 +129,12 @@ class AsyncGit:
 
         Examples
         --------
-        >>> import asyncio
         >>> async def example():
-        ...     git = AsyncGit(path="/path/to/repo")
-        ...     return await git.run(["status"])
-        >>> # asyncio.run(example())
+        ...     git = AsyncGit(path=tmp_path)
+        ...     await git.run(['init'])
+        ...     return 'On branch' in await git.run(['status'])
+        >>> asyncio.run(example())
+        True
         """
         cli_args: list[str]
         if isinstance(args, Sequence) and not isinstance(args, (str, bytes)):
@@ -223,11 +225,14 @@ class AsyncGit:
 
         Examples
         --------
-        >>> import asyncio
         >>> async def example():
-        ...     git = AsyncGit(path="/tmp/myrepo")
-        ...     await git.clone(url="https://github.com/user/repo")
-        >>> # asyncio.run(example())
+        ...     repo_path = tmp_path / 'cloned_repo'
+        ...     git = AsyncGit(path=repo_path)
+        ...     url = f'file://{create_git_remote_repo()}'
+        ...     await git.clone(url=url)
+        ...     return (repo_path / '.git').exists()
+        >>> asyncio.run(example())
+        True
         """
         if make_parents and not self.path.exists():
             self.path.mkdir(parents=True)

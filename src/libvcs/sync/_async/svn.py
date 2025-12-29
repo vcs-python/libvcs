@@ -31,15 +31,14 @@ class AsyncSvnSync(AsyncBaseSync):
 
     Examples
     --------
-    >>> import asyncio
     >>> async def example():
-    ...     repo = AsyncSvnSync(
-    ...         url="svn://svn.example.com/repo",
-    ...         path="/tmp/myrepo",
-    ...     )
+    ...     url = f'file://{create_svn_remote_repo()}'
+    ...     repo_path = tmp_path / 'svn_sync_repo'
+    ...     repo = AsyncSvnSync(url=url, path=repo_path)
     ...     await repo.obtain()
-    ...     await repo.update_repo()
-    >>> # asyncio.run(example())
+    ...     return (repo_path / '.svn').exists()
+    >>> asyncio.run(example())
+    True
     """
 
     bin_name = "svn"

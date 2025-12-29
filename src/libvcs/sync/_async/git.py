@@ -62,15 +62,14 @@ class AsyncGitSync(AsyncBaseSync):
 
     Examples
     --------
-    >>> import asyncio
     >>> async def example():
-    ...     repo = AsyncGitSync(
-    ...         url="https://github.com/vcs-python/libvcs",
-    ...         path="/tmp/libvcs",
-    ...     )
+    ...     url = f'file://{create_git_remote_repo()}'
+    ...     repo_path = tmp_path / 'git_sync_repo'
+    ...     repo = AsyncGitSync(url=url, path=repo_path)
     ...     await repo.obtain()
-    ...     await repo.update_repo()
-    >>> # asyncio.run(example())
+    ...     return (repo_path / '.git').exists()
+    >>> asyncio.run(example())
+    True
     """
 
     bin_name = "git"

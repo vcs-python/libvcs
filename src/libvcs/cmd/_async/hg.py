@@ -56,12 +56,14 @@ class AsyncHg:
 
     Examples
     --------
-    >>> import asyncio
     >>> async def example():
-    ...     hg = AsyncHg(path="/path/to/repo")
-    ...     output = await hg.pull()
-    ...     return output
-    >>> # asyncio.run(example())
+    ...     repo_path = tmp_path / 'hg_repo'
+    ...     hg = AsyncHg(path=repo_path)
+    ...     url = f'file://{create_hg_remote_repo()}'
+    ...     await hg.clone(url=url)
+    ...     return (repo_path / '.hg').exists()
+    >>> asyncio.run(example())
+    True
     """
 
     progress_callback: AsyncProgressCallbackProtocol | None = None
