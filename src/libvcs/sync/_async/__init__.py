@@ -11,7 +11,9 @@ This is an internal API not covered by versioning policy.
 from __future__ import annotations
 
 from libvcs.sync._async.git import AsyncGitSync
+from libvcs.sync._async.hg import AsyncHgSync
 
 __all__ = [
     "AsyncGitSync",
+    "AsyncHgSync",
 ]
