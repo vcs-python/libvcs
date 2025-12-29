@@ -18,6 +18,16 @@ from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
 
+# Async support - conditional import
+try:
+    import pytest_asyncio
+
+    from libvcs.sync._async.git import AsyncGitSync
+
+    HAS_PYTEST_ASYNCIO = True
+except ImportError:
+    HAS_PYTEST_ASYNCIO = False
+
 
 class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
     """Raised when exceeded threshold of attempts to find a unique repo destination."""
@@ -778,6 +788,49 @@ def svn_repo(
     )
     svn_repo.obtain()
     return svn_repo
+
+
+# =============================================================================
+# Async Fixtures
+# =============================================================================
+
+if HAS_PYTEST_ASYNCIO:
+
+    @pytest_asyncio.fixture
+    @skip_if_git_missing
+    async def async_git_repo(
+        remote_repos_path: pathlib.Path,
+        projects_path: pathlib.Path,
+        git_remote_repo: pathlib.Path,
+        set_gitconfig: pathlib.Path,
+    ) -> t.AsyncGenerator[AsyncGitSync, None]:
+        """Pre-made async git clone of remote repo checked out to user's projects dir.
+
+        Async equivalent of :func:`git_repo` fixture.
+
+        Examples
+        --------
+        >>> @pytest.mark.asyncio
+        ... async def test_git_operations(async_git_repo):
+        ...     revision = await async_git_repo.get_revision()
+        ...     assert revision is not None
+        """
+        remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+        new_checkout_path = projects_path / remote_repo_name
+
+        repo = AsyncGitSync(
+            url=f"file://{git_remote_repo}",
+            path=new_checkout_path,
+            remotes={
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=f"file://{git_remote_repo}",
+                ),
+            },
+        )
+        await repo.obtain()
+        yield repo
 
 
 @pytest.fixture
