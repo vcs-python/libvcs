@@ -32,6 +32,25 @@ The following reference codebases were studied to inform this design:
 
 ---
 
+## Verification Before Commit
+
+**REQUIRED**: Before committing any phase or making a PR, run the full verification pipeline:
+
+```bash
+uv run ruff check . --fix --show-fixes
+uv run ruff format .
+uv run mypy
+uv run pytest --reruns 0 -vvv
+```
+
+All checks must pass:
+- `ruff check`: No linting errors
+- `ruff format`: No formatting changes needed
+- `mypy`: Success with no type errors
+- `pytest`: All tests pass (0 failures)
+
+---
+
 ## DOs
 
 ### Subprocess Execution
