@@ -889,7 +889,9 @@ if HAS_PYTEST_ASYNCIO:
         projects_path: pathlib.Path,
         svn_remote_repo: pathlib.Path,
     ) -> t.AsyncGenerator[AsyncSvnSync, None]:
-        """Pre-made async svn checkout of remote repo checked out to user's projects dir.
+        """Pre-made async svn checkout of remote repo.
+
+        Checked out to user's projects dir.
 
         Async equivalent of :func:`svn_repo` fixture.
 
