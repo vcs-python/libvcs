@@ -187,6 +187,7 @@ class TestAsyncSubprocessCommand:
         cmd = AsyncSubprocessCommand(args=["pwd"], cwd=tmp_path)
         result = await cmd.run(text=True)
 
+        assert result.stdout is not None
         assert result.stdout.strip() == str(tmp_path)
 
     @pytest.mark.asyncio
@@ -228,5 +229,6 @@ class TestAsyncSubprocessCommand:
 
         assert len(results) == 5
         for i, result in enumerate(results):
+            assert result.stdout is not None
             assert result.stdout.strip() == str(i)
             assert result.returncode == 0
