@@ -1,5 +1,17 @@
 # libvcs Asyncio Support Implementation Plan
 
+## Implementation Status
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Complete | Core Async Subprocess (`async_subprocess.py`) |
+| Phase 2 | ✅ Complete | Async Run Function (`async_run.py`) |
+| Phase 3 | ✅ Complete | Async Command Classes (`AsyncGit`) |
+| Phase 4 | ✅ Complete | Async Sync Classes (`AsyncGitSync`) |
+| Phase 5 | ✅ Complete | Async pytest fixtures (`async_git_repo`) |
+
+---
+
 ## Study Sources
 
 The following reference codebases were studied to inform this design:
