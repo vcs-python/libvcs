@@ -246,3 +246,26 @@ class TestAsyncSvnSyncGetRevision:
         revision = await repo.get_revision_file("./")
         # SVN revisions start at 0 for empty repos
         assert revision == 0
+
+
+class TestAsyncSvnRepoFixture:
+    """Tests for the async_svn_repo pytest fixture."""
+
+    @pytest.mark.asyncio
+    async def test_async_svn_repo_fixture(
+        self,
+        async_svn_repo: AsyncSvnSync,
+    ) -> None:
+        """Test that async_svn_repo fixture provides a working repository."""
+        assert async_svn_repo.path.exists()
+        assert (async_svn_repo.path / ".svn").exists()
+
+    @pytest.mark.asyncio
+    async def test_async_svn_repo_revision(
+        self,
+        async_svn_repo: AsyncSvnSync,
+    ) -> None:
+        """Test async_svn_repo fixture can get revision."""
+        revision = await async_svn_repo.get_revision()
+        # SVN revisions start at 0 for empty repos
+        assert revision == 0

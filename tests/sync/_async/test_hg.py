@@ -124,3 +124,25 @@ class TestAsyncHgSyncGetRevision:
         revision = await repo.get_revision()
         # Mercurial revisions are numeric (0, 1, 2, ...)
         assert revision.strip().isdigit() or revision.strip() == ""
+
+
+class TestAsyncHgRepoFixture:
+    """Tests for the async_hg_repo pytest fixture."""
+
+    @pytest.mark.asyncio
+    async def test_async_hg_repo_fixture(
+        self,
+        async_hg_repo: AsyncHgSync,
+    ) -> None:
+        """Test that async_hg_repo fixture provides a working repository."""
+        assert async_hg_repo.path.exists()
+        assert (async_hg_repo.path / ".hg").exists()
+
+    @pytest.mark.asyncio
+    async def test_async_hg_repo_revision(
+        self,
+        async_hg_repo: AsyncHgSync,
+    ) -> None:
+        """Test async_hg_repo fixture can get revision."""
+        revision = await async_hg_repo.get_revision()
+        assert revision.strip().isdigit() or revision.strip() == ""
