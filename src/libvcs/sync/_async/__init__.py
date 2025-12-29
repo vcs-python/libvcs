@@ -12,8 +12,10 @@ from __future__ import annotations
 
 from libvcs.sync._async.git import AsyncGitSync
 from libvcs.sync._async.hg import AsyncHgSync
+from libvcs.sync._async.svn import AsyncSvnSync
 
 __all__ = [
     "AsyncGitSync",
     "AsyncHgSync",
+    "AsyncSvnSync",
 ]
