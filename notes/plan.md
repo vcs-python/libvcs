@@ -9,6 +9,7 @@
 | Phase 3 | ✅ Complete | Async Command Classes (`AsyncGit`) |
 | Phase 4 | ✅ Complete | Async Sync Classes (`AsyncGitSync`) |
 | Phase 5 | ✅ Complete | Async pytest fixtures (`async_git_repo`) |
+| Phase 6 | ✅ Complete | Async Mercurial (`AsyncHg`, `AsyncHgSync`) |
 
 ---
 
