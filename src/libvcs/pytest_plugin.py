@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import functools
 import getpass
 import pathlib
@@ -851,6 +852,8 @@ def add_doctest_fixtures(
 
     if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
         return
+    # Add asyncio for async doctests
+    doctest_namespace["asyncio"] = asyncio
     doctest_namespace["tmp_path"] = tmp_path
     if shutil.which("git"):
         doctest_namespace["create_git_remote_repo"] = functools.partial(
