@@ -11,6 +11,7 @@
 | Phase 5 | ✅ Complete | Async pytest fixtures (`async_git_repo`) |
 | Phase 6 | ✅ Complete | Async Mercurial (`AsyncHg`, `AsyncHgSync`) |
 | Phase 7 | ✅ Complete | Async Subversion (`AsyncSvn`, `AsyncSvnSync`) |
+| Phase 8 | ✅ Complete | Async Documentation |
 
 ---
 
