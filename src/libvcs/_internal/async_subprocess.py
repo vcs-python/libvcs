@@ -22,12 +22,12 @@ Examples
 
   With this (async):
 
-  >>> import asyncio
   >>> async def example():
   ...     cmd = AsyncSubprocessCommand(['echo', 'hi'])
   ...     result = await cmd.run()
   ...     return result.stdout
-  >>> # asyncio.run(example())  # Returns 'hi\n'
+  >>> asyncio.run(example())
+  b'hi\n'
 """
 
 from __future__ import annotations
@@ -113,7 +113,8 @@ class AsyncSubprocessCommand(SkipDefaultFieldsReprMixin):
     ...     cmd = AsyncSubprocessCommand(['echo', 'hello'])
     ...     result = await cmd.run()
     ...     return result.stdout
-    >>> # asyncio.run(example())  # Returns 'hello\n'
+    >>> asyncio.run(example())
+    b'hello\n'
 
     Modify before running:
 
@@ -240,7 +241,8 @@ class AsyncSubprocessCommand(SkipDefaultFieldsReprMixin):
         ...     cmd = AsyncSubprocessCommand(['echo', 'hello'])
         ...     result = await cmd.run(text=True)
         ...     return result.stdout.strip()
-        >>> # asyncio.run(example())  # Returns 'hello'
+        >>> asyncio.run(example())
+        'hello'
         """
         args_list = self._args_as_list()
 
@@ -330,7 +332,8 @@ class AsyncSubprocessCommand(SkipDefaultFieldsReprMixin):
         >>> async def example():
         ...     cmd = AsyncSubprocessCommand(['echo', 'hello'])
         ...     return await cmd.check_output(text=True)
-        >>> # asyncio.run(example())  # Returns 'hello\n'
+        >>> asyncio.run(example())
+        'hello\n'
         """
         result = await self.run(check=True, timeout=timeout, input=input, text=text)
         return result.stdout if result.stdout is not None else (b"" if not text else "")
@@ -365,7 +368,8 @@ class AsyncSubprocessCommand(SkipDefaultFieldsReprMixin):
         >>> async def example():
         ...     cmd = AsyncSubprocessCommand(['true'])
         ...     return await cmd.wait()
-        >>> # asyncio.run(example())  # Returns 0
+        >>> asyncio.run(example())
+        0
         """
         proc = await self._create_process(
             stdin=asyncio.subprocess.DEVNULL,

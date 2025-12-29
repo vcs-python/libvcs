@@ -17,12 +17,12 @@ Examples
 
   With this (async):
 
-  >>> import asyncio
   >>> from libvcs._internal.async_run import async_run
   >>> async def example():
   ...     output = await async_run(['echo', 'hello'])
-  ...     return output
-  >>> # asyncio.run(example())  # Returns 'hello'
+  ...     return output.strip()
+  >>> asyncio.run(example())
+  'hello'
 """
 
 from __future__ import annotations
@@ -176,20 +176,22 @@ async def async_run(
     --------
     Basic usage:
 
-    >>> import asyncio
     >>> async def example():
     ...     output = await async_run(['echo', 'hello'])
     ...     return output.strip()
-    >>> # asyncio.run(example())  # Returns 'hello'
+    >>> asyncio.run(example())
+    'hello'
 
     With progress callback:
 
     >>> async def progress(output: str, timestamp: datetime.datetime) -> None:
-    ...     print(f"Progress: {output}", end="")
-    >>> async def example():
-    ...     output = await async_run(['git', 'clone', url], callback=progress)
-    ...     return output
-    >>> # asyncio.run(example())
+    ...     pass  # Handle progress output
+    >>> async def clone_example():
+    ...     url = f'file://{create_git_remote_repo()}'
+    ...     output = await async_run(['git', 'clone', url, str(tmp_path / 'cb_repo')])
+    ...     return 'Cloning' in output or output == ''
+    >>> asyncio.run(clone_example())
+    True
 
     See Also
     --------
