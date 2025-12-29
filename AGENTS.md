@@ -225,8 +225,9 @@ type
 **Available tools for doctests:**
 - `doctest_namespace` fixtures: `tmp_path`, `asyncio`, `create_git_remote_repo`, `create_hg_remote_repo`, `create_svn_remote_repo`, `example_git_repo`
 - Ellipsis for variable output: `# doctest: +ELLIPSIS`
-- Skip for truly un-runnable examples: `# doctest: +SKIP` (use sparingly)
 - Update `pytest_plugin.py` to add new fixtures to `doctest_namespace`
+
+**`# doctest: +SKIP` is NOT permitted** - it's just another workaround that doesn't test anything. If a VCS binary might not be installed, pytest already handles skipping via `skip_if_binaries_missing`. Use the fixtures properly.
 
 **Async doctest pattern:**
 ```python
