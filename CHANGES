@@ -20,6 +20,12 @@ $ uv add libvcs --prerelease allow
 
 _Upcoming changes will be written here._
 
+### Bug fixes
+
+#### Fix stash.save() quiet parameter usage (#506)
+
+- Fixed `GitSync.update_repo()` to use `stash.save(quiet=True)` instead of incorrectly passing `"--quiet"` as the message parameter
+
 ### Development
 
 #### Makefile -> Justfile (#500)
