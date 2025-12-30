@@ -239,6 +239,9 @@ filterwarnings = [
 ]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
+]
 
 [tool.pytest-watcher]
 now = true
