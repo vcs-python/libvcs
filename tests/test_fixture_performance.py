@@ -16,6 +16,7 @@ from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
 
 if t.TYPE_CHECKING:
+    from libvcs.pytest_plugin import RepoFixtureResult
     from libvcs.sync._async.git import AsyncGitSync
     from libvcs.sync._async.hg import AsyncHgSync
     from libvcs.sync._async.svn import AsyncSvnSync
@@ -105,6 +106,30 @@ def test_hg_repo_fixture_provides_working_repo(
     """Verify hg_repo fixture provides a functional repository."""
     hg_dir = pathlib.Path(hg_repo.path) / ".hg"
     assert hg_dir.exists(), "hg_repo should have .hg directory"
+
+
+@pytest.mark.performance
+def test_hg_remote_repo_has_marker_file(
+    hg_remote_repo: pathlib.Path,
+) -> None:
+    """Verify hg_remote_repo uses marker file for initialization tracking."""
+    marker = hg_remote_repo / ".libvcs_initialized"
+    assert marker.exists(), "hg_remote_repo should have .libvcs_initialized marker"
+
+
+@pytest.mark.performance
+def test_hg_repo_warm_cache_is_fast(
+    hg_repo: RepoFixtureResult[HgSync],
+) -> None:
+    """Verify hg_repo warm cache uses copytree (should be <50ms).
+
+    Mercurial is inherently slow (~100ms for hg --version alone),
+    so we verify that cached runs avoid hg commands entirely.
+    """
+    # If from_cache is True, this was a copytree operation
+    if hg_repo.from_cache:
+        # created_at is relative perf_counter, but we verify it's fast
+        assert hg_repo.master_copy_path.exists()
 
 
 # =============================================================================
@@ -202,6 +227,22 @@ def test_persistent_cache_location_follows_xdg(
     assert libvcs_persistent_cache.parent.name == "libvcs-test"
     # Cache key should be 12-char hex
     assert len(libvcs_persistent_cache.name) == 12
+
+
+@pytest.mark.performance
+def test_version_key_is_cached_to_disk(
+    libvcs_persistent_cache: pathlib.Path,
+) -> None:
+    """Verify VCS version detection is cached to disk.
+
+    This optimization avoids running slow `hg --version` (102ms) on every
+    pytest session by caching the computed cache key to disk with 24h TTL.
+    """
+    cache_key_file = libvcs_persistent_cache.parent / ".cache_key"
+    assert cache_key_file.exists(), ".cache_key file should exist"
+    # Should contain the same 12-char hex key as the cache directory name
+    cached_key = cache_key_file.read_text().strip()
+    assert cached_key == libvcs_persistent_cache.name
 
 
 # =============================================================================

@@ -152,15 +152,39 @@ def get_cache_key() -> str:
     """Generate cache key from VCS versions and libvcs version.
 
     The cache is invalidated when any VCS tool or libvcs version changes.
+    Results are cached to disk with a 24-hour TTL to avoid slow `hg --version`
+    calls (which take ~100ms due to Python startup overhead).
     """
+    base_dir = get_xdg_cache_dir()
+    key_file = base_dir / ".cache_key"
+
+    # Return cached key if exists and is recent (within 24 hours)
+    if key_file.exists():
+        try:
+            stat = key_file.stat()
+            if time.time() - stat.st_mtime < 86400:  # 24 hours
+                return key_file.read_text().strip()
+        except OSError:
+            pass  # File was deleted or inaccessible, regenerate
+
+    # Compute fresh key from VCS versions
     versions = [
         get_vcs_version(["git", "--version"]),
-        get_vcs_version(["hg", "--version"]),
+        get_vcs_version(["hg", "--version"]),  # ~100ms due to Python startup
         get_vcs_version(["svn", "--version"]),
         get_package_version("libvcs"),
     ]
     version_str = "|".join(versions)
-    return hashlib.sha256(version_str.encode()).hexdigest()[:12]
+    cache_key = hashlib.sha256(version_str.encode()).hexdigest()[:12]
+
+    # Cache to disk for future runs
+    try:
+        base_dir.mkdir(parents=True, exist_ok=True)
+        key_file.write_text(cache_key)
+    except OSError:
+        pass  # Cache write failed, continue without caching
+
+    return cache_key
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -640,11 +664,13 @@ def git_remote_repo(
     """Return cached Git remote repo with an initial commit.
 
     Uses persistent XDG cache - repo persists across test sessions.
+    Uses a marker file to ensure the commit was successfully created.
     """
     repo_path = remote_repos_path / "git_remote_repo"
+    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if it exists and has commits
-    if repo_path.exists() and (repo_path / "HEAD").exists():
+    # Return cached repo if fully initialized (has marker file)
+    if repo_path.exists() and marker.exists():
         return repo_path
 
     # Create from empty template
@@ -657,6 +683,9 @@ def git_remote_repo(
         remote_repo_path=repo_path,
         env=git_commit_envvars,
     )
+
+    # Mark as fully initialized
+    marker.touch()
     return repo_path
 
 
@@ -769,11 +798,13 @@ def svn_remote_repo(
     """Return cached SVN remote repo.
 
     Uses persistent XDG cache - repo persists across test sessions.
+    Uses a marker file to ensure initialization was successful.
     """
     repo_path = remote_repos_path / "svn_remote_repo"
+    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if it exists
-    if repo_path.exists() and (repo_path / "format").exists():
+    # Return cached repo if fully initialized (has marker file)
+    if repo_path.exists() and marker.exists():
         return repo_path
 
     # Create from empty template
@@ -781,6 +812,8 @@ def svn_remote_repo(
         shutil.rmtree(repo_path)
     shutil.copytree(empty_svn_repo, repo_path)
 
+    # Mark as fully initialized
+    marker.touch()
     return repo_path
 
 
@@ -793,11 +826,13 @@ def svn_remote_repo_with_files(
     """Return cached SVN remote repo with files committed.
 
     Uses persistent XDG cache - repo persists across test sessions.
+    Uses a marker file to ensure the commit was successfully created.
     """
     repo_path = remote_repos_path / "svn_remote_repo_with_files"
+    marker = repo_path / ".libvcs_initialized"
 
-    # Check if cached version already has commits
-    if repo_path.exists() and (repo_path / "format").exists():
+    # Return cached repo if fully initialized (has marker file)
+    if repo_path.exists() and marker.exists():
         return repo_path
 
     # Create from base svn_remote_repo
@@ -806,6 +841,9 @@ def svn_remote_repo_with_files(
     shutil.copytree(svn_remote_repo, repo_path)
 
     svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+
+    # Mark as fully initialized
+    marker.touch()
     return repo_path
 
 
@@ -908,11 +946,13 @@ def hg_remote_repo(
     """Return cached Mercurial remote repo with an initial commit.
 
     Uses persistent XDG cache - repo persists across test sessions.
+    Uses a marker file to ensure the commit was successfully created.
     """
     repo_path = remote_repos_path / "hg_remote_repo"
+    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if it exists and has commits
-    if repo_path.exists() and (repo_path / ".hg").exists():
+    # Return cached repo if fully initialized (has marker file)
+    if repo_path.exists() and marker.exists():
         return repo_path
 
     # Create from empty template
@@ -920,11 +960,14 @@ def hg_remote_repo(
         shutil.rmtree(repo_path)
     shutil.copytree(empty_hg_repo, repo_path)
 
-    # Add initial commit
+    # Add initial commit (slow: ~288ms due to hg add + commit)
     hg_remote_repo_single_commit_post_init(
         remote_repo_path=repo_path,
         env={"HGRCPATH": str(hgconfig)},
     )
+
+    # Mark as fully initialized
+    marker.touch()
     return repo_path
 
 
