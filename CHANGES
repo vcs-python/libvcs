@@ -27,6 +27,13 @@ $ uv add libvcs --prerelease allow
 - Support both sync and async usage patterns
 - Useful for pytest-xdist compatibility
 
+### Tests
+
+#### tests: Add async tests for file_lock module (#505)
+
+- Add {class}`TestAsyncFileLock` with 8 async tests
+- Add {class}`TestAsyncAtomicInit` with 4 async tests
+
 ### Development
 
 #### Makefile -> Justfile (#500)
