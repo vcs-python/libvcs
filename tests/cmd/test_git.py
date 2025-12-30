@@ -570,7 +570,7 @@ def test_branch_ls_filters(git_repo: GitSync) -> None:
     assert any(b.branch_name == "master" for b in branches)
 
     # Test with --all (includes remote-tracking branches)
-    all_branches = git_repo.cmd.branches.ls(_all=True)
+    all_branches = git_repo.cmd.branches.ls(all_branches=True)
     assert len(all_branches) >= len(branches)
 
     # Test with --merged (branches merged into HEAD)

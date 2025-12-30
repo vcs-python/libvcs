@@ -442,7 +442,7 @@ def test_remotes(
     expected = lazy_remote_expected(**locals())
     assert len(expected.keys()) > 0
     for expected_remote_name, expected_remote_dict in expected.items():
-        remote = git_repo.remote(expected_remote_name)
+        remote = git_repo.get_remote(expected_remote_name)
         assert remote is not None
 
         if remote is not None:
@@ -568,7 +568,7 @@ def test_remotes_update_repo(
     expected = lazy_remote_expected(**locals())
     assert len(expected.keys()) > 0
     for expected_remote_name, expected_remote in expected.items():
-        assert expected_remote == git_repo.remote(expected_remote_name)
+        assert expected_remote == git_repo.get_remote(expected_remote_name)
 
 
 def test_git_get_url_and_rev_from_pip_url() -> None:
@@ -635,7 +635,7 @@ def test_remotes_preserves_git_ssh(
     git_repo.set_remote(name=remote_name, url=remote_url)
 
     assert GitRemote(remote_name, remote_url, remote_url) in list(
-        git_repo.remotes().values(),
+        git_repo.get_remotes().values(),
     )
 
 
@@ -679,8 +679,8 @@ def test_private_ssh_format(
 
 
 def test_git_sync_remotes(git_repo: GitSync) -> None:
-    """Test GitSync.remotes()."""
-    remotes = git_repo.remotes()
+    """Test GitSync.get_remotes()."""
+    remotes = git_repo.get_remotes()
 
     assert "origin" in remotes
     assert git_repo.cmd.remotes.show() == "origin"
@@ -688,7 +688,7 @@ def test_git_sync_remotes(git_repo: GitSync) -> None:
     assert git_origin is not None
     assert "origin" in git_origin.show()
     assert "origin" in git_origin.show(no_query_remotes=True)
-    assert git_repo.remotes()["origin"].name == "origin"
+    assert git_repo.get_remotes()["origin"].name == "origin"
 
 
 @pytest.mark.parametrize(
@@ -704,15 +704,15 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
     assert "file:///" in mynewremote.fetch_url, "set_remote returns remote"
 
     assert isinstance(
-        git_repo.remote(name=repo_name),
+        git_repo.get_remote(name=repo_name),
         GitRemote,
-    ), "remote() returns GitRemote"
-    remote = git_repo.remote(name=repo_name)
+    ), "get_remote() returns GitRemote"
+    remote = git_repo.get_remote(name=repo_name)
     assert remote is not None, "Remote should exist"
     if remote is not None:
         assert "file:///" in remote.fetch_url, "new value set"
 
-    assert "myrepo" in git_repo.remotes(), ".remotes() returns new remote"
+    assert "myrepo" in git_repo.get_remotes(), ".get_remotes() returns new remote"
 
     with pytest.raises(
         exc.CommandError,
@@ -722,7 +722,7 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
 
     mynewremote = git_repo.set_remote(name="myrepo", url=new_repo_url, overwrite=True)
 
-    remote = git_repo.remote(name="myrepo")
+    remote = git_repo.get_remote(name="myrepo")
     assert remote is not None
     if remote is not None:
         assert new_repo_url in remote.fetch_url, (
