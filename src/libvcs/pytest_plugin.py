@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
+import dataclasses
 import functools
 import getpass
+import hashlib
+import os
 import pathlib
 import random
 import shutil
+import subprocess
 import textwrap
+import time
 import typing as t
+from importlib.metadata import version as get_package_version
 
 import pytest
 
 from libvcs import exc
+from libvcs._internal.file_lock import atomic_init
 from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
@@ -41,6 +48,156 @@ skip_if_hg_missing = pytest.mark.skipif(
     not shutil.which("hg"),
     reason="hg is not available",
 )
+
+
+# =============================================================================
+# Repo Fixture Result Dataclass
+# =============================================================================
+
+RepoT = t.TypeVar("RepoT")
+
+
+@dataclasses.dataclass
+class RepoFixtureResult(t.Generic[RepoT]):
+    """Result from repo fixture with metadata.
+
+    This dataclass wraps the repository instance with additional metadata
+    about the fixture setup, including timing and cache information.
+
+    Attributes
+    ----------
+    repo : RepoT
+        The actual repository instance (GitSync, HgSync, SvnSync, or async variants)
+    path : pathlib.Path
+        Path to the repository working directory
+    remote_url : str
+        URL of the remote repository (file:// based)
+    master_copy_path : pathlib.Path
+        Path to the cached master copy
+    created_at : float
+        Time when the fixture was created (perf_counter)
+    from_cache : bool
+        True if the repo was copied from an existing master cache
+
+    Examples
+    --------
+    >>> def test_git_operations(git_repo):
+    ...     # Direct access to repo methods via __getattr__
+    ...     revision = git_repo.get_revision()
+    ...
+    ...     # Access metadata
+    ...     assert git_repo.from_cache  # True if using cached copy
+    ...     print(f"Setup took: {time.perf_counter() - git_repo.created_at:.3f}s")
+    ...
+    ...     # Access the underlying repo directly
+    ...     assert isinstance(git_repo.repo, GitSync)
+    """
+
+    repo: RepoT
+    path: pathlib.Path
+    remote_url: str
+    master_copy_path: pathlib.Path
+    created_at: float
+    from_cache: bool
+
+    def __getattr__(self, name: str) -> t.Any:
+        """Delegate attribute access to the underlying repo for backwards compat."""
+        return getattr(self.repo, name)
+
+
+# =============================================================================
+# XDG Persistent Cache Infrastructure
+# =============================================================================
+
+
+def get_xdg_cache_dir() -> pathlib.Path:
+    """Get XDG cache directory for libvcs tests.
+
+    Uses XDG_CACHE_HOME if set, otherwise defaults to ~/.cache.
+    """
+    xdg_cache = os.environ.get("XDG_CACHE_HOME")
+    if xdg_cache:
+        return pathlib.Path(xdg_cache) / "libvcs-test"
+    return pathlib.Path.home() / ".cache" / "libvcs-test"
+
+
+def get_vcs_version(cmd: list[str]) -> str:
+    """Get version string from a VCS command, or 'not-installed' if unavailable."""
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        return result.stdout.strip()
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return "not-installed"
+
+
+def get_cache_key() -> str:
+    """Generate cache key from VCS versions and libvcs version.
+
+    The cache is invalidated when any VCS tool or libvcs version changes.
+    Results are cached to disk with a ~23.5-hour TTL to avoid slow `hg --version`
+    calls (which take ~100ms due to Python startup overhead).
+
+    Uses atomic file operations to prevent race conditions with parallel workers.
+    """
+    base_dir = get_xdg_cache_dir()
+    key_file = base_dir / ".cache_key"
+
+    # Try to return cached key (atomic read with full error handling)
+    # No exists() check - let stat() fail naturally to avoid TOCTOU race
+    try:
+        stat = key_file.stat()
+        # Use 23.5 hours (not 24) to avoid exact boundary race conditions
+        if time.time() - stat.st_mtime < 84600:
+            cached_key = key_file.read_text().strip()
+            # Validate format before using (guards against corruption)
+            if len(cached_key) == 12:
+                return cached_key
+    except (OSError, ValueError):
+        pass  # File missing, stale, corrupt, or race condition - regenerate
+
+    # Compute fresh key from VCS versions
+    versions = [
+        get_vcs_version(["git", "--version"]),
+        get_vcs_version(["hg", "--version"]),  # ~100ms due to Python startup
+        get_vcs_version(["svn", "--version"]),
+        get_package_version("libvcs"),
+    ]
+    version_str = "|".join(versions)
+    cache_key = hashlib.sha256(version_str.encode()).hexdigest()[:12]
+
+    # Atomic write: write to temp file, then rename (atomic on POSIX)
+    try:
+        base_dir.mkdir(parents=True, exist_ok=True)
+        tmp_file = base_dir / f".cache_key.{os.getpid()}.tmp"
+        tmp_file.write_text(cache_key)
+        tmp_file.rename(key_file)
+    except OSError:
+        pass  # Cache write failed, continue without caching
+
+    return cache_key
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Add libvcs pytest options."""
+    group = parser.getgroup("libvcs", "libvcs fixture options")
+    group.addoption(
+        "--libvcs-cache-dir",
+        action="store",
+        metavar="PATH",
+        help="Override XDG cache directory for libvcs test fixtures",
+    )
+    group.addoption(
+        "--libvcs-clear-cache",
+        action="store_true",
+        default=False,
+        help="Clear libvcs persistent cache before running tests",
+    )
 
 
 DEFAULT_VCS_NAME = "Test user"
@@ -78,6 +235,43 @@ def git_commit_envvars(vcs_name: str, vcs_email: str) -> _ENV:
         "GIT_COMMITTER_NAME": vcs_name,
         "GIT_COMMITTER_EMAIL": vcs_email,
     }
+
+
+@pytest.fixture(scope="session")
+def libvcs_persistent_cache(request: pytest.FixtureRequest) -> pathlib.Path:
+    """Return persistent cache directory for libvcs test fixtures.
+
+    This cache persists across test sessions and is keyed by VCS + libvcs versions.
+    When any version changes, the cache is automatically invalidated.
+
+    The cache location follows XDG Base Directory spec:
+    - Default: ~/.cache/libvcs-test/<cache-key>/
+    - Override: --libvcs-cache-dir=PATH
+
+    Use --libvcs-clear-cache to force cache rebuild.
+    """
+    # Get cache directory (from option or XDG default)
+    custom_cache = request.config.getoption("--libvcs-cache-dir")
+    base_dir = pathlib.Path(custom_cache) if custom_cache else get_xdg_cache_dir()
+
+    # Get version-based cache key
+    cache_key = get_cache_key()
+    cache_dir = base_dir / cache_key
+
+    # Handle --libvcs-clear-cache
+    if request.config.getoption("--libvcs-clear-cache") and base_dir.exists():
+        shutil.rmtree(base_dir)
+
+    # NOTE: Automatic cleanup of old cache versions removed to prevent race
+    # conditions with pytest-xdist parallel workers. Old cache versions may
+    # accumulate but won't cause issues. Users can clean manually:
+    #   rm -rf ~/.cache/libvcs-test/*
+    # Or use: --libvcs-clear-cache
+
+    # Create cache directory
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    return cache_dir
 
 
 class RandomStrSequence:
@@ -237,17 +431,15 @@ def projects_path(
 
 @pytest.fixture(scope="session")
 def remote_repos_path(
-    user_path: pathlib.Path,
-    request: pytest.FixtureRequest,
+    libvcs_persistent_cache: pathlib.Path,
 ) -> pathlib.Path:
-    """System's remote (file-based) repos to clone and push to. Emphemeral directory."""
-    path = user_path / "remote_repos"
+    """Directory for remote repos and master copies, using persistent XDG cache.
+
+    This ensures stable file:// URLs across test sessions, enabling proper
+    caching of cloned repositories.
+    """
+    path = libvcs_persistent_cache / "remote_repos"
     path.mkdir(exist_ok=True)
-
-    def clean() -> None:
-        shutil.rmtree(path)
-
-    request.addfinalizer(clean)
     return path
 
 
@@ -317,9 +509,15 @@ def _create_git_remote_repo(
 
 
 @pytest.fixture(scope="session")
-def libvcs_test_cache_path(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
-    """Return temporary directory to use as cache path for libvcs tests."""
-    return tmp_path_factory.mktemp("libvcs-test-cache")
+def libvcs_test_cache_path(
+    libvcs_persistent_cache: pathlib.Path,
+) -> pathlib.Path:
+    """Return persistent cache directory for libvcs test fixtures.
+
+    This now uses XDG persistent cache, which survives across test sessions
+    and is automatically invalidated when VCS or libvcs versions change.
+    """
+    return libvcs_persistent_cache
 
 
 @pytest.fixture(scope="session")
@@ -454,17 +652,30 @@ def git_remote_repo_single_commit_post_init(
 @pytest.fixture(scope="session")
 @skip_if_git_missing
 def git_remote_repo(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    remote_repos_path: pathlib.Path,
+    empty_git_repo: pathlib.Path,
     gitconfig: pathlib.Path,
     git_commit_envvars: _ENV,
 ) -> pathlib.Path:
-    """Copy the session-scoped Git repository to a temporary directory."""
-    # TODO: Cache the effect of of this in a session-based repo
-    repo_path = create_git_remote_repo()
-    git_remote_repo_single_commit_post_init(
-        remote_repo_path=repo_path,
-        env=git_commit_envvars,
-    )
+    """Return cached Git remote repo with an initial commit.
+
+    Uses persistent XDG cache - repo persists across test sessions.
+    Uses atomic file locking for pytest-xdist worker coordination.
+    """
+    repo_path = remote_repos_path / "git_remote_repo"
+
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
+        return repo_path
+
+    def do_init() -> None:
+        shutil.copytree(empty_git_repo, repo_path)
+        git_remote_repo_single_commit_post_init(
+            remote_repo_path=repo_path,
+            env=git_commit_envvars,
+        )
+
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
@@ -571,20 +782,49 @@ def create_svn_remote_repo(
 @pytest.fixture(scope="session")
 @skip_if_svn_missing
 def svn_remote_repo(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    remote_repos_path: pathlib.Path,
+    empty_svn_repo: pathlib.Path,
 ) -> pathlib.Path:
-    """Pre-made. Local file:// based SVN server."""
-    return create_svn_remote_repo()
+    """Return cached SVN remote repo.
+
+    Uses persistent XDG cache - repo persists across test sessions.
+    Uses atomic file locking for pytest-xdist worker coordination.
+    """
+    repo_path = remote_repos_path / "svn_remote_repo"
+
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
+        return repo_path
+
+    def do_init() -> None:
+        shutil.copytree(empty_svn_repo, repo_path)
+
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
+    return repo_path
 
 
 @pytest.fixture(scope="session")
 @skip_if_svn_missing
 def svn_remote_repo_with_files(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    remote_repos_path: pathlib.Path,
+    svn_remote_repo: pathlib.Path,
 ) -> pathlib.Path:
-    """Pre-made. Local file:// based SVN server."""
-    repo_path = create_svn_remote_repo()
-    svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+    """Return cached SVN remote repo with files committed.
+
+    Uses persistent XDG cache - repo persists across test sessions.
+    Uses atomic file locking for pytest-xdist worker coordination.
+    """
+    repo_path = remote_repos_path / "svn_remote_repo_with_files"
+
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
+        return repo_path
+
+    def do_init() -> None:
+        shutil.copytree(svn_remote_repo, repo_path)
+        svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
+
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
@@ -681,15 +921,29 @@ def create_hg_remote_repo(
 @skip_if_hg_missing
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    empty_hg_repo: pathlib.Path,
     hgconfig: pathlib.Path,
 ) -> pathlib.Path:
-    """Pre-made, file-based repo for push and pull."""
-    repo_path = create_hg_remote_repo()
-    hg_remote_repo_single_commit_post_init(
-        remote_repo_path=repo_path,
-        env={"HGRCPATH": str(hgconfig)},
-    )
+    """Return cached Mercurial remote repo with an initial commit.
+
+    Uses persistent XDG cache - repo persists across test sessions.
+    Uses atomic file locking for pytest-xdist worker coordination.
+    """
+    repo_path = remote_repos_path / "hg_remote_repo"
+
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
+        return repo_path
+
+    def do_init() -> None:
+        shutil.copytree(empty_hg_repo, repo_path)
+        # Add initial commit (slow: ~288ms due to hg add + commit)
+        hg_remote_repo_single_commit_post_init(
+            remote_repo_path=repo_path,
+            env={"HGRCPATH": str(hgconfig)},
+        )
+
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
@@ -699,32 +953,56 @@ def git_repo(
     projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
     set_gitconfig: pathlib.Path,
-) -> GitSync:
-    """Pre-made git clone of remote repo checked out to user's projects dir."""
+) -> RepoFixtureResult[GitSync]:
+    """Pre-made git clone of remote repo checked out to user's projects dir.
+
+    Returns a RepoFixtureResult containing the GitSync instance and metadata.
+    The underlying GitSync methods are accessible directly via __getattr__.
+    """
+    created_at = time.perf_counter()
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
-    master_copy = remote_repos_path / "git_repo"
+    remote_url = f"file://{git_remote_repo}"
+    # Unified master copy shared with async_git_repo
+    master_copy = remote_repos_path / "git_repo_master"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return GitSync(
-            url=f"file://{git_remote_repo}",
-            path=str(new_checkout_path),
+    def create_master() -> None:
+        """Create master copy atomically - only one worker does this."""
+        repo = GitSync(
+            url=remote_url,
+            path=master_copy,
+            remotes={
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=remote_url,
+                    fetch_url=remote_url,
+                ),
+            },
         )
+        repo.obtain()
 
-    git_repo = GitSync(
-        url=f"file://{git_remote_repo}",
-        path=master_copy,
-        remotes={
-            "origin": GitRemote(
-                name="origin",
-                push_url=f"file://{git_remote_repo}",
-                fetch_url=f"file://{git_remote_repo}",
-            ),
-        },
+    # atomic_init returns True if this process did the init, False if waited
+    from_cache = not atomic_init(
+        master_copy,
+        create_master,
+        marker_name=".libvcs_master_initialized",
     )
-    git_repo.obtain()
-    return git_repo
+
+    # All workers get a unique copy from master (exclude marker file)
+    shutil.copytree(
+        master_copy,
+        new_checkout_path,
+        ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+    )
+    repo = GitSync(url=remote_url, path=str(new_checkout_path))
+    return RepoFixtureResult(
+        repo=repo,
+        path=new_checkout_path,
+        remote_url=remote_url,
+        master_copy_path=master_copy,
+        created_at=created_at,
+        from_cache=from_cache,
+    )
 
 
 @pytest.fixture
@@ -733,25 +1011,45 @@ def hg_repo(
     projects_path: pathlib.Path,
     hg_remote_repo: pathlib.Path,
     set_hgconfig: pathlib.Path,
-) -> HgSync:
-    """Pre-made hg clone of remote repo checked out to user's projects dir."""
+) -> RepoFixtureResult[HgSync]:
+    """Pre-made hg clone of remote repo checked out to user's projects dir.
+
+    Returns a RepoFixtureResult containing the HgSync instance and metadata.
+    """
+    created_at = time.perf_counter()
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
-    master_copy = remote_repos_path / "hg_repo"
+    remote_url = f"file://{hg_remote_repo}"
+    # Unified master copy shared with async_hg_repo
+    master_copy = remote_repos_path / "hg_repo_master"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return HgSync(
-            url=f"file://{hg_remote_repo}",
-            path=str(new_checkout_path),
-        )
+    def create_master() -> None:
+        """Create master copy atomically - only one worker does this."""
+        repo = HgSync(url=remote_url, path=master_copy)
+        repo.obtain()
 
-    hg_repo = HgSync(
-        url=f"file://{hg_remote_repo}",
-        path=master_copy,
+    # atomic_init returns True if this process did the init, False if waited
+    from_cache = not atomic_init(
+        master_copy,
+        create_master,
+        marker_name=".libvcs_master_initialized",
     )
-    hg_repo.obtain()
-    return hg_repo
+
+    # All workers get a unique copy from master (exclude marker file)
+    shutil.copytree(
+        master_copy,
+        new_checkout_path,
+        ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+    )
+    repo = HgSync(url=remote_url, path=str(new_checkout_path))
+    return RepoFixtureResult(
+        repo=repo,
+        path=new_checkout_path,
+        remote_url=remote_url,
+        master_copy_path=master_copy,
+        created_at=created_at,
+        from_cache=from_cache,
+    )
 
 
 @pytest.fixture
@@ -759,25 +1057,45 @@ def svn_repo(
     remote_repos_path: pathlib.Path,
     projects_path: pathlib.Path,
     svn_remote_repo: pathlib.Path,
-) -> SvnSync:
-    """Pre-made svn clone of remote repo checked out to user's projects dir."""
+) -> RepoFixtureResult[SvnSync]:
+    """Pre-made svn checkout of remote repo checked out to user's projects dir.
+
+    Returns a RepoFixtureResult containing the SvnSync instance and metadata.
+    """
+    created_at = time.perf_counter()
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
-    master_copy = remote_repos_path / "svn_repo"
+    remote_url = f"file://{svn_remote_repo}"
+    # Unified master copy shared with async_svn_repo
+    master_copy = remote_repos_path / "svn_repo_master"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return SvnSync(
-            url=f"file://{svn_remote_repo}",
-            path=str(new_checkout_path),
-        )
+    def create_master() -> None:
+        """Create master copy atomically - only one worker does this."""
+        repo = SvnSync(url=remote_url, path=str(master_copy))
+        repo.obtain()
 
-    svn_repo = SvnSync(
-        url=f"file://{svn_remote_repo}",
-        path=str(projects_path / "svn_repo"),
+    # atomic_init returns True if this process did the init, False if waited
+    from_cache = not atomic_init(
+        master_copy,
+        create_master,
+        marker_name=".libvcs_master_initialized",
     )
-    svn_repo.obtain()
-    return svn_repo
+
+    # All workers get a unique copy from master (exclude marker file)
+    shutil.copytree(
+        master_copy,
+        new_checkout_path,
+        ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+    )
+    repo = SvnSync(url=remote_url, path=str(new_checkout_path))
+    return RepoFixtureResult(
+        repo=repo,
+        path=new_checkout_path,
+        remote_url=remote_url,
+        master_copy_path=master_copy,
+        created_at=created_at,
+        from_cache=from_cache,
+    )
 
 
 @pytest.fixture
