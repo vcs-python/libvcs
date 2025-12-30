@@ -650,9 +650,72 @@ def test_benchmark_summary(
     for vcs, times in results.items():
         if times["native"] < times["copytree"]:
             print(
-                f"  - {vcs}: Use native copy "
-                "(svnadmin hotcopy / git clone / hg clone)"
+                f"  - {vcs}: Use native copy (svnadmin hotcopy / git clone / hg clone)"
             )
         else:
             print(f"  - {vcs}: Use shutil.copytree")
     print("=" * 70)
+
+
+@pytest.mark.performance
+@pytest.mark.benchmark
+def test_benchmark_reflink_vs_copytree(
+    empty_git_repo: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Benchmark cp --reflink=auto vs shutil.copytree.
+
+    On Btrfs/XFS: reflink should be significantly faster (10-100x).
+    On ext4: both should be similar (reflink falls back to regular copy).
+
+    This benchmark validates the copytree_reflink() optimization choice:
+    - If reflink is faster, we get a performance win on CoW filesystems
+    - If similar, we have no regression on traditional filesystems
+    """
+    import shutil
+    import subprocess
+
+    def copytree_copy(src: pathlib.Path, dst: pathlib.Path) -> None:
+        shutil.copytree(src, dst)
+
+    def reflink_copy(src: pathlib.Path, dst: pathlib.Path) -> None:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["cp", "-a", "--reflink=auto", str(src), str(dst)],
+            check=True,
+            capture_output=True,
+            timeout=60,
+        )
+
+    # Benchmark both methods
+    copytree_times = _benchmark_copy(
+        empty_git_repo, tmp_path / "copytree", copytree_copy
+    )
+    reflink_times = _benchmark_copy(empty_git_repo, tmp_path / "reflink", reflink_copy)
+
+    # Calculate statistics
+    copytree_avg = sum(copytree_times) / len(copytree_times)
+    copytree_min = min(copytree_times)
+    reflink_avg = sum(reflink_times) / len(reflink_times)
+    reflink_min = min(reflink_times)
+
+    # Determine filesystem type hint
+    speedup = copytree_avg / reflink_avg
+    fs_hint = (
+        "CoW filesystem (Btrfs/XFS)" if speedup > 2 else "Traditional filesystem (ext4)"
+    )
+
+    # Report results
+    print("\n" + "=" * 60)
+    print("Reflink vs Copytree Benchmark Results")
+    print("=" * 60)
+    print(f"shutil.copytree: avg={copytree_avg:.2f}ms, min={copytree_min:.2f}ms")
+    print(f"cp --reflink=auto: avg={reflink_avg:.2f}ms, min={reflink_min:.2f}ms")
+    print(f"Speedup: {speedup:.2f}x")
+    print(f"Likely filesystem: {fs_hint}")
+    print(f"Winner: {'reflink' if reflink_avg < copytree_avg else 'copytree'}")
+    print("=" * 60)
+
+    # Test always passes - it's informational
+    # Both methods should complete successfully
+    assert copytree_avg > 0 and reflink_avg > 0

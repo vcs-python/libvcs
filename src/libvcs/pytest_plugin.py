@@ -20,6 +20,7 @@ from importlib.metadata import version as get_package_version
 import pytest
 
 from libvcs import exc
+from libvcs._internal.copy import copytree_reflink
 from libvcs._internal.file_lock import atomic_init
 from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
@@ -1002,7 +1003,7 @@ def git_repo(
     )
 
     # All workers get a unique copy from master (exclude marker file)
-    shutil.copytree(
+    copytree_reflink(
         master_copy,
         new_checkout_path,
         ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
@@ -1049,7 +1050,7 @@ def hg_repo(
     )
 
     # All workers get a unique copy from master (exclude marker file)
-    shutil.copytree(
+    copytree_reflink(
         master_copy,
         new_checkout_path,
         ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
@@ -1095,7 +1096,7 @@ def svn_repo(
     )
 
     # All workers get a unique copy from master (exclude marker file)
-    shutil.copytree(
+    copytree_reflink(
         master_copy,
         new_checkout_path,
         ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
@@ -1168,7 +1169,7 @@ if HAS_PYTEST_ASYNCIO:
         )
 
         # All workers get a unique copy from master (exclude marker file)
-        shutil.copytree(
+        copytree_reflink(
             master_copy,
             new_checkout_path,
             ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
@@ -1224,7 +1225,7 @@ if HAS_PYTEST_ASYNCIO:
         )
 
         # All workers get a unique copy from master (exclude marker file)
-        shutil.copytree(
+        copytree_reflink(
             master_copy,
             new_checkout_path,
             ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
@@ -1280,7 +1281,7 @@ if HAS_PYTEST_ASYNCIO:
         )
 
         # All workers get a unique copy from master (exclude marker file)
-        shutil.copytree(
+        copytree_reflink(
             master_copy,
             new_checkout_path,
             ignore=shutil.ignore_patterns(".libvcs_master_initialized"),

@@ -9,6 +9,7 @@ If you need an internal API stabilized please [file an issue](https://github.com
 :::
 
 ```{toctree}
+copy
 exc
 types
 dataclasses
