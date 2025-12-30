@@ -61,6 +61,7 @@ Convenience functions for common operations.
 exc
 types
 dataclasses
+file_lock
 query_list
 run
 subprocess
