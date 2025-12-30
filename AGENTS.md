@@ -190,6 +190,41 @@ def test_sync(
 - For typing, use `import typing as t` and access via namespace: `t.NamedTuple`, etc.
 - Use `from __future__ import annotations` at the top of all Python files
 
+### Naming Conventions
+
+Follow Python community conventions (Django, pytest, Sphinx patterns):
+
+**Method naming:**
+- Use `get_*` prefix for methods that perform I/O or subprocess calls (e.g., `get_remotes()`, `get_revision()`)
+- Use `is_*` prefix for boolean checks (e.g., `is_valid()`)
+- Use `has_*` prefix for existence checks (e.g., `has_remote()`)
+
+**Parameter naming:**
+- Use descriptive names instead of underscore-prefixed built-in shadows
+- BAD: `_all`, `_type`, `_list` (cryptic, non-standard)
+- GOOD: `all_remotes`, `include_all`, `file_type`, `path_list` (self-documenting)
+
+**Examples:**
+```python
+# BAD - cryptic underscore prefix
+def fetch(_all: bool = False): ...
+def rev_list(_all: bool = False): ...
+
+# GOOD - descriptive parameter names
+def fetch(all_remotes: bool = False): ...
+def rev_list(include_all: bool = False): ...
+
+# BAD - inconsistent getter naming
+def remotes(): ...      # No prefix
+def get_revision(): ... # Has prefix
+
+# GOOD - consistent getter naming for subprocess calls
+def get_remotes(): ...
+def get_revision(): ...
+```
+
+**Rationale:** Major Python projects (Django, pytest, Sphinx) don't use `_all` style prefixes. They either use the built-in name directly as a keyword-only argument, or use descriptive alternatives. Underscore prefixes are reserved for private/internal parameters only.
+
 ### Docstrings
 
 Follow NumPy docstring style for all functions and methods:
