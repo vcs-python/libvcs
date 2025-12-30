@@ -13,6 +13,7 @@ import typing as t
 import pytest
 
 from libvcs import exc
+from libvcs._internal.copy import copytree_reflink
 from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
@@ -706,7 +707,7 @@ def git_repo(
     master_copy = remote_repos_path / "git_repo"
 
     if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
+        copytree_reflink(master_copy, new_checkout_path)
         return GitSync(
             url=f"file://{git_remote_repo}",
             path=str(new_checkout_path),
@@ -740,7 +741,7 @@ def hg_repo(
     master_copy = remote_repos_path / "hg_repo"
 
     if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
+        copytree_reflink(master_copy, new_checkout_path)
         return HgSync(
             url=f"file://{hg_remote_repo}",
             path=str(new_checkout_path),
@@ -766,7 +767,7 @@ def svn_repo(
     master_copy = remote_repos_path / "svn_repo"
 
     if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
+        copytree_reflink(master_copy, new_checkout_path)
         return SvnSync(
             url=f"file://{svn_remote_repo}",
             path=str(new_checkout_path),
