@@ -979,37 +979,42 @@ def git_repo(
     # Unified master copy shared with async_git_repo
     master_copy = remote_repos_path / "git_repo_master"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        repo = GitSync(url=remote_url, path=str(new_checkout_path))
-        return RepoFixtureResult(
-            repo=repo,
-            path=new_checkout_path,
-            remote_url=remote_url,
-            master_copy_path=master_copy,
-            created_at=created_at,
-            from_cache=True,
+    def create_master() -> None:
+        """Create master copy atomically - only one worker does this."""
+        repo = GitSync(
+            url=remote_url,
+            path=master_copy,
+            remotes={
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=remote_url,
+                    fetch_url=remote_url,
+                ),
+            },
         )
+        repo.obtain()
 
-    repo = GitSync(
-        url=remote_url,
-        path=master_copy,
-        remotes={
-            "origin": GitRemote(
-                name="origin",
-                push_url=remote_url,
-                fetch_url=remote_url,
-            ),
-        },
+    # atomic_init returns True if this process did the init, False if waited
+    from_cache = not atomic_init(
+        master_copy,
+        create_master,
+        marker_name=".libvcs_master_initialized",
     )
-    repo.obtain()
+
+    # All workers get a unique copy from master (exclude marker file)
+    shutil.copytree(
+        master_copy,
+        new_checkout_path,
+        ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+    )
+    repo = GitSync(url=remote_url, path=str(new_checkout_path))
     return RepoFixtureResult(
         repo=repo,
-        path=master_copy,
+        path=new_checkout_path,
         remote_url=remote_url,
         master_copy_path=master_copy,
         created_at=created_at,
-        from_cache=False,
+        from_cache=from_cache,
     )
 
 
@@ -1031,27 +1036,32 @@ def hg_repo(
     # Unified master copy shared with async_hg_repo
     master_copy = remote_repos_path / "hg_repo_master"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        repo = HgSync(url=remote_url, path=str(new_checkout_path))
-        return RepoFixtureResult(
-            repo=repo,
-            path=new_checkout_path,
-            remote_url=remote_url,
-            master_copy_path=master_copy,
-            created_at=created_at,
-            from_cache=True,
-        )
+    def create_master() -> None:
+        """Create master copy atomically - only one worker does this."""
+        repo = HgSync(url=remote_url, path=master_copy)
+        repo.obtain()
 
-    repo = HgSync(url=remote_url, path=master_copy)
-    repo.obtain()
+    # atomic_init returns True if this process did the init, False if waited
+    from_cache = not atomic_init(
+        master_copy,
+        create_master,
+        marker_name=".libvcs_master_initialized",
+    )
+
+    # All workers get a unique copy from master (exclude marker file)
+    shutil.copytree(
+        master_copy,
+        new_checkout_path,
+        ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+    )
+    repo = HgSync(url=remote_url, path=str(new_checkout_path))
     return RepoFixtureResult(
         repo=repo,
-        path=master_copy,
+        path=new_checkout_path,
         remote_url=remote_url,
         master_copy_path=master_copy,
         created_at=created_at,
-        from_cache=False,
+        from_cache=from_cache,
     )
 
 
@@ -1072,27 +1082,32 @@ def svn_repo(
     # Unified master copy shared with async_svn_repo
     master_copy = remote_repos_path / "svn_repo_master"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        repo = SvnSync(url=remote_url, path=str(new_checkout_path))
-        return RepoFixtureResult(
-            repo=repo,
-            path=new_checkout_path,
-            remote_url=remote_url,
-            master_copy_path=master_copy,
-            created_at=created_at,
-            from_cache=True,
-        )
+    def create_master() -> None:
+        """Create master copy atomically - only one worker does this."""
+        repo = SvnSync(url=remote_url, path=str(master_copy))
+        repo.obtain()
 
-    repo = SvnSync(url=remote_url, path=str(master_copy))
-    repo.obtain()
+    # atomic_init returns True if this process did the init, False if waited
+    from_cache = not atomic_init(
+        master_copy,
+        create_master,
+        marker_name=".libvcs_master_initialized",
+    )
+
+    # All workers get a unique copy from master (exclude marker file)
+    shutil.copytree(
+        master_copy,
+        new_checkout_path,
+        ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+    )
+    repo = SvnSync(url=remote_url, path=str(new_checkout_path))
     return RepoFixtureResult(
         repo=repo,
-        path=master_copy,
+        path=new_checkout_path,
         remote_url=remote_url,
         master_copy_path=master_copy,
         created_at=created_at,
-        from_cache=False,
+        from_cache=from_cache,
     )
 
 
@@ -1129,38 +1144,43 @@ if HAS_PYTEST_ASYNCIO:
         # Unified master copy shared with git_repo
         master_copy = remote_repos_path / "git_repo_master"
 
-        if master_copy.exists():
-            shutil.copytree(master_copy, new_checkout_path)
-            repo = AsyncGitSync(url=remote_url, path=new_checkout_path)
-            yield RepoFixtureResult(
-                repo=repo,
-                path=new_checkout_path,
-                remote_url=remote_url,
-                master_copy_path=master_copy,
-                created_at=created_at,
-                from_cache=True,
+        def create_master() -> None:
+            """Create master copy atomically - only one worker does this."""
+            # Use sync GitSync for atomic init (only runs once per session)
+            sync_repo = GitSync(
+                url=remote_url,
+                path=master_copy,
+                remotes={
+                    "origin": GitRemote(
+                        name="origin",
+                        push_url=remote_url,
+                        fetch_url=remote_url,
+                    ),
+                },
             )
-            return
+            sync_repo.obtain()
 
-        repo = AsyncGitSync(
-            url=remote_url,
-            path=master_copy,
-            remotes={
-                "origin": GitRemote(
-                    name="origin",
-                    push_url=remote_url,
-                    fetch_url=remote_url,
-                ),
-            },
+        # atomic_init returns True if this process did the init, False if waited
+        from_cache = not atomic_init(
+            master_copy,
+            create_master,
+            marker_name=".libvcs_master_initialized",
         )
-        await repo.obtain()
+
+        # All workers get a unique copy from master (exclude marker file)
+        shutil.copytree(
+            master_copy,
+            new_checkout_path,
+            ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+        )
+        repo = AsyncGitSync(url=remote_url, path=new_checkout_path)
         yield RepoFixtureResult(
             repo=repo,
-            path=master_copy,
+            path=new_checkout_path,
             remote_url=remote_url,
             master_copy_path=master_copy,
             created_at=created_at,
-            from_cache=False,
+            from_cache=from_cache,
         )
 
     @pytest_asyncio.fixture
@@ -1190,28 +1210,33 @@ if HAS_PYTEST_ASYNCIO:
         # Unified master copy shared with hg_repo
         master_copy = remote_repos_path / "hg_repo_master"
 
-        if master_copy.exists():
-            shutil.copytree(master_copy, new_checkout_path)
-            repo = AsyncHgSync(url=remote_url, path=new_checkout_path)
-            yield RepoFixtureResult(
-                repo=repo,
-                path=new_checkout_path,
-                remote_url=remote_url,
-                master_copy_path=master_copy,
-                created_at=created_at,
-                from_cache=True,
-            )
-            return
+        def create_master() -> None:
+            """Create master copy atomically - only one worker does this."""
+            # Use sync HgSync for atomic init (only runs once per session)
+            sync_repo = HgSync(url=remote_url, path=master_copy)
+            sync_repo.obtain()
 
-        repo = AsyncHgSync(url=remote_url, path=master_copy)
-        await repo.obtain()
+        # atomic_init returns True if this process did the init, False if waited
+        from_cache = not atomic_init(
+            master_copy,
+            create_master,
+            marker_name=".libvcs_master_initialized",
+        )
+
+        # All workers get a unique copy from master (exclude marker file)
+        shutil.copytree(
+            master_copy,
+            new_checkout_path,
+            ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+        )
+        repo = AsyncHgSync(url=remote_url, path=new_checkout_path)
         yield RepoFixtureResult(
             repo=repo,
-            path=master_copy,
+            path=new_checkout_path,
             remote_url=remote_url,
             master_copy_path=master_copy,
             created_at=created_at,
-            from_cache=False,
+            from_cache=from_cache,
         )
 
     @pytest_asyncio.fixture
@@ -1241,28 +1266,33 @@ if HAS_PYTEST_ASYNCIO:
         # Unified master copy shared with svn_repo
         master_copy = remote_repos_path / "svn_repo_master"
 
-        if master_copy.exists():
-            shutil.copytree(master_copy, new_checkout_path)
-            repo = AsyncSvnSync(url=remote_url, path=new_checkout_path)
-            yield RepoFixtureResult(
-                repo=repo,
-                path=new_checkout_path,
-                remote_url=remote_url,
-                master_copy_path=master_copy,
-                created_at=created_at,
-                from_cache=True,
-            )
-            return
+        def create_master() -> None:
+            """Create master copy atomically - only one worker does this."""
+            # Use sync SvnSync for atomic init (only runs once per session)
+            sync_repo = SvnSync(url=remote_url, path=str(master_copy))
+            sync_repo.obtain()
 
-        repo = AsyncSvnSync(url=remote_url, path=master_copy)
-        await repo.obtain()
+        # atomic_init returns True if this process did the init, False if waited
+        from_cache = not atomic_init(
+            master_copy,
+            create_master,
+            marker_name=".libvcs_master_initialized",
+        )
+
+        # All workers get a unique copy from master (exclude marker file)
+        shutil.copytree(
+            master_copy,
+            new_checkout_path,
+            ignore=shutil.ignore_patterns(".libvcs_master_initialized"),
+        )
+        repo = AsyncSvnSync(url=remote_url, path=new_checkout_path)
         yield RepoFixtureResult(
             repo=repo,
-            path=master_copy,
+            path=new_checkout_path,
             remote_url=remote_url,
             master_copy_path=master_copy,
             created_at=created_at,
-            from_cache=False,
+            from_cache=from_cache,
         )
 
 
