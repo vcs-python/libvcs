@@ -241,6 +241,7 @@ asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
   "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
+  "benchmark: marks tests as benchmark tests for comparing implementation methods",
 ]
 
 [tool.pytest-watcher]
