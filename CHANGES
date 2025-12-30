@@ -20,6 +20,15 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Internal
+
+#### _internal: Add file locking module (#501)
+
+- Add {class}`~libvcs._internal.file_lock.FileLock` for cross-platform file locking
+- Add {func}`~libvcs._internal.file_lock.atomic_init` for race-free initialization
+- Support both sync and async usage patterns
+- Useful for pytest-xdist compatibility
+
 ## libvcs 0.40.0 (2026-04-25)
 
 ### What's new
