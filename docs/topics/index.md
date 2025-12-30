@@ -9,6 +9,7 @@ with detailed explanations and runnable examples.
 
 ```{toctree}
 
+asyncio
 traversing_git
 filtering
 url_parsing
