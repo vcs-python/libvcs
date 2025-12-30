@@ -98,3 +98,41 @@ origin.prune()
 ```
 
 See {doc}`/cmd/git/index` for the full API reference.
+
+### Async Usage
+
+All APIs have async equivalents for non-blocking operations:
+
+```python
+import asyncio
+from libvcs.cmd._async.git import AsyncGit
+
+async def main():
+    git = AsyncGit(path='/path/to/repo')
+
+    # Non-blocking git operations
+    await git.run(['init'])
+    status = await git.status()
+    print(status)
+
+asyncio.run(main())
+```
+
+For repository synchronization:
+
+```python
+import asyncio
+from libvcs.sync._async.git import AsyncGitSync
+
+async def main():
+    repo = AsyncGitSync(
+        url='https://github.com/vcs-python/libvcs',
+        path='/tmp/libvcs',
+    )
+    await repo.obtain()  # Clone
+    await repo.update_repo()  # Update
+
+asyncio.run(main())
+```
+
+See {doc}`/topics/asyncio` for the complete async guide.
