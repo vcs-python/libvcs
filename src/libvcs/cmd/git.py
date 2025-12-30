@@ -309,7 +309,7 @@ class Git:
         jobs: str | None = None,
         force: bool | None = None,
         local: bool | None = None,
-        _all: bool | None = None,
+        all_branches: bool | None = None,
         no_hardlinks: bool | None = None,
         hardlinks: bool | None = None,
         shared: bool | None = None,
@@ -441,7 +441,7 @@ class Git:
         recurse_submodules: bool | t.Literal["yes", "on-demand", "no"] | None = None,
         recurse_submodules_default: bool | t.Literal["yes", "on-demand"] | None = None,
         submodule_prefix: StrOrBytesPath | None = None,
-        _all: bool | None = None,
+        all_remotes: bool | None = None,
         force: bool | None = None,
         keep: bool | None = None,
         multiple: bool | None = None,
@@ -527,7 +527,7 @@ class Git:
             local_flags.append("--progress")
         if verbose:
             local_flags.append("--verbose")
-        if _all:
+        if all_remotes:
             local_flags.append("--all")
         if atomic:
             local_flags.append("--atomic")
@@ -851,7 +851,7 @@ class Git:
         #
         fetch: bool | None = None,
         no_fetch: bool | None = None,
-        _all: bool | None = None,
+        all_remotes: bool | None = None,
         force: bool | None = None,
         keep: bool | None = None,
         multiple: bool | None = None,
@@ -1018,7 +1018,7 @@ class Git:
             local_flags.append("--progress")
         if verbose:
             local_flags.append("--verbose")
-        if _all:
+        if all_remotes:
             local_flags.append("--all")
         if atomic:
             local_flags.append("--atomic")
@@ -1331,7 +1331,7 @@ class Git:
     def help(
         self,
         *,
-        _all: bool | None = None,
+        show_all: bool | None = None,
         verbose: bool | None = None,
         no_external_commands: bool | None = None,
         no_aliases: bool | None = None,
@@ -1348,17 +1348,17 @@ class Git:
 
         Parameters
         ----------
-        _all : bool
+        show_all : bool
             Prints everything.
 
         no_external_commands : bool
-            For use with ``all``, excludes external commands.
+            For use with ``show_all``, excludes external commands.
 
         no_aliases : bool
-            For use with ``all``, excludes aliases.
+            For use with ``show_all``, excludes aliases.
 
         verbose : bool
-            For us with ``all``, on by default.
+            For us with ``show_all``, on by default.
 
         config : bool
             List all config vars.
@@ -1382,7 +1382,7 @@ class Git:
         >>> git.help()
         "usage: git [...--version] [...--help] [-C <path>]..."
 
-        >>> git.help(_all=True)
+        >>> git.help(show_all=True)
         "See 'git help <command>' to read about a specific subcommand..."
 
         >>> git.help(info=True)
@@ -1395,7 +1395,7 @@ class Git:
 
         if verbose is True:
             local_flags.append("--verbose")
-        if _all is True:
+        if show_all is True:
             local_flags.append("--all")
         if no_external_commands is True:
             local_flags.append("--no-external-commands")
@@ -2087,7 +2087,7 @@ class Git:
         first_parent: bool | None = None,
         exclude_first_parent_only: bool | None = None,
         _not: bool | None = None,
-        _all: bool | None = None,
+        include_all_refs: bool | None = None,
         branches: str | bool | None = None,
         tags: str | bool | None = None,
         remotes: str | bool | None = None,
@@ -2145,7 +2145,9 @@ class Git:
         >>> git.rev_list(commit="HEAD", path=".", max_count=1, header=True)
         '...'
 
-        >>> git.rev_list(commit="origin..HEAD", max_count=1, _all=True, header=True)
+        >>> git.rev_list(
+        ...     commit="origin..HEAD", max_count=1, include_all_refs=True, header=True
+        ... )
         '...'
 
         >>> git.rev_list(commit="origin..HEAD", max_count=1, header=True)
@@ -2202,7 +2204,7 @@ class Git:
 
         for flag, shell_flag in [
             # Limiting output
-            (_all, "--all"),
+            (include_all_refs, "--all"),
             (author, "--author"),
             (committer, "--committer"),
             (grep, "--grep"),
@@ -2221,7 +2223,7 @@ class Git:
             (first_parent, "--first-parent"),
             (exclude_first_parent_only, "--exclude-first-parent-only"),
             (_not, "--not"),
-            (_all, "--all"),
+            (include_all_refs, "--all"),
             (exclude, "--exclude"),
             (reflog, "--reflog"),
             (alternative_refs, "--alternative-refs"),
@@ -3902,7 +3904,7 @@ class GitRemoteCmd:
         self,
         *,
         push: bool | None = None,
-        _all: bool | None = None,
+        all_urls: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -3927,7 +3929,7 @@ class GitRemoteCmd:
         >>> GitRemoteCmd(
         ...     path=example_git_repo.path,
         ...     remote_name='origin'
-        ... ).get_url(_all=True)
+        ... ).get_url(all_urls=True)
         'file:///...'
         """
         local_flags: list[str] = []
@@ -3935,7 +3937,7 @@ class GitRemoteCmd:
 
         if push:
             local_flags.append("--push")
-        if _all:
+        if all_urls:
             local_flags.append("--all")
 
         return self.run(
@@ -4971,7 +4973,7 @@ class GitStashCmd:
         keep_index: int | None = None,
         patch: bool | None = None,
         include_untracked: bool | None = None,
-        _all: bool | None = None,
+        include_ignored: bool | None = None,
         quiet: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -4991,7 +4993,7 @@ class GitStashCmd:
         local_flags: list[str] = []
         stash_flags: list[str] = []
 
-        if _all is True:
+        if include_ignored is True:
             local_flags.append("--all")
         if staged is True:
             local_flags.append("--staged")
@@ -5100,7 +5102,7 @@ class GitStashManager:
         staged: bool | None = None,
         keep_index: bool | None = None,
         include_untracked: bool | None = None,
-        _all: bool | None = None,
+        include_ignored: bool | None = None,
         quiet: bool | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -5124,7 +5126,7 @@ class GitStashManager:
             Keep index intact (-k)
         include_untracked :
             Include untracked files (-u)
-        _all :
+        include_ignored :
             Include ignored files (-a)
         quiet :
             Suppress output (-q)
@@ -5150,7 +5152,7 @@ class GitStashManager:
             local_flags.append("-k")
         if include_untracked is True:
             local_flags.append("-u")
-        if _all is True:
+        if include_ignored is True:
             local_flags.append("-a")
         if quiet is True:
             local_flags.append("-q")
@@ -5762,7 +5764,7 @@ class GitBranchManager:
     def ls(
         self,
         *,
-        _all: bool = False,
+        all_branches: bool = False,
         remotes: bool = False,
         merged: str | None = None,
         no_merged: str | None = None,
@@ -5774,7 +5776,7 @@ class GitBranchManager:
 
         Parameters
         ----------
-        _all :
+        all_branches :
             List all branches (local + remote). Maps to --all.
         remotes :
             List remote branches only. Maps to --remotes.
@@ -5796,7 +5798,7 @@ class GitBranchManager:
         True
         """
         local_flags: list[str] = []
-        if _all:
+        if all_branches:
             local_flags.append("--all")
         if remotes:
             local_flags.append("--remotes")
