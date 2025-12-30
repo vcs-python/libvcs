@@ -12,6 +12,7 @@ If you need an internal API stabilized please [file an issue](https://github.com
 exc
 types
 dataclasses
+file_lock
 query_list
 run
 subprocess
