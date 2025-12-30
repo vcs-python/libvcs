@@ -10,6 +10,7 @@ https://docs.pytest.org/en/stable/deprecations.html
 
 from __future__ import annotations
 
+import dataclasses
 import time
 import typing as t
 from collections import defaultdict
@@ -24,9 +25,21 @@ if t.TYPE_CHECKING:
 
 pytest_plugins = ["pytester"]
 
+
+@dataclasses.dataclass
+class FixtureMetrics:
+    """Metrics collected during fixture execution."""
+
+    fixture_name: str
+    duration: float
+    cache_hit: bool | None = None  # None if not applicable (non-repo fixture)
+
+
 # Fixture profiling storage
 _fixture_timings: dict[str, list[float]] = defaultdict(list)
 _fixture_call_counts: dict[str, int] = defaultdict(int)
+_fixture_cache_hits: dict[str, int] = defaultdict(int)
+_fixture_cache_misses: dict[str, int] = defaultdict(int)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -76,10 +89,17 @@ def pytest_fixture_setup(
     fixturedef: FixtureDef[t.Any],
     request: SubRequest,
 ) -> t.Generator[None, t.Any, t.Any]:
-    """Wrap fixture setup to measure timing."""
+    """Wrap fixture setup to measure timing and track cache hits."""
     start = time.perf_counter()
     try:
         result = yield
+        # Track cache hits for fixtures that support it (RepoFixtureResult)
+        if hasattr(result, "from_cache"):
+            fixture_name = fixturedef.argname
+            if result.from_cache:
+                _fixture_cache_hits[fixture_name] += 1
+            else:
+                _fixture_cache_misses[fixture_name] += 1
         return result
     finally:
         duration = time.perf_counter() - start
@@ -93,7 +113,7 @@ def pytest_terminal_summary(
     exitstatus: int,
     config: pytest.Config,
 ) -> None:
-    """Display fixture timing summary."""
+    """Display fixture timing and cache statistics summary."""
     durations_count = config.option.fixture_durations
     durations_min = config.option.fixture_durations_min
 
@@ -133,6 +153,29 @@ def pytest_terminal_summary(
         terminalreporter.write_line(
             f"{name:<40} {total:>9.3f}s {calls:>8} {avg:>9.3f}s",
         )
+
+    # Display cache statistics if any repo fixtures were used
+    if _fixture_cache_hits or _fixture_cache_misses:
+        terminalreporter.write_line("")
+        terminalreporter.write_sep("=", "fixture cache statistics")
+        terminalreporter.write_line("")
+        terminalreporter.write_line(
+            f"{'Fixture':<40} {'Hits':>8} {'Misses':>8} {'Hit Rate':>10}",
+        )
+        terminalreporter.write_line("-" * 70)
+
+        # Combine hits and misses for all fixtures that have cache tracking
+        all_cache_fixtures = set(_fixture_cache_hits.keys()) | set(
+            _fixture_cache_misses.keys()
+        )
+        for name in sorted(all_cache_fixtures):
+            hits = _fixture_cache_hits.get(name, 0)
+            misses = _fixture_cache_misses.get(name, 0)
+            total = hits + misses
+            hit_rate = (hits / total * 100) if total > 0 else 0
+            terminalreporter.write_line(
+                f"{name:<40} {hits:>8} {misses:>8} {hit_rate:>9.1f}%",
+            )
 
 
 @pytest.fixture(autouse=True)
