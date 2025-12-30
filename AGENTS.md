@@ -330,6 +330,55 @@ EOF
 )"
 ```
 
+### CHANGES and MIGRATION Files
+
+Maintain `CHANGES` (changelog) and `MIGRATION` (upgrade guide) for all user-facing changes.
+
+**File structure:**
+- `CHANGES`: Organized by version with sections in this order of precedence:
+  1. `### Breaking changes` - API changes that require user action
+  2. `### New features` - New functionality
+  3. `### Bug fixes` - Corrections to existing behavior
+  4. `### Documentation` - Doc-only changes
+  5. `### Development` or `### Internal` - Tooling, CI, refactoring
+- `MIGRATION`: Detailed migration instructions with before/after examples
+
+**Maintenance-only releases:**
+For releases with no user-facing changes (only internal/development work), use:
+```markdown
+_Maintenance only, no bug fixes, or new features_
+```
+
+**PR references - where to put them:**
+- **DO**: Put PR number in section headers or at end of bullet items in the files
+- **DON'T**: Put PR number in commit message titles (causes linkback notification noise in the PR)
+
+**For larger changes with dedicated sections:**
+```markdown
+#### API Naming Consistency (#507)
+
+Renamed parameters and methods...
+```
+
+**For smaller changes in a list:**
+```markdown
+### Bug fixes
+
+- Fix argument expansion in `rev_list` (#455)
+- Remove unused command: `Svn.mergelist` (#450)
+```
+
+**Commit messages should NOT include PR numbers:**
+```bash
+# GOOD - no PR in commit message
+CHANGES(docs): Document breaking API changes for 0.39.x
+
+# BAD - PR in commit message creates noise
+CHANGES(docs): Document breaking API changes for 0.39.x (#507)
+```
+
+The PR reference in the file content creates a clean linkback when the PR merges, while keeping commit messages focused and avoiding duplicate notifications.
+
 ## Debugging Tips
 
 When stuck in debugging loops:
