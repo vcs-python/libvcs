@@ -24,6 +24,63 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### API Naming Consistency (#507)
+
+Renamed parameters and methods to follow Python community conventions (Django, pytest, Sphinx patterns).
+
+#### cmd/git.py: Renamed `_all` parameters
+
+The `_all` parameter has been renamed to descriptive names across multiple methods:
+
+| Method | Old | New |
+|--------|-----|-----|
+| `clone()` | `_all` | `all_branches` |
+| `fetch()` | `_all` | `all_remotes` |
+| `pull()` | `_all` | `all_remotes` |
+| `help()` | `_all` | `show_all` |
+| `rev_list()` | `_all` | `include_all_refs` |
+| `remote.get_url()` | `_all` | `all_urls` |
+| `stash.save()` | `_all` | `include_ignored` |
+| `stash.push()` | `_all` | `include_ignored` |
+| `branches.ls()` | `_all` | `all_branches` |
+
+Before:
+
+```python
+git.fetch(_all=True)
+git.stash.save(_all=True)
+```
+
+After:
+
+```python
+git.fetch(all_remotes=True)
+git.stash.save(include_ignored=True)
+```
+
+#### sync/git.py: Renamed getter methods
+
+Added `get_` prefix for consistency with other getter methods:
+
+| Old | New |
+|-----|-----|
+| `remotes()` | `get_remotes()` |
+| `remote(name)` | `get_remote(name)` |
+
+Before:
+
+```python
+repo.remotes()
+repo.remote("origin")
+```
+
+After:
+
+```python
+repo.get_remotes()
+repo.get_remote("origin")
+```
+
 ### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
 
 - pytest: `git_local_clone` renamed to `example_git_repo`
