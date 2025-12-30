@@ -78,6 +78,7 @@ dev = [
   # Testing
   "gp-libs",
   "pytest",
+  "pytest-asyncio",
   "pytest-rerunfailures",
   "pytest-mock",
   "pytest-watcher",
@@ -106,6 +107,7 @@ docs = [
 testing = [
   "gp-libs",
   "pytest",
+  "pytest-asyncio",
   "pytest-rerunfailures",
   "pytest-mock",
   "pytest-watcher",
@@ -233,7 +235,10 @@ testpaths = [
 ]
 filterwarnings = [
   "ignore:The frontend.Option(Parser)? class.*:DeprecationWarning::",
+  "ignore:The configuration option \"asyncio_default_fixture_loop_scope\" is unset.:DeprecationWarning:pytest_asyncio.plugin",
 ]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest-watcher]
 now = true
