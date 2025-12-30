@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import dataclasses
 import functools
 import getpass
@@ -21,6 +20,7 @@ from importlib.metadata import version as get_package_version
 import pytest
 
 from libvcs import exc
+from libvcs._internal.file_lock import atomic_init
 from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
@@ -147,123 +147,6 @@ def get_vcs_version(cmd: list[str]) -> str:
         return result.stdout.strip()
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return "not-installed"
-
-
-# Stale lock timeout (5 minutes - covers slow hg operations)
-_LOCK_TIMEOUT = 5 * 60
-
-
-def _acquire_lock(lock_path: pathlib.Path) -> int | None:
-    """Atomically acquire lock file. Returns fd if acquired, None otherwise.
-
-    Uses filelock's SoftFileLock pattern: os.O_CREAT | os.O_EXCL for atomicity.
-    """
-    try:
-        fd = os.open(
-            str(lock_path),
-            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
-            0o644,
-        )
-    except FileExistsError:
-        return None
-    else:
-        # Write PID for debugging stale locks
-        os.write(fd, str(os.getpid()).encode())
-        return fd
-
-
-def _release_lock(lock_path: pathlib.Path, fd: int) -> None:
-    """Release lock file."""
-    os.close(fd)
-    with contextlib.suppress(OSError):
-        lock_path.unlink()
-
-
-def _is_lock_stale(lock_path: pathlib.Path) -> bool:
-    """Check if lock is stale (older than timeout)."""
-    try:
-        mtime = lock_path.stat().st_mtime
-        return time.time() - mtime > _LOCK_TIMEOUT
-    except OSError:
-        return True
-
-
-def _atomic_repo_init(
-    repo_path: pathlib.Path,
-    init_fn: t.Callable[[], None],
-    marker_name: str = ".libvcs_initialized",
-    timeout: float = 60.0,
-    poll_interval: float = 0.05,
-) -> bool:
-    """Atomically initialize a repository with file-based lock coordination.
-
-    Uses filelock-inspired pattern for pytest-xdist worker coordination.
-    Two-file approach: .lock (temporary) vs marker (permanent).
-
-    Parameters
-    ----------
-    repo_path : pathlib.Path
-        Path to the repository directory to initialize
-    init_fn : Callable[[], None]
-        Function to call to perform initialization (creates repo_path)
-    marker_name : str
-        Name of the marker file indicating successful completion
-    timeout : float
-        Maximum seconds to wait for another process to complete
-    poll_interval : float
-        Seconds between polling attempts (default 50ms like filelock)
-
-    Returns
-    -------
-    bool
-        True if this process performed initialization, False if waited for another
-    """
-    marker = repo_path / marker_name
-    lock_path = repo_path.parent / f".{repo_path.name}.lock"
-
-    # Fast path: already initialized
-    if marker.exists():
-        return False
-
-    # Ensure parent directory exists for lock file
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-
-    start_time = time.perf_counter()
-
-    while True:
-        # Try to acquire lock
-        fd = _acquire_lock(lock_path)
-
-        if fd is not None:
-            # We got the lock
-            try:
-                # Double-check marker (another process may have finished)
-                if marker.exists():
-                    return False
-                # Clean partial state and initialize
-                if repo_path.exists():
-                    shutil.rmtree(repo_path)
-                init_fn()
-                marker.touch()
-                return True
-            finally:
-                _release_lock(lock_path, fd)
-
-        # Lock held by another process - check if done or stale
-        if marker.exists():
-            return False
-
-        if _is_lock_stale(lock_path):
-            with contextlib.suppress(OSError):
-                lock_path.unlink()
-            continue  # Retry immediately
-
-        # Timeout check
-        if time.perf_counter() - start_time >= timeout:
-            msg = f"Timeout waiting for {repo_path} initialization"
-            raise TimeoutError(msg)
-
-        time.sleep(poll_interval)
 
 
 def get_cache_key() -> str:
@@ -805,7 +688,7 @@ def git_remote_repo(
             env=git_commit_envvars,
         )
 
-    _atomic_repo_init(repo_path, do_init)
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
@@ -929,7 +812,7 @@ def svn_remote_repo(
     def do_init() -> None:
         shutil.copytree(empty_svn_repo, repo_path)
 
-    _atomic_repo_init(repo_path, do_init)
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
@@ -954,7 +837,7 @@ def svn_remote_repo_with_files(
         shutil.copytree(svn_remote_repo, repo_path)
         svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
 
-    _atomic_repo_init(repo_path, do_init)
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
@@ -1073,7 +956,7 @@ def hg_remote_repo(
             env={"HGRCPATH": str(hgconfig)},
         )
 
-    _atomic_repo_init(repo_path, do_init)
+    atomic_init(repo_path, do_init, marker_name=".libvcs_initialized")
     return repo_path
 
 
