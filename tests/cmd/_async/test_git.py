@@ -12,7 +12,7 @@ import pytest
 from libvcs.cmd._async.git import (
     AsyncGit,
 )
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+from libvcs.pytest_plugin import CreateRepoFn
 from libvcs.sync.git import GitSync
 
 
@@ -105,7 +105,7 @@ class TestAsyncGitClone:
     async def test_clone_basic(
         self,
         tmp_path: Path,
-        create_git_remote_repo: CreateRepoPytestFixtureFn,
+        create_git_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic clone operation."""
         remote_repo = create_git_remote_repo()
@@ -121,7 +121,7 @@ class TestAsyncGitClone:
     async def test_clone_with_depth(
         self,
         tmp_path: Path,
-        create_git_remote_repo: CreateRepoPytestFixtureFn,
+        create_git_remote_repo: CreateRepoFn,
     ) -> None:
         """Test shallow clone with depth parameter."""
         remote_repo = create_git_remote_repo()
@@ -139,7 +139,7 @@ class TestAsyncGitClone:
     async def test_clone_make_parents(
         self,
         tmp_path: Path,
-        create_git_remote_repo: CreateRepoPytestFixtureFn,
+        create_git_remote_repo: CreateRepoFn,
     ) -> None:
         """Test clone creates parent directories."""
         remote_repo = create_git_remote_repo()
@@ -626,7 +626,7 @@ class TestAsyncGitWithCallback:
     async def test_clone_with_callback(
         self,
         tmp_path: Path,
-        create_git_remote_repo: CreateRepoPytestFixtureFn,
+        create_git_remote_repo: CreateRepoFn,
     ) -> None:
         """Test clone with progress callback."""
         progress_output: list[str] = []

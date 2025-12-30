@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from libvcs.cmd._async.hg import AsyncHg
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+from libvcs.pytest_plugin import CreateRepoFn
 
 
 class RunFixture(t.NamedTuple):
@@ -79,7 +79,7 @@ class TestAsyncHgClone:
     async def test_clone_basic(
         self,
         tmp_path: Path,
-        create_hg_remote_repo: CreateRepoPytestFixtureFn,
+        create_hg_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic clone operation."""
         remote_repo = create_hg_remote_repo()
@@ -95,7 +95,7 @@ class TestAsyncHgClone:
     async def test_clone_quiet(
         self,
         tmp_path: Path,
-        create_hg_remote_repo: CreateRepoPytestFixtureFn,
+        create_hg_remote_repo: CreateRepoFn,
     ) -> None:
         """Test clone with quiet flag."""
         remote_repo = create_hg_remote_repo()
@@ -110,7 +110,7 @@ class TestAsyncHgClone:
     async def test_clone_no_update(
         self,
         tmp_path: Path,
-        create_hg_remote_repo: CreateRepoPytestFixtureFn,
+        create_hg_remote_repo: CreateRepoFn,
     ) -> None:
         """Test clone with no_update flag."""
         remote_repo = create_hg_remote_repo()
@@ -130,7 +130,7 @@ class TestAsyncHgUpdate:
     async def test_update_basic(
         self,
         tmp_path: Path,
-        create_hg_remote_repo: CreateRepoPytestFixtureFn,
+        create_hg_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic update operation."""
         remote_repo = create_hg_remote_repo()
@@ -150,7 +150,7 @@ class TestAsyncHgPull:
     async def test_pull_basic(
         self,
         tmp_path: Path,
-        create_hg_remote_repo: CreateRepoPytestFixtureFn,
+        create_hg_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic pull operation."""
         remote_repo = create_hg_remote_repo()
@@ -166,7 +166,7 @@ class TestAsyncHgPull:
     async def test_pull_with_update(
         self,
         tmp_path: Path,
-        create_hg_remote_repo: CreateRepoPytestFixtureFn,
+        create_hg_remote_repo: CreateRepoFn,
     ) -> None:
         """Test pull with update flag."""
         remote_repo = create_hg_remote_repo()

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from libvcs.cmd._async.svn import AsyncSvn
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+from libvcs.pytest_plugin import CreateRepoFn
 
 if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
@@ -83,7 +83,7 @@ class TestAsyncSvnCheckout:
     async def test_checkout_basic(
         self,
         tmp_path: Path,
-        create_svn_remote_repo: CreateRepoPytestFixtureFn,
+        create_svn_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic checkout operation."""
         remote_repo = create_svn_remote_repo()
@@ -99,7 +99,7 @@ class TestAsyncSvnCheckout:
     async def test_checkout_quiet(
         self,
         tmp_path: Path,
-        create_svn_remote_repo: CreateRepoPytestFixtureFn,
+        create_svn_remote_repo: CreateRepoFn,
     ) -> None:
         """Test checkout with quiet flag."""
         remote_repo = create_svn_remote_repo()
@@ -118,7 +118,7 @@ class TestAsyncSvnUpdate:
     async def test_update_basic(
         self,
         tmp_path: Path,
-        create_svn_remote_repo: CreateRepoPytestFixtureFn,
+        create_svn_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic update operation."""
         remote_repo = create_svn_remote_repo()
@@ -138,7 +138,7 @@ class TestAsyncSvnInfo:
     async def test_info_basic(
         self,
         tmp_path: Path,
-        create_svn_remote_repo: CreateRepoPytestFixtureFn,
+        create_svn_remote_repo: CreateRepoFn,
     ) -> None:
         """Test basic info operation."""
         remote_repo = create_svn_remote_repo()
@@ -154,7 +154,7 @@ class TestAsyncSvnInfo:
     async def test_info_xml(
         self,
         tmp_path: Path,
-        create_svn_remote_repo: CreateRepoPytestFixtureFn,
+        create_svn_remote_repo: CreateRepoFn,
     ) -> None:
         """Test info with XML output."""
         remote_repo = create_svn_remote_repo()
