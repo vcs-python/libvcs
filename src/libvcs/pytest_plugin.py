@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import dataclasses
 import functools
 import getpass
@@ -148,24 +149,147 @@ def get_vcs_version(cmd: list[str]) -> str:
         return "not-installed"
 
 
+# Stale lock timeout (5 minutes - covers slow hg operations)
+_LOCK_TIMEOUT = 5 * 60
+
+
+def _acquire_lock(lock_path: pathlib.Path) -> int | None:
+    """Atomically acquire lock file. Returns fd if acquired, None otherwise.
+
+    Uses filelock's SoftFileLock pattern: os.O_CREAT | os.O_EXCL for atomicity.
+    """
+    try:
+        fd = os.open(
+            str(lock_path),
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+            0o644,
+        )
+    except FileExistsError:
+        return None
+    else:
+        # Write PID for debugging stale locks
+        os.write(fd, str(os.getpid()).encode())
+        return fd
+
+
+def _release_lock(lock_path: pathlib.Path, fd: int) -> None:
+    """Release lock file."""
+    os.close(fd)
+    with contextlib.suppress(OSError):
+        lock_path.unlink()
+
+
+def _is_lock_stale(lock_path: pathlib.Path) -> bool:
+    """Check if lock is stale (older than timeout)."""
+    try:
+        mtime = lock_path.stat().st_mtime
+        return time.time() - mtime > _LOCK_TIMEOUT
+    except OSError:
+        return True
+
+
+def _atomic_repo_init(
+    repo_path: pathlib.Path,
+    init_fn: t.Callable[[], None],
+    marker_name: str = ".libvcs_initialized",
+    timeout: float = 60.0,
+    poll_interval: float = 0.05,
+) -> bool:
+    """Atomically initialize a repository with file-based lock coordination.
+
+    Uses filelock-inspired pattern for pytest-xdist worker coordination.
+    Two-file approach: .lock (temporary) vs marker (permanent).
+
+    Parameters
+    ----------
+    repo_path : pathlib.Path
+        Path to the repository directory to initialize
+    init_fn : Callable[[], None]
+        Function to call to perform initialization (creates repo_path)
+    marker_name : str
+        Name of the marker file indicating successful completion
+    timeout : float
+        Maximum seconds to wait for another process to complete
+    poll_interval : float
+        Seconds between polling attempts (default 50ms like filelock)
+
+    Returns
+    -------
+    bool
+        True if this process performed initialization, False if waited for another
+    """
+    marker = repo_path / marker_name
+    lock_path = repo_path.parent / f".{repo_path.name}.lock"
+
+    # Fast path: already initialized
+    if marker.exists():
+        return False
+
+    # Ensure parent directory exists for lock file
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+
+    start_time = time.perf_counter()
+
+    while True:
+        # Try to acquire lock
+        fd = _acquire_lock(lock_path)
+
+        if fd is not None:
+            # We got the lock
+            try:
+                # Double-check marker (another process may have finished)
+                if marker.exists():
+                    return False
+                # Clean partial state and initialize
+                if repo_path.exists():
+                    shutil.rmtree(repo_path)
+                init_fn()
+                marker.touch()
+                return True
+            finally:
+                _release_lock(lock_path, fd)
+
+        # Lock held by another process - check if done or stale
+        if marker.exists():
+            return False
+
+        if _is_lock_stale(lock_path):
+            with contextlib.suppress(OSError):
+                lock_path.unlink()
+            continue  # Retry immediately
+
+        # Timeout check
+        if time.perf_counter() - start_time >= timeout:
+            msg = f"Timeout waiting for {repo_path} initialization"
+            raise TimeoutError(msg)
+
+        time.sleep(poll_interval)
+
+
 def get_cache_key() -> str:
     """Generate cache key from VCS versions and libvcs version.
 
     The cache is invalidated when any VCS tool or libvcs version changes.
-    Results are cached to disk with a 24-hour TTL to avoid slow `hg --version`
+    Results are cached to disk with a ~23.5-hour TTL to avoid slow `hg --version`
     calls (which take ~100ms due to Python startup overhead).
+
+    Uses atomic file operations to prevent race conditions with parallel workers.
     """
     base_dir = get_xdg_cache_dir()
     key_file = base_dir / ".cache_key"
 
-    # Return cached key if exists and is recent (within 24 hours)
-    if key_file.exists():
-        try:
-            stat = key_file.stat()
-            if time.time() - stat.st_mtime < 86400:  # 24 hours
-                return key_file.read_text().strip()
-        except OSError:
-            pass  # File was deleted or inaccessible, regenerate
+    # Try to return cached key (atomic read with full error handling)
+    # No exists() check - let stat() fail naturally to avoid TOCTOU race
+    try:
+        stat = key_file.stat()
+        # Use 23.5 hours (not 24) to avoid exact boundary race conditions
+        if time.time() - stat.st_mtime < 84600:
+            cached_key = key_file.read_text().strip()
+            # Validate format before using (guards against corruption)
+            if len(cached_key) == 12:
+                return cached_key
+    except (OSError, ValueError):
+        pass  # File missing, stale, corrupt, or race condition - regenerate
 
     # Compute fresh key from VCS versions
     versions = [
@@ -177,10 +301,12 @@ def get_cache_key() -> str:
     version_str = "|".join(versions)
     cache_key = hashlib.sha256(version_str.encode()).hexdigest()[:12]
 
-    # Cache to disk for future runs
+    # Atomic write: write to temp file, then rename (atomic on POSIX)
     try:
         base_dir.mkdir(parents=True, exist_ok=True)
-        key_file.write_text(cache_key)
+        tmp_file = base_dir / f".cache_key.{os.getpid()}.tmp"
+        tmp_file.write_text(cache_key)
+        tmp_file.rename(key_file)
     except OSError:
         pass  # Cache write failed, continue without caching
 
@@ -266,11 +392,11 @@ def libvcs_persistent_cache(request: pytest.FixtureRequest) -> pathlib.Path:
     if request.config.getoption("--libvcs-clear-cache") and base_dir.exists():
         shutil.rmtree(base_dir)
 
-    # Clean old cache versions (different keys)
-    if base_dir.exists():
-        for old_cache in base_dir.iterdir():
-            if old_cache.is_dir() and old_cache.name != cache_key:
-                shutil.rmtree(old_cache)
+    # NOTE: Automatic cleanup of old cache versions removed to prevent race
+    # conditions with pytest-xdist parallel workers. Old cache versions may
+    # accumulate but won't cause issues. Users can clean manually:
+    #   rm -rf ~/.cache/libvcs-test/*
+    # Or use: --libvcs-clear-cache
 
     # Create cache directory
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -664,28 +790,22 @@ def git_remote_repo(
     """Return cached Git remote repo with an initial commit.
 
     Uses persistent XDG cache - repo persists across test sessions.
-    Uses a marker file to ensure the commit was successfully created.
+    Uses atomic file locking for pytest-xdist worker coordination.
     """
     repo_path = remote_repos_path / "git_remote_repo"
-    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if fully initialized (has marker file)
-    if repo_path.exists() and marker.exists():
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
         return repo_path
 
-    # Create from empty template
-    if repo_path.exists():
-        shutil.rmtree(repo_path)
-    shutil.copytree(empty_git_repo, repo_path)
+    def do_init() -> None:
+        shutil.copytree(empty_git_repo, repo_path)
+        git_remote_repo_single_commit_post_init(
+            remote_repo_path=repo_path,
+            env=git_commit_envvars,
+        )
 
-    # Add initial commit
-    git_remote_repo_single_commit_post_init(
-        remote_repo_path=repo_path,
-        env=git_commit_envvars,
-    )
-
-    # Mark as fully initialized
-    marker.touch()
+    _atomic_repo_init(repo_path, do_init)
     return repo_path
 
 
@@ -798,22 +918,18 @@ def svn_remote_repo(
     """Return cached SVN remote repo.
 
     Uses persistent XDG cache - repo persists across test sessions.
-    Uses a marker file to ensure initialization was successful.
+    Uses atomic file locking for pytest-xdist worker coordination.
     """
     repo_path = remote_repos_path / "svn_remote_repo"
-    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if fully initialized (has marker file)
-    if repo_path.exists() and marker.exists():
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
         return repo_path
 
-    # Create from empty template
-    if repo_path.exists():
-        shutil.rmtree(repo_path)
-    shutil.copytree(empty_svn_repo, repo_path)
+    def do_init() -> None:
+        shutil.copytree(empty_svn_repo, repo_path)
 
-    # Mark as fully initialized
-    marker.touch()
+    _atomic_repo_init(repo_path, do_init)
     return repo_path
 
 
@@ -826,24 +942,19 @@ def svn_remote_repo_with_files(
     """Return cached SVN remote repo with files committed.
 
     Uses persistent XDG cache - repo persists across test sessions.
-    Uses a marker file to ensure the commit was successfully created.
+    Uses atomic file locking for pytest-xdist worker coordination.
     """
     repo_path = remote_repos_path / "svn_remote_repo_with_files"
-    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if fully initialized (has marker file)
-    if repo_path.exists() and marker.exists():
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
         return repo_path
 
-    # Create from base svn_remote_repo
-    if repo_path.exists():
-        shutil.rmtree(repo_path)
-    shutil.copytree(svn_remote_repo, repo_path)
+    def do_init() -> None:
+        shutil.copytree(svn_remote_repo, repo_path)
+        svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
 
-    svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
-
-    # Mark as fully initialized
-    marker.touch()
+    _atomic_repo_init(repo_path, do_init)
     return repo_path
 
 
@@ -946,28 +1057,23 @@ def hg_remote_repo(
     """Return cached Mercurial remote repo with an initial commit.
 
     Uses persistent XDG cache - repo persists across test sessions.
-    Uses a marker file to ensure the commit was successfully created.
+    Uses atomic file locking for pytest-xdist worker coordination.
     """
     repo_path = remote_repos_path / "hg_remote_repo"
-    marker = repo_path / ".libvcs_initialized"
 
-    # Return cached repo if fully initialized (has marker file)
-    if repo_path.exists() and marker.exists():
+    # Fast path: already initialized
+    if (repo_path / ".libvcs_initialized").exists():
         return repo_path
 
-    # Create from empty template
-    if repo_path.exists():
-        shutil.rmtree(repo_path)
-    shutil.copytree(empty_hg_repo, repo_path)
+    def do_init() -> None:
+        shutil.copytree(empty_hg_repo, repo_path)
+        # Add initial commit (slow: ~288ms due to hg add + commit)
+        hg_remote_repo_single_commit_post_init(
+            remote_repo_path=repo_path,
+            env={"HGRCPATH": str(hgconfig)},
+        )
 
-    # Add initial commit (slow: ~288ms due to hg add + commit)
-    hg_remote_repo_single_commit_post_init(
-        remote_repo_path=repo_path,
-        env={"HGRCPATH": str(hgconfig)},
-    )
-
-    # Mark as fully initialized
-    marker.touch()
+    _atomic_repo_init(repo_path, do_init)
     return repo_path
 
 
