@@ -213,6 +213,44 @@ type
 """
 ```
 
+### Doctests
+
+**All functions and methods MUST have working doctests.** Doctests serve as both documentation and tests.
+
+**CRITICAL RULES:**
+- Doctests MUST actually execute - never comment out `asyncio.run()` or similar calls
+- Doctests MUST NOT be converted to `.. code-block::` as a workaround (code-blocks don't run)
+- If you cannot create a working doctest, **STOP and ask for help**
+
+**Available tools for doctests:**
+- `doctest_namespace` fixtures: `tmp_path`, `asyncio`, `create_git_remote_repo`, `create_hg_remote_repo`, `create_svn_remote_repo`, `example_git_repo`
+- Ellipsis for variable output: `# doctest: +ELLIPSIS`
+- Update `pytest_plugin.py` to add new fixtures to `doctest_namespace`
+
+**`# doctest: +SKIP` is NOT permitted** - it's just another workaround that doesn't test anything. If a VCS binary might not be installed, pytest already handles skipping via `skip_if_binaries_missing`. Use the fixtures properly.
+
+**Async doctest pattern:**
+```python
+>>> async def example():
+...     result = await some_async_function()
+...     return result
+>>> asyncio.run(example())
+'expected output'
+```
+
+**Using fixtures in doctests:**
+```python
+>>> git = Git(path=tmp_path)  # tmp_path from doctest_namespace
+>>> git.run(['status'])
+'...'
+```
+
+**When output varies, use ellipsis:**
+```python
+>>> git.clone(url=f'file://{create_git_remote_repo()}')  # doctest: +ELLIPSIS
+'Cloning into ...'
+```
+
 ### Git Commit Standards
 
 Format commit messages as:
