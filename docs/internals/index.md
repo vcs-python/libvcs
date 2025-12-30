@@ -53,11 +53,18 @@ Subprocess wrappers for VCS binaries.
 Convenience functions for common operations.
 :::
 
+:::{grid-item-card} Copy
+:link: copy
+:link-type: doc
+CoW-optimized directory copying utilities.
+:::
+
 ::::
 
 ```{toctree}
 :hidden:
 
+copy
 exc
 types
 dataclasses
