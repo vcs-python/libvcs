@@ -295,6 +295,139 @@ EOF
 )"
 ```
 
+## Asyncio Development
+
+### Architecture
+
+libvcs async support is organized in `_async/` subpackages:
+
+```
+libvcs/
+├── _internal/
+│   ├── subprocess.py         # Sync subprocess wrapper
+│   └── async_subprocess.py   # Async subprocess wrapper
+├── cmd/
+│   ├── git.py                # Git (sync)
+│   └── _async/git.py         # AsyncGit
+├── sync/
+│   ├── git.py                # GitSync (sync)
+│   └── _async/git.py         # AsyncGitSync
+```
+
+### Async Subprocess Patterns
+
+**Always use `communicate()` for subprocess I/O:**
+```python
+proc = await asyncio.create_subprocess_shell(...)
+stdout, stderr = await proc.communicate()  # Prevents deadlocks
+```
+
+**Use `asyncio.timeout()` for timeouts:**
+```python
+async with asyncio.timeout(300):
+    stdout, stderr = await proc.communicate()
+```
+
+**Handle BrokenPipeError gracefully:**
+```python
+try:
+    proc.stdin.write(data)
+    await proc.stdin.drain()
+except BrokenPipeError:
+    pass  # Process already exited - expected behavior
+```
+
+### Async API Conventions
+
+- **Class naming**: Use `Async` prefix: `AsyncGit`, `AsyncGitSync`
+- **Callbacks**: Async APIs accept only async callbacks (no union types)
+- **Shared logic**: Extract argument-building to sync functions, share with async
+
+```python
+# Shared argument building (sync)
+def build_clone_args(url: str, depth: int | None = None) -> list[str]:
+    args = ["clone", url]
+    if depth:
+        args.extend(["--depth", str(depth)])
+    return args
+
+# Async method uses shared logic
+async def clone(self, url: str, depth: int | None = None) -> str:
+    args = build_clone_args(url, depth)
+    return await self.run(args)
+```
+
+### Async Testing
+
+**pytest configuration:**
+```toml
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+```
+
+**Async fixture pattern:**
+```python
+@pytest_asyncio.fixture(loop_scope="function")
+async def async_git_repo(tmp_path: Path) -> t.AsyncGenerator[AsyncGitSync, None]:
+    repo = AsyncGitSync(url="...", path=tmp_path / "repo")
+    await repo.obtain()
+    yield repo
+```
+
+**Parametrized async tests:**
+```python
+class CloneFixture(t.NamedTuple):
+    test_id: str
+    clone_kwargs: dict[str, t.Any]
+    expected: list[str]
+
+CLONE_FIXTURES = [
+    CloneFixture("basic", {}, [".git"]),
+    CloneFixture("shallow", {"depth": 1}, [".git"]),
+]
+
+@pytest.mark.parametrize(
+    list(CloneFixture._fields),
+    CLONE_FIXTURES,
+    ids=[f.test_id for f in CLONE_FIXTURES],
+)
+@pytest.mark.asyncio
+async def test_clone(test_id: str, clone_kwargs: dict, expected: list) -> None:
+    ...
+```
+
+### Async Anti-Patterns
+
+**DON'T poll returncode:**
+```python
+# WRONG
+while proc.returncode is None:
+    await asyncio.sleep(0.1)
+
+# RIGHT
+await proc.wait()
+```
+
+**DON'T mix blocking calls in async code:**
+```python
+# WRONG
+async def bad():
+    subprocess.run(["git", "clone", url])  # Blocks event loop!
+
+# RIGHT
+async def good():
+    proc = await asyncio.create_subprocess_shell(...)
+    await proc.wait()
+```
+
+**DON'T close the event loop in tests:**
+```python
+# WRONG - breaks pytest-asyncio cleanup
+loop = asyncio.get_running_loop()
+loop.close()
+```
+
 ## Debugging Tips
 
 When stuck in debugging loops:

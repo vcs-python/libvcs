@@ -131,6 +131,64 @@ def setup(set_hgconfig: None):
     pass
 ```
 
+## Async Fixtures
+
+For async testing with [pytest-asyncio], libvcs provides async fixture variants:
+
+[pytest-asyncio]: https://pytest-asyncio.readthedocs.io/
+
+### Configuration
+
+Add pytest-asyncio to your test dependencies and configure strict mode:
+
+```toml
+# pyproject.toml
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+```
+
+### Available Async Fixtures
+
+- {func}`async_git_repo` - An {class}`~libvcs.sync._async.git.AsyncGitSync` instance ready for testing
+- `async_create_git_remote_repo` - Factory to create temporary git repositories
+
+### Usage Example
+
+```python
+import pytest
+
+@pytest.mark.asyncio
+async def test_async_repo_operations(async_git_repo):
+    """Test async repository operations."""
+    # async_git_repo is an AsyncGitSync instance
+    status = await async_git_repo.cmd.status()
+    assert 'On branch' in status
+
+    # Update the repo
+    await async_git_repo.update_repo()
+```
+
+### Creating Repositories in Async Tests
+
+```python
+import pytest
+from libvcs.sync._async.git import AsyncGitSync
+
+@pytest.mark.asyncio
+async def test_clone_repo(tmp_path, create_git_remote_repo):
+    """Test cloning a repository asynchronously."""
+    remote = create_git_remote_repo()
+    repo = AsyncGitSync(
+        url=f'file://{remote}',
+        path=tmp_path / 'clone',
+    )
+    await repo.obtain()
+    assert (tmp_path / 'clone' / '.git').exists()
+```
+
+See {doc}`/topics/asyncio` for more async patterns.
+
 ## Examples
 
 For usage examples, refer to libvcs's own [tests/](https://github.com/vcs-python/libvcs/tree/master/tests).

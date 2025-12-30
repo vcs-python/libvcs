@@ -14,6 +14,8 @@ types
 dataclasses
 query_list
 run
+async_run
 subprocess
+async_subprocess
 shortcuts
 ```

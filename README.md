@@ -149,6 +149,46 @@ def test_my_git_tool(
     assert (checkout_path / ".git").is_dir()
 ```
 
+### 5. Async Support
+Run VCS operations asynchronously for better concurrency when managing multiple repositories.
+
+[**Learn more about Async Support**](https://libvcs.git-pull.com/topics/asyncio.html)
+
+```python
+import asyncio
+import pathlib
+from libvcs.sync._async.git import AsyncGitSync
+
+async def main():
+    repo = AsyncGitSync(
+        url="https://github.com/vcs-python/libvcs",
+        path=pathlib.Path.cwd() / "libvcs",
+    )
+    await repo.obtain()
+    await repo.update_repo()
+
+asyncio.run(main())
+```
+
+Clone multiple repositories concurrently:
+
+```python
+import asyncio
+from libvcs.sync._async.git import AsyncGitSync
+
+async def clone_all(repos: list[tuple[str, str]]):
+    tasks = [
+        AsyncGitSync(url=url, path=path).obtain()
+        for url, path in repos
+    ]
+    await asyncio.gather(*tasks)  # All clone in parallel
+
+asyncio.run(clone_all([
+    ("https://github.com/vcs-python/libvcs", "./libvcs"),
+    ("https://github.com/vcs-python/vcspull", "./vcspull"),
+]))
+```
+
 ## Project Information
 
 - **Python Support**: 3.10+

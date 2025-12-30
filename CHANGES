@@ -18,7 +18,49 @@ $ uv add libvcs --prerelease allow
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-_Upcoming changes will be written here._
+### New features
+
+#### Async support (#504)
+
+Add async equivalents for all synchronous APIs, enabling non-blocking VCS operations:
+
+**Command classes** (`libvcs.cmd._async`):
+
+- {class}`~libvcs.cmd._async.git.AsyncGit` - async git commands
+- {class}`~libvcs.cmd._async.hg.AsyncHg` - async mercurial commands
+- {class}`~libvcs.cmd._async.svn.AsyncSvn` - async subversion commands
+
+**Sync classes** (`libvcs.sync._async`):
+
+- {class}`~libvcs.sync._async.git.AsyncGitSync` - async git repository management
+- {class}`~libvcs.sync._async.hg.AsyncHgSync` - async mercurial repository management
+- {class}`~libvcs.sync._async.svn.AsyncSvnSync` - async subversion repository management
+
+**Internal utilities**:
+
+- {func}`~libvcs._internal.async_run.async_run` - async command execution with progress callbacks
+- {class}`~libvcs._internal.async_subprocess.AsyncSubprocessCommand` - async subprocess wrapper
+
+Example usage:
+
+```python
+import asyncio
+from libvcs.sync._async.git import AsyncGitSync
+
+async def main():
+    repo = AsyncGitSync(url="https://github.com/user/repo", path="/tmp/repo")
+    await repo.obtain()  # Clone
+    await repo.update_repo()  # Pull
+
+asyncio.run(main())
+```
+
+### pytest plugin
+
+#### pytest_plugin: Add async fixtures (#504)
+
+- Add `async_git_repo`, `async_hg_repo`, `async_svn_repo` fixtures
+- Add `asyncio` to `doctest_namespace` for async doctests
 
 ### Development
 

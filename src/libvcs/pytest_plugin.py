@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import functools
 import getpass
 import pathlib
@@ -17,6 +18,18 @@ from libvcs._internal.run import _ENV, run
 from libvcs.sync.git import GitRemote, GitSync
 from libvcs.sync.hg import HgSync
 from libvcs.sync.svn import SvnSync
+
+# Async support - conditional import
+try:
+    import pytest_asyncio
+
+    from libvcs.sync._async.git import AsyncGitSync
+    from libvcs.sync._async.hg import AsyncHgSync
+    from libvcs.sync._async.svn import AsyncSvnSync
+
+    HAS_PYTEST_ASYNCIO = True
+except ImportError:
+    HAS_PYTEST_ASYNCIO = False
 
 
 class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
@@ -780,6 +793,133 @@ def svn_repo(
     return svn_repo
 
 
+# =============================================================================
+# Async Fixtures
+# =============================================================================
+
+if HAS_PYTEST_ASYNCIO:
+
+    @pytest_asyncio.fixture
+    @skip_if_git_missing
+    async def async_git_repo(
+        remote_repos_path: pathlib.Path,
+        projects_path: pathlib.Path,
+        git_remote_repo: pathlib.Path,
+        set_gitconfig: pathlib.Path,
+    ) -> t.AsyncGenerator[AsyncGitSync, None]:
+        """Pre-made async git clone of remote repo checked out to user's projects dir.
+
+        Async equivalent of :func:`git_repo` fixture.
+
+        Examples
+        --------
+        >>> @pytest.mark.asyncio
+        ... async def test_git_operations(async_git_repo):
+        ...     status = await async_git_repo.cmd.status()
+        """
+        remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+        new_checkout_path = projects_path / remote_repo_name
+        master_copy = remote_repos_path / "git_repo"
+
+        if master_copy.exists():
+            shutil.copytree(master_copy, new_checkout_path)
+            yield AsyncGitSync(
+                url=f"file://{git_remote_repo}",
+                path=new_checkout_path,
+            )
+            return
+
+        sync_repo = GitSync(
+            url=f"file://{git_remote_repo}",
+            path=master_copy,
+            remotes={
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=f"file://{git_remote_repo}",
+                ),
+            },
+        )
+        sync_repo.obtain()
+        shutil.copytree(master_copy, new_checkout_path)
+        yield AsyncGitSync(url=f"file://{git_remote_repo}", path=new_checkout_path)
+
+    @pytest_asyncio.fixture
+    @skip_if_hg_missing
+    async def async_hg_repo(
+        remote_repos_path: pathlib.Path,
+        projects_path: pathlib.Path,
+        hg_remote_repo: pathlib.Path,
+        set_hgconfig: pathlib.Path,
+    ) -> t.AsyncGenerator[AsyncHgSync, None]:
+        """Pre-made async hg clone of remote repo checked out to user's projects dir.
+
+        Async equivalent of :func:`hg_repo` fixture.
+
+        Examples
+        --------
+        >>> @pytest.mark.asyncio
+        ... async def test_hg_operations(async_hg_repo):
+        ...     status = await async_hg_repo.cmd.status()
+        """
+        remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+        new_checkout_path = projects_path / remote_repo_name
+        master_copy = remote_repos_path / "hg_repo"
+
+        if master_copy.exists():
+            shutil.copytree(master_copy, new_checkout_path)
+            yield AsyncHgSync(
+                url=f"file://{hg_remote_repo}",
+                path=new_checkout_path,
+            )
+            return
+
+        sync_repo = HgSync(
+            url=f"file://{hg_remote_repo}",
+            path=master_copy,
+        )
+        sync_repo.obtain()
+        shutil.copytree(master_copy, new_checkout_path)
+        yield AsyncHgSync(url=f"file://{hg_remote_repo}", path=new_checkout_path)
+
+    @pytest_asyncio.fixture
+    @skip_if_svn_missing
+    async def async_svn_repo(
+        remote_repos_path: pathlib.Path,
+        projects_path: pathlib.Path,
+        svn_remote_repo: pathlib.Path,
+    ) -> t.AsyncGenerator[AsyncSvnSync, None]:
+        """Pre-made async svn checkout of remote repo.
+
+        Async equivalent of :func:`svn_repo` fixture.
+
+        Examples
+        --------
+        >>> @pytest.mark.asyncio
+        ... async def test_svn_operations(async_svn_repo):
+        ...     status = await async_svn_repo.cmd.status()
+        """
+        remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
+        new_checkout_path = projects_path / remote_repo_name
+        master_copy = remote_repos_path / "svn_repo"
+
+        if master_copy.exists():
+            shutil.copytree(master_copy, new_checkout_path)
+            yield AsyncSvnSync(
+                url=f"file://{svn_remote_repo}",
+                path=new_checkout_path,
+            )
+            return
+
+        sync_repo = SvnSync(
+            url=f"file://{svn_remote_repo}",
+            path=str(master_copy),
+        )
+        sync_repo.obtain()
+        shutil.copytree(master_copy, new_checkout_path)
+        yield AsyncSvnSync(url=f"file://{svn_remote_repo}", path=new_checkout_path)
+
+
 @pytest.fixture
 def add_doctest_fixtures(
     request: pytest.FixtureRequest,
@@ -798,6 +938,8 @@ def add_doctest_fixtures(
 
     if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
         return
+    # Add asyncio for async doctests
+    doctest_namespace["asyncio"] = asyncio
     doctest_namespace["tmp_path"] = tmp_path
     if shutil.which("git"):
         doctest_namespace["create_git_remote_repo"] = functools.partial(
