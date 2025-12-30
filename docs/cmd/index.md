@@ -21,6 +21,16 @@ The `libvcs.cmd` module provides Python wrappers for VCS command-line tools:
 - {mod}`libvcs.cmd.hg` - Mercurial commands
 - {mod}`libvcs.cmd.svn` - Subversion commands
 
+### Async Variants
+
+Async equivalents are available in `libvcs.cmd._async`:
+
+- {class}`~libvcs.cmd._async.git.AsyncGit` - Async git commands
+- {class}`~libvcs.cmd._async.hg.AsyncHg` - Async mercurial commands
+- {class}`~libvcs.cmd._async.svn.AsyncSvn` - Async subversion commands
+
+See {doc}`/topics/asyncio` for usage patterns.
+
 ### When to use `cmd` vs `sync`
 
 | Module | Use Case |
