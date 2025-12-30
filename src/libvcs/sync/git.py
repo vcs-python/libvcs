@@ -480,10 +480,8 @@ class GitSync(BaseSync):
             # If not in clean state, stash changes in order to be able
             # to be able to perform git pull --rebase
             if need_stash:
-                # If Git < 1.7.6, uses --quiet --all
-                git_stash_save_options = "--quiet"
                 try:
-                    process = self.cmd.stash.save(message=git_stash_save_options)
+                    process = self.cmd.stash.save(quiet=True)
                 except exc.CommandError:
                     self.log.exception("Failed to stash changes")
 
