@@ -18,7 +18,48 @@ $ uv add libvcs --prerelease allow
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-_Upcoming changes will be written here._
+### Breaking changes
+
+#### API Naming Consistency (#507)
+
+Renamed parameters and methods to follow Python community conventions (Django, pytest, Sphinx patterns).
+
+**cmd/git.py: Renamed `_all` parameters to descriptive names:**
+
+| Method | Old Parameter | New Parameter |
+|--------|---------------|---------------|
+| `clone()` | `_all` | `all_branches` |
+| `fetch()` | `_all` | `all_remotes` |
+| `pull()` | `_all` | `all_remotes` |
+| `help()` | `_all` | `show_all` |
+| `rev_list()` | `_all` | `include_all_refs` |
+| `remote.get_url()` | `_all` | `all_urls` |
+| `stash.save()` | `_all` | `include_ignored` |
+| `stash.push()` | `_all` | `include_ignored` |
+| `branches.ls()` | `_all` | `all_branches` |
+
+**sync/git.py: Renamed getter methods with `get_` prefix:**
+
+| Old Method | New Method |
+|------------|------------|
+| `remotes()` | `get_remotes()` |
+| `remote(name)` | `get_remote(name)` |
+
+**Migration example:**
+
+```python
+# Before
+git.fetch(_all=True)
+git.stash.save(_all=True)
+repo.remotes()
+repo.remote("origin")
+
+# After
+git.fetch(all_remotes=True)
+git.stash.save(include_ignored=True)
+repo.get_remotes()
+repo.get_remote("origin")
+```
 
 ### Development
 
