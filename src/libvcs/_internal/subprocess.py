@@ -45,7 +45,7 @@ import dataclasses
 import subprocess
 import sys
 import typing as t
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 from libvcs._internal.types import StrOrBytesPath
 
@@ -109,7 +109,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     # POSIX-only
     restore_signals: bool = True
     start_new_session: bool = False
-    pass_fds: Sequence[int] = ()
+    pass_fds: Collection[int] = ()
     umask: int = -1
     pipesize: int = -1
     user: str | None = None

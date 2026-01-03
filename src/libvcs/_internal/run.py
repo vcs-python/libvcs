@@ -15,7 +15,7 @@ import logging
 import subprocess
 import sys
 import typing as t
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, MutableMapping, Sequence
 
 from libvcs import exc
 from libvcs._internal.types import StrPath
@@ -119,7 +119,7 @@ def run(
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
-    pass_fds: Sequence[int] = (),
+    pass_fds: Collection[int] = (),
     *,
     encoding: str | None = None,
     errors: str | None = None,
