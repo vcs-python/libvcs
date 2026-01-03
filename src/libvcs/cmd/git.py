@@ -16,6 +16,7 @@ from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
+GitConfigValue: t.TypeAlias = bool | int | float | StrPath
 
 
 class Git:
@@ -141,7 +142,7 @@ class Git:
         noglob_pathspecs: bool | None = None,
         icase_pathspecs: bool | None = None,
         no_optional_locks: bool | None = None,
-        config: dict[str, t.Any] | None = None,
+        config: dict[str, GitConfigValue] | None = None,
         config_env: str | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -241,7 +242,7 @@ class Git:
         if config is not None:
             assert isinstance(config, dict)
 
-            def stringify(v: t.Any) -> str:
+            def stringify(v: GitConfigValue) -> str:
                 if isinstance(v, bool):
                     return "true" if v else "false"
                 if not isinstance(v, str):
@@ -316,7 +317,7 @@ class Git:
         verbose: bool | None = None,
         quiet: bool | None = None,
         # Pass-through to run
-        config: dict[str, t.Any] | None = None,
+        config: dict[str, GitConfigValue] | None = None,
         log_in_real_time: bool = False,
         # Special behavior
         check_returncode: bool | None = None,
