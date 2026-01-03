@@ -130,7 +130,7 @@ def run(
     stdin: _FILE | None = None,
     stdout: _FILE | None = None,
     stderr: _FILE | None = None,
-    preexec_fn: t.Callable[[], None] | None = None,
+    preexec_fn: t.Callable[[], object] | None = None,
     close_fds: bool = True,
     shell: bool = False,
     cwd: StrOrBytesPath | None = None,
