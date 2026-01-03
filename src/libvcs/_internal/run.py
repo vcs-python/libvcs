@@ -100,7 +100,7 @@ else:
     _ENV: t.TypeAlias = Mapping[bytes, StrPath] | Mapping[str, StrPath]
 
 _CMD = StrPath | Sequence[StrPath]
-_FILE: t.TypeAlias = int | t.IO[t.Any] | None
+_FILE: t.TypeAlias = int | t.IO[str] | t.IO[bytes] | None
 
 
 def run(
@@ -110,7 +110,7 @@ def run(
     stdin: _FILE | None = None,
     stdout: _FILE | None = None,
     stderr: _FILE | None = None,
-    preexec_fn: t.Callable[[], t.Any] | None = None,
+    preexec_fn: t.Callable[[], None] | None = None,
     close_fds: bool = True,
     shell: bool = False,
     cwd: StrPath | None = None,
@@ -119,7 +119,7 @@ def run(
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
-    pass_fds: t.Any = (),
+    pass_fds: Sequence[int] = (),
     *,
     encoding: str | None = None,
     errors: str | None = None,
