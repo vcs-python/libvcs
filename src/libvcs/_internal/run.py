@@ -75,7 +75,7 @@ class CmdLoggingAdapter(_LoggerAdapter):
         self,
         msg: str,
         kwargs: MutableMapping[str, t.Any],
-    ) -> tuple[t.Any, MutableMapping[str, t.Any]]:
+    ) -> tuple[str, MutableMapping[str, t.Any]]:
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict["bin_name"] = self.bin_name
