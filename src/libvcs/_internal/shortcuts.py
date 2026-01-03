@@ -127,7 +127,7 @@ def create_project(
 
         assert vcs_matches[0].vcs is not None
 
-        def is_vcs(val: t.Any) -> t.TypeGuard[VCSLiteral]:
+        def is_vcs(val: str) -> t.TypeGuard[VCSLiteral]:
             return isinstance(val, str) and val in {"git", "hg", "svn"}
 
         if is_vcs(vcs_matches[0].vcs):
