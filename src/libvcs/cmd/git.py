@@ -19,6 +19,18 @@ _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 GitConfigValue: t.TypeAlias = bool | int | float | StrPath
 
 
+class GitSubmoduleData(t.TypedDict):
+    """Structured submodule data returned by _ls()."""
+
+    name: str
+    path: str
+    sha: str
+    url: str | None
+    branch: str | None
+    status_prefix: str
+    description: str
+
+
 class Git:
     """Run commands directly on a git repository."""
 
@@ -3387,7 +3399,7 @@ class GitSubmoduleManager:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-    ) -> list[dict[str, t.Any]]:
+    ) -> list[GitSubmoduleData]:
         """Parse submodule status output into structured data.
 
         Parameters
@@ -3399,7 +3411,7 @@ class GitSubmoduleManager:
 
         Returns
         -------
-        list[dict[str, Any]]
+        list[GitSubmoduleData]
             List of parsed submodule data.
 
         Examples
@@ -3422,7 +3434,7 @@ class GitSubmoduleManager:
             log_in_real_time=log_in_real_time,
         )
 
-        submodules: list[dict[str, t.Any]] = []
+        submodules: list[GitSubmoduleData] = []
 
         for line in result.strip().split("\n"):
             if not line:
