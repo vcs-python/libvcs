@@ -420,7 +420,7 @@ class Git:
     def fetch(
         self,
         *,
-        reftag: t.Any | None = None,
+        reftag: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
         upload_pack: str | None = None,
@@ -788,7 +788,7 @@ class Git:
     def pull(
         self,
         *,
-        reftag: t.Any | None = None,
+        reftag: str | None = None,
         repository: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
