@@ -38,7 +38,7 @@ def create_project(
     path: StrPath,
     vcs: t.Literal["git"],
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: dict[t.Any, t.Any],
+    **kwargs: dict[str, t.Any],
 ) -> GitSync: ...
 
 
@@ -49,7 +49,7 @@ def create_project(
     path: StrPath,
     vcs: t.Literal["svn"],
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: dict[t.Any, t.Any],
+    **kwargs: dict[str, t.Any],
 ) -> SvnSync: ...
 
 
@@ -60,7 +60,7 @@ def create_project(
     path: StrPath,
     vcs: t.Literal["hg"],
     progress_callback: ProgressCallbackProtocol | None = ...,
-    **kwargs: dict[t.Any, t.Any],
+    **kwargs: dict[str, t.Any],
 ) -> HgSync: ...
 
 
@@ -71,7 +71,7 @@ def create_project(
     path: StrPath,
     vcs: None = None,
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: dict[t.Any, t.Any],
+    **kwargs: dict[str, t.Any],
 ) -> GitSync | HgSync | SvnSync: ...
 
 
@@ -81,7 +81,7 @@ def create_project(
     path: StrPath,
     vcs: VCSLiteral | None = None,
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: dict[t.Any, t.Any],
+    **kwargs: dict[str, t.Any],
 ) -> GitSync | HgSync | SvnSync:
     r"""Return an object representation of a VCS repository.
 
