@@ -315,7 +315,7 @@ class GitSync(BaseSync):
         remotes = self._remotes
         if isinstance(remotes, dict):
             for remote_name, git_remote_repo in remotes.items():
-                existing_remote = self.remote(remote_name)
+                existing_remote = self.get_remote(remote_name)
                 if isinstance(git_remote_repo, GitRemote):
                     if (
                         not existing_remote
@@ -327,7 +327,7 @@ class GitSync(BaseSync):
                             overwrite=overwrite,
                         )
                         # refresh if we're setting it, so push can be checked
-                        existing_remote = self.remote(remote_name)
+                        existing_remote = self.get_remote(remote_name)
                     if git_remote_repo.push_url and (
                         not existing_remote
                         or existing_remote.push_url != git_remote_repo.push_url
@@ -540,7 +540,7 @@ class GitSync(BaseSync):
 
         self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)
 
-    def remotes(self) -> GitSyncRemoteDict:
+    def get_remotes(self) -> GitSyncRemoteDict:
         """Return remotes like git remote -v.
 
         Parameters
@@ -558,12 +558,12 @@ class GitSync(BaseSync):
 
         for r in ret:
             # FIXME: Cast to the GitRemote that sync uses, for now
-            remote = self.remote(r.remote_name)
+            remote = self.get_remote(r.remote_name)
             if remote is not None:
                 remotes[r.remote_name] = remote
         return remotes
 
-    def remote(self, name: str, **kwargs: t.Any) -> GitRemote | None:
+    def get_remote(self, name: str, **kwargs: t.Any) -> GitRemote | None:
         """Get the fetch and push URL for a specified remote name.
 
         Parameters
@@ -619,7 +619,7 @@ class GitSync(BaseSync):
         else:
             self.cmd.remotes.add(name=name, url=url, check_returncode=True)
 
-        remote = self.remote(name=name)
+        remote = self.get_remote(name=name)
         if remote is None:
             raise GitRemoteSetError(remote_name=name)
         return remote

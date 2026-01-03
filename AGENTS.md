@@ -190,6 +190,41 @@ def test_sync(
 - For typing, use `import typing as t` and access via namespace: `t.NamedTuple`, etc.
 - Use `from __future__ import annotations` at the top of all Python files
 
+### Naming Conventions
+
+Follow Python community conventions (Django, pytest, Sphinx patterns):
+
+**Method naming:**
+- Use `get_*` prefix for methods that perform I/O or subprocess calls (e.g., `get_remotes()`, `get_revision()`)
+- Use `is_*` prefix for boolean checks (e.g., `is_valid()`)
+- Use `has_*` prefix for existence checks (e.g., `has_remote()`)
+
+**Parameter naming:**
+- Use descriptive names instead of underscore-prefixed built-in shadows
+- BAD: `_all`, `_type`, `_list` (cryptic, non-standard)
+- GOOD: `all_remotes`, `include_all`, `file_type`, `path_list` (self-documenting)
+
+**Examples:**
+```python
+# BAD - cryptic underscore prefix
+def fetch(_all: bool = False): ...
+def rev_list(_all: bool = False): ...
+
+# GOOD - descriptive parameter names
+def fetch(all_remotes: bool = False): ...
+def rev_list(include_all: bool = False): ...
+
+# BAD - inconsistent getter naming
+def remotes(): ...      # No prefix
+def get_revision(): ... # Has prefix
+
+# GOOD - consistent getter naming for subprocess calls
+def get_remotes(): ...
+def get_revision(): ...
+```
+
+**Rationale:** Major Python projects (Django, pytest, Sphinx) don't use `_all` style prefixes. They either use the built-in name directly as a keyword-only argument, or use descriptive alternatives. Underscore prefixes are reserved for private/internal parameters only.
+
 ### Docstrings
 
 Follow NumPy docstring style for all functions and methods:
@@ -294,6 +329,55 @@ what:
 EOF
 )"
 ```
+
+### CHANGES and MIGRATION Files
+
+Maintain `CHANGES` (changelog) and `MIGRATION` (upgrade guide) for all user-facing changes.
+
+**File structure:**
+- `CHANGES`: Organized by version with sections in this order of precedence:
+  1. `### Breaking changes` - API changes that require user action
+  2. `### New features` - New functionality
+  3. `### Bug fixes` - Corrections to existing behavior
+  4. `### Documentation` - Doc-only changes
+  5. `### Development` or `### Internal` - Tooling, CI, refactoring
+- `MIGRATION`: Detailed migration instructions with before/after examples
+
+**Maintenance-only releases:**
+For releases with no user-facing changes (only internal/development work), use:
+```markdown
+_Maintenance only, no bug fixes, or new features_
+```
+
+**PR references - where to put them:**
+- **DO**: Put PR number in section headers or at end of bullet items in the files
+- **DON'T**: Put PR number in commit message titles (causes linkback notification noise in the PR)
+
+**For larger changes with dedicated sections:**
+```markdown
+#### API Naming Consistency (#507)
+
+Renamed parameters and methods...
+```
+
+**For smaller changes in a list:**
+```markdown
+### Bug fixes
+
+- Fix argument expansion in `rev_list` (#455)
+- Remove unused command: `Svn.mergelist` (#450)
+```
+
+**Commit messages should NOT include PR numbers:**
+```bash
+# GOOD - no PR in commit message
+CHANGES(docs): Document breaking API changes for 0.39.x
+
+# BAD - PR in commit message creates noise
+CHANGES(docs): Document breaking API changes for 0.39.x (#507)
+```
+
+The PR reference in the file content creates a clean linkback when the PR merges, while keeping commit messages focused and avoiding duplicate notifications.
 
 ## Debugging Tips
 
