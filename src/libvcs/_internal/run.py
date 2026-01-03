@@ -104,7 +104,7 @@ else:
     _ENV: t.TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
 
 _CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
-_FILE: t.TypeAlias = int | t.IO[t.Any] | None
+_FILE: t.TypeAlias = int | t.IO[str] | t.IO[bytes] | None
 
 
 def _normalize_command_args(args: _CMD) -> list[StrOrBytesPath]:
@@ -130,7 +130,7 @@ def run(
     stdin: _FILE | None = None,
     stdout: _FILE | None = None,
     stderr: _FILE | None = None,
-    preexec_fn: t.Callable[[], t.Any] | None = None,
+    preexec_fn: t.Callable[[], None] | None = None,
     close_fds: bool = True,
     shell: bool = False,
     cwd: StrOrBytesPath | None = None,
@@ -139,7 +139,7 @@ def run(
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
-    pass_fds: t.Any = (),
+    pass_fds: Sequence[int] = (),
     *,
     encoding: str | None = None,
     errors: str | None = None,
