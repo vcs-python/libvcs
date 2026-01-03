@@ -96,7 +96,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
     stdin: _FILE = None
     stdout: _FILE = None
     stderr: _FILE = None
-    preexec_fn: t.Callable[[], None] | None = None
+    preexec_fn: t.Callable[[], object] | None = None
     close_fds: bool = True
     shell: bool = False
     cwd: StrOrBytesPath | None = None
