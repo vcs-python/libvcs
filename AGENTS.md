@@ -152,6 +152,10 @@ These fixtures handle setup and teardown automatically, creating isolated test e
 
 For running tests with actual VCS commands, tests will be skipped if the corresponding VCS binary is not installed.
 
+### Testing Guidelines
+
+1. **Use functional tests only**: Write tests as standalone functions (`test_*`), not classes. Avoid `class TestFoo:` groupings - use descriptive function names and file organization instead. This applies to pytest tests, not doctests.
+
 ### Example Fixture Usage
 
 ```python
