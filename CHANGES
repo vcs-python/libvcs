@@ -18,7 +18,14 @@ $ uv add libvcs --prerelease allow
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-_Upcoming changes will be written here._
+### Internal
+
+#### _internal: Add copytree_reflink for CoW-optimized copying (#503)
+
+- Add {func}`~libvcs._internal.copy.copytree_reflink` using `cp --reflink=auto`
+- Enables Copy-on-Write on supported filesystems (btrfs, XFS, APFS)
+- Falls back to {func}`shutil.copytree` on unsupported filesystems
+- Used by pytest fixtures for faster test setup
 
 ### Development
 
