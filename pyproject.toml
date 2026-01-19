@@ -78,8 +78,9 @@ dev = [
   # Testing
   "gp-libs",
   "pytest",
-  "pytest-rerunfailures",
+  "pytest-asyncio",
   "pytest-mock",
+  "pytest-rerunfailures",
   "pytest-watcher",
   # Coverage
   "codecov",
@@ -106,8 +107,9 @@ docs = [
 testing = [
   "gp-libs",
   "pytest",
-  "pytest-rerunfailures",
+  "pytest-asyncio",
   "pytest-mock",
+  "pytest-rerunfailures",
   "pytest-watcher",
 ]
 coverage =[
@@ -233,6 +235,10 @@ testpaths = [
 ]
 filterwarnings = [
   "ignore:The frontend.Option(Parser)? class.*:DeprecationWarning::",
+]
+markers = [
+  "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
+  "benchmark: marks tests as benchmark tests for comparing implementation methods",
 ]
 
 [tool.pytest-watcher]
