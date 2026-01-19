@@ -16,6 +16,19 @@ from libvcs._internal.run import ProgressCallbackProtocol, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
+GitConfigValue: t.TypeAlias = bool | int | float | StrPath
+
+
+class GitSubmoduleData(t.TypedDict):
+    """Structured submodule data returned by _ls()."""
+
+    name: str
+    path: str
+    sha: str
+    url: str | None
+    branch: str | None
+    status_prefix: str
+    description: str
 
 
 class Git:
@@ -141,7 +154,7 @@ class Git:
         noglob_pathspecs: bool | None = None,
         icase_pathspecs: bool | None = None,
         no_optional_locks: bool | None = None,
-        config: dict[str, t.Any] | None = None,
+        config: dict[str, GitConfigValue] | None = None,
         config_env: str | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -241,7 +254,7 @@ class Git:
         if config is not None:
             assert isinstance(config, dict)
 
-            def stringify(v: t.Any) -> str:
+            def stringify(v: GitConfigValue) -> str:
                 if isinstance(v, bool):
                     return "true" if v else "false"
                 if not isinstance(v, str):
@@ -316,7 +329,7 @@ class Git:
         verbose: bool | None = None,
         quiet: bool | None = None,
         # Pass-through to run
-        config: dict[str, t.Any] | None = None,
+        config: dict[str, GitConfigValue] | None = None,
         log_in_real_time: bool = False,
         # Special behavior
         check_returncode: bool | None = None,
@@ -420,7 +433,7 @@ class Git:
     def fetch(
         self,
         *,
-        reftag: t.Any | None = None,
+        reftag: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
         upload_pack: str | None = None,
@@ -788,7 +801,7 @@ class Git:
     def pull(
         self,
         *,
-        reftag: t.Any | None = None,
+        reftag: str | None = None,
         repository: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
@@ -3386,7 +3399,7 @@ class GitSubmoduleManager:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
-    ) -> list[dict[str, t.Any]]:
+    ) -> list[GitSubmoduleData]:
         """Parse submodule status output into structured data.
 
         Parameters
@@ -3398,7 +3411,7 @@ class GitSubmoduleManager:
 
         Returns
         -------
-        list[dict[str, Any]]
+        list[GitSubmoduleData]
             List of parsed submodule data.
 
         Examples
@@ -3421,7 +3434,7 @@ class GitSubmoduleManager:
             log_in_real_time=log_in_real_time,
         )
 
-        submodules: list[dict[str, t.Any]] = []
+        submodules: list[GitSubmoduleData] = []
 
         for line in result.strip().split("\n"):
             if not line:
