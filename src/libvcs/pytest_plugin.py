@@ -103,16 +103,17 @@ namer = RandomStrSequence()
 
 def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) -> bool:
     """Skip tests if VCS binaries are missing."""
-    if not shutil.which("svn") and any(
+    if any(
         needle in str(collection_path) for needle in ["svn", "subversion"]
-    ):
+    ) and not shutil.which("svn"):
         return True
-    if not shutil.which("git") and "git" in str(collection_path):
+    if "git" in str(collection_path) and not shutil.which("git"):
         return True
-    return bool(
-        not shutil.which("hg")
-        and any(needle in str(collection_path) for needle in ["hg", "mercurial"]),
-    )
+    if any(  # NOQA: SIM103
+        needle in str(collection_path) for needle in ["hg", "mercurial"]
+    ) and not shutil.which("hg"):
+        return True
+    return False
 
 
 @pytest.fixture(scope="session")

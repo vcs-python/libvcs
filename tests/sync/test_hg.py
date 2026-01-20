@@ -16,14 +16,6 @@ if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 
-@pytest.fixture(autouse=True)
-def set_hgconfig(
-    set_hgconfig: pathlib.Path,
-) -> pathlib.Path:
-    """Set mercurial configuration."""
-    return set_hgconfig
-
-
 def test_hg_sync(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
