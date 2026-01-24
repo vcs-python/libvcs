@@ -18,7 +18,9 @@ $ uv add libvcs --prerelease allow
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-### CI
+## libvcs 0.38.2 (2026-01-24)
+
+### Packaging
 
 - Migrate to PyPI Trusted Publisher (#499)
 
