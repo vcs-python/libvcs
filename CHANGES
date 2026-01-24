@@ -18,7 +18,9 @@ $ uv add libvcs --prerelease allow
 
 <!-- Maintainers, insert changes / features for the next release here -->
 
-_Upcoming changes will be written here._
+### CI
+
+- Migrate to PyPI Trusted Publisher (#499)
 
 ### Development
 
