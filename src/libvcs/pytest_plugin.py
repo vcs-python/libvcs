@@ -180,6 +180,7 @@ def set_gitconfig(
 ) -> pathlib.Path:
     """Set git configuration."""
     monkeypatch.setenv("GIT_CONFIG", str(gitconfig))
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(gitconfig))  # For child processes
     return gitconfig
 
 
