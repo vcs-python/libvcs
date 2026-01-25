@@ -154,9 +154,6 @@ def gitconfig(
     """Return git configuration, pytest fixture."""
     gitconfig = user_path / ".gitconfig"
 
-    if gitconfig.exists():
-        return gitconfig
-
     gitconfig.write_text(
         textwrap.dedent(
             f"""

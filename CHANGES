@@ -20,6 +20,17 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+## libvcs 0.38.5 (unreleased)
+
+### Bug Fixes
+
+- pytest plugin: Fix `gitconfig` fixture to always write config (#512)
+
+  Follow-up to #510, #511 for #509: The fixture was returning early if
+  `.gitconfig` already existed (even if empty or incomplete), skipping
+  the write of `protocol.file.allow=always`. Now always writes the full
+  config to ensure submodule operations work in strict build environments.
+
 ## libvcs 0.38.4 (2026-01-25)
 
 ### Tests
