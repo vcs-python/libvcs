@@ -181,9 +181,6 @@ def test_git_bare_repo_sync_and_commit(
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
-@pytest.mark.xfail(
-    reason="gitconfig fixture lacks protocol.file.allow=always for submodules (#509)",
-)
 def test_gitconfig_submodule_file_protocol(
     gitconfig: pathlib.Path,
     user_path: pathlib.Path,
