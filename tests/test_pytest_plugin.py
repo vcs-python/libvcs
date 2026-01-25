@@ -262,13 +262,11 @@ def test_gitconfig_submodule_file_protocol(
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
-@pytest.mark.xfail(reason="git_repo fixture missing set_home dependency")
 def test_git_repo_fixture_submodule_file_protocol(
     git_repo: GitSync,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
     git_commit_envvars: dict[str, str],
     user_path: pathlib.Path,
-    tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that git_repo fixture allows file:// protocol for submodule operations.
@@ -277,20 +275,23 @@ def test_git_repo_fixture_submodule_file_protocol(
     processes (spawned by git submodule add) can find $HOME/.gitconfig with
     protocol.file.allow=always.
 
-    Without set_home in git_repo, this test fails with:
-        fatal: transport 'file' not allowed
+    The git_repo fixture depends on set_home to ensure child processes
+    (like git clone spawned by git submodule add) can find the test gitconfig.
 
     See: https://github.com/vcs-python/libvcs/issues/509
     """
     from libvcs.pytest_plugin import git_remote_repo_single_commit_post_init
 
-    # Isolate git config: set HOME to a clean path without protocol.file.allow
-    # This simulates what happens on a fresh build system like Arch Linux packaging
-    clean_home = tmp_path / "clean_home"
-    clean_home.mkdir()
-    monkeypatch.setenv("HOME", str(clean_home))
+    # Verify that HOME is set to user_path where test gitconfig resides
+    assert os.environ.get("HOME") == str(user_path), (
+        f"git_repo fixture should set HOME to user_path.\n"
+        f"Expected: {user_path}\n"
+        f"Actual: {os.environ.get('HOME')}\n"
+        "git_repo fixture is missing set_home dependency"
+    )
+
+    # Block system config to prevent interference
     monkeypatch.setenv("GIT_CONFIG_SYSTEM", os.devnull)
-    monkeypatch.delenv("GIT_CONFIG_GLOBAL", raising=False)
 
     # Create a repo to use as submodule source (with a commit so it can be cloned)
     submodule_source = create_git_remote_repo()
@@ -299,7 +300,7 @@ def test_git_repo_fixture_submodule_file_protocol(
         env=git_commit_envvars,
     )
 
-    # Add submodule - this spawns child git clone that needs HOME set
+    # Add submodule - this spawns child git clone that needs HOME set correctly
     # NOTE: We do NOT use the local config workaround here
     result = git_repo.cmd.submodules.add(
         repository=f"file://{submodule_source}",
