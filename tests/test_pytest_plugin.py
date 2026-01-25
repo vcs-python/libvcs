@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import shutil
+import subprocess
 import textwrap
 import typing as t
 
@@ -176,3 +178,86 @@ def test_git_bare_repo_sync_and_commit(
     # Test
     result = pytester.runpytest(str(first_test_filename))
     result.assert_outcomes(passed=2)
+
+
+@pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
+@pytest.mark.xfail(
+    reason="gitconfig fixture lacks protocol.file.allow=always for submodules (#509)",
+)
+def test_gitconfig_submodule_file_protocol(
+    gitconfig: pathlib.Path,
+    user_path: pathlib.Path,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that gitconfig fixture allows file:// protocol for git submodule operations.
+
+    Git submodule operations spawn child processes that don't inherit local repo config.
+    The child `git clone` process needs protocol.file.allow=always in global config.
+
+    Without this setting, submodule operations fail with:
+        fatal: transport 'file' not allowed
+
+    This reproduces GitHub issue #509 where tests fail in strict build environments
+    (like Arch Linux packaging) that don't have protocol.file.allow set globally.
+
+    See: https://github.com/vcs-python/libvcs/issues/509
+    """
+    # Isolate git config: use fixture's gitconfig via HOME, block only system config
+    # Note: We don't block GIT_CONFIG_GLOBAL because git falls back to $HOME/.gitconfig
+    # when GIT_CONFIG_GLOBAL is unset, which is where our fixture puts the config
+    monkeypatch.setenv("HOME", str(user_path))
+    monkeypatch.setenv("GIT_CONFIG_SYSTEM", os.devnull)
+    monkeypatch.delenv("GIT_CONFIG_GLOBAL", raising=False)
+
+    # Create a source repository to use as submodule
+    submodule_source = tmp_path / "submodule_source"
+    submodule_source.mkdir()
+    subprocess.run(
+        ["git", "init"],
+        cwd=submodule_source,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "commit", "--allow-empty", "-m", "initial"],
+        cwd=submodule_source,
+        check=True,
+        capture_output=True,
+    )
+
+    # Create a main repository
+    main_repo = tmp_path / "main_repo"
+    main_repo.mkdir()
+    subprocess.run(
+        ["git", "init"],
+        cwd=main_repo,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "commit", "--allow-empty", "-m", "initial"],
+        cwd=main_repo,
+        check=True,
+        capture_output=True,
+    )
+
+    # Try to add submodule using file:// protocol
+    # This spawns a child git clone that needs protocol.file.allow=always
+    result = subprocess.run(
+        ["git", "submodule", "add", str(submodule_source), "vendor/lib"],
+        cwd=main_repo,
+        capture_output=True,
+        text=True,
+    )
+
+    # Assert: submodule add should succeed (no "fatal" errors)
+    assert "fatal" not in result.stderr.lower(), (
+        f"git submodule add failed with: {result.stderr}\n"
+        'This indicates gitconfig fixture is missing [protocol "file"] allow = always'
+    )
+    assert result.returncode == 0, f"git submodule add failed: {result.stderr}"
+
+    # Verify submodule was actually added
+    gitmodules = main_repo / ".gitmodules"
+    assert gitmodules.exists(), "Submodule should create .gitmodules file"
