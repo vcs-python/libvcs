@@ -20,6 +20,13 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Tests
+
+- pytest plugin: Add `set_home` dependency to `git_repo` fixture (#511)
+
+  Follow-up to #510 for #509: Ensures child processes spawned by git submodule
+  operations can find `$HOME/.gitconfig` with `protocol.file.allow=always`.
+
 ## libvcs 0.38.3 (2026-01-25)
 
 ### Tests
