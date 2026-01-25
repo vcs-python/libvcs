@@ -20,7 +20,7 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
-## libvcs 0.38.5 (unreleased)
+## libvcs 0.38.5 (2026-01-25)
 
 ### Bug Fixes
 
