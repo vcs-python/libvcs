@@ -165,6 +165,8 @@ def gitconfig(
     name = {vcs_name}
   [color]
     diff = auto
+  [protocol "file"]
+    allow = always
     """,
         ),
         encoding="utf-8",
