@@ -5,7 +5,7 @@ from __future__ import annotations
 __title__ = "libvcs"
 __package_name__ = "libvcs"
 __description__ = "Lite, typed, python utilities for Git, SVN, Mercurial, etc."
-__version__ = "0.38.5"
+__version__ = "0.38.6"
 __author__ = "Tony Narlock"
 __github__ = "https://github.com/vcs-python/libvcs"
 __docs__ = "https://libvcs.git-pull.com"
