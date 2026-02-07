@@ -1059,3 +1059,137 @@ def test_update_repo_rev_list_head_failure_returns_sync_result(
     assert result.errors[0].step == "rev-list-head"
     assert result.errors[0].exception is not None
     assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+@pytest.mark.xfail(strict=True, reason="submodule.update not wrapped in try/except")
+def test_update_repo_submodule_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that submodule.update() failure is recorded in SyncResult.
+
+    When .gitmodules references a non-existent submodule URL, the
+    ``git submodule update`` call in update_repo() fails.  Currently
+    this is not wrapped in try/except, so the exception propagates
+    instead of being recorded in SyncResult.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make an initial commit and push so update_repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Add a .gitmodules file that references a non-existent submodule URL
+    gitmodules = git_repo.path / ".gitmodules"
+    gitmodules.write_text(
+        '[submodule "broken"]\n\tpath = broken\n\turl = file:///nonexistent/repo.git\n',
+        encoding="utf-8",
+    )
+    git_repo.run(["add", ".gitmodules"])
+    git_repo.run(["commit", "-m", "add broken submodule ref"])
+    git_repo.run(["push"])
+
+    # Reset behind so update_repo triggers a fetch+checkout cycle
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert any(e.step == "submodule-update" for e in result.errors)
+
+
+@pytest.mark.xfail(strict=True, reason="symbolic_ref not wrapped in try/except")
+def test_update_repo_symbolic_ref_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that symbolic_ref failure on detached HEAD is recorded in SyncResult.
+
+    When a repo is in detached HEAD state and no ``rev`` is set,
+    ``symbolic_ref --short HEAD`` fails.  Currently this is not wrapped
+    in try/except, so the exception propagates instead of being
+    recorded in SyncResult.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Detach HEAD — symbolic_ref will fail
+    head_sha = git_repo.run(["rev-parse", "HEAD"]).strip()
+    git_repo.run(["checkout", head_sha])
+
+    # Ensure no rev is set so the code path hits symbolic_ref
+    git_repo.rev = None  # type: ignore[assignment]
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert any(e.step == "symbolic-ref" for e in result.errors)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="GitRemoteRefNotFound raised instead of recorded in SyncResult",
+)
+def test_update_repo_remote_ref_not_found_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that GitRemoteRefNotFound is caught and recorded in SyncResult.
+
+    When show-ref output contains ``refs/remotes/<tag>`` but the regex
+    match fails, ``GitRemoteRefNotFound`` is raised with a bare ``raise``.
+    It should instead be caught and recorded in SyncResult.
+    """
+    from unittest.mock import patch
+
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Set rev so symbolic_ref is skipped
+    git_repo.rev = "master"
+
+    # Patch show_ref to return output that contains "refs/remotes/master"
+    # but in a format that the regex won't match, triggering
+    # GitRemoteRefNotFound
+    malformed_show_ref = "not-a-sha refs/remotes/master"
+    with patch.object(git_repo.cmd, "show_ref", return_value=malformed_show_ref):
+        result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert any(e.step == "remote-ref-not-found" for e in result.errors)
