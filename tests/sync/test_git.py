@@ -154,14 +154,17 @@ def test_repo_update_handle_cases(
     cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
 
-    cmd_mock.assert_any_call(name="HEAD", short=True)
+    cmd_mock.assert_any_call(name="HEAD", short=True, check_returncode=True)
 
     cmd_mock.reset_mock()
 
     # will only look up symbolic-ref if no rev specified for object
     git_repo.rev = "HEAD"
     git_repo.update_repo()
-    assert mocker.call(name="HEAD", short=True) not in cmd_mock.mock_calls
+    assert (
+        mocker.call(name="HEAD", short=True, check_returncode=True)
+        not in cmd_mock.mock_calls
+    )
 
 
 @pytest.mark.parametrize(
@@ -225,7 +228,7 @@ def test_repo_update_stash_cases(
     cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
 
-    cmd_mock.assert_any_call(name="HEAD", short=True)
+    cmd_mock.assert_any_call(name="HEAD", short=True, check_returncode=True)
 
 
 @pytest.mark.parametrize(
@@ -1061,17 +1064,17 @@ def test_update_repo_rev_list_head_failure_returns_sync_result(
     assert isinstance(result.errors[0].exception, exc.CommandError)
 
 
-@pytest.mark.xfail(strict=True, reason="submodule.update not wrapped in try/except")
 def test_update_repo_submodule_failure_recorded(
     create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
+    mocker: MockerFixture,
 ) -> None:
     """Test that submodule.update() failure is recorded in SyncResult.
 
-    When .gitmodules references a non-existent submodule URL, the
-    ``git submodule update`` call in update_repo() fails.  Currently
-    this is not wrapped in try/except, so the exception propagates
-    instead of being recorded in SyncResult.
+    When ``git submodule update`` fails, the error should be recorded
+    in SyncResult rather than propagating as an uncaught exception.
+    We mock the submodule.update call to raise CommandError since
+    triggering a real submodule failure is git-version-dependent.
     """
     git_server = create_git_remote_bare_repo()
     git_repo = GitSync(
@@ -1080,25 +1083,31 @@ def test_update_repo_submodule_failure_recorded(
     )
     git_repo.obtain()
 
-    # Make an initial commit and push so update_repo has a valid HEAD
+    # Make a commit and push so update_repo has a valid HEAD
     initial_file = git_repo.path / "initial_file"
     initial_file.write_text("content", encoding="utf-8")
     git_repo.run(["add", str(initial_file)])
     git_repo.run(["commit", "-m", "initial commit"])
     git_repo.run(["push"])
 
-    # Add a .gitmodules file that references a non-existent submodule URL
-    gitmodules = git_repo.path / ".gitmodules"
-    gitmodules.write_text(
-        '[submodule "broken"]\n\tpath = broken\n\turl = file:///nonexistent/repo.git\n',
-        encoding="utf-8",
-    )
-    git_repo.run(["add", ".gitmodules"])
-    git_repo.run(["commit", "-m", "add broken submodule ref"])
+    # Make another commit, push, then reset to create a "behind" state
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
     git_repo.run(["push"])
-
-    # Reset behind so update_repo triggers a fetch+checkout cycle
     git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # Mock submodule.update to raise CommandError
+    mocker.patch.object(
+        git_repo.cmd.submodule,
+        "update",
+        side_effect=exc.CommandError(
+            output="fatal: clone of 'file:///nonexistent' failed",
+            returncode=128,
+            cmd="git submodule update --init --recursive",
+        ),
+    )
 
     result = git_repo.update_repo()
 
@@ -1108,7 +1117,6 @@ def test_update_repo_submodule_failure_recorded(
     assert any(e.step == "submodule-update" for e in result.errors)
 
 
-@pytest.mark.xfail(strict=True, reason="symbolic_ref not wrapped in try/except")
 def test_update_repo_symbolic_ref_failure_recorded(
     create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
@@ -1149,10 +1157,6 @@ def test_update_repo_symbolic_ref_failure_recorded(
     assert any(e.step == "symbolic-ref" for e in result.errors)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="GitRemoteRefNotFound raised instead of recorded in SyncResult",
-)
 def test_update_repo_remote_ref_not_found_recorded(
     create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
     tmp_path: pathlib.Path,
