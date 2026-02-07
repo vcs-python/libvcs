@@ -382,7 +382,18 @@ class GitSync(BaseSync):
         *args: t.Any,
         **kwargs: t.Any,
     ) -> SyncResult:
-        """Pull latest changes from git remote."""
+        """Pull latest changes from git remote.
+
+        Parameters
+        ----------
+        set_remotes : bool
+            If True, configure remotes before updating.
+
+        Returns
+        -------
+        SyncResult
+            Result of the sync operation, with any errors recorded.
+        """
         result = SyncResult()
         self.ensure_dir()
 

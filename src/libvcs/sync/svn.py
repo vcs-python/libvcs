@@ -150,7 +150,18 @@ class SvnSync(BaseSync):
         *args: t.Any,
         **kwargs: t.Any,
     ) -> SyncResult:
-        """Fetch changes from SVN repository to local working copy."""
+        """Fetch changes from SVN repository to local working copy.
+
+        Parameters
+        ----------
+        dest : str or None, optional
+            Destination path override for the working copy.
+
+        Returns
+        -------
+        SyncResult
+            Result of the sync operation, with any errors recorded.
+        """
         result = SyncResult()
         self.ensure_dir()
         if pathlib.Path(self.path / ".svn").exists():

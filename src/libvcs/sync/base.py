@@ -61,7 +61,13 @@ class SyncResult:
     errors: list[SyncError] = dataclasses.field(default_factory=list)
 
     def __bool__(self) -> bool:
-        """Return True if the sync succeeded without errors."""
+        """Return True if the sync succeeded without errors.
+
+        Returns
+        -------
+        bool
+            True if no errors were recorded, False otherwise.
+        """
         return self.ok
 
     def add_error(
@@ -70,7 +76,17 @@ class SyncResult:
         message: str,
         exception: Exception | None = None,
     ) -> None:
-        """Record an error and mark the result as failed."""
+        """Record an error and mark the result as failed.
+
+        Parameters
+        ----------
+        step : str
+            Name of the sync step that failed (e.g. ``"fetch"``, ``"checkout"``).
+        message : str
+            Human-readable description of the error.
+        exception : Exception or None, optional
+            The underlying exception, if available.
+        """
         self.ok = False
         self.errors.append(SyncError(step=step, message=message, exception=exception))
 

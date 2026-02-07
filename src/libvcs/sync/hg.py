@@ -66,7 +66,13 @@ class HgSync(BaseSync):
         return self.run(["parents", "--template={rev}"])
 
     def update_repo(self, *args: t.Any, **kwargs: t.Any) -> SyncResult:
-        """Pull changes from remote Mercurial repository into this one."""
+        """Pull changes from remote Mercurial repository into this one.
+
+        Returns
+        -------
+        SyncResult
+            Result of the sync operation, with any errors recorded.
+        """
         result = SyncResult()
         if not pathlib.Path(self.path / ".hg").exists():
             self.obtain()
