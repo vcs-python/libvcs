@@ -432,8 +432,9 @@ class GitSync(BaseSync):
                 max_count=1,
                 check_returncode=True,
             )
-        except exc.CommandError:
+        except exc.CommandError as e:
             self.log.exception("Failed to get the hash for HEAD")
+            result.add_error("rev-list-head", str(e), exception=e)
             return result
 
         self.log.debug("head_sha: %s", head_sha)
