@@ -506,6 +506,7 @@ class GitSync(BaseSync):
                 except exc.CommandError as e:
                     self.log.exception("Failed to stash changes")
                     result.add_error("stash-save", str(e), exception=e)
+                    return result
 
             # Checkout the remote branch
             try:
