@@ -178,7 +178,12 @@ class SvnSync(BaseSync):
             except exc.CommandError as e:
                 result.add_error("checkout", str(e), exception=e)
         else:
-            self.obtain()
+            try:
+                self.obtain()
+            except exc.CommandError as e:
+                self.log.exception("Failed to obtain repository")
+                result.add_error("obtain", str(e), exception=e)
+                return result
             return self.update_repo()
         return result
 

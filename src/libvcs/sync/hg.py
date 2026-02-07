@@ -75,7 +75,12 @@ class HgSync(BaseSync):
         """
         result = SyncResult()
         if not pathlib.Path(self.path / ".hg").exists():
-            self.obtain()
+            try:
+                self.obtain()
+            except exc.CommandError as e:
+                self.log.exception("Failed to obtain repository")
+                result.add_error("obtain", str(e), exception=e)
+                return result
             return self.update_repo()
         else:
             try:

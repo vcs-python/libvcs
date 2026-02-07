@@ -95,9 +95,12 @@ def test_vulnerability_2022_03_12_command_injection(
         vcs="hg",
         path="./",
     )
-    with pytest.raises(exc.CommandError):
-        mercurial_repo.update_repo()
+    result = mercurial_repo.update_repo()
 
+    assert not result.ok, "update_repo() should report failure for malicious URL"
+    assert any(e.step == "obtain" for e in result.errors), (
+        "Error should be recorded under 'obtain' step"
+    )
     assert not pathlib.Path(
         random_dir / "HELLO",
     ).exists(), "Prevent command injection in hg aliases"

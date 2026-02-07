@@ -398,7 +398,12 @@ class GitSync(BaseSync):
         self.ensure_dir()
 
         if not pathlib.Path(self.path / ".git").is_dir():
-            self.obtain()
+            try:
+                self.obtain()
+            except exc.CommandError as e:
+                self.log.exception("Failed to obtain repository")
+                result.add_error("obtain", str(e), exception=e)
+                return result
             return self.update_repo(set_remotes=set_remotes)
 
         if set_remotes:
