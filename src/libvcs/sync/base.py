@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import pathlib
 import typing as t
@@ -12,6 +13,66 @@ from libvcs._internal.run import _CMD, CmdLoggingAdapter, ProgressCallbackProtoc
 from libvcs._internal.types import StrPath
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class SyncError:
+    """An error encountered during a sync step.
+
+    Examples
+    --------
+    >>> error = SyncError(step="fetch", message="remote not found")
+    >>> error.step
+    'fetch'
+    >>> error.message
+    'remote not found'
+    >>> error.exception is None
+    True
+    """
+
+    step: str
+    message: str
+    exception: Exception | None = None
+
+
+@dataclasses.dataclass
+class SyncResult:
+    """Result of a repository synchronization.
+
+    Examples
+    --------
+    >>> result = SyncResult()
+    >>> result.ok
+    True
+    >>> bool(result)
+    True
+
+    >>> result = SyncResult()
+    >>> result.add_error(step="fetch", message="remote not found")
+    >>> result.ok
+    False
+    >>> bool(result)
+    False
+    >>> result.errors[0].step
+    'fetch'
+    """
+
+    ok: bool = True
+    errors: list[SyncError] = dataclasses.field(default_factory=list)
+
+    def __bool__(self) -> bool:
+        """Return True if the sync succeeded without errors."""
+        return self.ok
+
+    def add_error(
+        self,
+        step: str,
+        message: str,
+        exception: Exception | None = None,
+    ) -> None:
+        """Record an error and mark the result as failed."""
+        self.ok = False
+        self.errors.append(SyncError(step=step, message=message, exception=exception))
 
 
 class VCSLocation(t.NamedTuple):
@@ -200,7 +261,7 @@ class BaseSync:
 
         return True
 
-    def update_repo(self, *args: t.Any, **kwargs: t.Any) -> None:
+    def update_repo(self, *args: t.Any, **kwargs: t.Any) -> SyncResult:
         """Pull latest changes to here from remote repository."""
         raise NotImplementedError
 

@@ -15,10 +15,11 @@ import logging
 import pathlib
 import typing as t
 
+from libvcs import exc
 from libvcs._internal.types import StrPath
 from libvcs.cmd.hg import Hg
 
-from .base import BaseSync
+from .base import BaseSync, SyncResult
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +65,16 @@ class HgSync(BaseSync):
         """Get latest revision of this mercurial repository."""
         return self.run(["parents", "--template={rev}"])
 
-    def update_repo(self, *args: t.Any, **kwargs: t.Any) -> None:
+    def update_repo(self, *args: t.Any, **kwargs: t.Any) -> SyncResult:
         """Pull changes from remote Mercurial repository into this one."""
+        result = SyncResult()
         if not pathlib.Path(self.path / ".hg").exists():
             self.obtain()
-            self.update_repo()
+            return self.update_repo()
         else:
-            self.cmd.update()
-            self.cmd.pull(update=True)
+            try:
+                self.cmd.update()
+                self.cmd.pull(update=True)
+            except exc.CommandError as e:
+                result.add_error("pull", str(e), exception=e)
+        return result

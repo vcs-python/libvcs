@@ -15,6 +15,7 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.sync.base import SyncResult
 from libvcs.sync.git import (
     GitRemote,
     GitStatus,
@@ -923,3 +924,71 @@ def test_repo_git_remote_checkout(
 
     assert git_repo_checkout_dir.exists()
     assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
+
+
+def test_update_repo_success_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that a successful update_repo() returns SyncResult with ok=True."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make an initial commit so rev-list HEAD succeeds
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is True
+    assert result.errors == []
+    assert bool(result) is True
+
+
+def test_update_repo_fetch_failure_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that a fetch failure in update_repo() returns SyncResult with error."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "a commit"])
+    git_repo.run(["push"])
+
+    # Make another commit, push, then reset to create a "behind" state
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # Delete the remote directory to cause a fetch failure
+    shutil.rmtree(git_server)
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert bool(result) is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "fetch"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
