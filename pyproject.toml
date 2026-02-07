@@ -211,6 +211,7 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["F401"]
+"src/libvcs/_internal/subprocess.py" = ["A002"]
 
 [tool.pytest.ini_options]
 addopts = [
