@@ -67,6 +67,12 @@ _Notes on the upcoming release will go here._
 
 - Migrate to PyPI Trusted Publisher (#499)
 
+### Bug fixes
+
+#### Fix stash.save() quiet parameter usage (#506)
+
+- Fixed `GitSync.update_repo()` to use `stash.save(quiet=True)` instead of incorrectly passing `"--quiet"` as the message parameter
+
 ### Development
 
 #### Makefile -> Justfile (#500)
