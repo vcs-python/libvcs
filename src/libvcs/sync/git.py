@@ -71,6 +71,8 @@ class GitNoBranchFound(exc.LibVCSException):
 class GitRemoteRefNotFound(exc.CommandError):
     """Raised when a git remote ref (tag, branch) could not be found."""
 
+    _message: str
+
     def __init__(self, git_tag: str, ref_output: str, *args: object) -> None:
         self._message = (
             f"Could not fetch remote in refs/remotes/{git_tag}. Output: {ref_output}"
