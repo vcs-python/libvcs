@@ -576,6 +576,7 @@ class GitSync(BaseSync):
                 if any(msg in str(e) for msg in ["invalid_upstream", "Aborting"]):
                     self.log.exception("Invalid upstream remote. Rebase aborted.")
                     result.add_error("rebase", str(e), exception=e)
+                    return result
                 else:
                     # Rebase failed: Restore previous state.
                     with contextlib.suppress(exc.CommandError):
