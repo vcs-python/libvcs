@@ -278,7 +278,13 @@ class BaseSync:
         return True
 
     def update_repo(self, *args: t.Any, **kwargs: t.Any) -> SyncResult:
-        """Pull latest changes to here from remote repository."""
+        """Pull latest changes to here from remote repository.
+
+        Returns
+        -------
+        SyncResult
+            Result of the sync operation, with any errors recorded.
+        """
         raise NotImplementedError
 
     def obtain(self, *args: t.Any, **kwargs: t.Any) -> None:
