@@ -498,7 +498,10 @@ class GitSync(BaseSync):
 
             # Checkout the remote branch
             try:
-                process = self.cmd.checkout(branch=git_tag)
+                process = self.cmd.checkout(
+                    branch=git_tag,
+                    check_returncode=True,
+                )
             except exc.CommandError as e:
                 self.log.exception("Failed to checkout tag: '%s'", git_tag)
                 result.add_error("checkout", str(e), exception=e)
@@ -546,7 +549,10 @@ class GitSync(BaseSync):
 
         else:
             try:
-                process = self.cmd.checkout(branch=git_tag)
+                process = self.cmd.checkout(
+                    branch=git_tag,
+                    check_returncode=True,
+                )
             except exc.CommandError as e:
                 self.log.exception("Failed to checkout tag: '%s'", git_tag)
                 result.add_error("checkout", str(e), exception=e)

@@ -10,6 +10,7 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.sync.base import SyncResult
 from libvcs.sync.hg import HgSync
 
 if not shutil.which("hg"):
@@ -100,3 +101,31 @@ def test_vulnerability_2022_03_12_command_injection(
     assert not pathlib.Path(
         random_dir / "HELLO",
     ).exists(), "Prevent command injection in hg aliases"
+
+
+def test_update_repo_pull_failure_returns_sync_result(
+    tmp_path: pathlib.Path,
+    projects_path: pathlib.Path,
+    hg_remote_repo: pathlib.Path,
+) -> None:
+    """Test that a deleted remote in update_repo() returns SyncResult with error."""
+    repo_name = "my_hg_error_project"
+
+    hg_repo = HgSync(
+        url=f"file://{hg_remote_repo}",
+        path=projects_path / repo_name,
+    )
+
+    # First update_repo clones since .hg doesn't exist yet
+    hg_repo.update_repo()
+
+    # Delete the remote to cause a pull failure
+    shutil.rmtree(hg_remote_repo)
+
+    result = hg_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "pull"
+    assert isinstance(result.errors[0].exception, exc.CommandError)

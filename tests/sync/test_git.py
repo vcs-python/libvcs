@@ -992,3 +992,36 @@ def test_update_repo_fetch_failure_returns_sync_result(
     assert result.errors[0].step == "fetch"
     assert result.errors[0].exception is not None
     assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_checkout_failure_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that a checkout failure in update_repo() returns SyncResult with error."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Set rev to a nonexistent branch to trigger a checkout failure
+    git_repo.rev = "nonexistent-branch"
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert bool(result) is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "checkout"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
