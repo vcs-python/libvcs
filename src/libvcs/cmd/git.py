@@ -2193,7 +2193,7 @@ class Git:
 
         for flag, shell_flag in [
             # Limiting output
-            (all, "--all"),
+            (_all, "--all"),
             (author, "--author"),
             (committer, "--committer"),
             (grep, "--grep"),
@@ -2212,7 +2212,7 @@ class Git:
             (first_parent, "--first-parent"),
             (exclude_first_parent_only, "--exclude-first-parent-only"),
             (_not, "--not"),
-            (all, "--all"),
+            (_all, "--all"),
             (exclude, "--exclude"),
             (reflog, "--reflog"),
             (alternative_refs, "--alternative-refs"),
