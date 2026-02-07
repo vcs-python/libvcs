@@ -7,6 +7,8 @@ import typing as t
 
 import pytest
 
+from libvcs import exc
+from libvcs.sync.base import SyncResult
 from libvcs.sync.svn import SvnSync
 
 if t.TYPE_CHECKING:
@@ -74,3 +76,27 @@ def test_repo_svn_remote_checkout(
     assert svn_repo.get_revision_file("./") == 0
 
     assert svn_repo_checkout_dir.exists()
+
+
+def test_update_repo_checkout_failure_returns_sync_result(
+    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    projects_path: pathlib.Path,
+) -> None:
+    """Test that a deleted remote in update_repo() returns SyncResult with error."""
+    svn_server = create_svn_remote_repo()
+    svn_repo_checkout_dir = projects_path / "my_svn_checkout"
+    svn_repo = SvnSync(path=svn_repo_checkout_dir, url=f"file://{svn_server!s}")
+
+    svn_repo.obtain()
+
+    # Delete the remote to cause an update failure
+    shutil.rmtree(svn_server)
+
+    result = svn_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "checkout"
+    assert isinstance(result.errors[0].exception, exc.CommandError)

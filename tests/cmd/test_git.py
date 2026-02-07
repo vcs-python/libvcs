@@ -2625,3 +2625,22 @@ def test_submodule_entry_absorbgitdirs(
 
     # Should succeed (empty string or info message)
     assert result == "" or isinstance(result, str)
+
+
+def test_rev_list_all_parameter(git_repo: GitSync) -> None:
+    """Test that _all parameter controls --all flag in rev-list."""
+    # Create a branch with an extra commit not reachable from master
+    git_repo.cmd.run(["checkout", "-b", "other-branch"])
+    git_repo.cmd.run(["commit", "--allow-empty", "-m", "other-branch-commit"])
+    git_repo.cmd.run(["checkout", "master"])
+
+    # Without _all: only commits reachable from HEAD (master)
+    result_no_all = git_repo.cmd.rev_list(commit="HEAD")
+    count_no_all = len(result_no_all.strip().split("\n"))
+
+    # With _all=True: includes commits from all branches
+    result_with_all = git_repo.cmd.rev_list(commit="HEAD", _all=True)
+    count_with_all = len(result_with_all.strip().split("\n"))
+
+    # _all=True should return strictly more commits (the other-branch commit)
+    assert count_with_all > count_no_all

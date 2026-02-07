@@ -70,9 +70,13 @@ repo = GitSync(
 )
 
 # Clone (if not exists) or fetch & update (if exists)
-repo.update_repo()
+result = repo.update_repo()
 
-print(f"Current revision: {repo.get_revision()}")
+if result.ok:
+    print(f"Current revision: {repo.get_revision()}")
+else:
+    for error in result.errors:
+        print(f"Sync failed at {error.step}: {error.message}")
 ```
 
 ### 2. Command Abstraction

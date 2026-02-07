@@ -15,6 +15,7 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.sync.base import SyncResult
 from libvcs.sync.git import (
     GitRemote,
     GitStatus,
@@ -153,14 +154,17 @@ def test_repo_update_handle_cases(
     cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
 
-    cmd_mock.assert_any_call(name="HEAD", short=True)
+    cmd_mock.assert_any_call(name="HEAD", short=True, check_returncode=True)
 
     cmd_mock.reset_mock()
 
     # will only look up symbolic-ref if no rev specified for object
     git_repo.rev = "HEAD"
     git_repo.update_repo()
-    assert mocker.call(name="HEAD", short=True) not in cmd_mock.mock_calls
+    assert (
+        mocker.call(name="HEAD", short=True, check_returncode=True)
+        not in cmd_mock.mock_calls
+    )
 
 
 @pytest.mark.parametrize(
@@ -224,7 +228,7 @@ def test_repo_update_stash_cases(
     cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
     git_repo.update_repo()
 
-    cmd_mock.assert_any_call(name="HEAD", short=True)
+    cmd_mock.assert_any_call(name="HEAD", short=True, check_returncode=True)
 
 
 @pytest.mark.parametrize(
@@ -923,3 +927,742 @@ def test_repo_git_remote_checkout(
 
     assert git_repo_checkout_dir.exists()
     assert pathlib.Path(git_repo_checkout_dir / ".git").exists()
+
+
+def test_update_repo_success_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that a successful update_repo() returns SyncResult with ok=True."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make an initial commit so rev-list HEAD succeeds
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is True
+    assert result.errors == []
+    assert bool(result) is True
+
+
+def test_update_repo_fetch_failure_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that a fetch failure in update_repo() returns SyncResult with error."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "a commit"])
+    git_repo.run(["push"])
+
+    # Make another commit, push, then reset to create a "behind" state
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # Delete the remote directory to cause a fetch failure
+    shutil.rmtree(git_server)
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert bool(result) is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "fetch"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_checkout_failure_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that a checkout failure in update_repo() returns SyncResult with error."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Set rev to a nonexistent branch to trigger a checkout failure
+    git_repo.rev = "nonexistent-branch"
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert bool(result) is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "checkout"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_rev_list_head_failure_returns_sync_result(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """update_repo() records rev-list HEAD failure in SyncResult."""
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Corrupt HEAD so rev-list HEAD fails
+    head_file = git_repo.path / ".git" / "HEAD"
+    head_file.write_text("ref: refs/heads/nonexistent\n")
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert bool(result) is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "rev-list-head"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_submodule_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that submodule.update() failure is recorded in SyncResult.
+
+    When ``git submodule update`` fails, the error should be recorded
+    in SyncResult rather than propagating as an uncaught exception.
+    We mock the submodule.update call to raise CommandError since
+    triggering a real submodule failure is git-version-dependent.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so update_repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Make another commit, push, then reset to create a "behind" state
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # Mock submodule.update to raise CommandError
+    mocker.patch.object(
+        git_repo.cmd.submodule,
+        "update",
+        side_effect=exc.CommandError(
+            output="fatal: clone of 'file:///nonexistent' failed",
+            returncode=128,
+            cmd="git submodule update --init --recursive",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert any(e.step == "submodule-update" for e in result.errors)
+
+
+def test_update_repo_symbolic_ref_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that symbolic_ref failure on detached HEAD is recorded in SyncResult.
+
+    When a repo is in detached HEAD state and no ``rev`` is set,
+    ``symbolic_ref --short HEAD`` fails.  Currently this is not wrapped
+    in try/except, so the exception propagates instead of being
+    recorded in SyncResult.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Detach HEAD — symbolic_ref will fail
+    head_sha = git_repo.run(["rev-parse", "HEAD"]).strip()
+    git_repo.run(["checkout", head_sha])
+
+    # Ensure no rev is set so the code path hits symbolic_ref
+    git_repo.rev = None
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert any(e.step == "symbolic-ref" for e in result.errors)
+
+
+def test_update_repo_remote_ref_not_found_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test that GitRemoteRefNotFound is caught and recorded in SyncResult.
+
+    When show-ref output contains ``refs/remotes/<tag>`` but the regex
+    match fails, ``GitRemoteRefNotFound`` is raised with a bare ``raise``.
+    It should instead be caught and recorded in SyncResult.
+    """
+    from unittest.mock import patch
+
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    # Set rev so symbolic_ref is skipped
+    git_repo.rev = "master"
+
+    # Patch show_ref to return output that contains "refs/remotes/master"
+    # but in a format that the regex won't match, triggering
+    # GitRemoteRefNotFound
+    malformed_show_ref = "not-a-sha refs/remotes/master"
+    with patch.object(git_repo.cmd, "show_ref", return_value=malformed_show_ref):
+        result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert any(e.step == "remote-ref-not-found" for e in result.errors)
+
+
+def test_update_repo_obtain_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that obtain failure when .git is missing is recorded in SyncResult.
+
+    When .git does not exist, update_repo() calls obtain(). If the clone
+    fails, the error is recorded as ``obtain``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+
+    # Mock obtain to raise CommandError (simulates a clone failure)
+    mocker.patch.object(
+        git_repo,
+        "obtain",
+        side_effect=exc.CommandError(
+            output="fatal: repository not found",
+            returncode=128,
+            cmd="git clone",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "obtain"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_set_remotes_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that set_remotes failure is recorded in SyncResult.
+
+    When ``set_remotes=True`` is passed and ``set_remotes()`` raises
+    CommandError, the error is recorded as ``set-remotes``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    mocker.patch.object(
+        git_repo,
+        "set_remotes",
+        side_effect=exc.CommandError(
+            output="fatal: remote error",
+            returncode=1,
+            cmd="git remote set-url",
+        ),
+    )
+
+    result = git_repo.update_repo(set_remotes=True)
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "set-remotes"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_remote_name_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that get_current_remote_name failure is recorded in SyncResult.
+
+    When ``get_current_remote_name()`` raises, the error is recorded
+    as ``remote-name``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit and push so the repo has a valid HEAD
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    mocker.patch.object(
+        git_repo,
+        "get_current_remote_name",
+        side_effect=exc.CommandError(
+            output="fatal: could not determine remote",
+            returncode=1,
+            cmd="git status",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "remote-name"
+    assert result.errors[0].exception is not None
+
+
+def test_update_repo_status_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that cmd.status failure is recorded in SyncResult.
+
+    When ``cmd.status()`` raises during the dirty-tree check on a remote
+    ref, the error is recorded as ``status``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit, push, then reset to create a "behind" state
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # cmd.status is called twice: once for get_current_remote_name
+    # (with short=True, branch=True) and once for the dirty-tree check
+    # (with porcelain=True, untracked_files="no"). Only the second should fail.
+    real_status = git_repo.cmd.status
+
+    def status_side_effect(**kwargs: t.Any) -> str:
+        if "untracked_files" in kwargs:
+            raise exc.CommandError(
+                output="fatal: status failed",
+                returncode=128,
+                cmd="git status",
+            )
+        return real_status(**kwargs)
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "status",
+        side_effect=status_side_effect,
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "status"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_stash_save_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that stash save failure is recorded in SyncResult.
+
+    When ``cmd.stash.save()`` raises on a dirty working tree, the error
+    is recorded as ``stash-save``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit, push, then reset to create a "behind" state
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # cmd.status is called twice: first for get_current_remote_name, then
+    # for the dirty-tree check. Only the second should return dirty.
+    real_status = git_repo.cmd.status
+
+    def status_side_effect(**kwargs: t.Any) -> str:
+        if "untracked_files" in kwargs:
+            return "M  some_file"
+        return real_status(**kwargs)
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "status",
+        side_effect=status_side_effect,
+    )
+
+    mocker.patch.object(
+        git_repo.cmd.stash,
+        "save",
+        side_effect=exc.CommandError(
+            output="fatal: stash save failed",
+            returncode=1,
+            cmd="git stash save",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "stash-save"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_rebase_invalid_upstream_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that rebase with invalid upstream is recorded in SyncResult.
+
+    When ``cmd.rebase()`` raises and the error message contains
+    ``invalid_upstream``, the error is recorded as ``rebase`` and the
+    function returns immediately.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit, push, then reset to create a "behind" state
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # cmd.status is called twice: first for get_current_remote_name, then
+    # for the dirty-tree check. Only the second should return dirty.
+    real_status = git_repo.cmd.status
+
+    def status_side_effect(**kwargs: t.Any) -> str:
+        if "untracked_files" in kwargs:
+            return "M  some_file"
+        return real_status(**kwargs)
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "status",
+        side_effect=status_side_effect,
+    )
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "rebase",
+        side_effect=exc.CommandError(
+            output="fatal: invalid_upstream 'origin/master'",
+            returncode=128,
+            cmd="git rebase",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "rebase"
+    assert "invalid_upstream" in result.errors[0].message
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_rebase_conflict_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that rebase conflict (non-abort) is recorded in SyncResult.
+
+    When ``cmd.rebase()`` raises and the error does NOT contain
+    ``invalid_upstream`` or ``Aborting``, the function aborts the rebase,
+    tries to restore stash, and records the error as ``rebase``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit, push, then reset to create a "behind" state
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # cmd.status is called twice: first for get_current_remote_name, then
+    # for the dirty-tree check. Only the second should return dirty.
+    real_status = git_repo.cmd.status
+
+    def status_side_effect(**kwargs: t.Any) -> str:
+        if "untracked_files" in kwargs:
+            return "M  some_file"
+        return real_status(**kwargs)
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "status",
+        side_effect=status_side_effect,
+    )
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "rebase",
+        side_effect=exc.CommandError(
+            output="CONFLICT (content): Merge conflict in file.txt",
+            returncode=1,
+            cmd="git rebase",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "rebase"
+    assert "CONFLICT" in result.errors[0].message
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_update_repo_stash_pop_failure_recorded(
+    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Test that stash pop failure is recorded in SyncResult.
+
+    When ``cmd.stash.pop()`` raises after a successful rebase on a dirty
+    tree, the error is recorded as ``stash-pop``.
+    """
+    git_server = create_git_remote_bare_repo()
+    git_repo = GitSync(
+        path=tmp_path / "myrepo",
+        url=git_server.as_uri(),
+    )
+    git_repo.obtain()
+
+    # Make a commit, push, then reset to create a "behind" state
+    initial_file = git_repo.path / "initial_file"
+    initial_file.write_text("content", encoding="utf-8")
+    git_repo.run(["add", str(initial_file)])
+    git_repo.run(["commit", "-m", "initial commit"])
+    git_repo.run(["push"])
+
+    another_file = git_repo.path / "another_file"
+    another_file.write_text("more content", encoding="utf-8")
+    git_repo.run(["add", str(another_file)])
+    git_repo.run(["commit", "-m", "second commit"])
+    git_repo.run(["push"])
+    git_repo.run(["reset", "--hard", "HEAD^"])
+
+    # cmd.status is called twice: first for get_current_remote_name, then
+    # for the dirty-tree check. Only the second should return dirty.
+    real_status = git_repo.cmd.status
+
+    def status_side_effect(**kwargs: t.Any) -> str:
+        if "untracked_files" in kwargs:
+            return "M  some_file"
+        return real_status(**kwargs)
+
+    mocker.patch.object(
+        git_repo.cmd,
+        "status",
+        side_effect=status_side_effect,
+    )
+
+    # stash.pop must fail on both attempts (index=True and without)
+    mocker.patch.object(
+        git_repo.cmd.stash,
+        "pop",
+        side_effect=exc.CommandError(
+            output="error: could not restore untracked files",
+            returncode=1,
+            cmd="git stash pop",
+        ),
+    )
+
+    result = git_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "stash-pop"
+    assert result.errors[0].exception is not None
+    assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+def test_sync_result_multiple_errors() -> None:
+    """Test that SyncResult can accumulate multiple errors."""
+    result = SyncResult()
+    assert result.ok is True
+
+    result.add_error(step="fetch", message="network error")
+    assert result.ok is False
+    assert len(result.errors) == 1
+
+    result.add_error(step="checkout", message="branch not found")
+    assert len(result.errors) == 2
+    assert result.errors[0].step == "fetch"
+    assert result.errors[1].step == "checkout"

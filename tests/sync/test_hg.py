@@ -4,13 +4,19 @@ from __future__ import annotations
 
 import pathlib
 import shutil
+import typing as t
 
 import pytest
 
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.pytest_plugin import hg_remote_repo_single_commit_post_init
+from libvcs.sync.base import SyncResult
 from libvcs.sync.hg import HgSync
+
+if t.TYPE_CHECKING:
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
 
 if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
@@ -94,9 +100,40 @@ def test_vulnerability_2022_03_12_command_injection(
         vcs="hg",
         path="./",
     )
-    with pytest.raises(exc.CommandError):
-        mercurial_repo.update_repo()
+    result = mercurial_repo.update_repo()
 
+    assert not result.ok, "update_repo() should report failure for malicious URL"
+    assert any(e.step == "obtain" for e in result.errors), (
+        "Error should be recorded under 'obtain' step"
+    )
     assert not pathlib.Path(
         random_dir / "HELLO",
     ).exists(), "Prevent command injection in hg aliases"
+
+
+def test_update_repo_pull_failure_returns_sync_result(
+    projects_path: pathlib.Path,
+    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+) -> None:
+    """Test that a deleted remote in update_repo() returns SyncResult with error."""
+    repo_name = "my_hg_error_project"
+    hg_remote = create_hg_remote_repo(
+        remote_repo_post_init=hg_remote_repo_single_commit_post_init,
+    )
+
+    hg_repo = HgSync(
+        url=f"file://{hg_remote}",
+        path=projects_path / repo_name,
+    )
+
+    hg_repo.update_repo()
+
+    shutil.rmtree(hg_remote)
+
+    result = hg_repo.update_repo()
+
+    assert isinstance(result, SyncResult)
+    assert result.ok is False
+    assert len(result.errors) > 0
+    assert result.errors[0].step == "pull"
+    assert isinstance(result.errors[0].exception, exc.CommandError)

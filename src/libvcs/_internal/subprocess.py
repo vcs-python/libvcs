@@ -1,4 +1,3 @@
-# ruff: NOQA: A002
 r"""Invocable :mod:`subprocess` wrapper.
 
 Defer running a subprocess, such as by handing to an executor.

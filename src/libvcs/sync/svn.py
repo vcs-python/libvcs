@@ -21,10 +21,11 @@ import pathlib
 import re
 import typing as t
 
+from libvcs import exc
 from libvcs._internal.types import StrPath
 from libvcs.cmd.svn import Svn
 
-from .base import BaseSync
+from .base import BaseSync, SyncResult
 
 logger = logging.getLogger(__name__)
 
@@ -148,22 +149,43 @@ class SvnSync(BaseSync):
         dest: str | None = None,
         *args: t.Any,
         **kwargs: t.Any,
-    ) -> None:
-        """Fetch changes from SVN repository to local working copy."""
+    ) -> SyncResult:
+        """Fetch changes from SVN repository to local working copy.
+
+        Parameters
+        ----------
+        dest : str or None, optional
+            Destination path override for the working copy.
+
+        Returns
+        -------
+        SyncResult
+            Result of the sync operation, with any errors recorded.
+        """
+        result = SyncResult()
         self.ensure_dir()
         if pathlib.Path(self.path / ".svn").exists():
-            self.cmd.checkout(
-                url=self.url,
-                username=self.username,
-                password=self.password,
-                non_interactive=True,
-                quiet=True,
-                check_returncode=True,
-                **kwargs,
-            )
+            try:
+                self.cmd.checkout(
+                    url=self.url,
+                    username=self.username,
+                    password=self.password,
+                    non_interactive=True,
+                    quiet=True,
+                    check_returncode=True,
+                    **kwargs,
+                )
+            except exc.CommandError as e:
+                result.add_error("checkout", str(e), exception=e)
         else:
-            self.obtain()
-            self.update_repo()
+            try:
+                self.obtain()
+            except exc.CommandError as e:
+                self.log.exception("Failed to obtain repository")
+                result.add_error("obtain", str(e), exception=e)
+                return result
+            return self.update_repo()
+        return result
 
     @classmethod
     def _get_svn_url_rev(cls, location: str) -> tuple[str | None, int]:

@@ -20,6 +20,43 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### New features
+
+#### sync: Return {class}`~libvcs.sync.base.SyncResult` from `update_repo()` (#514)
+
+`update_repo()` across {class}`~libvcs.sync.git.GitSync`,
+{class}`~libvcs.sync.hg.HgSync`, and {class}`~libvcs.sync.svn.SvnSync`
+now returns a {class}`~libvcs.sync.base.SyncResult` instead of `None`.
+Callers can inspect `result.ok` and `result.errors` to distinguish
+successful syncs from failures.
+
+- New dataclasses: {class}`~libvcs.sync.base.SyncResult` and
+  {class}`~libvcs.sync.base.SyncError`
+- Git: 10+ silent `except CommandError: return` paths now record
+  structured errors with labeled steps (`fetch`, `rebase`, `checkout`,
+  `stash-save`, etc.)
+- Hg and SVN: Wrap `obtain` and `pull`/`update` failures for API
+  consistency
+
+Companion change: [vcspull#512](https://github.com/vcs-python/vcspull/pull/512)
+
+### Bug Fixes
+
+- cmd: Fix `Git.rev_list()` referencing builtin `all` instead of `_all`
+  parameter (#514)
+
+- sync: Disambiguate `rev-list` when a local branch name collides with a
+  filesystem path by using fully-qualified `refs/heads/` refs (#514)
+
+- sync: Return early with error on invalid-upstream rebase instead of
+  falling through to stash-pop (#514)
+
+### Tests
+
+- sync: Fix `test_update_repo_pull_failure_returns_sync_result` (hg)
+  destroying the session-scoped `hg_remote_repo` fixture, which broke
+  downstream tests like `test_hg_url` (#514)
+
 ## libvcs 0.38.6 (2026-01-27)
 
 ### Bug Fixes
