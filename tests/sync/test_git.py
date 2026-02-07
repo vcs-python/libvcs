@@ -1147,7 +1147,7 @@ def test_update_repo_symbolic_ref_failure_recorded(
     git_repo.run(["checkout", head_sha])
 
     # Ensure no rev is set so the code path hits symbolic_ref
-    git_repo.rev = None  # type: ignore[assignment]
+    git_repo.rev = None
 
     result = git_repo.update_repo()
 
