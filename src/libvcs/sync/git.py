@@ -467,10 +467,20 @@ class GitSync(BaseSync):
 
         # This will fail if the tag does not exist (it probably has not
         # been fetched yet).
+        #
+        # When the ref is local, use the fully-qualified refs/heads/ path
+        # if available to avoid ambiguity with paths (e.g. a branch named
+        # "notes" when a directory "notes/" also exists).
+        if is_remote_ref:
+            rev_list_commit = git_remote_name + "/" + git_tag
+        elif f"refs/heads/{git_tag}" in show_ref_output:
+            rev_list_commit = f"refs/heads/{git_tag}"
+        else:
+            rev_list_commit = git_tag
         try:
             error_code = 0
             tag_sha = self.cmd.rev_list(
-                commit=git_remote_name + "/" + git_tag if is_remote_ref else git_tag,
+                commit=rev_list_commit,
                 max_count=1,
             )
 
