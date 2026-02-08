@@ -259,7 +259,7 @@ type
 
 Format commit messages as:
 ```
-Component/File(commit-type[Subcomponent/method]): Concise description
+Scope(type[detail]): concise description
 
 why: Explanation of necessity or impact.
 what:
@@ -275,6 +275,9 @@ Common commit types:
 - **chore**: Maintenance (dependencies, tooling, config)
 - **test**: Test-related updates
 - **style**: Code style and formatting
+- **ai(rules[AGENTS])**: AI rule updates
+- **ai(claude[rules])**: Claude Code rules (CLAUDE.md)
+- **ai(claude[command])**: Claude Code command changes
 
 Example:
 ```
