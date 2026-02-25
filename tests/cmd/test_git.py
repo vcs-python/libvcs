@@ -18,7 +18,7 @@ if t.TYPE_CHECKING:
 
 @pytest.mark.parametrize("path_type", [str, pathlib.Path])
 def test_git_constructor(
-    path_type: t.Callable[[str | pathlib.Path], t.Any],
+    path_type: t.Callable[[str | pathlib.Path], str | pathlib.Path],
     tmp_path: pathlib.Path,
 ) -> None:
     """Test Git constructor."""
