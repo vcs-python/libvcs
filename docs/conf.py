@@ -31,6 +31,7 @@ with (src_root / "libvcs" / "__about__.py").open() as fp:
 extensions = [
     "sphinx.ext.napoleon",  # Should go first
     "sphinx.ext.autodoc",
+    "sphinx_fonts",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
@@ -146,6 +147,32 @@ copybutton_remove_prompts = True
 # sphinxext-rediraffe
 rediraffe_redirects = "redirects.txt"
 rediraffe_branch = "master~1"
+
+# sphinx_fonts — self-hosted IBM Plex via Fontsource CDN
+sphinx_fonts = [
+    {
+        "family": "IBM Plex Sans",
+        "package": "@fontsource/ibm-plex-sans",
+        "version": "5.2.8",
+        "weights": [400, 500, 600, 700],
+        "styles": ["normal", "italic"],
+        "subset": "latin",
+    },
+    {
+        "family": "IBM Plex Mono",
+        "package": "@fontsource/ibm-plex-mono",
+        "version": "5.2.7",
+        "weights": [400],
+        "styles": ["normal", "italic"],
+        "subset": "latin",
+    },
+]
+
+sphinx_font_css_variables = {
+    "--font-stack": '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+    "--font-stack--monospace": '"IBM Plex Mono", SFMono-Regular, Menlo, Consolas, monospace',
+    "--font-stack--headings": "var(--font-stack)",
+}
 
 intersphinx_mapping = {
     "py": ("https://docs.python.org/3", None),
