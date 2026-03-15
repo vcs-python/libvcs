@@ -394,7 +394,10 @@ _Maintenance only, no bug fixes, or new features_
   via ruff v0.3.4, all automated lint fixes, including unsafe and previews were applied:
 
   ```console
-  $ ruff check --select ALL . --fix --unsafe-fixes --preview --show-fixes; ruff format .
+  $ ruff check --select ALL . \
+      --fix --unsafe-fixes \
+      --preview --show-fixes; \
+      ruff format .
   ```
 
   Branches were treated with:
