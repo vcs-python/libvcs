@@ -26,20 +26,20 @@ It powers [vcspull](https://github.com/vcs-python/vcspull) and simplifies VCS in
 
 ## Installation
 
-```bash
-pip install libvcs
+```console
+$ pip install libvcs
 ```
 
 With [uv](https://docs.astral.sh/uv/):
 
-```bash
-uv add libvcs
+```console
+$ uv add libvcs
 ```
 
 Try it interactively:
 
-```bash
-uvx --with libvcs ipython
+```console
+$ uvx --with libvcs ipython
 ```
 
 Tip: libvcs is pre-1.0. Pin a version range in projects to avoid surprises:
