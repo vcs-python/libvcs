@@ -28,8 +28,33 @@ The `libvcs.cmd` module provides Python wrappers for VCS command-line tools:
 | `libvcs.cmd` | Fine-grained control over individual VCS commands |
 | `libvcs.sync` | High-level repository cloning and updating |
 
+## Modules
+
+::::{grid} 1 1 2 2
+:gutter: 2 2 3 3
+
+:::{grid-item-card} Git
+:link: git/index
+:link-type: doc
+Full git CLI wrapper with sub-command managers (branch, remote, stash, ...).
+:::
+
+:::{grid-item-card} Mercurial
+:link: hg
+:link-type: doc
+Mercurial CLI wrapper.
+:::
+
+:::{grid-item-card} Subversion
+:link: svn
+:link-type: doc
+Subversion CLI wrapper.
+:::
+
+::::
+
 ```{toctree}
-:caption: API
+:hidden:
 
 git/index
 hg

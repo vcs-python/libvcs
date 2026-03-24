@@ -14,6 +14,49 @@ perfect balance.
 If we could make it ready-to-go out of the box, but also have framework-like extensibility, it could
 satisfy the niche.
 
+## Modules
+
+::::{grid} 1 1 2 2
+:gutter: 2 2 3 3
+
+:::{grid-item-card} Git URLs
+:link: git
+:link-type: doc
+Parse and validate Git repository URLs (HTTPS, SSH, SCP).
+:::
+
+:::{grid-item-card} SVN URLs
+:link: svn
+:link-type: doc
+Parse Subversion repository URLs.
+:::
+
+:::{grid-item-card} Hg URLs
+:link: hg
+:link-type: doc
+Parse Mercurial repository URLs.
+:::
+
+:::{grid-item-card} Base
+:link: base
+:link-type: doc
+Abstract base classes for URL parsing.
+:::
+
+:::{grid-item-card} Registry
+:link: registry
+:link-type: doc
+URL matcher registration and lookup.
+:::
+
+:::{grid-item-card} Constants
+:link: constants
+:link-type: doc
+Shared regex patterns and URL constants.
+:::
+
+::::
+
 ## Validate and detect VCS URLs
 
 ````{tab} git
@@ -256,10 +299,8 @@ When a match occurs, its `defaults` will fill in non-matched groups.
 When registering new matchers, higher `weight`s are checked first. If it's a valid regex grouping,
 it will be picked.
 
-## Explore
-
 ```{toctree}
-:caption: API
+:hidden:
 
 git
 svn
