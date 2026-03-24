@@ -1,9 +1,9 @@
-"api.md" "projects/index.md"
+# "api.md" "projects/index.md"  # dirhtml: collides with api/index.md
 "api/base.md" "projects/base.md"
 "api/git.md" "projects/git.md"
 "api/hg.md" "projects/hg.md"
 "api/svn.md" "projects/svn.md"
-"developing.md" "contributing/index.md"
+"developing.md" "project/contributing.md"
 # "contributing/internals.md" "contributing/internals/index.md"  # dirhtml: same output path
 "contributing/internals/exc.md" "internals/exc.md"
 "contributing/internals/index.md" "internals/index.md"
@@ -21,3 +21,6 @@
 "projects/hg.md" "sync/hg.md"
 "projects/svn.md" "sync/svn.md"
 # "cmd/git.md" "cmd/git/index.md"  # dirhtml: same output path
+"contributing/index.md" "project/contributing.md"
+"contributing/workflow.md" "project/workflow.md"
+"pytest-plugin.md" "api/pytest-plugin.md"
