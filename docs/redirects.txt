@@ -4,7 +4,7 @@
 "api/hg.md" "projects/hg.md"
 "api/svn.md" "projects/svn.md"
 "developing.md" "contributing/index.md"
-"contributing/internals.md" "contributing/internals/index.md"
+# "contributing/internals.md" "contributing/internals/index.md"  # dirhtml: same output path
 "contributing/internals/exc.md" "internals/exc.md"
 "contributing/internals/index.md" "internals/index.md"
 "contributing/internals/query_list.md" "internals/query_list.md"
@@ -20,4 +20,4 @@
 "projects/git.md" "sync/git.md"
 "projects/hg.md" "sync/hg.md"
 "projects/svn.md" "sync/svn.md"
-"cmd/git.md" "cmd/git/index.md"
+# "cmd/git.md" "cmd/git/index.md"  # dirhtml: same output path
