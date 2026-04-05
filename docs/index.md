@@ -34,7 +34,7 @@ Clone and update local repositories.
 :::
 
 :::{grid-item-card} pytest Plugin
-:link: api/pytest-plugin
+:link: /api/pytest-plugin
 :link-type: doc
 Fixtures for isolated VCS test repos.
 :::
@@ -88,7 +88,7 @@ updates a local checkout in one call.
 
 ## Testing
 
-libvcs ships a [pytest plugin](api/pytest-plugin.md) with
+libvcs ships a [pytest plugin](/api/pytest-plugin/) with
 session-scoped fixtures for Git, SVN, and Mercurial repositories:
 
 ```python
