@@ -16,10 +16,10 @@ import pathlib
 import typing as t
 from collections.abc import Sequence
 
-from libvcs._internal.run import ProgressCallbackProtocol, run
+from libvcs._internal.run import ProgressCallbackProtocol, _normalize_command_args, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
+_CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 
 class HgColorType(enum.Enum):
@@ -156,7 +156,7 @@ class Hg:
         >>> hg.run(['help'])
         "Mercurial Distributed SCM..."
         """
-        cli_args = ["hg", *args] if isinstance(args, Sequence) else ["hg", args]
+        cli_args: list[StrOrBytesPath] = ["hg", *_normalize_command_args(args)]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path
@@ -166,9 +166,9 @@ class Hg:
         if config is not None:
             cli_args.extend(["--config", config])
         if pager is not None:
-            cli_args.append(["--pager", pager])
+            cli_args.extend(["--pager", pager.value])
         if color is not None:
-            cli_args.append(["--color", color])
+            cli_args.extend(["--color", color.value])
         if verbose is True:
             cli_args.append("--verbose")
         if quiet is True:

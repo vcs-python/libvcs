@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
+import os
 import pathlib
 import re
 import shlex
@@ -12,7 +13,7 @@ import typing as t
 from collections.abc import Sequence
 
 from libvcs._internal.query_list import QueryList
-from libvcs._internal.run import ProgressCallbackProtocol, run
+from libvcs._internal.run import ProgressCallbackProtocol, _normalize_command_args, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
@@ -211,10 +212,10 @@ class Git:
         >>> git.run(['help'])
         "usage: git [...--version] [...--help] [-C <path>]..."
         """
-        cli_args = ["git", *args] if isinstance(args, Sequence) else ["git", args]
+        cli_args: list[StrOrBytesPath] = ["git", *_normalize_command_args(args)]
 
         if "cwd" not in kwargs:
-            kwargs["cwd"] = self.path
+            kwargs["cwd"] = self.path if cwd is None else cwd
 
         #
         # Print-and-exit
@@ -237,7 +238,7 @@ class Git:
             if not isinstance(C, list):
                 C = [C]
             for c in C:
-                cli_args.extend(["-C", str(c)])
+                cli_args.extend(["-C", os.fspath(c)])
         if config is not None:
             assert isinstance(config, dict)
 
@@ -253,15 +254,15 @@ class Git:
         if config_env is not None:
             cli_args.append(f"--config-env={config_env}")
         if git_dir is not None:
-            cli_args.extend(["--git-dir", str(git_dir)])
+            cli_args.extend(["--git-dir", os.fspath(git_dir)])
         if work_tree is not None:
-            cli_args.extend(["--work-tree", str(work_tree)])
+            cli_args.extend(["--work-tree", os.fspath(work_tree)])
         if namespace is not None:
-            cli_args.extend(["--namespace", namespace])
+            cli_args.extend(["--namespace", os.fspath(namespace)])
         if super_prefix is not None:
-            cli_args.extend(["--super-prefix", super_prefix])
+            cli_args.extend(["--super-prefix", os.fspath(super_prefix)])
         if exec_path is not None:
-            cli_args.extend(["--exec-path", exec_path])
+            cli_args.extend(["--exec-path", os.fspath(exec_path)])
         if bare is True:
             cli_args.append("--bare")
         if no_replace_objects is True:

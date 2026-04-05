@@ -12,13 +12,14 @@ from __future__ import annotations
 
 import datetime
 import logging
+import os
 import subprocess
 import sys
 import typing as t
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 
 from libvcs import exc
-from libvcs._internal.types import StrPath
+from libvcs._internal.types import StrOrBytesPath
 
 logger = logging.getLogger(__name__)
 
@@ -97,23 +98,39 @@ class ProgressCallbackProtocol(t.Protocol):
 if sys.platform == "win32":
     _ENV: t.TypeAlias = Mapping[str, str]
 else:
-    _ENV: t.TypeAlias = Mapping[bytes, StrPath] | Mapping[str, StrPath]
+    _ENV: t.TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
 
-_CMD = StrPath | Sequence[StrPath]
+_CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 _FILE: t.TypeAlias = int | t.IO[t.Any] | None
+
+
+def _normalize_command_args(args: _CMD) -> list[StrOrBytesPath]:
+    """Return subprocess arguments without splitting scalar strings or bytes."""
+    if isinstance(args, (str, bytes, os.PathLike)):
+        return [os.fspath(args)]
+
+    return [os.fspath(arg) for arg in args]
+
+
+def _stringify_command(args: _CMD) -> str | list[str]:
+    """Return a human-readable command for CommandError."""
+    if isinstance(args, (str, bytes, os.PathLike)):
+        return os.fsdecode(args)
+
+    return [os.fsdecode(arg) for arg in args]
 
 
 def run(
     args: _CMD,
     bufsize: int = -1,
-    executable: StrPath | None = None,
+    executable: StrOrBytesPath | None = None,
     stdin: _FILE | None = None,
     stdout: _FILE | None = None,
     stderr: _FILE | None = None,
     preexec_fn: t.Callable[[], t.Any] | None = None,
     close_fds: bool = True,
     shell: bool = False,
-    cwd: StrPath | None = None,
+    cwd: StrOrBytesPath | None = None,
     env: _ENV | None = None,
     startupinfo: t.Any | None = None,
     creationflags: int = 0,
@@ -173,8 +190,14 @@ def run(
     ----------------
     When minimum python >= 3.10, pipesize: int = -1 will be added after umask.
     """
+    normalized_args: _CMD
+    if shell:
+        normalized_args = os.fspath(args) if isinstance(args, os.PathLike) else args
+    else:
+        normalized_args = _normalize_command_args(args)
+
     proc = subprocess.Popen(
-        args,
+        normalized_args,
         bufsize=bufsize,
         executable=executable,
         stdin=stdin,
@@ -246,8 +269,6 @@ def run(
         raise exc.CommandError(
             output=output,
             returncode=code,
-            cmd=[str(arg) for arg in args]
-            if isinstance(args, (list, tuple))
-            else str(args),
+            cmd=_stringify_command(normalized_args),
         )
     return output

@@ -10,15 +10,16 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import typing as t
 from collections.abc import Sequence
 
 from libvcs import exc
-from libvcs._internal.run import ProgressCallbackProtocol, run
+from libvcs._internal.run import ProgressCallbackProtocol, _normalize_command_args, run
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
-_CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
+_CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 
 DepthLiteral = t.Literal["infinity", "empty", "files", "immediates"] | None
 RevisionLiteral = t.Literal["HEAD", "BASE", "COMMITTED", "PREV"] | None
@@ -125,7 +126,7 @@ class Svn:
         >>> svn.run(['help'])
         "usage: svn <subcommand> [options] [args]..."
         """
-        cli_args = ["svn", *args] if isinstance(args, Sequence) else ["svn", args]
+        cli_args: list[StrOrBytesPath] = ["svn", *_normalize_command_args(args)]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path
@@ -141,9 +142,9 @@ class Svn:
         if trust_server_cert is True:
             cli_args.append("--trust-server_cert")
         if config_dir is not None:
-            cli_args.extend(["--config-dir", str(config_dir)])
+            cli_args.extend(["--config-dir", os.fspath(config_dir)])
         if config_option is not None:
-            cli_args.extend(["--config-option", str(config_option)])
+            cli_args.extend(["--config-option", os.fspath(config_option)])
 
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback
