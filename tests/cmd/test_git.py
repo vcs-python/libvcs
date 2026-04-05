@@ -35,6 +35,15 @@ def test_git_init_basic(tmp_path: pathlib.Path) -> None:
     assert (tmp_path / ".git").is_dir()
 
 
+def test_git_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
+    """Git run() should not split scalar command strings."""
+    repo = git.Git(path=tmp_path)
+
+    result = repo.run("--version")
+
+    assert result.startswith("git version ")
+
+
 def test_git_init_bare(tmp_path: pathlib.Path) -> None:
     """Test git init with bare repository."""
     repo = git.Git(path=tmp_path)
