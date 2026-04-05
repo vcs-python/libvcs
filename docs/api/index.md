@@ -37,7 +37,7 @@ One call to fetch or create a working copy.
 :::
 
 :::{grid-item-card} pytest Plugin
-:link: api/pytest-plugin
+:link: /api/pytest-plugin
 :link-type: doc
 Session-scoped fixtures for Git, SVN, and Mercurial
 repositories. Drop-in test isolation.

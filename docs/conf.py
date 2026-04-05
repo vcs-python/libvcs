@@ -30,7 +30,10 @@ conf = merge_sphinx_config(
     source_branch="master",
     light_logo="img/libvcs.svg",
     dark_logo="img/libvcs-dark.svg",
-    extra_extensions=["sphinx.ext.todo"],
+    extra_extensions=[
+        "sphinx.ext.todo",
+        "sphinx_autodoc_pytest_fixtures",
+    ],
     intersphinx_mapping={
         "py": ("https://docs.python.org/3", None),
         "pip": ("https://pip.pypa.io/en/latest/", None),
