@@ -20,6 +20,27 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### What's new
+
+#### pytest plugin: Improve typings (#521)
+
+The pytest plugin now exports concise public TypeAliases in place of
+the private `_ENV` type that was leaking into public signatures:
+
+- `Env` — public alias for the subprocess environment mapping type;
+  replaces `_ENV` in all `env:` parameters across Protocol classes and
+  helper functions
+- `GitCommitEnvVars` — alias for `dict[str, str]`, the type returned
+  by the `git_commit_envvars` fixture
+
+`CreateRepoPytestFixtureFn` is renamed to `CreateRepoFn`. Update any
+`TYPE_CHECKING` imports accordingly.
+
+### Documentation
+
+- pytest plugin: `CreateRepoFn` and `CreateRepoPostInitFn` now render
+  as hyperlinks in the fixture summary table (#521)
+
 ## libvcs 0.39.0 (2026-02-07)
 
 ### New features
