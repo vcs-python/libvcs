@@ -66,7 +66,7 @@ def vcs_user(vcs_name: str, vcs_email: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def git_commit_envvars(vcs_name: str, vcs_email: str) -> _ENV:
+def git_commit_envvars(vcs_name: str, vcs_email: str) -> GitCommitEnvVars:
     """Return environment variables for `git commit`.
 
     For some reason, `GIT_CONFIG` via {func}`set_gitconfig` doesn't work for `git
@@ -266,6 +266,9 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
 
 
 InitCmdArgs: t.TypeAlias = list[str] | None
+GitCommitEnvVars: t.TypeAlias = dict[str, str]
+"""Environment variable mapping passed to ``git commit`` subprocess calls."""
+Env: t.TypeAlias = _ENV
 
 
 class CreateRepoPostInitFn(t.Protocol):
@@ -274,13 +277,13 @@ class CreateRepoPostInitFn(t.Protocol):
     def __call__(
         self,
         remote_repo_path: pathlib.Path,
-        env: _ENV | None = None,
+        env: Env | None = None,
     ) -> None:
         """Ran after creating a repo from pytest fixture."""
         ...
 
 
-class CreateRepoPytestFixtureFn(t.Protocol):
+class CreateRepoFn(t.Protocol):
     """Typing for VCS pytest fixture callback."""
 
     def __call__(
@@ -301,7 +304,7 @@ def _create_git_remote_repo(
     remote_repo_path: pathlib.Path,
     remote_repo_post_init: CreateRepoPostInitFn | None = None,
     init_cmd_args: InitCmdArgs = DEFAULT_GIT_REMOTE_REPO_CMD_ARGS,
-    env: _ENV | None = None,
+    env: Env | None = None,
 ) -> pathlib.Path:
     if init_cmd_args is None:
         init_cmd_args = []
@@ -374,7 +377,7 @@ def empty_git_repo(
 def create_git_remote_bare_repo(
     remote_repos_path: pathlib.Path,
     empty_git_bare_repo: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Return factory to create git remote repo to for clone / push purposes."""
 
     def fn(
@@ -403,7 +406,7 @@ def create_git_remote_bare_repo(
 def create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_git_repo: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Return factory to create git remote repo to for clone / push purposes."""
 
     def fn(
@@ -434,7 +437,7 @@ def create_git_remote_repo(
 
 def git_remote_repo_single_commit_post_init(
     remote_repo_path: pathlib.Path,
-    env: _ENV | None = None,
+    env: Env | None = None,
 ) -> None:
     """Post-initialization: Create a test git repo with a single commit."""
     testfile_filename = "testfile.test"
@@ -454,9 +457,9 @@ def git_remote_repo_single_commit_post_init(
 @pytest.fixture(scope="session")
 @skip_if_git_missing
 def git_remote_repo(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     gitconfig: pathlib.Path,
-    git_commit_envvars: _ENV,
+    git_commit_envvars: GitCommitEnvVars,
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
     # TODO: Cache the effect of of this in a session-based repo
@@ -490,7 +493,7 @@ def _create_svn_remote_repo(
 
 def svn_remote_repo_single_commit_post_init(
     remote_repo_path: pathlib.Path,
-    env: _ENV | None = None,
+    env: Env | None = None,
 ) -> None:
     """Post-initialization: Create a test SVN repo with a single commit."""
     assert remote_repo_path.exists()
@@ -541,7 +544,7 @@ def empty_svn_repo(
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_svn_repo: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
@@ -571,7 +574,7 @@ def create_svn_remote_repo(
 @pytest.fixture(scope="session")
 @skip_if_svn_missing
 def svn_remote_repo(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
     return create_svn_remote_repo()
@@ -580,7 +583,7 @@ def svn_remote_repo(
 @pytest.fixture(scope="session")
 @skip_if_svn_missing
 def svn_remote_repo_with_files(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
     repo_path = create_svn_remote_repo()
@@ -610,7 +613,7 @@ def _create_hg_remote_repo(
 
 def hg_remote_repo_single_commit_post_init(
     remote_repo_path: pathlib.Path,
-    env: _ENV | None = None,
+    env: Env | None = None,
 ) -> None:
     """Post-initialization: Create a test mercurial repo with a single commit."""
     testfile_filename = "testfile.test"
@@ -647,7 +650,7 @@ def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_hg_repo: pathlib.Path,
     hgconfig: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
@@ -681,7 +684,7 @@ def create_hg_remote_repo(
 @skip_if_hg_missing
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    create_hg_remote_repo: CreateRepoFn,
     hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
@@ -787,11 +790,11 @@ def add_doctest_fixtures(
     doctest_namespace: dict[str, t.Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
-    git_commit_envvars: _ENV,
+    git_commit_envvars: GitCommitEnvVars,
     hgconfig: pathlib.Path,
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
+    create_svn_remote_repo: CreateRepoFn,
+    create_hg_remote_repo: CreateRepoFn,
     git_repo: pathlib.Path,
 ) -> None:
     """Harness pytest fixtures to pytest's doctest namespace."""

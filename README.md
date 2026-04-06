@@ -134,11 +134,11 @@ Writing a tool that interacts with VCS? Use our fixtures to keep your tests clea
 
 ```python
 import pathlib
-from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+from libvcs.pytest_plugin import CreateRepoFn
 from libvcs.sync.git import GitSync
 
 def test_my_git_tool(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path
 ):
     # Spin up a real, temporary Git server

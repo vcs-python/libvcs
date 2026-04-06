@@ -41,3 +41,17 @@ def setup(
     pass
 ```
 :::
+
+## Types
+
+```{eval-rst}
+.. autodata:: libvcs.pytest_plugin.GitCommitEnvVars
+
+.. autoclass:: libvcs.pytest_plugin.CreateRepoFn
+   :special-members: __call__
+   :exclude-members: __init__, _abc_impl, _is_protocol
+
+.. autoclass:: libvcs.pytest_plugin.CreateRepoPostInitFn
+   :special-members: __call__
+   :exclude-members: __init__, _abc_impl, _is_protocol
+```

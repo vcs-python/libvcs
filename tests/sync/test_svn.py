@@ -14,7 +14,7 @@ from libvcs.sync.svn import SvnSync
 if t.TYPE_CHECKING:
     import pathlib
 
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+    from libvcs.pytest_plugin import CreateRepoFn
 
 if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
@@ -60,7 +60,7 @@ def test_svn_sync_with_files(
 
 
 def test_repo_svn_remote_checkout(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -79,7 +79,7 @@ def test_repo_svn_remote_checkout(
 
 
 def test_update_repo_checkout_failure_returns_sync_result(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
