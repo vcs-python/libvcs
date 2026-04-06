@@ -7,7 +7,7 @@ import sys
 import typing as t
 
 if t.TYPE_CHECKING:
-    from docutils import nodes
+    from docutils import nodes  # type: ignore[import-untyped]
     from sphinx import addnodes
     from sphinx.application import Sphinx
     from sphinx.domains.python import PythonDomain
@@ -76,7 +76,7 @@ def _on_missing_class_reference(
 
     py_domain: PythonDomain = env.get_domain("py")  # type: ignore[assignment]
     target = node.get("reftarget", "")
-    matches = py_domain.find_obj(env, "", "", target, None, 1)
+    matches = py_domain.find_obj(env, "", "", target, None, 1)  # type: ignore[attr-defined,unused-ignore]
     if not matches:
         return None
     _name, obj_entry = matches[0]
