@@ -10,6 +10,7 @@ if t.TYPE_CHECKING:
     from docutils import nodes
     from sphinx import addnodes
     from sphinx.application import Sphinx
+    from sphinx.domains.python import PythonDomain
     from sphinx.environment import BuildEnvironment
 
 from gp_sphinx.config import make_linkcode_resolve, merge_sphinx_config
@@ -73,7 +74,7 @@ def _on_missing_class_reference(
         return None
     from sphinx.util.nodes import make_refnode
 
-    py_domain = env.get_domain("py")
+    py_domain: PythonDomain = env.get_domain("py")  # type: ignore[assignment]
     target = node.get("reftarget", "")
     matches = py_domain.find_obj(env, "", "", target, None, 1)
     if not matches:
