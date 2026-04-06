@@ -267,6 +267,7 @@ def unique_repo_name(remote_repos_path: pathlib.Path, max_retries: int = 15) -> 
 
 InitCmdArgs: t.TypeAlias = list[str] | None
 GitCommitEnvVars: t.TypeAlias = dict[str, str]
+"""Environment variable mapping passed to ``git commit`` subprocess calls."""
 Env: t.TypeAlias = _ENV
 
 
