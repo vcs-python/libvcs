@@ -12,7 +12,7 @@ from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
 
 if t.TYPE_CHECKING:
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, GitCommitEnvVars
+    from libvcs.pytest_plugin import CreateRepoFn, GitCommitEnvVars
     from libvcs.sync.git import GitSync
 
 
@@ -956,7 +956,7 @@ REMOTE_ADD_PARAM_FIXTURES: list[RemoteAddParamFixture] = [
 )
 def test_remote_manager_add_params(
     git_repo: GitSync,
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     test_id: str,
     fetch: bool | None,
     track: str | None,

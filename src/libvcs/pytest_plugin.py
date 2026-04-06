@@ -282,7 +282,7 @@ class CreateRepoPostInitFn(t.Protocol):
         ...
 
 
-class CreateRepoPytestFixtureFn(t.Protocol):
+class CreateRepoFn(t.Protocol):
     """Typing for VCS pytest fixture callback."""
 
     def __call__(
@@ -376,7 +376,7 @@ def empty_git_repo(
 def create_git_remote_bare_repo(
     remote_repos_path: pathlib.Path,
     empty_git_bare_repo: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Return factory to create git remote repo to for clone / push purposes."""
 
     def fn(
@@ -405,7 +405,7 @@ def create_git_remote_bare_repo(
 def create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_git_repo: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Return factory to create git remote repo to for clone / push purposes."""
 
     def fn(
@@ -456,7 +456,7 @@ def git_remote_repo_single_commit_post_init(
 @pytest.fixture(scope="session")
 @skip_if_git_missing
 def git_remote_repo(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     gitconfig: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
 ) -> pathlib.Path:
@@ -543,7 +543,7 @@ def empty_svn_repo(
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_svn_repo: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
@@ -573,7 +573,7 @@ def create_svn_remote_repo(
 @pytest.fixture(scope="session")
 @skip_if_svn_missing
 def svn_remote_repo(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
     return create_svn_remote_repo()
@@ -582,7 +582,7 @@ def svn_remote_repo(
 @pytest.fixture(scope="session")
 @skip_if_svn_missing
 def svn_remote_repo_with_files(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
     repo_path = create_svn_remote_repo()
@@ -649,7 +649,7 @@ def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_hg_repo: pathlib.Path,
     hgconfig: pathlib.Path,
-) -> CreateRepoPytestFixtureFn:
+) -> CreateRepoFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
     def fn(
@@ -683,7 +683,7 @@ def create_hg_remote_repo(
 @skip_if_hg_missing
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    create_hg_remote_repo: CreateRepoFn,
     hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
@@ -791,9 +791,9 @@ def add_doctest_fixtures(
     set_home: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
     hgconfig: pathlib.Path,
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
+    create_svn_remote_repo: CreateRepoFn,
+    create_hg_remote_repo: CreateRepoFn,
     git_repo: pathlib.Path,
 ) -> None:
     """Harness pytest fixtures to pytest's doctest namespace."""

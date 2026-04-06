@@ -16,7 +16,7 @@ from libvcs.sync.base import SyncResult
 from libvcs.sync.hg import HgSync
 
 if t.TYPE_CHECKING:
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+    from libvcs.pytest_plugin import CreateRepoFn
 
 if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
@@ -113,7 +113,7 @@ def test_vulnerability_2022_03_12_command_injection(
 
 def test_update_repo_pull_failure_returns_sync_result(
     projects_path: pathlib.Path,
-    create_hg_remote_repo: CreateRepoPytestFixtureFn,
+    create_hg_remote_repo: CreateRepoFn,
 ) -> None:
     """Test that a deleted remote in update_repo() returns SyncResult with error."""
     repo_name = "my_hg_error_project"

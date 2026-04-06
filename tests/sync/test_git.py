@@ -26,7 +26,7 @@ from libvcs.sync.git import (
 if t.TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+    from libvcs.pytest_plugin import CreateRepoFn
 
 if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
@@ -182,7 +182,7 @@ def test_repo_update_handle_cases(
 )
 def test_repo_update_stash_cases(
     tmp_path: pathlib.Path,
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     mocker: MockerFixture,
     has_untracked_files: bool,
     needs_stash: bool,
@@ -551,7 +551,7 @@ def test_remotes_update_repo(
     lazy_constructor_options: ProjectTestFactoryLazyKwargs,
     lazy_remote_dict: ProjectTestFactoryRemoteLazyExpected,
     lazy_remote_expected: ProjectTestFactoryRemoteLazyExpected,
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
 ) -> None:
     """Tests GitSync with updated remotes."""
     repo_name = "myrepo"
@@ -911,7 +911,7 @@ def test_GitRemote__from_stdout_c(fixture: str, expected_result: GitStatus) -> N
 
 
 def test_repo_git_remote_checkout(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -930,7 +930,7 @@ def test_repo_git_remote_checkout(
 
 
 def test_update_repo_success_returns_sync_result(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
 ) -> None:
     """Test that a successful update_repo() returns SyncResult with ok=True."""
@@ -957,7 +957,7 @@ def test_update_repo_success_returns_sync_result(
 
 
 def test_update_repo_fetch_failure_returns_sync_result(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
 ) -> None:
     """Test that a fetch failure in update_repo() returns SyncResult with error."""
@@ -998,7 +998,7 @@ def test_update_repo_fetch_failure_returns_sync_result(
 
 
 def test_update_repo_checkout_failure_returns_sync_result(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
 ) -> None:
     """Test that a checkout failure in update_repo() returns SyncResult with error."""
@@ -1031,7 +1031,7 @@ def test_update_repo_checkout_failure_returns_sync_result(
 
 
 def test_update_repo_rev_list_head_failure_returns_sync_result(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
 ) -> None:
     """update_repo() records rev-list HEAD failure in SyncResult."""
@@ -1065,7 +1065,7 @@ def test_update_repo_rev_list_head_failure_returns_sync_result(
 
 
 def test_update_repo_submodule_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1118,7 +1118,7 @@ def test_update_repo_submodule_failure_recorded(
 
 
 def test_update_repo_symbolic_ref_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
 ) -> None:
     """Test that symbolic_ref failure on detached HEAD is recorded in SyncResult.
@@ -1158,7 +1158,7 @@ def test_update_repo_symbolic_ref_failure_recorded(
 
 
 def test_update_repo_remote_ref_not_found_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
 ) -> None:
     """Test that GitRemoteRefNotFound is caught and recorded in SyncResult.
@@ -1200,7 +1200,7 @@ def test_update_repo_remote_ref_not_found_recorded(
 
 
 def test_update_repo_obtain_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1237,7 +1237,7 @@ def test_update_repo_obtain_failure_recorded(
 
 
 def test_update_repo_set_remotes_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1281,7 +1281,7 @@ def test_update_repo_set_remotes_failure_recorded(
 
 
 def test_update_repo_remote_name_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1324,7 +1324,7 @@ def test_update_repo_remote_name_failure_recorded(
 
 
 def test_update_repo_status_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1385,7 +1385,7 @@ def test_update_repo_status_failure_recorded(
 
 
 def test_update_repo_stash_save_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1451,7 +1451,7 @@ def test_update_repo_stash_save_failure_recorded(
 
 
 def test_update_repo_rebase_invalid_upstream_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1519,7 +1519,7 @@ def test_update_repo_rebase_invalid_upstream_recorded(
 
 
 def test_update_repo_rebase_conflict_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
@@ -1587,7 +1587,7 @@ def test_update_repo_rebase_conflict_recorded(
 
 
 def test_update_repo_stash_pop_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:

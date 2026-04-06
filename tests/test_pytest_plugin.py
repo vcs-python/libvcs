@@ -15,13 +15,13 @@ from libvcs._internal.run import run
 if t.TYPE_CHECKING:
     import pathlib
 
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, GitCommitEnvVars
+    from libvcs.pytest_plugin import CreateRepoFn, GitCommitEnvVars
     from libvcs.sync.git import GitSync
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
 def test_create_git_remote_repo(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -34,7 +34,7 @@ def test_create_git_remote_repo(
 
 @pytest.mark.skipif(not shutil.which("svn"), reason="svn is not available")
 def test_create_svn_remote_repo(
-    create_svn_remote_repo: CreateRepoPytestFixtureFn,
+    create_svn_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -112,13 +112,13 @@ import pathlib
 
 from libvcs.sync.git import GitSync
 from libvcs.pytest_plugin import (
-    CreateRepoPytestFixtureFn,
+    CreateRepoFn,
     git_remote_repo_single_commit_post_init
 )
 
 
 def test_repo_git_remote_repo_and_sync(
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
 ) -> None:
@@ -136,7 +136,7 @@ def test_repo_git_remote_repo_and_sync(
 
 
 def test_git_bare_repo_sync_and_commit(
-    create_git_remote_bare_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_bare_repo: CreateRepoFn,
     projects_path: pathlib.Path,
 ) -> None:
     git_server = create_git_remote_bare_repo()
@@ -264,7 +264,7 @@ def test_gitconfig_submodule_file_protocol(
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
 def test_git_repo_fixture_submodule_file_protocol(
     git_repo: GitSync,
-    create_git_remote_repo: CreateRepoPytestFixtureFn,
+    create_git_remote_repo: CreateRepoFn,
     git_commit_envvars: GitCommitEnvVars,
     user_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
