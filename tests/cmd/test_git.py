@@ -12,7 +12,7 @@ from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
 
 if t.TYPE_CHECKING:
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, GitCommitEnvVars
     from libvcs.sync.git import GitSync
 
 
@@ -2287,7 +2287,7 @@ def test_reflog_entry_delete(git_repo: GitSync) -> None:
 @pytest.fixture
 def submodule_repo(
     tmp_path: pathlib.Path,
-    git_commit_envvars: dict[str, str],
+    git_commit_envvars: GitCommitEnvVars,
     set_gitconfig: pathlib.Path,
 ) -> git.Git:
     """Create a git repository to use as a submodule source."""

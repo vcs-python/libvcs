@@ -15,7 +15,7 @@ from libvcs._internal.run import run
 if t.TYPE_CHECKING:
     import pathlib
 
-    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn
+    from libvcs.pytest_plugin import CreateRepoPytestFixtureFn, GitCommitEnvVars
     from libvcs.sync.git import GitSync
 
 
@@ -265,7 +265,7 @@ def test_gitconfig_submodule_file_protocol(
 def test_git_repo_fixture_submodule_file_protocol(
     git_repo: GitSync,
     create_git_remote_repo: CreateRepoPytestFixtureFn,
-    git_commit_envvars: dict[str, str],
+    git_commit_envvars: GitCommitEnvVars,
     user_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
