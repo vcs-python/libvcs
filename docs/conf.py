@@ -39,6 +39,7 @@ conf = merge_sphinx_config(
     light_logo="img/libvcs.svg",
     dark_logo="img/libvcs-dark.svg",
     extra_extensions=[
+        "sphinx_autodoc_api_style",
         "sphinx.ext.todo",
         "sphinx_autodoc_pytest_fixtures",
     ],
