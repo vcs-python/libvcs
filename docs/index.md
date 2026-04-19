@@ -107,4 +107,5 @@ internals/index
 project/index
 history
 migration
+GitHub <https://github.com/vcs-python/libvcs>
 ```
