@@ -10,7 +10,10 @@ from .sync.git import GitSync
 from .sync.hg import HgSync
 from .sync.svn import SvnSync
 
+from .__about__ import __version__
+
 __all__ = [
+    "__version__",
     "BaseSync",
     "CmdLoggingAdapter",
     "GitSync",
