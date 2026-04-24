@@ -1666,3 +1666,46 @@ def test_sync_result_multiple_errors() -> None:
     assert len(result.errors) == 2
     assert result.errors[0].step == "fetch"
     assert result.errors[1].step == "checkout"
+
+
+def test_remote_is_fast_for_repos_with_many_refs(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+) -> None:
+    """``GitSync.remote`` stays O(1) even when the repo has thousands of refs.
+
+    The prior implementation called ``git remote show -n origin`` whose output
+    enumerates every remote-tracking ref. For repositories like openai/codex
+    (2,400+ branches) that stream of lines piped through the subprocess
+    progress callback produced the appearance of a hang during vcspull sync.
+
+    This test seeds synthetic refs/remotes/origin/branch-N entries and asserts
+    that ``remote('origin')`` returns promptly. A generous 5-second budget is
+    enough to catch the pathological old path (many seconds on WSL2) without
+    flaking on slow CI.
+    """
+    import time
+
+    # Point origin at a commit we already have so fake refs don't dangle.
+    head_sha = run(["git", "rev-parse", "HEAD"], cwd=git_repo.path).strip()
+
+    # Seed 500 fake remote-tracking refs. ``git update-ref`` is quick but the
+    # cumulative count is what would blow up ``git remote show -n``.
+    for i in range(500):
+        run(
+            [
+                "git",
+                "update-ref",
+                f"refs/remotes/origin/fake-branch-{i:04d}",
+                head_sha,
+            ],
+            cwd=git_repo.path,
+        )
+
+    started = time.monotonic()
+    remote = git_repo.remote("origin")
+    elapsed = time.monotonic() - started
+
+    assert remote is not None
+    assert remote.fetch_url, "fetch URL must be populated"
+    assert elapsed < 5.0, f"remote() too slow: {elapsed:.2f}s with 500 fake refs"

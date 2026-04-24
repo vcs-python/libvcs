@@ -673,25 +673,34 @@ class GitSync(BaseSync):
         Returns
         -------
         Remote name and url in tuple form
+
+        Notes
+        -----
+        Uses ``git remote -v`` (via the cached remote manager) instead of
+        ``git remote show -n``. ``git remote show`` also enumerates every
+        remote-tracking ref, which pipes thousands of lines through the
+        subprocess progress callback for repositories with large branch
+        counts (e.g. ``openai/codex`` at 2,400+ refs) and can appear to
+        hang. ``git remote -v`` is O(remotes) and cannot block on ref
+        enumeration.
         """
-        try:
-            ret = self.cmd.remotes.show(
-                name=name,
-                no_query_remotes=True,
-                log_in_real_time=True,
-            )
-            lines = ret.split("\n")
-            remote_fetch_url = lines[1].replace("Fetch URL: ", "").strip()
-            remote_push_url = lines[2].replace("Push  URL: ", "").strip()
-            if name not in {remote_fetch_url, remote_push_url}:
-                return GitRemote(
-                    name=name,
-                    fetch_url=remote_fetch_url,
-                    push_url=remote_push_url,
-                )
-        except exc.LibVCSException:
-            pass
-        return None
+        remote_cmd = self.cmd.remotes.get(remote_name=name, default=None)
+        if remote_cmd is None:
+            return None
+
+        fetch_url = (remote_cmd.fetch_url or "").strip()
+        if not fetch_url:
+            return None
+
+        # When no explicit ``remote.<name>.pushurl`` is set, git itself falls
+        # back to the fetch URL -- mirror that so callers always see a URL.
+        push_url = (remote_cmd.push_url or fetch_url).strip()
+
+        return GitRemote(
+            name=name,
+            fetch_url=fetch_url,
+            push_url=push_url,
+        )
 
     def set_remote(
         self,
