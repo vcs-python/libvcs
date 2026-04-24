@@ -10,11 +10,14 @@ This is an internal API not covered by versioning policy.
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import logging
 import os
+import selectors
 import subprocess
 import sys
+import time
 import typing as t
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 
@@ -147,6 +150,7 @@ def run(
     log_in_real_time: bool = False,
     check_returncode: bool = True,
     callback: ProgressCallbackProtocol | None = None,
+    timeout: float | None = None,
 ) -> str:
     """Run a command.
 
@@ -185,6 +189,13 @@ def run(
                 sys.stdout.write(output)
                 sys.stdout.flush()
             run(['git', 'pull'], callback=progress_cb)
+
+    timeout : float, optional
+        Seconds to wait before terminating the subprocess. When the deadline is
+        exceeded the process is sent ``SIGTERM`` (then ``SIGKILL`` after a short
+        grace period) and :class:`libvcs.exc.CommandTimeoutError` is raised with
+        any output collected so far. ``None`` (default) disables the deadline and
+        preserves the legacy behaviour of blocking until the process exits.
 
     Upcoming changes
     ----------------
@@ -240,13 +251,21 @@ def run(
     # connected to a pseudo-TTY, which would require significant changes
     # to how subprocess execution is handled.
 
-    while code is None:
-        code = proc.poll()
+    if timeout is None:
+        while code is None:
+            code = proc.poll()
 
-        if callback and callable(callback) and proc.stderr is not None:
-            line = console_to_str(proc.stderr.read(128))
-            if line:
-                callback(output=line, timestamp=datetime.datetime.now())
+            if callback and callable(callback) and proc.stderr is not None:
+                line = console_to_str(proc.stderr.read(128))
+                if line:
+                    callback(output=line, timestamp=datetime.datetime.now())
+    else:
+        code = _wait_with_deadline(
+            proc,
+            deadline=time.monotonic() + timeout,
+            callback=callback,
+            cmd=_stringify_command(normalized_args),
+        )
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now())
 
@@ -272,3 +291,109 @@ def run(
             cmd=_stringify_command(normalized_args),
         )
     return output
+
+
+#: Grace period after ``terminate()`` before escalating to ``kill()``.
+_TIMEOUT_KILL_GRACE_SECONDS = 0.5
+
+#: Upper bound on the ``selectors.select()`` wait inside the deadline loop.
+_TIMEOUT_POLL_INTERVAL_SECONDS = 0.1
+
+
+def _wait_with_deadline(
+    proc: subprocess.Popen[bytes],
+    *,
+    deadline: float,
+    callback: ProgressCallbackProtocol | None,
+    cmd: str | list[str],
+) -> int:
+    """Wait for ``proc`` to exit, enforcing a wall-clock deadline.
+
+    Uses :mod:`selectors` so the wait unblocks when stderr is readable, when the
+    child exits, or when the per-iteration poll interval expires -- whichever
+    comes first. When the deadline is exceeded, the subprocess is reaped and
+    :class:`libvcs.exc.CommandTimeoutError` is raised with whatever output was
+    collected before the timeout.
+    """
+    sel = selectors.DefaultSelector()
+    stderr_stream = proc.stderr
+    if stderr_stream is not None:
+        # Non-blocking reads so the selector loop never stalls on a short read
+        # from a stuck child (e.g. git waiting on network or credentials).
+        try:
+            os.set_blocking(stderr_stream.fileno(), False)
+        except (OSError, ValueError):
+            stderr_stream = None
+        else:
+            sel.register(stderr_stream, selectors.EVENT_READ)
+
+    partial_chunks: list[bytes] = []
+    try:
+        while True:
+            code = proc.poll()
+            if code is not None:
+                return code
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                _terminate_process(proc)
+                drained = _drain_stream(stderr_stream) + _drain_stream(proc.stdout)
+                message = console_to_str(b"".join(partial_chunks) + drained)
+                raise exc.CommandTimeoutError(
+                    output=message,
+                    returncode=proc.returncode,
+                    cmd=cmd,
+                )
+
+            wait = min(_TIMEOUT_POLL_INTERVAL_SECONDS, remaining)
+            events = sel.select(timeout=wait) if stderr_stream is not None else ()
+            if not events:
+                continue
+
+            for key, _mask in events:
+                if key.fileobj is not stderr_stream:
+                    continue
+                try:
+                    chunk = stderr_stream.read(128)
+                except (BlockingIOError, OSError):
+                    chunk = b""
+                if not chunk:
+                    continue
+                partial_chunks.append(chunk)
+                if callback is not None and callable(callback):
+                    callback(
+                        output=console_to_str(chunk),
+                        timestamp=datetime.datetime.now(),
+                    )
+    finally:
+        sel.close()
+
+
+def _terminate_process(proc: subprocess.Popen[bytes]) -> None:
+    """Terminate ``proc`` gracefully, falling back to ``kill`` on the grace."""
+    if proc.poll() is not None:
+        return
+    try:
+        proc.terminate()
+    except (OSError, ProcessLookupError):
+        return
+    try:
+        proc.wait(timeout=_TIMEOUT_KILL_GRACE_SECONDS)
+    except subprocess.TimeoutExpired:
+        with contextlib.suppress(OSError, ProcessLookupError):
+            proc.kill()
+        # If the child is still unreachable after SIGKILL, bail rather than
+        # block forever -- we've already signalled the user-facing timeout.
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            proc.wait(timeout=_TIMEOUT_KILL_GRACE_SECONDS)
+
+
+def _drain_stream(stream: t.IO[bytes] | None) -> bytes:
+    """Best-effort read of any remaining bytes from a subprocess pipe."""
+    if stream is None:
+        return b""
+    try:
+        data = stream.read() or b""
+    except (BlockingIOError, OSError, ValueError):
+        data = b""
+    return data
