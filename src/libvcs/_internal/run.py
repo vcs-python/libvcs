@@ -342,6 +342,15 @@ def _wait_with_deadline(
         ``None`` when the corresponding pipe could not be put into non-
         blocking mode (Windows pipes, unusual fd types) -- in that case the
         caller should fall back to reading the pipe directly.
+
+    Notes
+    -----
+    The progress ``callback`` is invoked for ``stderr`` chunks only,
+    matching the legacy non-timeout codepath. ``stdout`` is drained into
+    the returned buffer to prevent the child from blocking on a full pipe,
+    but its chunks are not forwarded to the callback in real time. Callers
+    that want streaming ``stdout`` should redirect it themselves
+    (e.g. ``stdout=`` to a file) rather than relying on ``callback``.
     """
     sel = selectors.DefaultSelector()
     buffers: dict[t.IO[bytes], list[bytes]] = {}
