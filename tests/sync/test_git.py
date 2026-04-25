@@ -7,6 +7,7 @@ import pathlib
 import random
 import shutil
 import textwrap
+import time
 import typing as t
 from collections.abc import Callable
 
@@ -1684,8 +1685,6 @@ def test_remote_is_fast_for_repos_with_many_refs(
     enough to catch the pathological old path (many seconds on WSL2) without
     flaking on slow CI.
     """
-    import time
-
     # Point origin at a commit we already have so fake refs don't dangle.
     head_sha = run(["git", "rev-parse", "HEAD"], cwd=git_repo.path).strip()
 

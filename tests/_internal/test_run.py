@@ -85,7 +85,7 @@ def test_run_timeout_captures_partial_stderr_output() -> None:
     assert "first" in excinfo.value.output
 
 
-def test_run_timeout_reaps_child_process() -> None:
+def test_run_timeout_reaps_child_process(monkeypatch: pytest.MonkeyPatch) -> None:
     """Timed-out processes are terminated; no zombies remain in the group."""
     script = "import time; time.sleep(10)"
 
@@ -97,15 +97,13 @@ def test_run_timeout_reaps_child_process() -> None:
         captured["proc"] = proc
         return proc
 
-    # Attribute replacement keeps the test narrow -- we just need a handle on
-    # the Popen that ``run`` created so we can assert the child was actually
-    # reaped rather than abandoned (no zombie left behind).
-    subprocess.Popen = _capturing_popen  # type: ignore[misc,assignment]
-    try:
-        with pytest.raises(exc.CommandTimeoutError):
-            run([sys.executable, "-c", script], timeout=0.3)
-    finally:
-        subprocess.Popen = original_popen  # type: ignore[misc]
+    # ``monkeypatch.setattr`` auto-restores even if the test body raises and
+    # is safe under ``pytest-xdist`` parallel runs, unlike a hand-rolled
+    # try/finally around a global assignment.
+    monkeypatch.setattr(subprocess, "Popen", _capturing_popen)
+
+    with pytest.raises(exc.CommandTimeoutError):
+        run([sys.executable, "-c", script], timeout=0.3)
 
     proc = captured["proc"]
     # ``returncode`` is only populated once ``wait`` succeeds, so a populated
