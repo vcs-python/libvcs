@@ -14,17 +14,13 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.40.x (unreleased)
+## libvcs 0.41.x (unreleased)
 
 <!-- KEEP THIS PLACEHOLDER - DO NOT REMOVE OR MODIFY THIS LINE -->
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
-### Documentation
-
-- Visual improvements to API docs from [gp-sphinx](https://gp-sphinx.git-pull.com)-based Sphinx packages (#522)
-- Bump gp-sphinx docs stack to v0.0.1a8 (#523)
-
+## libvcs 0.40.0 (2026-04-25)
 
 ### What's new
 
@@ -61,6 +57,8 @@ ref-walking git command that was load-bearing for the URL lookup.
 
 - pytest plugin: `CreateRepoFn` and `CreateRepoPostInitFn` now render
   as hyperlinks in the fixture summary table (#521)
+- Visual improvements to API docs from [gp-sphinx](https://gp-sphinx.git-pull.com)-based Sphinx packages (#522)
+- Bump gp-sphinx docs stack to v0.0.1a8 (#523)
 
 ## libvcs 0.39.0 (2026-02-07)
 
