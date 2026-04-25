@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import typing as t
+import unittest.mock
 
 import pytest
 
@@ -254,6 +255,50 @@ def test_run_timeout_logs_deadline_exceeded(
     assert hasattr(record, "vcs_cmd")
     cmd_extra = t.cast("str", record.vcs_cmd)
     assert "time.sleep" in cmd_extra
+
+
+def test_terminate_process_warns_when_sigkill_does_not_reap(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A child that resists ``SIGKILL`` surfaces a WARNING with ``vcs_cmd``.
+
+    Reproducing a true uninterruptible (``D`` state on POSIX) child requires
+    kernel fixtures that aren't available in a pytest run, so we substitute
+    a ``MagicMock`` whose ``poll()`` always reports the child alive and
+    whose ``wait()`` always raises ``TimeoutExpired``. That drives both
+    branches inside ``_terminate_process`` -- SIGTERM grace expires
+    (DEBUG escalation log), SIGKILL is sent, the second wait also times
+    out, and the final ``poll() is None`` triggers the WARNING this test
+    asserts on.
+    """
+    fake_proc = unittest.mock.MagicMock(spec=subprocess.Popen)
+    fake_proc.args = ["sleep", "60"]
+    fake_proc.returncode = None
+    fake_proc.poll.return_value = None
+    fake_proc.wait.side_effect = subprocess.TimeoutExpired(
+        cmd=fake_proc.args,
+        timeout=0.05,
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="libvcs._internal.run"):
+        run_module._terminate_process(
+            t.cast("subprocess.Popen[bytes]", fake_proc),
+            "test-cmd",
+        )
+
+    fake_proc.terminate.assert_called_once()
+    fake_proc.kill.assert_called_once()
+
+    warnings = [
+        record
+        for record in caplog.records
+        if record.levelname == "WARNING" and "did not reap" in record.getMessage()
+    ]
+    assert len(warnings) == 1
+    record = warnings[0]
+    assert hasattr(record, "vcs_cmd")
+    cmd_extra = t.cast("str", record.vcs_cmd)
+    assert cmd_extra == "test-cmd"
 
 
 @pytest.mark.skipif(
