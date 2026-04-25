@@ -123,3 +123,68 @@ def test_run_timeout_none_is_the_default() -> None:
     """Omitting ``timeout`` is equivalent to ``timeout=None``."""
     output = run([sys.executable, "-c", "print('default')"], timeout=None)
     assert "default" in output
+
+
+def test_run_timeout_does_not_deadlock_on_chatty_stdout() -> None:
+    """A child filling its stdout pipe must not deadlock the deadline loop.
+
+    The OS pipe buffer is typically 64 KiB on Linux. The child below writes
+    well past that before exiting; if the parent only drained ``stderr``, the
+    child would block on ``write()`` and only ``terminate()`` would unwedge
+    it, losing all the legitimate output.
+    """
+    script = "import sys; sys.stdout.write('x' * 200000); sys.stdout.flush()"
+
+    output = run([sys.executable, "-c", script], timeout=15.0)
+
+    assert len(output) >= 200000
+
+
+def test_run_timeout_preserves_stdout_after_exit() -> None:
+    """Captured stdout from the deadline loop survives back to the caller."""
+    script = "print('preserved'); print('lines')"
+    output = run([sys.executable, "-c", script], timeout=10.0)
+
+    assert "preserved" in output
+    assert "lines" in output
+
+
+def test_run_timeout_captures_partial_stdout_on_timeout() -> None:
+    """Stdout flushed before the deadline appears in ``CommandTimeoutError.output``."""
+    script = (
+        "import sys, time; "
+        "sys.stdout.write('partial-stdout\\n'); "
+        "sys.stdout.flush(); "
+        "time.sleep(10)"
+    )
+
+    with pytest.raises(exc.CommandTimeoutError) as excinfo:
+        run([sys.executable, "-c", script], timeout=0.5)
+
+    assert "partial-stdout" in excinfo.value.output
+
+
+def test_run_timeout_handles_early_stderr_close_without_hanging() -> None:
+    """A child that closes stderr long before exiting must not stall the loop.
+
+    Before the EOF-unregister fix, ``selectors.select`` kept waking on the
+    closed-but-readable stderr fd, the read returned ``b""``, and the loop
+    spun until the deadline. With the unregister, the stream is removed
+    after the first empty read and the loop returns to waiting on the
+    remaining fd or the poll interval.
+    """
+    script = (
+        "import os, sys, time; "
+        "os.close(sys.stderr.fileno()); "
+        "time.sleep(0.2); "
+        "print('done')"
+    )
+    started = time.monotonic()
+
+    output = run([sys.executable, "-c", script], timeout=10.0)
+
+    elapsed = time.monotonic() - started
+    assert "done" in output
+    # An upper bound that's loose enough not to flake but tight enough to
+    # catch a regression where the EOF unregister is undone.
+    assert elapsed < 5.0, f"early-stderr-close path took too long: {elapsed:.2f}s"

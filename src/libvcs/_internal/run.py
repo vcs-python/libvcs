@@ -251,6 +251,8 @@ def run(
     # connected to a pseudo-TTY, which would require significant changes
     # to how subprocess execution is handled.
 
+    timeout_stdout: bytes | None = None
+    timeout_stderr: bytes | None = None
     if timeout is None:
         while code is None:
             code = proc.poll()
@@ -260,7 +262,7 @@ def run(
                 if line:
                     callback(output=line, timestamp=datetime.datetime.now())
     else:
-        code = _wait_with_deadline(
+        code, timeout_stdout, timeout_stderr = _wait_with_deadline(
             proc,
             deadline=time.monotonic() + timeout,
             callback=callback,
@@ -270,17 +272,27 @@ def run(
         callback(output="\r", timestamp=datetime.datetime.now())
 
     if proc.stdout is not None:
+        stdout_lines: list[bytes] = (
+            timeout_stdout.split(b"\n")
+            if timeout_stdout is not None
+            else proc.stdout.readlines()
+        )
         lines: t.Iterable[bytes] = filter(
             None,
-            (line.strip() for line in proc.stdout.readlines()),
+            (line.strip() for line in stdout_lines),
         )
         all_output = console_to_str(b"\n".join(lines))
     else:
         all_output = ""
     if code and proc.stderr is not None:
+        stderr_raw: list[bytes] = (
+            timeout_stderr.split(b"\n")
+            if timeout_stderr is not None
+            else proc.stderr.readlines()
+        )
         stderr_lines: t.Iterable[bytes] = filter(
             None,
-            (line.strip() for line in proc.stderr.readlines()),
+            (line.strip() for line in stderr_raw),
         )
         all_output = console_to_str(b"".join(stderr_lines))
     output = "".join(all_output)
@@ -306,39 +318,82 @@ def _wait_with_deadline(
     deadline: float,
     callback: ProgressCallbackProtocol | None,
     cmd: str | list[str],
-) -> int:
+) -> tuple[int, bytes | None, bytes | None]:
     """Wait for ``proc`` to exit, enforcing a wall-clock deadline.
 
-    Uses :mod:`selectors` so the wait unblocks when stderr is readable, when the
-    child exits, or when the per-iteration poll interval expires -- whichever
-    comes first. When the deadline is exceeded, the subprocess is reaped and
-    :class:`libvcs.exc.CommandTimeoutError` is raised with whatever output was
-    collected before the timeout.
+    Drains both ``stdout`` and ``stderr`` concurrently so a child that fills
+    either kernel pipe buffer (~64 KiB on Linux) cannot deadlock waiting for
+    libvcs to read its output. Uses :mod:`selectors` to unblock when either
+    stream is readable, when the child exits, or when the per-iteration poll
+    interval expires -- whichever comes first.
+
+    When the deadline is exceeded the subprocess is reaped and
+    :class:`libvcs.exc.CommandTimeoutError` is raised with the bytes captured
+    before the timeout. Otherwise the captured stdout/stderr are returned to
+    the caller alongside the exit code so they can be reused without re-
+    reading the now-drained pipes.
+
+    Returns
+    -------
+    tuple[int, bytes | None, bytes | None]
+        ``(returncode, stdout_bytes, stderr_bytes)``. A byte buffer is
+        ``None`` when the corresponding pipe could not be put into non-
+        blocking mode (Windows pipes, unusual fd types) -- in that case the
+        caller should fall back to reading the pipe directly.
     """
     sel = selectors.DefaultSelector()
-    stderr_stream = proc.stderr
-    if stderr_stream is not None:
-        # Non-blocking reads so the selector loop never stalls on a short read
-        # from a stuck child (e.g. git waiting on network or credentials).
-        try:
-            os.set_blocking(stderr_stream.fileno(), False)
-        except (OSError, ValueError):
-            stderr_stream = None
-        else:
-            sel.register(stderr_stream, selectors.EVENT_READ)
+    buffers: dict[t.IO[bytes], list[bytes]] = {}
+    registered: set[t.IO[bytes]] = set()
+    fds_to_restore: list[int] = []
 
-    partial_chunks: list[bytes] = []
+    for stream in (proc.stdout, proc.stderr):
+        if stream is None:
+            continue
+        # Non-blocking reads so the selector loop never stalls on a short read
+        # and a chatty child cannot fill a pipe buffer and wedge itself.
+        try:
+            fd = stream.fileno()
+            os.set_blocking(fd, False)
+        except (OSError, ValueError):
+            continue
+        sel.register(stream, selectors.EVENT_READ)
+        buffers[stream] = []
+        registered.add(stream)
+        fds_to_restore.append(fd)
+
+    code: int | None = None
     try:
         while True:
             code = proc.poll()
             if code is not None:
-                return code
+                # Final drain: data written between the last ``select()`` wake
+                # and the child's exit would otherwise be lost on the early
+                # return. Only drain streams we put into non-blocking mode.
+                for stream in list(registered):
+                    trailing = _drain_stream(stream)
+                    if trailing:
+                        buffers[stream].append(trailing)
+                        if (
+                            stream is proc.stderr
+                            and callback is not None
+                            and callable(callback)
+                        ):
+                            callback(
+                                output=console_to_str(trailing),
+                                timestamp=datetime.datetime.now(),
+                            )
+                break
 
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 _terminate_process(proc)
-                drained = _drain_stream(stderr_stream) + _drain_stream(proc.stdout)
-                message = console_to_str(b"".join(partial_chunks) + drained)
+                for stream in list(registered):
+                    trailing = _drain_stream(stream)
+                    if trailing:
+                        buffers[stream].append(trailing)
+                stdout_data = _join_buffer(buffers, proc.stdout)
+                stderr_data = _join_buffer(buffers, proc.stderr)
+                message = console_to_str((stdout_data or b"") + (stderr_data or b""))
                 raise exc.CommandTimeoutError(
                     output=message,
                     returncode=proc.returncode,
@@ -346,27 +401,58 @@ def _wait_with_deadline(
                 )
 
             wait = min(_TIMEOUT_POLL_INTERVAL_SECONDS, remaining)
-            events = sel.select(timeout=wait) if stderr_stream is not None else ()
+            if not registered:
+                # No streams to select on (e.g. ``os.set_blocking`` failed on
+                # Windows pipes). Yield the CPU explicitly instead of busy-
+                # looping until the deadline or process exit.
+                time.sleep(wait)
+                continue
+
+            events = sel.select(timeout=wait)
             if not events:
                 continue
 
             for key, _mask in events:
-                if key.fileobj is not stderr_stream:
-                    continue
+                stream = t.cast("t.IO[bytes]", key.fileobj)
                 try:
-                    chunk = stderr_stream.read(128)
+                    chunk = stream.read(128)
                 except (BlockingIOError, OSError):
                     chunk = b""
                 if not chunk:
+                    # EOF from the child closing the pipe. Stop selecting on
+                    # it so the loop doesn't spin on an always-readable fd.
+                    sel.unregister(stream)
+                    registered.discard(stream)
                     continue
-                partial_chunks.append(chunk)
-                if callback is not None and callable(callback):
+                buffers[stream].append(chunk)
+                if (
+                    stream is proc.stderr
+                    and callback is not None
+                    and callable(callback)
+                ):
                     callback(
                         output=console_to_str(chunk),
                         timestamp=datetime.datetime.now(),
                     )
     finally:
+        # Restore blocking mode so any subsequent read by the caller behaves
+        # as expected; ignore failures (fd already closed, Windows pipe).
+        for fd in fds_to_restore:
+            with contextlib.suppress(OSError, ValueError):
+                os.set_blocking(fd, True)
         sel.close()
+
+    return code, _join_buffer(buffers, proc.stdout), _join_buffer(buffers, proc.stderr)
+
+
+def _join_buffer(
+    buffers: dict[t.IO[bytes], list[bytes]],
+    stream: t.IO[bytes] | None,
+) -> bytes | None:
+    """Concatenate captured chunks for ``stream``, or ``None`` if not tracked."""
+    if stream is None or stream not in buffers:
+        return None
+    return b"".join(buffers[stream])
 
 
 def _terminate_process(proc: subprocess.Popen[bytes]) -> None:
