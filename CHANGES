@@ -42,6 +42,21 @@ the private `_ENV` type that was leaking into public signatures:
 `CreateRepoPytestFixtureFn` is renamed to `CreateRepoFn`. Update any
 `TYPE_CHECKING` imports accordingly.
 
+#### New `timeout=` keyword on subprocess runners
+
+`libvcs._internal.run.run()`, `Git.run()`, `Hg.run()`, and `Svn.run()`
+now accept `timeout`, with improved cleanup and handling of stuck
+subprocesses when the deadline fires. (#524)
+
+### Bug fixes
+
+#### Improve handling of ref-heavy remotes
+
+Large repositories (e.g. `openai/codex` at 2,400+ refs) no longer
+appear to hang during `vcspull sync` -- libvcs avoids the expensive
+ref-walking git command that was load-bearing for the URL lookup.
+(#524)
+
 ### Documentation
 
 - pytest plugin: `CreateRepoFn` and `CreateRepoPostInitFn` now render
