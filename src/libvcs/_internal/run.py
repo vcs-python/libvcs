@@ -397,13 +397,13 @@ def _wait_with_deadline(
 
             remaining = deadline - time.monotonic()
             if remaining <= 0:
+                # ``vcs_exit_code`` deliberately omitted here: ``proc.returncode``
+                # is still ``None`` because the child has not been signalled yet,
+                # and CLAUDE.md treats ``vcs_exit_code`` as a scalar ``int``.
                 logger.warning(
                     "subprocess deadline exceeded after %.3gs",
                     timeout,
-                    extra={
-                        "vcs_cmd": _format_cmd_for_log(cmd),
-                        "vcs_exit_code": proc.returncode,
-                    },
+                    extra={"vcs_cmd": _format_cmd_for_log(cmd)},
                 )
                 _terminate_process(proc, cmd)
                 for stream in list(registered):
