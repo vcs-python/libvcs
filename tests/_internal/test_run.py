@@ -125,6 +125,44 @@ def test_run_timeout_none_is_the_default() -> None:
     assert "default" in output
 
 
+def test_command_timeout_error_renders_duration() -> None:
+    """Direct ``CommandTimeoutError`` construction surfaces the duration."""
+    err = exc.CommandTimeoutError(
+        output="",
+        returncode=None,
+        cmd="git fetch origin",
+        timeout=2.5,
+    )
+
+    rendered = str(err)
+    assert "timed out after 2.5s" in rendered
+    assert "git fetch origin" in rendered
+    # Regression guard: the bare ``CommandError`` template would have produced
+    # ``"Command failed with code None: ..."`` when ``returncode`` is ``None``.
+    assert "code None" not in rendered
+
+
+def test_command_timeout_error_without_timeout_falls_back() -> None:
+    """Omitting ``timeout=`` still produces a readable timeout message."""
+    err = exc.CommandTimeoutError(output="partial", cmd="git fetch")
+
+    rendered = str(err)
+    assert "timed out" in rendered
+    assert "git fetch" in rendered
+    assert "partial" in rendered
+
+
+def test_run_timeout_message_includes_duration() -> None:
+    """``run(..., timeout=X)`` raises an exception whose ``str()`` shows X."""
+    with pytest.raises(exc.CommandTimeoutError) as excinfo:
+        run([sys.executable, "-c", "import time; time.sleep(10)"], timeout=0.3)
+
+    assert excinfo.value.timeout == 0.3
+    rendered = str(excinfo.value)
+    assert "timed out after" in rendered
+    assert "0.3" in rendered
+
+
 def test_run_timeout_does_not_deadlock_on_chatty_stdout() -> None:
     """A child filling its stdout pipe must not deadlock the deadline loop.
 

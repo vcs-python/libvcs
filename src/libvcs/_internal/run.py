@@ -265,6 +265,7 @@ def run(
         code, timeout_stdout, timeout_stderr = _wait_with_deadline(
             proc,
             deadline=time.monotonic() + timeout,
+            timeout=timeout,
             callback=callback,
             cmd=_stringify_command(normalized_args),
         )
@@ -316,6 +317,7 @@ def _wait_with_deadline(
     proc: subprocess.Popen[bytes],
     *,
     deadline: float,
+    timeout: float,
     callback: ProgressCallbackProtocol | None,
     cmd: str | list[str],
 ) -> tuple[int, bytes | None, bytes | None]:
@@ -398,6 +400,7 @@ def _wait_with_deadline(
                     output=message,
                     returncode=proc.returncode,
                     cmd=cmd,
+                    timeout=timeout,
                 )
 
             wait = min(_TIMEOUT_POLL_INTERVAL_SECONDS, remaining)
