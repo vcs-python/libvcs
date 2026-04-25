@@ -6,6 +6,7 @@ import datetime
 import pathlib
 import random
 import shutil
+import subprocess
 import textwrap
 import time
 import typing as t
@@ -1683,23 +1684,25 @@ def test_remote_is_fast_for_repos_with_many_refs(
     This test seeds synthetic refs/remotes/origin/branch-N entries and asserts
     that ``remote('origin')`` returns promptly. A generous 5-second budget is
     enough to catch the pathological old path (many seconds on WSL2) without
-    flaking on slow CI.
+    flaking on slow CI. Refs are batched through ``git update-ref --stdin``
+    (one subprocess) instead of one invocation per ref so the test setup
+    doesn't dominate suite duration.
     """
     # Point origin at a commit we already have so fake refs don't dangle.
     head_sha = run(["git", "rev-parse", "HEAD"], cwd=git_repo.path).strip()
 
-    # Seed 500 fake remote-tracking refs. ``git update-ref`` is quick but the
-    # cumulative count is what would blow up ``git remote show -n``.
-    for i in range(500):
-        run(
-            [
-                "git",
-                "update-ref",
-                f"refs/remotes/origin/fake-branch-{i:04d}",
-                head_sha,
-            ],
-            cwd=git_repo.path,
-        )
+    # Seed 500 fake remote-tracking refs in a single ``git update-ref`` call;
+    # the cumulative count is what would blow up ``git remote show -n``.
+    stdin_input = "".join(
+        f"update refs/remotes/origin/fake-branch-{i:04d} {head_sha}\n"
+        for i in range(500)
+    )
+    subprocess.run(
+        ["git", "-C", str(git_repo.path), "update-ref", "--stdin"],
+        input=stdin_input,
+        text=True,
+        check=True,
+    )
 
     started = time.monotonic()
     remote = git_repo.remote("origin")

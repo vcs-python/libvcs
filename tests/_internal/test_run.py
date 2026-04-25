@@ -12,7 +12,24 @@ import typing as t
 import pytest
 
 from libvcs import exc
+from libvcs._internal import run as run_module
 from libvcs._internal.run import _normalize_command_args, run
+
+
+@pytest.fixture
+def fast_timeout_constants(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tighten the deadline-loop spread so test wall-clock budgets stay reliable.
+
+    The two ``_TIMEOUT_*`` constants in :mod:`libvcs._internal.run` are tuned
+    for production use (0.5 s SIGTERM grace, 0.1 s selector poll). For tests
+    that intentionally fire the deadline, those defaults add up to ~0.7 s of
+    unavoidable wall-clock spread on top of the test's nominal timeout, which
+    makes upper-bound assertions fragile on loaded CI runners. This fixture
+    monkeypatches both to 0.05 s so the spread stays predictable; production
+    behaviour is unchanged.
+    """
+    monkeypatch.setattr(run_module, "_TIMEOUT_KILL_GRACE_SECONDS", 0.05)
+    monkeypatch.setattr(run_module, "_TIMEOUT_POLL_INTERVAL_SECONDS", 0.05)
 
 
 def test_normalize_command_args_keeps_scalar_string() -> None:
@@ -46,7 +63,9 @@ def test_run_without_timeout_matches_legacy_behavior() -> None:
     assert "world" in output
 
 
-def test_run_raises_command_timeout_when_deadline_exceeded() -> None:
+def test_run_raises_command_timeout_when_deadline_exceeded(
+    fast_timeout_constants: None,
+) -> None:
     """A command sleeping past ``timeout`` raises ``CommandTimeoutError`` fast."""
     started = time.monotonic()
 
@@ -59,12 +78,17 @@ def test_run_raises_command_timeout_when_deadline_exceeded() -> None:
     elapsed = time.monotonic() - started
 
     # Upper bound keeps the test honest: the deadline must actually fire, not
-    # fall through to the legacy unbounded wait.
-    assert elapsed < 2.5, f"timeout took too long: {elapsed:.2f}s"
+    # fall through to the legacy unbounded wait. With the fast-constants
+    # fixture, the worst-case spread is 0.3 (deadline) + 0.05 (SIGTERM grace)
+    # + 0.05 (poll) + Python startup (~0.5 s on cold CI) -> ~1 s; the budget
+    # below leaves comfortable headroom for slow runners.
+    assert elapsed < 2.0, f"timeout took too long: {elapsed:.2f}s"
     assert isinstance(excinfo.value, exc.CommandError)
 
 
-def test_run_timeout_captures_partial_stderr_output() -> None:
+def test_run_timeout_captures_partial_stderr_output(
+    fast_timeout_constants: None,
+) -> None:
     """Output produced before the timeout is preserved on ``CommandTimeoutError``."""
     script = (
         "import sys, time;"
@@ -86,7 +110,10 @@ def test_run_timeout_captures_partial_stderr_output() -> None:
     assert "first" in excinfo.value.output
 
 
-def test_run_timeout_reaps_child_process(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_timeout_reaps_child_process(
+    monkeypatch: pytest.MonkeyPatch,
+    fast_timeout_constants: None,
+) -> None:
     """Timed-out processes are terminated; no zombies remain in the group."""
     script = "import time; time.sleep(10)"
 
@@ -151,7 +178,9 @@ def test_command_timeout_error_without_timeout_falls_back() -> None:
     assert "partial" in rendered
 
 
-def test_run_timeout_message_includes_duration() -> None:
+def test_run_timeout_message_includes_duration(
+    fast_timeout_constants: None,
+) -> None:
     """``run(..., timeout=X)`` raises an exception whose ``str()`` shows X."""
     with pytest.raises(exc.CommandTimeoutError) as excinfo:
         run([sys.executable, "-c", "import time; time.sleep(10)"], timeout=0.3)
@@ -186,7 +215,9 @@ def test_run_timeout_preserves_stdout_after_exit() -> None:
     assert "lines" in output
 
 
-def test_run_timeout_captures_partial_stdout_on_timeout() -> None:
+def test_run_timeout_captures_partial_stdout_on_timeout(
+    fast_timeout_constants: None,
+) -> None:
     """Stdout flushed before the deadline appears in ``CommandTimeoutError.output``."""
     script = (
         "import sys, time; "
@@ -203,6 +234,7 @@ def test_run_timeout_captures_partial_stdout_on_timeout() -> None:
 
 def test_run_timeout_logs_deadline_exceeded(
     caplog: pytest.LogCaptureFixture,
+    fast_timeout_constants: None,
 ) -> None:
     """Deadline-fired path emits a WARNING with the canonical ``vcs_cmd`` extra."""
     with (
@@ -224,6 +256,10 @@ def test_run_timeout_logs_deadline_exceeded(
     assert "time.sleep" in cmd_extra
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="os.close(sys.stderr.fileno()) has POSIX-specific semantics",
+)
 def test_run_timeout_handles_early_stderr_close_without_hanging() -> None:
     """A child that closes stderr long before exiting must not stall the loop.
 
