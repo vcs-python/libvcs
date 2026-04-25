@@ -146,6 +146,7 @@ class Git:
         config_env: str | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
+        timeout: float | None = None,
         **kwargs: t.Any,
     ) -> str:
         """Run a command for this git repository.
@@ -205,6 +206,13 @@ class Git:
             ``--config=<name>=<value>``
         config_env :
             ``--config-env=<name>=<envvar>``
+        timeout : float, optional
+            Wall-clock seconds to wait before terminating the subprocess.
+            ``None`` (default) preserves the legacy behaviour of blocking
+            until the process exits. When the deadline is exceeded the
+            process is sent ``SIGTERM`` (then ``SIGKILL`` after a grace
+            period) and :class:`libvcs.exc.CommandTimeoutError` is raised
+            with any output collected so far.
 
         Examples
         --------
@@ -281,7 +289,7 @@ class Git:
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback
 
-        return run(args=cli_args, **kwargs)
+        return run(args=cli_args, timeout=timeout, **kwargs)
 
     def clone(
         self,

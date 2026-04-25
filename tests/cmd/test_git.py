@@ -4,14 +4,19 @@ from __future__ import annotations
 
 import os
 import pathlib
+import subprocess
+import time
 import typing as t
 
 import pytest
 
+from libvcs import exc
 from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
 
 if t.TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
     from libvcs.pytest_plugin import CreateRepoFn, GitCommitEnvVars
     from libvcs.sync.git import GitSync
 
@@ -42,6 +47,52 @@ def test_git_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     result = repo.run("--version")
 
     assert result.startswith("git version ")
+
+
+def test_git_run_timeout_propagates_to_runner(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """``Git.run(timeout=X)`` forwards X to the underlying ``run()`` call.
+
+    Regression guard for the discoverability fix: ``timeout=`` is part of the
+    public ``Git.run`` signature rather than reachable only via ``**kwargs``.
+    """
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch("libvcs.cmd.git.run", return_value="")
+
+    repo.run(["--version"], timeout=2.5)
+
+    _args, kwargs = mock_run.call_args
+    assert kwargs.get("timeout") == 2.5
+
+
+def test_git_run_timeout_e2e_raises_command_timeout(
+    git_repo: GitSync,
+    fast_timeout_constants: None,
+) -> None:
+    """End-to-end: ``Git.run(timeout=...)`` against a real subprocess that hangs.
+
+    ``git cat-file --batch`` reads object names from stdin one per line. With
+    ``stdin=subprocess.PIPE`` and no input written (nor EOF signalled), the
+    child blocks on the read forever -- so the deadline must fire and
+    ``Git.run`` must raise :class:`libvcs.exc.CommandTimeoutError`. Exercises
+    the full public path (``Git.run`` -> ``run`` -> ``_wait_with_deadline``)
+    without mocks.
+    """
+    started = time.monotonic()
+
+    with pytest.raises(exc.CommandTimeoutError):
+        git_repo.cmd.run(
+            ["cat-file", "--batch"],
+            stdin=subprocess.PIPE,
+            timeout=0.3,
+        )
+
+    elapsed = time.monotonic() - started
+    # Worst-case wall clock with the fast-constants fixture: 0.3 (deadline)
+    # + 0.05 (SIGTERM grace) + 0.05 (poll) + git startup overhead.
+    assert elapsed < 2.0, f"Git.run timeout took too long: {elapsed:.2f}s"
 
 
 def test_git_init_bare(tmp_path: pathlib.Path) -> None:
