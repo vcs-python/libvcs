@@ -1709,3 +1709,28 @@ def test_remote_is_fast_for_repos_with_many_refs(
     assert remote is not None
     assert remote.fetch_url, "fetch URL must be populated"
     assert elapsed < 5.0, f"remote() too slow: {elapsed:.2f}s with 500 fake refs"
+
+
+def test_remote_swallows_libvcs_exception(
+    git_repo: GitSync,
+    mocker: MockerFixture,
+) -> None:
+    """``GitSync.remote`` returns ``None`` when ``git remote -v`` fails.
+
+    The pre-rewrite implementation wrapped the underlying subprocess call
+    in ``try / except LibVCSException`` so a corrupt config or a locked
+    ``.git/config`` did not crash a ``vcspull sync``. The new path must
+    preserve that resilience -- callers should still see ``None`` rather
+    than a raised exception.
+    """
+    mocker.patch.object(
+        git_repo.cmd.remotes,
+        "get",
+        side_effect=exc.CommandError(
+            output="fatal: bad config",
+            returncode=128,
+            cmd="git remote --verbose",
+        ),
+    )
+
+    assert git_repo.remote("origin") is None

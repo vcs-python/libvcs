@@ -676,15 +676,24 @@ class GitSync(BaseSync):
 
         Notes
         -----
-        Uses ``git remote -v`` (via the cached remote manager) instead of
+        Uses ``git remote -v`` via the remote manager rather than
         ``git remote show -n``. ``git remote show`` also enumerates every
         remote-tracking ref, which pipes thousands of lines through the
         subprocess progress callback for repositories with large branch
         counts (e.g. ``openai/codex`` at 2,400+ refs) and can appear to
         hang. ``git remote -v`` is O(remotes) and cannot block on ref
         enumeration.
+
+        Subprocess failures from the underlying ``git remote -v`` are
+        suppressed and returned as ``None`` to preserve the resilience
+        contract callers relied on with the previous ``git remote show``
+        path (which wrapped the same call in ``try / except
+        LibVCSException``).
         """
-        remote_cmd = self.cmd.remotes.get(remote_name=name, default=None)
+        try:
+            remote_cmd = self.cmd.remotes.get(remote_name=name, default=None)
+        except exc.LibVCSException:
+            return None
         if remote_cmd is None:
             return None
 
