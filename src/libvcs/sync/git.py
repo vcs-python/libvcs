@@ -682,7 +682,9 @@ class GitSync(BaseSync):
         subprocess progress callback for repositories with large branch
         counts (e.g. ``openai/codex`` at 2,400+ refs) and can appear to
         hang. ``git remote -v`` is O(remotes) and cannot block on ref
-        enumeration.
+        enumeration. The remote manager is uncached -- each call shells
+        out -- so repeated calls in a loop will still spawn one
+        subprocess apiece.
 
         Subprocess failures from the underlying ``git remote -v`` are
         suppressed and returned as ``None`` to preserve the resilience

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import pathlib
 import subprocess
 import sys
@@ -198,6 +199,29 @@ def test_run_timeout_captures_partial_stdout_on_timeout() -> None:
         run([sys.executable, "-c", script], timeout=0.5)
 
     assert "partial-stdout" in excinfo.value.output
+
+
+def test_run_timeout_logs_deadline_exceeded(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Deadline-fired path emits a WARNING with the canonical ``vcs_cmd`` extra."""
+    with (
+        caplog.at_level(logging.WARNING, logger="libvcs._internal.run"),
+        pytest.raises(exc.CommandTimeoutError),
+    ):
+        run([sys.executable, "-c", "import time; time.sleep(10)"], timeout=0.3)
+
+    deadline_records = [
+        record
+        for record in caplog.records
+        if "deadline exceeded" in record.getMessage()
+    ]
+    assert len(deadline_records) == 1
+    record = deadline_records[0]
+    assert record.levelname == "WARNING"
+    assert hasattr(record, "vcs_cmd")
+    cmd_extra = t.cast("str", record.vcs_cmd)
+    assert "time.sleep" in cmd_extra
 
 
 def test_run_timeout_handles_early_stderr_close_without_hanging() -> None:

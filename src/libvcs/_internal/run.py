@@ -388,7 +388,15 @@ def _wait_with_deadline(
 
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                _terminate_process(proc)
+                logger.warning(
+                    "subprocess deadline exceeded after %.3gs",
+                    timeout,
+                    extra={
+                        "vcs_cmd": _format_cmd_for_log(cmd),
+                        "vcs_exit_code": proc.returncode,
+                    },
+                )
+                _terminate_process(proc, cmd)
                 for stream in list(registered):
                     trailing = _drain_stream(stream)
                     if trailing:
@@ -458,7 +466,7 @@ def _join_buffer(
     return b"".join(buffers[stream])
 
 
-def _terminate_process(proc: subprocess.Popen[bytes]) -> None:
+def _terminate_process(proc: subprocess.Popen[bytes], cmd: str | list[str]) -> None:
     """Terminate ``proc`` gracefully, falling back to ``kill`` on the grace."""
     if proc.poll() is not None:
         return
@@ -469,12 +477,28 @@ def _terminate_process(proc: subprocess.Popen[bytes]) -> None:
     try:
         proc.wait(timeout=_TIMEOUT_KILL_GRACE_SECONDS)
     except subprocess.TimeoutExpired:
+        logger.debug(
+            "subprocess sigkill escalated after sigterm grace expired",
+            extra={"vcs_cmd": _format_cmd_for_log(cmd)},
+        )
         with contextlib.suppress(OSError, ProcessLookupError):
             proc.kill()
         # If the child is still unreachable after SIGKILL, bail rather than
         # block forever -- we've already signalled the user-facing timeout.
         with contextlib.suppress(subprocess.TimeoutExpired):
             proc.wait(timeout=_TIMEOUT_KILL_GRACE_SECONDS)
+        if proc.poll() is None:
+            logger.warning(
+                "subprocess sigkill did not reap; child may be leaked",
+                extra={"vcs_cmd": _format_cmd_for_log(cmd)},
+            )
+
+
+def _format_cmd_for_log(cmd: str | list[str]) -> str:
+    """Render ``cmd`` as a flat string for the ``vcs_cmd`` log extra."""
+    if isinstance(cmd, list):
+        return " ".join(cmd)
+    return cmd
 
 
 def _drain_stream(stream: t.IO[bytes] | None) -> bytes:
