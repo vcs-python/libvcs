@@ -83,6 +83,7 @@ class Svn:
         # Special behavior
         make_parents: bool | None = True,
         check_returncode: bool | None = None,
+        timeout: float | None = None,
         **kwargs: t.Any,
     ) -> str:
         """Run a command for this SVN working copy.
@@ -119,6 +120,13 @@ class Svn:
             Creates checkout directory (`:attr:`self.path`) if it doesn't already exist.
         check_returncode : bool, default: ``None``
             Passthrough to :meth:`Svn.run`
+        timeout : float, optional
+            Wall-clock seconds to wait before terminating the subprocess.
+            ``None`` (default) preserves the legacy behaviour of blocking
+            until the process exits. When the deadline is exceeded the
+            process is sent ``SIGTERM`` (then ``SIGKILL`` after a grace
+            period) and :class:`libvcs.exc.CommandTimeoutError` is raised
+            with any output collected so far.
 
         Examples
         --------
@@ -152,6 +160,7 @@ class Svn:
         return run(
             args=cli_args,
             check_returncode=True if check_returncode is None else check_returncode,
+            timeout=timeout,
             **kwargs,
         )
 

@@ -12,6 +12,8 @@ from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
 
 if t.TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
     from libvcs.pytest_plugin import CreateRepoFn, GitCommitEnvVars
     from libvcs.sync.git import GitSync
 
@@ -42,6 +44,24 @@ def test_git_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     result = repo.run("--version")
 
     assert result.startswith("git version ")
+
+
+def test_git_run_timeout_propagates_to_runner(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """``Git.run(timeout=X)`` forwards X to the underlying ``run()`` call.
+
+    Regression guard for the discoverability fix: ``timeout=`` is part of the
+    public ``Git.run`` signature rather than reachable only via ``**kwargs``.
+    """
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch("libvcs.cmd.git.run", return_value="")
+
+    repo.run(["--version"], timeout=2.5)
+
+    _args, kwargs = mock_run.call_args
+    assert kwargs.get("timeout") == 2.5
 
 
 def test_git_init_bare(tmp_path: pathlib.Path) -> None:
