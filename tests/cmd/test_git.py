@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import os
 import pathlib
+import subprocess
+import time
 import typing as t
 
 import pytest
 
+from libvcs import exc
 from libvcs._internal.query_list import ObjectDoesNotExist
 from libvcs.cmd import git
 
@@ -62,6 +65,34 @@ def test_git_run_timeout_propagates_to_runner(
 
     _args, kwargs = mock_run.call_args
     assert kwargs.get("timeout") == 2.5
+
+
+def test_git_run_timeout_e2e_raises_command_timeout(
+    git_repo: GitSync,
+    fast_timeout_constants: None,
+) -> None:
+    """End-to-end: ``Git.run(timeout=...)`` against a real subprocess that hangs.
+
+    ``git cat-file --batch`` reads object names from stdin one per line. With
+    ``stdin=subprocess.PIPE`` and no input written (nor EOF signalled), the
+    child blocks on the read forever -- so the deadline must fire and
+    ``Git.run`` must raise :class:`libvcs.exc.CommandTimeoutError`. Exercises
+    the full public path (``Git.run`` -> ``run`` -> ``_wait_with_deadline``)
+    without mocks.
+    """
+    started = time.monotonic()
+
+    with pytest.raises(exc.CommandTimeoutError):
+        git_repo.cmd.run(
+            ["cat-file", "--batch"],
+            stdin=subprocess.PIPE,
+            timeout=0.3,
+        )
+
+    elapsed = time.monotonic() - started
+    # Worst-case wall clock with the fast-constants fixture: 0.3 (deadline)
+    # + 0.05 (SIGTERM grace) + 0.05 (poll) + git startup overhead.
+    assert elapsed < 2.0, f"Git.run timeout took too long: {elapsed:.2f}s"
 
 
 def test_git_init_bare(tmp_path: pathlib.Path) -> None:

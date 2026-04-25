@@ -17,22 +17,6 @@ from libvcs._internal import run as run_module
 from libvcs._internal.run import _normalize_command_args, run
 
 
-@pytest.fixture
-def fast_timeout_constants(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Tighten the deadline-loop spread so test wall-clock budgets stay reliable.
-
-    The two ``_TIMEOUT_*`` constants in :mod:`libvcs._internal.run` are tuned
-    for production use (0.5 s SIGTERM grace, 0.1 s selector poll). For tests
-    that intentionally fire the deadline, those defaults add up to ~0.7 s of
-    unavoidable wall-clock spread on top of the test's nominal timeout, which
-    makes upper-bound assertions fragile on loaded CI runners. This fixture
-    monkeypatches both to 0.05 s so the spread stays predictable; production
-    behaviour is unchanged.
-    """
-    monkeypatch.setattr(run_module, "_TIMEOUT_KILL_GRACE_SECONDS", 0.05)
-    monkeypatch.setattr(run_module, "_TIMEOUT_POLL_INTERVAL_SECONDS", 0.05)
-
-
 def test_normalize_command_args_keeps_scalar_string() -> None:
     """Scalar strings should remain a single subprocess argument."""
     assert _normalize_command_args("status") == ["status"]
