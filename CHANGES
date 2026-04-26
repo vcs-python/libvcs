@@ -29,6 +29,13 @@ _Notes on the upcoming release will go here._
 - Support both sync and async usage patterns
 - Useful for pytest-xdist compatibility
 
+### Tests
+
+#### tests: Add async tests for file_lock module (#505)
+
+- Add {class}`TestAsyncFileLock` with 8 async tests
+- Add {class}`TestAsyncAtomicInit` with 4 async tests
+
 ## libvcs 0.40.0 (2026-04-25)
 
 ### What's new
