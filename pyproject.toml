@@ -97,6 +97,7 @@ testing = [
   "pytest-rerunfailures",
   "pytest-mock",
   "pytest-watcher",
+  "pytest-codspeed",
 ]
 coverage =[
   "codecov",
@@ -145,6 +146,10 @@ files = [
   "src",
   "tests",
 ]
+
+[[tool.mypy.overrides]]
+module = ["pytest_codspeed.*"]
+ignore_missing_imports = true
 
 [tool.coverage.run]
 branch = true
@@ -231,7 +236,8 @@ addopts = [
   "--showlocals",
   "--doctest-docutils-modules",
   "-p no:doctest",
-  "--reruns=2"
+  "--reruns=2",
+  "-m", "not benchmark",
 ]
 doctest_optionflags = [
   "ELLIPSIS",
@@ -242,6 +248,9 @@ testpaths = [
   "tests",
   "docs",
   "README.md",
+]
+markers = [
+  "benchmark: codspeed performance benchmark, deselected by default (run via `pytest tests/benchmarks --codspeed`)",
 ]
 filterwarnings = [
   "ignore:The frontend.Option(Parser)? class.*:DeprecationWarning::",
