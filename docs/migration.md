@@ -1,6 +1,6 @@
 (migration)=
 
-```{currentmodule} libtmux
+```{currentmodule} libvcs
 
 ```
 
