@@ -20,6 +20,14 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Compatibility
+
+- Add `GitVersionInfo` dataclass and `build_options()` method to `Git` class to
+  provide structured access to git version information, making version handling more homogeneous
+  and type-safe (#491). The `version()` method now returns a `Version` object instead of a string.
+  This allows for more reliable version parsing and comparison, while `GitSync.get_git_version()`
+  continues to return a string for backward compatibility.
+
 ## libvcs 0.40.0 (2026-04-25)
 
 ### What's new
