@@ -29,6 +29,7 @@ Detect, validate, and normalize VCS URLs.
 ```{toctree}
 :hidden:
 
+asyncio
 traversing_git
 filtering
 url_parsing
