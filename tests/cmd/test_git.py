@@ -630,7 +630,7 @@ def test_branch_ls_filters(git_repo: GitSync) -> None:
     assert any(b.branch_name == "master" for b in branches)
 
     # Test with --all (includes remote-tracking branches)
-    all_branches = git_repo.cmd.branches.ls(_all=True)
+    all_branches = git_repo.cmd.branches.ls(all_branches=True)
     assert len(all_branches) >= len(branches)
 
     # Test with --merged (branches merged into HEAD)
@@ -2688,19 +2688,19 @@ def test_submodule_entry_absorbgitdirs(
 
 
 def test_rev_list_all_parameter(git_repo: GitSync) -> None:
-    """Test that _all parameter controls --all flag in rev-list."""
+    """Test that include_all_refs parameter controls --all flag in rev-list."""
     # Create a branch with an extra commit not reachable from master
     git_repo.cmd.run(["checkout", "-b", "other-branch"])
     git_repo.cmd.run(["commit", "--allow-empty", "-m", "other-branch-commit"])
     git_repo.cmd.run(["checkout", "master"])
 
-    # Without _all: only commits reachable from HEAD (master)
+    # Without include_all_refs: only commits reachable from HEAD (master)
     result_no_all = git_repo.cmd.rev_list(commit="HEAD")
     count_no_all = len(result_no_all.strip().split("\n"))
 
-    # With _all=True: includes commits from all branches
-    result_with_all = git_repo.cmd.rev_list(commit="HEAD", _all=True)
+    # With include_all_refs=True: includes commits from all branches
+    result_with_all = git_repo.cmd.rev_list(commit="HEAD", include_all_refs=True)
     count_with_all = len(result_with_all.strip().split("\n"))
 
-    # _all=True should return strictly more commits (the other-branch commit)
+    # With include_all_refs=True we should get strictly more commits.
     assert count_with_all > count_no_all
