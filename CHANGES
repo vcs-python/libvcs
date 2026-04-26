@@ -20,6 +20,15 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Development
+
+#### CI: CodSpeed performance benchmarks
+
+- Add `pytest-codspeed` to the `testing` dependency group
+- Register a `benchmark` marker (deselected by default; opt-in via `pytest tests/benchmarks --codspeed -m benchmark`)
+- Add `tests/benchmarks/test_sync_git.py` covering `GitSync.obtain` of an initial-commit remote
+- Add a dedicated `benchmarks` job in `.github/workflows/tests.yml` that runs the CodSpeed action on PRs and master pushes
+
 ## libvcs 0.40.0 (2026-04-25)
 
 ### What's new
