@@ -16,8 +16,8 @@ and home-directory setup without repeating bootstrap code in every suite.
 These fixtures are the usual starting point when enabling the plugin:
 
 - {fixture}`set_home` patches `$HOME` to point at {fixture}`user_path`.
-- {fixture}`set_gitconfig` and {fixture}`set_hgconfig` apply stable VCS
-  configuration.
+- {fixture}`set_vcs_gitconfig` and {fixture}`set_vcs_hgconfig` apply stable
+  VCS configuration.
 - {fixture}`vcs_name`, {fixture}`vcs_email`, and {fixture}`vcs_user` let you
   override commit identity defaults.
 - {fixture}`git_commit_envvars` helps when Git ignores `GIT_CONFIG` in a
@@ -35,8 +35,8 @@ import pytest
 @pytest.fixture(autouse=True)
 def setup(
     set_home: None,
-    set_gitconfig: None,
-    set_hgconfig: None,
+    set_vcs_gitconfig: None,
+    set_vcs_hgconfig: None,
 ) -> None:
     pass
 ```

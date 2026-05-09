@@ -2339,7 +2339,7 @@ def test_reflog_entry_delete(git_repo: GitSync) -> None:
 def submodule_repo(
     tmp_path: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
-    set_gitconfig: pathlib.Path,
+    set_vcs_gitconfig: pathlib.Path,
 ) -> git.Git:
     """Create a git repository to use as a submodule source."""
     # Create a repo to serve as submodule source

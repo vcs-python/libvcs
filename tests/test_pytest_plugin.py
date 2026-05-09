@@ -46,11 +46,11 @@ def test_create_svn_remote_repo(
 
 
 def test_gitconfig(
-    gitconfig: pathlib.Path,
-    set_gitconfig: pathlib.Path,
+    vcs_gitconfig: pathlib.Path,
+    set_vcs_gitconfig: pathlib.Path,
     vcs_email: str,
 ) -> None:
-    """Test gitconfig fixture."""
+    """Test vcs_gitconfig fixture."""
     output = run(["git", "config", "--get", "user.email"])
     used_config_file_output = run(
         [
@@ -61,7 +61,7 @@ def test_gitconfig(
             "user.email",
         ],
     )
-    assert str(gitconfig) in used_config_file_output
+    assert str(vcs_gitconfig) in used_config_file_output
     assert vcs_email in output, "Should use our fixture config and home directory"
 
 
@@ -97,7 +97,7 @@ def vcs_email() -> str:
 @pytest.fixture(autouse=True)
 def setup(
     request: pytest.FixtureRequest,
-    gitconfig: pathlib.Path,
+    vcs_gitconfig: pathlib.Path,
     set_home: pathlib.Path,
 ) -> None:
     pass
@@ -183,12 +183,12 @@ def test_git_bare_repo_sync_and_commit(
 
 @pytest.mark.skipif(not shutil.which("git"), reason="git is not available")
 def test_gitconfig_submodule_file_protocol(
-    gitconfig: pathlib.Path,
+    vcs_gitconfig: pathlib.Path,
     user_path: pathlib.Path,
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test that gitconfig fixture allows file:// protocol for git submodule operations.
+    """Test that vcs_gitconfig fixture allows file:// protocol for submodule operations.
 
     Git submodule operations spawn child processes that don't inherit local repo config.
     The child `git clone` process needs protocol.file.allow=always in global config.
@@ -201,7 +201,7 @@ def test_gitconfig_submodule_file_protocol(
 
     See: https://github.com/vcs-python/libvcs/issues/509
     """
-    # Isolate git config: use fixture's gitconfig via HOME, block only system config
+    # Isolate git config: use fixture's vcs_gitconfig via HOME, block only system config
     # Note: We don't block GIT_CONFIG_GLOBAL because git falls back to $HOME/.gitconfig
     # when GIT_CONFIG_GLOBAL is unset, which is where our fixture puts the config
     monkeypatch.setenv("HOME", str(user_path))
@@ -252,7 +252,7 @@ def test_gitconfig_submodule_file_protocol(
     # Assert: submodule add should succeed (no "fatal" errors)
     assert "fatal" not in result.stderr.lower(), (
         f"git submodule add failed with: {result.stderr}\n"
-        'This indicates gitconfig fixture is missing [protocol "file"] allow = always'
+        'vcs_gitconfig fixture is missing [protocol "file"] allow = always'
     )
     assert result.returncode == 0, f"git submodule add failed: {result.stderr}"
 
@@ -276,13 +276,13 @@ def test_git_repo_fixture_submodule_file_protocol(
     protocol.file.allow=always.
 
     The git_repo fixture depends on set_home to ensure child processes
-    (like git clone spawned by git submodule add) can find the test gitconfig.
+    (like git clone spawned by git submodule add) can find the test vcs_gitconfig.
 
     See: https://github.com/vcs-python/libvcs/issues/509
     """
     from libvcs.pytest_plugin import git_remote_repo_single_commit_post_init
 
-    # Verify that HOME is set to user_path where test gitconfig resides
+    # Verify that HOME is set to user_path where test vcs_gitconfig resides
     assert os.environ.get("HOME") == str(user_path), (
         f"git_repo fixture should set HOME to user_path.\n"
         f"Expected: {user_path}\n"

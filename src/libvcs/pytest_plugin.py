@@ -69,8 +69,8 @@ def vcs_user(vcs_name: str, vcs_email: str) -> str:
 def git_commit_envvars(vcs_name: str, vcs_email: str) -> GitCommitEnvVars:
     """Return environment variables for `git commit`.
 
-    For some reason, `GIT_CONFIG` via {func}`set_gitconfig` doesn't work for `git
-    commit`.
+    For some reason, `GIT_CONFIG` via {func}`set_vcs_gitconfig` doesn't work for
+    `git commit`.
     """
     return {
         "GIT_AUTHOR_NAME": vcs_name,
@@ -146,7 +146,7 @@ def set_home(
 
 @pytest.fixture(scope="session")
 @skip_if_git_missing
-def gitconfig(
+def vcs_gitconfig(
     user_path: pathlib.Path,
     vcs_email: str,
     vcs_name: str,
@@ -174,19 +174,19 @@ def gitconfig(
 
 @pytest.fixture
 @skip_if_git_missing
-def set_gitconfig(
+def set_vcs_gitconfig(
     monkeypatch: pytest.MonkeyPatch,
-    gitconfig: pathlib.Path,
+    vcs_gitconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set git configuration."""
-    monkeypatch.setenv("GIT_CONFIG", str(gitconfig))
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(gitconfig))  # For child processes
-    return gitconfig
+    monkeypatch.setenv("GIT_CONFIG", str(vcs_gitconfig))
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(vcs_gitconfig))  # For child processes
+    return vcs_gitconfig
 
 
 @pytest.fixture(scope="session")
 @skip_if_hg_missing
-def hgconfig(
+def vcs_hgconfig(
     user_path: pathlib.Path,
     vcs_user: str,
 ) -> pathlib.Path:
@@ -210,13 +210,13 @@ def hgconfig(
 
 @pytest.fixture
 @skip_if_hg_missing
-def set_hgconfig(
+def set_vcs_hgconfig(
     monkeypatch: pytest.MonkeyPatch,
-    hgconfig: pathlib.Path,
+    vcs_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set Mercurial configuration."""
-    monkeypatch.setenv("HGRCPATH", str(hgconfig))
-    return hgconfig
+    monkeypatch.setenv("HGRCPATH", str(vcs_hgconfig))
+    return vcs_hgconfig
 
 
 @pytest.fixture
@@ -458,7 +458,7 @@ def git_remote_repo_single_commit_post_init(
 @skip_if_git_missing
 def git_remote_repo(
     create_git_remote_repo: CreateRepoFn,
-    gitconfig: pathlib.Path,
+    vcs_gitconfig: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
@@ -649,7 +649,7 @@ def empty_hg_repo(
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_hg_repo: pathlib.Path,
-    hgconfig: pathlib.Path,
+    vcs_hgconfig: pathlib.Path,
 ) -> CreateRepoFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
 
@@ -668,7 +668,7 @@ def create_hg_remote_repo(
         if remote_repo_post_init is not None and callable(remote_repo_post_init):
             remote_repo_post_init(
                 remote_repo_path=remote_repo_path,
-                env={"HGRCPATH": str(hgconfig)},
+                env={"HGRCPATH": str(vcs_hgconfig)},
             )
 
         assert empty_hg_repo.exists()
@@ -685,13 +685,13 @@ def create_hg_remote_repo(
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
     create_hg_remote_repo: CreateRepoFn,
-    hgconfig: pathlib.Path,
+    vcs_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
     repo_path = create_hg_remote_repo()
     hg_remote_repo_single_commit_post_init(
         remote_repo_path=repo_path,
-        env={"HGRCPATH": str(hgconfig)},
+        env={"HGRCPATH": str(vcs_hgconfig)},
     )
     return repo_path
 
@@ -701,7 +701,7 @@ def git_repo(
     remote_repos_path: pathlib.Path,
     projects_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
-    set_gitconfig: pathlib.Path,
+    set_vcs_gitconfig: pathlib.Path,
     set_home: None,  # Needed for child processes (e.g. submodules)
 ) -> GitSync:
     """Pre-made git clone of remote repo checked out to user's projects dir."""
@@ -736,7 +736,7 @@ def hg_repo(
     remote_repos_path: pathlib.Path,
     projects_path: pathlib.Path,
     hg_remote_repo: pathlib.Path,
-    set_hgconfig: pathlib.Path,
+    set_vcs_hgconfig: pathlib.Path,
 ) -> HgSync:
     """Pre-made hg clone of remote repo checked out to user's projects dir."""
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
@@ -791,7 +791,7 @@ def add_doctest_fixtures(
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
-    hgconfig: pathlib.Path,
+    vcs_hgconfig: pathlib.Path,
     create_git_remote_repo: CreateRepoFn,
     create_svn_remote_repo: CreateRepoFn,
     create_hg_remote_repo: CreateRepoFn,
@@ -826,6 +826,6 @@ def add_doctest_fixtures(
             create_hg_remote_repo,
             remote_repo_post_init=functools.partial(
                 hg_remote_repo_single_commit_post_init,
-                env={"HGRCPATH": str(hgconfig)},
+                env={"HGRCPATH": str(vcs_hgconfig)},
             ),
         )

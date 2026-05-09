@@ -16,11 +16,11 @@ if typing.TYPE_CHECKING:
 
 
 @pytest.fixture(autouse=True)
-def set_hgconfig(
-    set_hgconfig: pathlib.Path,
+def set_vcs_hgconfig(
+    set_vcs_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set mercurial configuration."""
-    return set_hgconfig
+    return set_vcs_hgconfig
 
 
 class HgURLFixture(typing.NamedTuple):
