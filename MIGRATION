@@ -24,6 +24,23 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### pytest fixtures: `gitconfig` / `hgconfig` renamed to `vcs_gitconfig` / `vcs_hgconfig` (#528)
+
+- pytest: `gitconfig` renamed to `vcs_gitconfig`
+- pytest: `set_gitconfig` renamed to `set_vcs_gitconfig`
+- pytest: `hgconfig` renamed to `vcs_hgconfig`
+- pytest: `set_hgconfig` renamed to `set_vcs_hgconfig`
+
+The unprefixed names collided with the third-party
+[`pytest-gitconfig`](https://pypi.org/project/pytest-gitconfig/) plugin,
+which exposes a `gitconfig` fixture returning a `GitConfig` helper rather
+than a `pathlib.Path`. When both plugins auto-loaded, downstream tests
+crashed with `AttributeError: 'PosixPath' object has no attribute 'set'`.
+
+No deprecation alias is provided -- update parameter names in test
+suites, conftests, and any embedded `pytester.makeconftest` text that
+references these fixtures.
+
 ### pytest fixtures: `git_local_clone` renamed to `example_git_repo` (#468)
 
 - pytest: `git_local_clone` renamed to `example_git_repo`
