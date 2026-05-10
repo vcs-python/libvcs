@@ -20,6 +20,26 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Breaking changes
+
+#### pytest plugin: Rename `gitconfig` / `hgconfig` fixtures (#528)
+
+The pytest plugin's `gitconfig`, `set_gitconfig`, `hgconfig`, and
+`set_hgconfig` fixtures are renamed to `vcs_gitconfig`,
+`set_vcs_gitconfig`, `vcs_hgconfig`, and `set_vcs_hgconfig`
+respectively, matching the existing `vcs_name` / `vcs_email` / `vcs_user`
+convention.
+
+The unprefixed names collided with the third-party
+[`pytest-gitconfig`](https://pypi.org/project/pytest-gitconfig/) plugin,
+which exposes a `gitconfig` fixture returning a `GitConfig` helper
+rather than a `pathlib.Path`. When both plugins auto-loaded, downstream
+tests crashed with `AttributeError: 'PosixPath' object has no attribute 'set'`.
+
+No deprecation alias is provided -- the entire point of the rename is
+to vacate the shared name. Downstream test suites that referenced the
+old fixture names must update parameter names accordingly.
+
 ### Bug fixes
 
 - Fix dark-theme flash when light theme is selected — the docs

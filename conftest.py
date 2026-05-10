@@ -42,7 +42,7 @@ def cwd_default(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> None
 @pytest.fixture(autouse=True)
 def setup(
     request: pytest.FixtureRequest,
-    gitconfig: pathlib.Path,
+    vcs_gitconfig: pathlib.Path,
     set_home: pathlib.Path,
 ) -> None:
     """Configure test fixtures for pytest."""
