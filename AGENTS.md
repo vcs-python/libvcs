@@ -146,7 +146,7 @@ libvcs uses pytest for testing with many custom fixtures. The pytest plugin (`py
 - `create_hg_remote_repo`: Creates a Mercurial repository for testing
 - `create_svn_remote_repo`: Creates a Subversion repository for testing
 - `git_repo`, `svn_repo`, `hg_repo`: Pre-made repository instances
-- `set_home`, `gitconfig`, `hgconfig`, `git_commit_envvars`: Environment fixtures
+- `set_home`, `vcs_gitconfig`, `vcs_hgconfig`, `git_commit_envvars`: Environment fixtures
 
 These fixtures handle setup and teardown automatically, creating isolated test environments.
 
