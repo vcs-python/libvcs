@@ -19,7 +19,7 @@ import subprocess
 import sys
 import time
 import typing as t
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, MutableMapping, Sequence
 
 from libvcs import exc
 from libvcs._internal.types import StrOrBytesPath
@@ -79,7 +79,7 @@ class CmdLoggingAdapter(_LoggerAdapter):
         self,
         msg: str,
         kwargs: MutableMapping[str, t.Any],
-    ) -> tuple[t.Any, MutableMapping[str, t.Any]]:
+    ) -> tuple[str, MutableMapping[str, t.Any]]:
         """Add additional context information for loggers."""
         prefixed_dict = {}
         prefixed_dict["bin_name"] = self.bin_name
@@ -104,7 +104,7 @@ else:
     _ENV: t.TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
 
 _CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
-_FILE: t.TypeAlias = int | t.IO[t.Any] | None
+_FILE: t.TypeAlias = int | t.IO[str] | t.IO[bytes] | None
 
 
 def _normalize_command_args(args: _CMD) -> list[StrOrBytesPath]:
@@ -130,7 +130,7 @@ def run(
     stdin: _FILE | None = None,
     stdout: _FILE | None = None,
     stderr: _FILE | None = None,
-    preexec_fn: t.Callable[[], t.Any] | None = None,
+    preexec_fn: t.Callable[[], object] | None = None,
     close_fds: bool = True,
     shell: bool = False,
     cwd: StrOrBytesPath | None = None,
@@ -139,7 +139,7 @@ def run(
     creationflags: int = 0,
     restore_signals: bool = True,
     start_new_session: bool = False,
-    pass_fds: t.Any = (),
+    pass_fds: Collection[int] = (),
     *,
     encoding: str | None = None,
     errors: str | None = None,
