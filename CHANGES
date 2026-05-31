@@ -20,6 +20,12 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### What's new
+
+#### GitSync honors an arbitrary clone depth (#531)
+
+{class}`~libvcs.sync.git.GitSync` accepts a `depth` keyword argument that {meth}`~libvcs.sync.git.GitSync.obtain` forwards to `git clone --depth N`. When `depth` is unset the prior behavior is preserved: `git_shallow=True` clones at depth 1, and otherwise the clone is full. Downstream tools can now persist and apply a numeric shallow depth instead of only a boolean shallow flag.
+
 ### Fixes
 
 #### GitSync honors `git_shallow` and `tls_verify` constructor arguments (#531)
