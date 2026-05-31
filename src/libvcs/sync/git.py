@@ -211,6 +211,8 @@ class GitSync(BaseSync):
         url: str,
         path: StrPath,
         remotes: GitRemotesArgs = None,
+        git_shallow: bool = False,
+        tls_verify: bool = False,
         **kwargs: t.Any,
     ) -> None:
         """Local git repository.
@@ -219,6 +221,10 @@ class GitSync(BaseSync):
         ----------
         url : str
             URL of repo
+
+        git_shallow : bool
+            Clone with history truncated to the latest commit (``--depth 1``,
+            default False)
 
         tls_verify : bool
             Should certificate for https be checked (default False)
@@ -258,10 +264,8 @@ class GitSync(BaseSync):
                }
             )
         """
-        if "git_shallow" not in kwargs:
-            self.git_shallow = False
-        if "tls_verify" not in kwargs:
-            self.tls_verify = False
+        self.git_shallow = git_shallow
+        self.tls_verify = tls_verify
 
         self._remotes: GitSyncRemoteDict
 

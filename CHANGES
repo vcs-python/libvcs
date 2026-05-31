@@ -20,6 +20,12 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Fixes
+
+#### GitSync honors `git_shallow` and `tls_verify` constructor arguments (#531)
+
+Passing `git_shallow=True` or `tls_verify=True` to {class}`~libvcs.sync.git.GitSync` left the matching attribute unset, so the next {meth}`~libvcs.sync.git.GitSync.obtain` raised `AttributeError`. Both are now accepted as keyword-only constructor arguments and applied when cloning.
+
 ## libvcs 0.41.0 (2026-05-10)
 
 libvcs 0.41.0 is a pytest-plugin compatibility release. It renames libvcs's Git and Mercurial config fixtures so the plugin no longer occupies fixture names used by third-party pytest plugins, and it keeps the docs stack aligned with the current gp-sphinx theme pipeline.

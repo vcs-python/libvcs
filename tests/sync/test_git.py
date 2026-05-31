@@ -120,6 +120,43 @@ def test_repo_git_obtain_full(
     assert (tmp_path / "myrepo").exists()
 
 
+def test_git_shallow_and_tls_verify_kwargs_are_honored(
+    tmp_path: pathlib.Path,
+    git_remote_repo: pathlib.Path,
+) -> None:
+    """``git_shallow`` and ``tls_verify`` populate their attributes.
+
+    Regression: each kwarg previously left its attribute unset, so the next
+    ``obtain()`` raised ``AttributeError``.
+    """
+    # tls_verify reaches the attribute. Its clone-time ``config`` wiring is
+    # broken independently of this fix and tracked separately, so we don't
+    # drive a clone with it here.
+    assert (
+        GitSync(
+            url=git_remote_repo.as_uri(),
+            path=tmp_path / "tls",
+            tls_verify=True,
+        ).tls_verify
+        is True
+    )
+
+    # git_shallow drives a depth-1 (shallow) clone in obtain().
+    git_repo = GitSync(
+        url=git_remote_repo.as_uri(),
+        path=tmp_path / "myrepo",
+        git_shallow=True,
+    )
+    assert git_repo.git_shallow is True
+    git_repo.obtain()
+
+    is_shallow = run(
+        ["git", "rev-parse", "--is-shallow-repository"],
+        cwd=tmp_path / "myrepo",
+    )
+    assert is_shallow == "true"
+
+
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
     ("constructor", "lazy_constructor_options"),
