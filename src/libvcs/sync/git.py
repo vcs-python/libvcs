@@ -211,6 +211,9 @@ class GitSync(BaseSync):
         url: str,
         path: StrPath,
         remotes: GitRemotesArgs = None,
+        git_shallow: bool = False,
+        tls_verify: bool = False,
+        depth: int | None = None,
         **kwargs: t.Any,
     ) -> None:
         """Local git repository.
@@ -219,6 +222,15 @@ class GitSync(BaseSync):
         ----------
         url : str
             URL of repo
+
+        git_shallow : bool
+            Clone with history truncated to the latest commit (``--depth 1``,
+            default False)
+
+        depth : int, optional
+            Clone with history truncated to ``depth`` commits
+            (``git clone --depth N``). Takes precedence over ``git_shallow``.
+            Default None (full clone).
 
         tls_verify : bool
             Should certificate for https be checked (default False)
@@ -258,10 +270,9 @@ class GitSync(BaseSync):
                }
             )
         """
-        if "git_shallow" not in kwargs:
-            self.git_shallow = False
-        if "tls_verify" not in kwargs:
-            self.tls_verify = False
+        self.git_shallow = git_shallow
+        self.tls_verify = tls_verify
+        self.depth = depth
 
         self._remotes: GitSyncRemoteDict
 
@@ -364,10 +375,19 @@ class GitSync(BaseSync):
         url = self.url
 
         self.log.info("Cloning.")
+        # An explicit depth wins; otherwise git_shallow keeps the depth-1
+        # behavior, and neither means a full clone.
+        clone_depth: int | None
+        if self.depth is not None:
+            clone_depth = self.depth
+        elif self.git_shallow:
+            clone_depth = 1
+        else:
+            clone_depth = None
         self.cmd.clone(
             url=url,
             progress=True,
-            depth=1 if self.git_shallow else None,
+            depth=clone_depth,
             config={"http.sslVerify": False} if self.tls_verify else None,
             log_in_real_time=True,
         )
@@ -391,6 +411,15 @@ class GitSync(BaseSync):
         **kwargs: t.Any,
     ) -> SyncResult:
         """Pull latest changes from git remote.
+
+        .. todo::
+
+            Honor ``depth`` on update by deepening or unshallowing the existing
+            checkout when the requested depth differs from what is on disk.
+            Tracked in https://github.com/vcs-python/libvcs/issues/532. Edges to
+            handle: ``git fetch --depth N`` against a full checkout truncates it
+            to shallow, and ``git fetch --unshallow`` against a complete repo is
+            a fatal error (guard with ``git rev-parse --is-shallow-repository``).
 
         Parameters
         ----------

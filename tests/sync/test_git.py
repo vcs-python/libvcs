@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 import pathlib
 import random
 import shutil
@@ -28,7 +29,7 @@ from libvcs.sync.git import (
 if t.TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from libvcs.pytest_plugin import CreateRepoFn
+    from libvcs.pytest_plugin import CreateRepoFn, GitCommitEnvVars
 
 if not shutil.which("git"):
     pytestmark = pytest.mark.skip(reason="git is not available")
@@ -118,6 +119,116 @@ def test_repo_git_obtain_full(
 
     assert git_repo.get_revision() == test_repo_revision
     assert (tmp_path / "myrepo").exists()
+
+
+def test_git_shallow_and_tls_verify_kwargs_are_honored(
+    tmp_path: pathlib.Path,
+    git_remote_repo: pathlib.Path,
+) -> None:
+    """``git_shallow`` and ``tls_verify`` populate their attributes.
+
+    Regression: each kwarg previously left its attribute unset, so the next
+    ``obtain()`` raised ``AttributeError``.
+    """
+    # tls_verify reaches the attribute. Its clone-time ``config`` wiring is
+    # broken independently of this fix and tracked separately, so we don't
+    # drive a clone with it here.
+    assert (
+        GitSync(
+            url=git_remote_repo.as_uri(),
+            path=tmp_path / "tls",
+            tls_verify=True,
+        ).tls_verify
+        is True
+    )
+
+    # git_shallow drives a depth-1 (shallow) clone in obtain().
+    git_repo = GitSync(
+        url=git_remote_repo.as_uri(),
+        path=tmp_path / "myrepo",
+        git_shallow=True,
+    )
+    assert git_repo.git_shallow is True
+    git_repo.obtain()
+
+    is_shallow = run(
+        ["git", "rev-parse", "--is-shallow-repository"],
+        cwd=tmp_path / "myrepo",
+    )
+    assert is_shallow == "true"
+
+
+class DepthFixture(t.NamedTuple):
+    """Parameters for :func:`test_obtain_honors_clone_depth`."""
+
+    test_id: str
+    sync_kwargs: dict[str, t.Any]
+    expected_count: int
+    expected_shallow: bool
+
+
+DEPTH_FIXTURES: list[DepthFixture] = [
+    DepthFixture(
+        test_id="full-clone",
+        sync_kwargs={},
+        expected_count=6,
+        expected_shallow=False,
+    ),
+    DepthFixture(
+        test_id="git_shallow-depth-1",
+        sync_kwargs={"git_shallow": True},
+        expected_count=1,
+        expected_shallow=True,
+    ),
+    DepthFixture(
+        test_id="depth-3",
+        sync_kwargs={"depth": 3},
+        expected_count=3,
+        expected_shallow=True,
+    ),
+    DepthFixture(
+        test_id="depth-overrides-git_shallow",
+        sync_kwargs={"git_shallow": True, "depth": 2},
+        expected_count=2,
+        expected_shallow=True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    list(DepthFixture._fields),
+    DEPTH_FIXTURES,
+    ids=[test.test_id for test in DEPTH_FIXTURES],
+)
+def test_obtain_honors_clone_depth(
+    tmp_path: pathlib.Path,
+    create_git_remote_repo: CreateRepoFn,
+    git_commit_envvars: GitCommitEnvVars,
+    test_id: str,
+    sync_kwargs: dict[str, t.Any],
+    expected_count: int,
+    expected_shallow: bool,
+) -> None:
+    """obtain() clones at the requested depth; an explicit depth wins.
+
+    The ``file://`` URL matters: git ignores ``--depth`` for local-path clones.
+    """
+    remote_repo = create_git_remote_repo()
+    env = os.environ.copy()
+    env.update(git_commit_envvars)
+    for i in range(1, 7):
+        (remote_repo / "f.txt").write_text(str(i))
+        run(["git", "add", "f.txt"], cwd=remote_repo, env=env)
+        run(["git", "commit", "-m", f"c{i}"], cwd=remote_repo, env=env)
+
+    checkout = tmp_path / "checkout"
+    git_repo = GitSync(url=remote_repo.as_uri(), path=checkout, **sync_kwargs)
+    git_repo.obtain()
+
+    commit_count = run(["git", "rev-list", "--count", "HEAD"], cwd=checkout)
+    is_shallow = run(["git", "rev-parse", "--is-shallow-repository"], cwd=checkout)
+    assert int(commit_count) == expected_count
+    assert is_shallow == ("true" if expected_shallow else "false")
 
 
 @pytest.mark.parametrize(
