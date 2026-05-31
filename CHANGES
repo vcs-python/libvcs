@@ -14,11 +14,15 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.42.x (unreleased)
+## libvcs 0.43.x (unreleased)
 
 <!-- KEEP THIS PLACEHOLDER - DO NOT REMOVE OR MODIFY THIS LINE -->
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
+
+## libvcs 0.42.0 (2026-05-31)
+
+libvcs 0.42.0 teaches {class}`~libvcs.sync.git.GitSync` to clone at an arbitrary shallow depth rather than only a single commit, so tools that synchronize many repositories can persist and apply a numeric `--depth N` instead of a boolean shallow flag. It also repairs a long-standing bug where the `git_shallow` and `tls_verify` constructor arguments were silently dropped and then raised `AttributeError` on the next {meth}`~libvcs.sync.git.GitSync.obtain`. Downstream tools such as vcspull are the primary beneficiaries.
 
 ### What's new
 
