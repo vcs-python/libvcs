@@ -14,11 +14,15 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.43.x (unreleased)
+## libvcs 0.44.x (unreleased)
 
 <!-- KEEP THIS PLACEHOLDER - DO NOT REMOVE OR MODIFY THIS LINE -->
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
+
+## libvcs 0.43.0 (2026-06-20)
+
+libvcs 0.43.0 restores compatibility with pytest 9.1. Because the pytest plugin is auto-loaded by pytest, the previous release aborted the test session for any project that had libvcs installed and upgraded to pytest 9.1+; that no longer happens. Downstream tools such as vcspull are the primary beneficiaries.
 
 ### Fixes
 
