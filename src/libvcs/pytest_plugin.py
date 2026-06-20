@@ -43,6 +43,24 @@ skip_if_hg_missing = pytest.mark.skipif(
 )
 
 
+def _skip_if_git_missing() -> None:
+    """Skip the calling fixture when the ``git`` binary is unavailable."""
+    if not shutil.which("git"):
+        pytest.skip(reason="git is not available")
+
+
+def _skip_if_svn_missing() -> None:
+    """Skip the calling fixture when ``svn`` or ``svnadmin`` is unavailable."""
+    if not shutil.which("svn") or not shutil.which("svnadmin"):
+        pytest.skip(reason="svn is not available")
+
+
+def _skip_if_hg_missing() -> None:
+    """Skip the calling fixture when the ``hg`` binary is unavailable."""
+    if not shutil.which("hg"):
+        pytest.skip(reason="hg is not available")
+
+
 DEFAULT_VCS_NAME = "Test user"
 DEFAULT_VCS_EMAIL = "test@example.com"
 
@@ -145,13 +163,13 @@ def set_home(
 
 
 @pytest.fixture(scope="session")
-@skip_if_git_missing
 def vcs_gitconfig(
     user_path: pathlib.Path,
     vcs_email: str,
     vcs_name: str,
 ) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
+    _skip_if_git_missing()
     gitconfig = user_path / ".gitconfig"
 
     gitconfig.write_text(
@@ -173,24 +191,24 @@ def vcs_gitconfig(
 
 
 @pytest.fixture
-@skip_if_git_missing
 def set_vcs_gitconfig(
     monkeypatch: pytest.MonkeyPatch,
     vcs_gitconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set git configuration."""
+    _skip_if_git_missing()
     monkeypatch.setenv("GIT_CONFIG", str(vcs_gitconfig))
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(vcs_gitconfig))  # For child processes
     return vcs_gitconfig
 
 
 @pytest.fixture(scope="session")
-@skip_if_hg_missing
 def vcs_hgconfig(
     user_path: pathlib.Path,
     vcs_user: str,
 ) -> pathlib.Path:
     """Return Mercurial configuration."""
+    _skip_if_hg_missing()
     hgrc = user_path / ".hgrc"
     hgrc.write_text(
         textwrap.dedent(
@@ -209,12 +227,12 @@ def vcs_hgconfig(
 
 
 @pytest.fixture
-@skip_if_hg_missing
 def set_vcs_hgconfig(
     monkeypatch: pytest.MonkeyPatch,
     vcs_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set Mercurial configuration."""
+    _skip_if_hg_missing()
     monkeypatch.setenv("HGRCPATH", str(vcs_hgconfig))
     return vcs_hgconfig
 
@@ -338,11 +356,11 @@ def empty_git_bare_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Pa
 
 
 @pytest.fixture(scope="session")
-@skip_if_git_missing
 def empty_git_bare_repo(
     empty_git_bare_repo_path: pathlib.Path,
 ) -> pathlib.Path:
     """Return factory to create git remote repo to for clone / push purposes."""
+    _skip_if_git_missing()
     if (
         empty_git_bare_repo_path.exists()
         and (empty_git_bare_repo_path / ".git").exists()
@@ -357,11 +375,11 @@ def empty_git_bare_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_git_missing
 def empty_git_repo(
     empty_git_repo_path: pathlib.Path,
 ) -> pathlib.Path:
     """Return factory to create git remote repo to for clone / push purposes."""
+    _skip_if_git_missing()
     if empty_git_repo_path.exists() and (empty_git_repo_path / ".git").exists():
         return empty_git_repo_path
 
@@ -373,12 +391,12 @@ def empty_git_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_git_missing
 def create_git_remote_bare_repo(
     remote_repos_path: pathlib.Path,
     empty_git_bare_repo: pathlib.Path,
 ) -> CreateRepoFn:
     """Return factory to create git remote repo to for clone / push purposes."""
+    _skip_if_git_missing()
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
@@ -402,12 +420,12 @@ def create_git_remote_bare_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_git_missing
 def create_git_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_git_repo: pathlib.Path,
 ) -> CreateRepoFn:
     """Return factory to create git remote repo to for clone / push purposes."""
+    _skip_if_git_missing()
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
@@ -455,13 +473,13 @@ def git_remote_repo_single_commit_post_init(
 
 
 @pytest.fixture(scope="session")
-@skip_if_git_missing
 def git_remote_repo(
     create_git_remote_repo: CreateRepoFn,
     vcs_gitconfig: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
 ) -> pathlib.Path:
     """Copy the session-scoped Git repository to a temporary directory."""
+    _skip_if_git_missing()
     # TODO: Cache the effect of of this in a session-based repo
     repo_path = create_git_remote_repo()
     git_remote_repo_single_commit_post_init(
@@ -519,15 +537,11 @@ def empty_svn_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
 
 
 @pytest.fixture(scope="session")
-@skip_if_svn_missing
 def empty_svn_repo(
     empty_svn_repo_path: pathlib.Path,
 ) -> pathlib.Path:
     """Return factory to create svn remote repo to for clone / push purposes."""
-    if not shutil.which("svn") or not shutil.which("svnadmin"):
-        pytest.skip(
-            reason="svn is not available",
-        )
+    _skip_if_svn_missing()
 
     if empty_svn_repo_path.exists() and (empty_svn_repo_path / "conf").exists():
         return empty_svn_repo_path
@@ -540,12 +554,12 @@ def empty_svn_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_svn_missing
 def create_svn_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_svn_repo: pathlib.Path,
 ) -> CreateRepoFn:
     """Pre-made svn repo, bare, used as a file:// remote to checkout and commit to."""
+    _skip_if_svn_missing()
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
@@ -572,20 +586,20 @@ def create_svn_remote_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_svn_missing
 def svn_remote_repo(
     create_svn_remote_repo: CreateRepoFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
+    _skip_if_svn_missing()
     return create_svn_remote_repo()
 
 
 @pytest.fixture(scope="session")
-@skip_if_svn_missing
 def svn_remote_repo_with_files(
     create_svn_remote_repo: CreateRepoFn,
 ) -> pathlib.Path:
     """Pre-made. Local file:// based SVN server."""
+    _skip_if_svn_missing()
     repo_path = create_svn_remote_repo()
     svn_remote_repo_single_commit_post_init(remote_repo_path=repo_path)
     return repo_path
@@ -629,11 +643,11 @@ def empty_hg_repo_path(libvcs_test_cache_path: pathlib.Path) -> pathlib.Path:
 
 
 @pytest.fixture(scope="session")
-@skip_if_hg_missing
 def empty_hg_repo(
     empty_hg_repo_path: pathlib.Path,
 ) -> pathlib.Path:
     """Return factory to create hg remote repo to for clone / push purposes."""
+    _skip_if_hg_missing()
     if empty_hg_repo_path.exists() and (empty_hg_repo_path / ".hg").exists():
         return empty_hg_repo_path
 
@@ -645,13 +659,13 @@ def empty_hg_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_hg_missing
 def create_hg_remote_repo(
     remote_repos_path: pathlib.Path,
     empty_hg_repo: pathlib.Path,
     vcs_hgconfig: pathlib.Path,
 ) -> CreateRepoFn:
     """Pre-made hg repo, bare, used as a file:// remote to checkout and commit to."""
+    _skip_if_hg_missing()
 
     def fn(
         remote_repos_path: pathlib.Path = remote_repos_path,
@@ -681,13 +695,13 @@ def create_hg_remote_repo(
 
 
 @pytest.fixture(scope="session")
-@skip_if_hg_missing
 def hg_remote_repo(
     remote_repos_path: pathlib.Path,
     create_hg_remote_repo: CreateRepoFn,
     vcs_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Pre-made, file-based repo for push and pull."""
+    _skip_if_hg_missing()
     repo_path = create_hg_remote_repo()
     hg_remote_repo_single_commit_post_init(
         remote_repo_path=repo_path,
