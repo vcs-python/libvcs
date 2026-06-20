@@ -34,8 +34,8 @@ skip_if_git_missing = pytest.mark.skipif(
     reason="git is not available",
 )
 skip_if_svn_missing = pytest.mark.skipif(
-    not shutil.which("svn"),
-    reason="svn is not available",
+    not shutil.which("svn") or not shutil.which("svnadmin"),
+    reason="svn or svnadmin is not available",
 )
 skip_if_hg_missing = pytest.mark.skipif(
     not shutil.which("hg"),
@@ -52,7 +52,7 @@ def _skip_if_git_missing() -> None:
 def _skip_if_svn_missing() -> None:
     """Skip the calling fixture when ``svn`` or ``svnadmin`` is unavailable."""
     if not shutil.which("svn") or not shutil.which("svnadmin"):
-        pytest.skip(reason="svn is not available")
+        pytest.skip(reason="svn or svnadmin is not available")
 
 
 def _skip_if_hg_missing() -> None:
@@ -121,7 +121,7 @@ namer = RandomStrSequence()
 
 def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) -> bool:
     """Skip tests if VCS binaries are missing."""
-    if not shutil.which("svn") and any(
+    if (not shutil.which("svn") or not shutil.which("svnadmin")) and any(
         needle in str(collection_path) for needle in ["svn", "subversion"]
     ):
         return True
