@@ -169,7 +169,6 @@ def vcs_gitconfig(
     vcs_name: str,
 ) -> pathlib.Path:
     """Return git configuration, pytest fixture."""
-    _skip_if_git_missing()
     gitconfig = user_path / ".gitconfig"
 
     gitconfig.write_text(
@@ -196,7 +195,6 @@ def set_vcs_gitconfig(
     vcs_gitconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set git configuration."""
-    _skip_if_git_missing()
     monkeypatch.setenv("GIT_CONFIG", str(vcs_gitconfig))
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(vcs_gitconfig))  # For child processes
     return vcs_gitconfig
@@ -208,7 +206,6 @@ def vcs_hgconfig(
     vcs_user: str,
 ) -> pathlib.Path:
     """Return Mercurial configuration."""
-    _skip_if_hg_missing()
     hgrc = user_path / ".hgrc"
     hgrc.write_text(
         textwrap.dedent(
@@ -232,7 +229,6 @@ def set_vcs_hgconfig(
     vcs_hgconfig: pathlib.Path,
 ) -> pathlib.Path:
     """Set Mercurial configuration."""
-    _skip_if_hg_missing()
     monkeypatch.setenv("HGRCPATH", str(vcs_hgconfig))
     return vcs_hgconfig
 
