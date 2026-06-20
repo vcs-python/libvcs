@@ -2704,3 +2704,82 @@ def test_rev_list_all_parameter(git_repo: GitSync) -> None:
 
     # _all=True should return strictly more commits (the other-branch commit)
     assert count_with_all > count_no_all
+
+
+def test_run_trim_false_preserves_diff(git_repo: GitSync) -> None:
+    """run(trim=False) returns byte-faithful output a patch tool can apply.
+
+    The default per-line trimming dropped leading indentation and blank
+    context lines and removed the trailing newline, so a captured
+    ``git diff`` was rejected by ``git apply`` as a corrupt patch.
+    """
+    base = (
+        "def greet(name):\n"
+        '    message = "hello, " + name\n'
+        "\n"
+        "    print(message)\n"
+        "    return message\n"
+    )
+    target = git_repo.path / "greet.py"
+    target.write_text(base)
+    git_repo.cmd.run(["add", "greet.py"])
+    git_repo.cmd.run(["commit", "-m", "Add greet.py"])
+    target.write_text(base.replace("hello, ", "hi, "))
+
+    faithful = subprocess.run(
+        ["git", "diff", "--no-color", "--", "greet.py"],
+        cwd=git_repo.path,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    captured = git_repo.cmd.run(["diff", "--no-color", "--", "greet.py"], trim=False)
+    assert captured == faithful
+
+    # Restore the clean pre-image so the captured patch can be validated.
+    target.write_text(base)
+    check = subprocess.run(
+        ["git", "apply", "--check"],
+        cwd=git_repo.path,
+        input=captured,
+        capture_output=True,
+        text=True,
+    )
+    assert check.returncode == 0, check.stderr
+
+
+def test_run_trim_false_preserves_blob(git_repo: GitSync) -> None:
+    """run(trim=False) round-trips file contents byte-for-byte."""
+    base = "a\n    indented\n\nb\n"
+    target = git_repo.path / "blob.txt"
+    target.write_text(base)
+    git_repo.cmd.run(["add", "blob.txt"])
+    git_repo.cmd.run(["commit", "-m", "Add blob.txt"])
+
+    blob = git_repo.cmd.run(["cat-file", "blob", "HEAD:blob.txt"], trim=False)
+    assert blob == base
+
+
+def test_run_default_trims_trailing_newline(git_repo: GitSync) -> None:
+    """Default run() keeps the no-trailing-newline contract callers rely on."""
+    sha = git_repo.cmd.run(["rev-parse", "HEAD"])
+
+    assert "\n" not in sha
+    assert sha == sha.strip()
+
+
+def test_run_failure_preserves_stderr_lines(git_repo: GitSync) -> None:
+    """A failed command keeps stderr line structure in CommandError.output.
+
+    Previously stderr lines were rejoined with no separator, smashing a
+    multi-line git error into a single run-on string.
+    """
+    with pytest.raises(exc.CommandError) as excinfo:
+        git_repo.cmd.run(["push", "no-such-remote", "HEAD"])
+
+    output = excinfo.value.output
+    # Multi-line stderr keeps its line breaks (previously smashed into one
+    # run-on line). Assert on the echoed remote name, which git does not
+    # localize, rather than on translatable English error text.
+    assert "\n" in output
+    assert "no-such-remote" in output

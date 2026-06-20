@@ -387,7 +387,7 @@ class Svn:
         >>> svn.commit(path=new_file, message='My new commit')
         '...'
         >>> svn.blame('new.txt')
-        '4        ... example text'
+        '     4 ... example text'
         """
         local_flags: list[str] = [str(target)]
 
