@@ -24,7 +24,7 @@ _Notes on the upcoming release will go here._
 
 #### pytest 9.1 compatibility for the pytest plugin (#537)
 
-libvcs's pytest plugin (see {ref}`pytest_plugin`) now imports cleanly under pytest 9.1, which began rejecting marks applied to fixture functions. The binary-availability checks that decide whether to skip Git, Mercurial, or Subversion fixtures now run inside each fixture, so projects that use libvcs's fixtures can upgrade to pytest 9.1+ without the plugin aborting before test collection.
+libvcs's pytest plugin (see {ref}`pytest_plugin`) loads automatically whenever pytest runs, so any project with libvcs installed can now use pytest 9.1+ — the plugin no longer aborts the test session at startup. Its Git, Mercurial, and Subversion fixtures upgrade cleanly.
 
 ## libvcs 0.42.0 (2026-05-31)
 
