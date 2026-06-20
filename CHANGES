@@ -20,6 +20,12 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Fixes
+
+#### pytest 9.1 compatibility for the pytest plugin (#537)
+
+libvcs's pytest plugin (see {ref}`pytest_plugin`) loads automatically whenever pytest runs, so any project with libvcs installed can now use pytest 9.1+ — the plugin no longer aborts the test session at startup. Its Git, Mercurial, and Subversion fixtures upgrade cleanly.
+
 ## libvcs 0.42.0 (2026-05-31)
 
 libvcs 0.42.0 teaches {class}`~libvcs.sync.git.GitSync` to clone at an arbitrary shallow depth rather than only a single commit, so tools that synchronize many repositories can persist and apply a numeric `--depth N` instead of a boolean shallow flag. It also repairs a long-standing bug where the `git_shallow` and `tls_verify` constructor arguments were silently dropped and then raised `AttributeError` on the next {meth}`~libvcs.sync.git.GitSync.obtain`. Downstream tools such as vcspull are the primary beneficiaries.
