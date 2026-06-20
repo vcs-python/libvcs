@@ -800,12 +800,6 @@ def add_doctest_fixtures(
     doctest_namespace: dict[str, t.Any],
     tmp_path: pathlib.Path,
     set_home: pathlib.Path,
-    git_commit_envvars: GitCommitEnvVars,
-    vcs_hgconfig: pathlib.Path,
-    create_git_remote_repo: CreateRepoFn,
-    create_svn_remote_repo: CreateRepoFn,
-    create_hg_remote_repo: CreateRepoFn,
-    git_repo: pathlib.Path,
 ) -> None:
     """Harness pytest fixtures to pytest's doctest namespace."""
     from _pytest.doctest import DoctestItem
@@ -813,7 +807,11 @@ def add_doctest_fixtures(
     if not isinstance(request._pyfuncitem, DoctestItem):  # Only run on doctest items
         return
     doctest_namespace["tmp_path"] = tmp_path
+    # Request the per-VCS fixtures lazily so a missing binary only drops that
+    # VCS's doctest helpers -- it does not skip doctests for the others.
     if shutil.which("git"):
+        git_commit_envvars = request.getfixturevalue("git_commit_envvars")
+        create_git_remote_repo = request.getfixturevalue("create_git_remote_repo")
         doctest_namespace["create_git_remote_repo"] = functools.partial(
             create_git_remote_repo,
             remote_repo_post_init=functools.partial(
@@ -823,14 +821,17 @@ def add_doctest_fixtures(
             init_cmd_args=None,
         )
         doctest_namespace["create_git_remote_repo_bare"] = create_git_remote_repo
-        doctest_namespace["example_git_repo"] = git_repo
-    if shutil.which("svn"):
+        doctest_namespace["example_git_repo"] = request.getfixturevalue("git_repo")
+    if shutil.which("svn") and shutil.which("svnadmin"):
+        create_svn_remote_repo = request.getfixturevalue("create_svn_remote_repo")
         doctest_namespace["create_svn_remote_repo_bare"] = create_svn_remote_repo
         doctest_namespace["create_svn_remote_repo"] = functools.partial(
             create_svn_remote_repo,
             remote_repo_post_init=svn_remote_repo_single_commit_post_init,
         )
     if shutil.which("hg"):
+        vcs_hgconfig = request.getfixturevalue("vcs_hgconfig")
+        create_hg_remote_repo = request.getfixturevalue("create_hg_remote_repo")
         doctest_namespace["create_hg_remote_repo_bare"] = create_hg_remote_repo
         doctest_namespace["create_hg_remote_repo"] = functools.partial(
             create_hg_remote_repo,
