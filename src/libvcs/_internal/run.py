@@ -149,7 +149,7 @@ def run(
     umask: int = -1,
     log_in_real_time: bool = False,
     check_returncode: bool = True,
-    trim: bool = True,
+    trim: bool = False,
     callback: ProgressCallbackProtocol | None = None,
     timeout: float | None = None,
 ) -> str:
@@ -158,12 +158,12 @@ def run(
     Run 'args' in a shell and return the combined contents of stdout and
     stderr (Blocking). Throws an exception if the command exits non-zero.
 
-    Output is captured verbatim. When ``trim`` is True (the default)
-    :meth:`str.rstrip` removes trailing whitespace from the whole output,
-    preserving leading indentation, blank lines, and interior structure. Pass
-    ``trim=False`` for byte-faithful output -- for example a ``git diff``
-    destined for ``git apply``, which requires the trailing newline, or
-    ``git cat-file blob`` whose contents must round-trip exactly.
+    Output is returned verbatim by default, so whitespace-significant output
+    round-trips exactly -- for example a ``git diff`` destined for
+    ``git apply``, which requires the trailing newline, or a ``git cat-file
+    blob`` whose contents must match byte-for-byte. Pass ``trim=True`` to strip
+    trailing whitespace from the whole output for convenient "bare value" reads
+    where a trailing newline is just noise (e.g. ``rev-parse HEAD``).
 
     Keyword arguments are passthrough to :class:`subprocess.Popen`.
 
@@ -190,12 +190,12 @@ def run(
         code is different from 0.
 
     trim : bool
-        When True (default), strip trailing whitespace from the whole output
-        for the convenient "bare value" reads callers expect (e.g.
-        ``rev-parse HEAD``). When False, return the output verbatim, including
-        any trailing newline, so whitespace-significant output (diffs, blob
-        contents) round-trips exactly. On a non-zero exit the captured stderr
-        used for the error output is trimmed the same way.
+        When False (the default), return the output verbatim, including any
+        trailing newline, so whitespace-significant output (diffs, blob
+        contents) round-trips exactly. When True, strip trailing whitespace
+        from the whole output for the convenient "bare value" reads callers
+        expect (e.g. ``rev-parse HEAD``). The same policy applies to stderr
+        captured for a failed command's error output.
 
     callback : ProgressCallbackProtocol
         callback to return output as a command executes, accepts a function signature
