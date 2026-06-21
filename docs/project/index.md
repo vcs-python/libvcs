@@ -31,6 +31,12 @@ Ruff, mypy, NumPy docstrings, import conventions.
 Release checklist and version policy.
 :::
 
+:::{grid-item-card} Decision Records
+:link: adr
+:link-type: ref
+Architecture decisions and their rationale.
+:::
+
 ::::
 
 ```{toctree}
@@ -40,4 +46,5 @@ contributing
 workflow
 code-style
 releasing
+adr/index
 ```

@@ -34,7 +34,7 @@ def console_to_str(s: bytes) -> str:
     try:
         return s.decode(console_encoding)
     except UnicodeDecodeError:
-        return s.decode("utf_8")
+        return s.decode("utf_8", errors="backslashreplace")
     except AttributeError:  # for tests, #13
         return str(s)
 
@@ -149,6 +149,7 @@ def run(
     umask: int = -1,
     log_in_real_time: bool = False,
     check_returncode: bool = True,
+    trim: bool = False,
     callback: ProgressCallbackProtocol | None = None,
     timeout: float | None = None,
 ) -> str:
@@ -156,6 +157,13 @@ def run(
 
     Run 'args' in a shell and return the combined contents of stdout and
     stderr (Blocking). Throws an exception if the command exits non-zero.
+
+    Output is returned verbatim by default, so whitespace-significant output
+    round-trips exactly -- for example a ``git diff`` destined for
+    ``git apply``, which requires the trailing newline, or a ``git cat-file
+    blob`` whose contents must match byte-for-byte. Pass ``trim=True`` to strip
+    trailing whitespace from the whole output for convenient "bare value" reads
+    where a trailing newline is just noise (e.g. ``rev-parse HEAD``).
 
     Keyword arguments are passthrough to :class:`subprocess.Popen`.
 
@@ -180,6 +188,14 @@ def run(
     check_returncode : bool
         Indicate whether a ``libvcs.exc.CommandError`` should be raised if return
         code is different from 0.
+
+    trim : bool
+        When False (the default), return the output verbatim, including any
+        trailing newline, so whitespace-significant output (diffs, blob
+        contents) round-trips exactly. When True, strip trailing whitespace
+        from the whole output for the convenient "bare value" reads callers
+        expect (e.g. ``rev-parse HEAD``). The same policy applies to stderr
+        captured for a failed command's error output.
 
     callback : ProgressCallbackProtocol
         callback to return output as a command executes, accepts a function signature
@@ -273,29 +289,25 @@ def run(
         callback(output="\r", timestamp=datetime.datetime.now())
 
     if proc.stdout is not None:
-        stdout_lines: list[bytes] = (
-            timeout_stdout.split(b"\n")
+        raw_stdout: bytes = (
+            timeout_stdout
             if timeout_stdout is not None
-            else proc.stdout.readlines()
+            else b"".join(proc.stdout.readlines())
         )
-        lines: t.Iterable[bytes] = filter(
-            None,
-            (line.strip() for line in stdout_lines),
-        )
-        all_output = console_to_str(b"\n".join(lines))
+        all_output = console_to_str(raw_stdout)
+        if trim:
+            all_output = all_output.rstrip()
     else:
         all_output = ""
     if code and proc.stderr is not None:
-        stderr_raw: list[bytes] = (
-            timeout_stderr.split(b"\n")
+        raw_stderr: bytes = (
+            timeout_stderr
             if timeout_stderr is not None
-            else proc.stderr.readlines()
+            else b"".join(proc.stderr.readlines())
         )
-        stderr_lines: t.Iterable[bytes] = filter(
-            None,
-            (line.strip() for line in stderr_raw),
-        )
-        all_output = console_to_str(b"".join(stderr_lines))
+        all_output = console_to_str(raw_stderr)
+        if trim:
+            all_output = all_output.rstrip()
     output = "".join(all_output)
     if code != 0 and check_returncode:
         raise exc.CommandError(

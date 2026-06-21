@@ -248,6 +248,7 @@ class Svn:
         auto_props: bool | None = None,
         no_auto_props: bool | None = None,
         parents: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Stage an unversioned file to be pushed to repository next commit.
 
@@ -272,6 +273,8 @@ class Svn:
             `--no-auto-props`
         parents :
             `--parents`
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -281,8 +284,8 @@ class Svn:
         >>> new_file = tmp_path / 'new.txt'
         >>> new_file.write_text('example text', encoding="utf-8")
         12
-        >>> svn.add(path=new_file)
-        'A  new.txt'
+        >>> svn.add(path=new_file, trim=True)
+        'A         new.txt'
         """
         local_flags: list[str] = []
 
@@ -302,12 +305,13 @@ class Svn:
         if parents is True:
             local_flags.append("--parents")
 
-        return self.run(["add", *local_flags])
+        return self.run(["add", *local_flags], trim=trim)
 
     def auth(
         self,
         remove: str | None = None,
         show_passwords: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Manage stored authentication credentials.
@@ -321,10 +325,12 @@ class Svn:
             Remove matching auth credentials
         show_passwords : bool, optional
             Show cached passwords
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
-        >>> Svn(path=tmp_path).auth()
+        >>> Svn(path=tmp_path).auth(trim=True)
         "Credentials cache in '...' is empty"
         """
         local_flags: list[str] = []
@@ -334,7 +340,7 @@ class Svn:
         if show_passwords is True:
             local_flags.append("--show-passwords")
 
-        return self.run(["auth", *local_flags])
+        return self.run(["auth", *local_flags], trim=trim)
 
     def blame(
         self,
@@ -347,6 +353,7 @@ class Svn:
         incremental: bool | None = None,
         xml: bool | None = None,
         extensions: str | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Show authorship for file line-by-line.
@@ -372,6 +379,8 @@ class Svn:
             Diff or blame tool (pass raw args).
         force : bool, optional
             force operation to run
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -382,12 +391,12 @@ class Svn:
         >>> new_file = tmp_path / 'new.txt'
         >>> new_file.write_text('example text', encoding="utf-8")
         12
-        >>> svn.add(path=new_file)
-        'A  new.txt'
+        >>> svn.add(path=new_file, trim=True)
+        'A         new.txt'
         >>> svn.commit(path=new_file, message='My new commit')
         '...'
-        >>> svn.blame('new.txt')
-        '4        ... example text'
+        >>> svn.blame('new.txt', trim=True)
+        '     4 ... example text'
         """
         local_flags: list[str] = [str(target)]
 
@@ -406,7 +415,7 @@ class Svn:
         if force is True:
             local_flags.append("--force")
 
-        return self.run(["blame", *local_flags])
+        return self.run(["blame", *local_flags], trim=trim)
 
     def cat(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Output contents of files from working copy or repository URLs.
@@ -451,6 +460,7 @@ class Svn:
         force_log: bool | None = None,
         keep_changelists: bool | None = None,
         include_externals: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Push changes from working copy to SVN repo.
@@ -470,6 +480,8 @@ class Svn:
             `--keep_changelists`, don't delete changelists after commit
         force_log :
             `--force-log`, Ignore already versioned paths
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -479,9 +491,9 @@ class Svn:
         >>> new_file = tmp_path / 'new.txt'
         >>> new_file.write_text('example text', encoding="utf-8")
         12
-        >>> svn.add(path=new_file)
-        'A  new.txt'
-        >>> svn.commit(path=new_file, message='My new commit')
+        >>> svn.add(path=new_file, trim=True)
+        'A         new.txt'
+        >>> svn.commit(path=new_file, message='My new commit', trim=True)
         'Adding          new.txt...Transmitting file data...Committed revision 4.'
         """
         local_flags: list[str] = []
@@ -504,7 +516,7 @@ class Svn:
         if include_externals is True:
             local_flags.append("--include-externals")
 
-        return self.run(["commit", *local_flags])
+        return self.run(["commit", *local_flags], trim=trim)
 
     def copy(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Copy file or dir in this SVN working copy or repo.
@@ -637,6 +649,7 @@ class Svn:
         self,
         targets: pathlib.Path | None = None,
         force: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Lock path or URLs for working copy or repository.
@@ -644,12 +657,17 @@ class Svn:
         Wraps `svn lock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.lock.html>`_.
 
+        Parameters
+        ----------
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
+
         Examples
         --------
         >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
-        >>> svn.lock(targets='samplepickle')
+        >>> svn.lock(targets='samplepickle', trim=True)
         "'samplepickle' locked by user '...'."
         """
         local_flags: list[str] = []
@@ -663,7 +681,7 @@ class Svn:
         if force:
             local_flags.append("--force")
 
-        return self.run(["lock", *local_flags])
+        return self.run(["lock", *local_flags], trim=trim)
 
     def log(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Show logs from repository.
@@ -764,6 +782,7 @@ class Svn:
         value_path: StrPath | None = None,
         target: StrOrBytesPath | None = None,
         *args: t.Any,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Set property for this SVN working copy or a remote revision.
@@ -779,13 +798,15 @@ class Svn:
             propname
         value_path :
             VALFILE
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
-        >>> svn.propset(name="my_prop", value="value", path=".")
+        >>> svn.propset(name="my_prop", value="value", path=".", trim=True)
         "property 'my_prop' set on '.'"
         """
         local_flags: list[str] = [name, *args]
@@ -803,7 +824,7 @@ class Svn:
         elif target is not None:
             local_flags.append(str(target))
 
-        return self.run(["propset", *local_flags])
+        return self.run(["propset", *local_flags], trim=trim)
 
     def relocate(self, *, to_path: StrPath, **kwargs: t.Any) -> str:
         """Set the SVN repository URL for this working copy.
@@ -932,12 +953,18 @@ class Svn:
         targets: pathlib.Path | None = None,
         depth: DepthLiteral = None,
         force: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Revert any changes to this SVN working copy.
 
         Wraps `svn revert
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.revert.html>`_.
+
+        Parameters
+        ----------
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -947,8 +974,8 @@ class Svn:
         >>> new_file = tmp_path / 'new.txt'
         >>> new_file.write_text('example text', encoding="utf-8")
         12
-        >>> svn.add(path=new_file)
-        'A  new.txt'
+        >>> svn.add(path=new_file, trim=True)
+        'A         new.txt'
         >>> svn.commit(path=new_file, message='My new commit')
         '...'
         >>> svn.revert(path=new_file)
@@ -979,7 +1006,7 @@ class Svn:
         if force is not None:
             local_flags.append("--force")
 
-        return self.run(["revert", *local_flags])
+        return self.run(["revert", *local_flags], trim=trim)
 
     def status(self, *args: t.Any, **kwargs: t.Any) -> str:
         """Return status of this SVN working copy.
@@ -1048,6 +1075,7 @@ class Svn:
         self,
         targets: pathlib.Path | None = None,
         force: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Unlock path or URL reserved by another user.
@@ -1055,14 +1083,19 @@ class Svn:
         Wraps `svn unlock
         <https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.unlock.html>`_.
 
+        Parameters
+        ----------
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
+
         Examples
         --------
         >>> svn = Svn(path=tmp_path)
         >>> svn.checkout(url=f'file://{create_svn_remote_repo()}')
         '...Checked out revision ...'
-        >>> svn.lock(targets='samplepickle')
+        >>> svn.lock(targets='samplepickle', trim=True)
         "'samplepickle' locked by user '...'."
-        >>> svn.unlock(targets='samplepickle')
+        >>> svn.unlock(targets='samplepickle', trim=True)
         "'samplepickle' unlocked."
         """
         local_flags: list[str] = []
@@ -1076,7 +1109,7 @@ class Svn:
         if force:
             local_flags.append("--force")
 
-        return self.run(["unlock", *local_flags])
+        return self.run(["unlock", *local_flags], trim=trim)
 
     def update(
         self,

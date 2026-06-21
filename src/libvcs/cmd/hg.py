@@ -281,7 +281,7 @@ class Hg:
         # libvcs special behavior
         check_returncode: bool | None = True,
         *args: object,
-        **kwargs: object,
+        **kwargs: t.Any,
     ) -> str:
         """Update working directory.
 
@@ -293,7 +293,7 @@ class Hg:
         >>> hg_remote_repo = create_hg_remote_repo()
         >>> hg.clone(url=f'file://{hg_remote_repo}')
         'updating to branch default...1 files updated, 0 files merged, ...'
-        >>> hg.update()
+        >>> hg.update(trim=True)
         '0 files updated, 0 files merged, 0 files removed, 0 files unresolved'
         """
         local_flags: list[str] = []
@@ -303,7 +303,9 @@ class Hg:
         if verbose:
             local_flags.append("--verbose")
 
-        return self.run(["update", *local_flags], check_returncode=check_returncode)
+        return self.run(
+            ["update", *local_flags], check_returncode=check_returncode, **kwargs
+        )
 
     def pull(
         self,
@@ -313,9 +315,9 @@ class Hg:
         # libvcs special behavior
         check_returncode: bool | None = True,
         *args: object,
-        **kwargs: object,
+        **kwargs: t.Any,
     ) -> str:
-        """Update working directory.
+        r"""Pull changes from a remote repository.
 
         Wraps `hg pull <https://www.mercurial-scm.org/doc/hg.1.html#pull>`_.
 
@@ -325,10 +327,10 @@ class Hg:
         >>> hg_remote_repo = create_hg_remote_repo()
         >>> hg.clone(url=f'file://{hg_remote_repo}')
         'updating to branch default...1 files updated, 0 files merged, ...'
-        >>> hg.pull()
-        'pulling from ...searching for changes...no changes found'
-        >>> hg.pull(update=True)
-        'pulling from ...searching for changes...no changes found'
+        >>> hg.pull(trim=True)  # doctest: +ELLIPSIS
+        'pulling from ...\nsearching for changes\nno changes found'
+        >>> hg.pull(update=True, trim=True)  # doctest: +ELLIPSIS
+        'pulling from ...\nsearching for changes\nno changes found'
         """
         local_flags: list[str] = []
 
@@ -339,4 +341,6 @@ class Hg:
         if update:
             local_flags.append("--update")
 
-        return self.run(["pull", *local_flags], check_returncode=check_returncode)
+        return self.run(
+            ["pull", *local_flags], check_returncode=check_returncode, **kwargs
+        )
