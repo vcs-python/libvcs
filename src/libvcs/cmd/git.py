@@ -57,7 +57,7 @@ class Git:
 
         Subcommands:
 
-        >>> git.remotes.show()
+        >>> git.remotes.show(trim=True)
         'origin'
 
         >>> git.remotes.add(
@@ -65,10 +65,10 @@ class Git:
         ... )
         ''
 
-        >>> git.remotes.show()
+        >>> git.remotes.show(trim=True)
         'my_remote\norigin'
 
-        >>> git.stash.save(message="Message")
+        >>> git.stash.save(message="Message", trim=True)
         'No local changes to save'
 
         >>> git.submodule.init()
@@ -78,7 +78,7 @@ class Git:
 
         >>> git.remotes.get(remote_name='my_remote').remove()
         ''
-        >>> git.remotes.show()
+        >>> git.remotes.show(trim=True)
         'origin'
 
         >>> git.stash.ls()
@@ -651,6 +651,7 @@ class Git:
         _quit: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Reapply commit on top of another tip.
@@ -661,19 +662,21 @@ class Git:
         ----------
         continue : bool
             Accepted via kwargs
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
-        >>> git.rebase()
+        >>> git.rebase(trim=True)
         'Current branch master is up to date.'
 
         Declare upstream:
 
         >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
-        >>> git.rebase(upstream='origin')
+        >>> git.rebase(upstream='origin', trim=True)
         'Current branch master is up to date.'
         >>> git.path.exists()
         True
@@ -792,6 +795,7 @@ class Git:
         return self.run(
             ["rebase", *local_flags, *required_flags],
             check_returncode=check_returncode,
+            trim=trim,
         )
 
     def pull(
@@ -886,6 +890,7 @@ class Git:
         # Pass-through to run
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Download from repo. Wraps `git pull <https://git-scm.com/docs/git-pull>`_.
@@ -894,7 +899,7 @@ class Git:
         --------
         >>> git = Git(path=example_git_repo.path)
         >>> git_remote_repo = create_git_remote_repo()
-        >>> git.pull()
+        >>> git.pull(trim=True)
         'Already up to date.'
 
         Fetch via ref:
@@ -1084,6 +1089,7 @@ class Git:
             ["pull", *local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def init(
@@ -1542,6 +1548,7 @@ class Git:
         treeish: str | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Switch branches or checks out files.
@@ -1576,12 +1583,14 @@ class Git:
         new_branch : str
         start_point : str
         treeish : str
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> git = Git(path=example_git_repo.path)
 
-        >>> git.checkout()
+        >>> git.checkout(trim=True)
         "Your branch is up to date with 'origin/master'."
 
         >>> git.checkout(branch='origin/master', pathspec='.')
@@ -1643,6 +1652,7 @@ class Git:
         return self.run(
             ["checkout", *local_flags, *(["--", *pathspec] if pathspec else [])],
             check_returncode=check_returncode,
+            trim=trim,
         )
 
     def status(
@@ -1667,6 +1677,7 @@ class Git:
         pathspec: StrOrBytesPath | list[StrOrBytesPath] | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Return status of working tree.
@@ -1694,6 +1705,8 @@ class Git:
         ignored_submodules : "untracked", "dirty", "all"
         pathspec : :attr:`libvcs._internal.types.StrOrBytesPath` or list
             :attr:`libvcs._internal.types.StrOrBytesPath`
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -1704,16 +1717,16 @@ class Git:
 
         >>> pathlib.Path(example_git_repo.path / 'new_file.txt').touch()
 
-        >>> git.status(porcelain=True)
+        >>> git.status(porcelain=True, trim=True)
         '?? new_file.txt'
 
-        >>> git.status(porcelain='1')
+        >>> git.status(porcelain='1', trim=True)
         '?? new_file.txt'
 
-        >>> git.status(porcelain='2')
+        >>> git.status(porcelain='2', trim=True)
         '? new_file.txt'
 
-        >>> git.status(C=example_git_repo.path / '.git', porcelain='2')
+        >>> git.status(C=example_git_repo.path / '.git', porcelain='2', trim=True)
         '? new_file.txt'
 
         >>> git.status(porcelain=True, untracked_files="no")
@@ -1777,6 +1790,7 @@ class Git:
         return self.run(
             ["status", *local_flags, *(["--", *pathspec] if pathspec else [])],
             check_returncode=check_returncode,
+            trim=trim,
         )
 
     def config(
@@ -1814,6 +1828,7 @@ class Git:
         add: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Get and set repo configuration.
@@ -1851,6 +1866,8 @@ class Git:
         no_includes : Optional[bool]
         includes : Optional[bool]
         add : Optional[bool]
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -1862,7 +1879,7 @@ class Git:
         >>> git.config(_list=True)
         '...user.email=...'
 
-        >>> git.config(get='color.diff')
+        >>> git.config(get='color.diff', trim=True)
         'auto'
         """
         local_flags: list[str] = []
@@ -1963,6 +1980,7 @@ class Git:
         return self.run(
             ["config", *local_flags],
             check_returncode=check_returncode,
+            trim=trim,
         )
 
     def version(
@@ -2049,6 +2067,7 @@ class Git:
         return self.run(
             ["rev-parse", *local_flags],
             check_returncode=check_returncode,
+            **kwargs,
         )
 
     def rev_list(
@@ -2136,7 +2155,7 @@ class Git:
         >>> git.rev_list(commit="HEAD")
         '...'
 
-        >>> git.run(['commit', '--allow-empty', '--message=Moo'])
+        >>> git.run(['commit', '--allow-empty', '--message=Moo'], trim=True)
         '[master ...] Moo'
 
         >>> git.rev_list(commit="HEAD", max_count=1)
@@ -2252,6 +2271,7 @@ class Git:
             ],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def symbolic_ref(
@@ -2265,6 +2285,7 @@ class Git:
         quiet: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Return symbolic-ref.
@@ -2275,10 +2296,10 @@ class Git:
         --------
         >>> git = Git(path=example_git_repo.path)
 
-        >>> git.symbolic_ref(name="test")
+        >>> git.symbolic_ref(name="test", trim=True)
         'fatal: ref test is not a symbolic ref'
 
-        >>> git.symbolic_ref(name="test")
+        >>> git.symbolic_ref(name="test", trim=True)
         'fatal: ref test is not a symbolic ref'
         """
         required_flags: list[str] = [name]
@@ -2297,6 +2318,7 @@ class Git:
         return self.run(
             ["symbolic-ref", *required_flags, *local_flags],
             check_returncode=check_returncode,
+            trim=trim,
         )
 
     def show_ref(
@@ -2312,6 +2334,7 @@ class Git:
         abbrev: str | bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         r"""show-ref. Wraps `git show-ref <https://git-scm.com/docs/git-show-ref>`_.
@@ -2329,10 +2352,10 @@ class Git:
         >>> git.show_ref(pattern='master', head=True)
         '...'
 
-        >>> git.show_ref(pattern='HEAD', verify=True)
+        >>> git.show_ref(pattern='HEAD', verify=True, trim=True)
         '... HEAD'
 
-        >>> git.show_ref(pattern='master', dereference=True)
+        >>> git.show_ref(pattern='master', dereference=True, trim=True)
         '... refs/heads/master\n... refs/remotes/origin/master'
 
         >>> git.show_ref(pattern='HEAD', tags=True)
@@ -2374,6 +2397,7 @@ class Git:
                 *(["--", *pattern_flags] if pattern_flags else []),
             ],
             check_returncode=check_returncode,
+            trim=trim,
         )
 
 
@@ -2408,7 +2432,7 @@ class GitSubmoduleCmd:
         >>> GitSubmoduleCmd(path=tmp_path)
         <GitSubmoduleCmd path=...>
 
-        >>> GitSubmoduleCmd(path=tmp_path).run(quiet=True)
+        >>> GitSubmoduleCmd(path=tmp_path).run(quiet=True, trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitSubmoduleCmd(path=example_git_repo.path).run(quiet=True)
@@ -2974,7 +2998,7 @@ class GitSubmoduleManager:
         >>> GitSubmoduleManager(path=tmp_path)
         <GitSubmoduleManager path=...>
 
-        >>> GitSubmoduleManager(path=tmp_path).run('status')
+        >>> GitSubmoduleManager(path=tmp_path).run('status', trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitSubmoduleManager(path=example_git_repo.path).run('status')
@@ -3677,7 +3701,7 @@ class GitRemoteCmd:
         >>> GitRemoteCmd(
         ...     path=tmp_path,
         ...     remote_name='origin',
-        ... ).run(verbose=True)
+        ... ).run(verbose=True, trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitRemoteCmd(
@@ -3723,7 +3747,7 @@ class GitRemoteCmd:
         >>> GitRemoteCmd(
         ...     path=example_git_repo.path,
         ...     remote_name='master',
-        ... ).run()
+        ... ).run(trim=True)
         'origin'
         >>> GitRemoteCmd(
         ...     path=example_git_repo.path,
@@ -3768,7 +3792,7 @@ class GitRemoteCmd:
         >>> GitRemoteCmd(
         ...     path=example_git_repo.path,
         ...     remote_name='origin',
-        ... ).run()
+        ... ).run(trim=True)
         'new_name'
         """
         local_flags: list[str] = []
@@ -3957,7 +3981,7 @@ class GitRemoteCmd:
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
     ) -> str:
-        """Git remote set-url.
+        r"""Git remote set-url.
 
         Examples
         --------
@@ -3992,14 +4016,14 @@ class GitRemoteCmd:
         ...     path=example_git_repo.path,
         ...     remote_name='origin'
         ... ).get_url()
-        >>> GitRemoteCmd(
+        >>> 'fatal' in GitRemoteCmd(
         ...     path=example_git_repo.path,
         ...     remote_name='origin'
         ... ).set_url(
         ...     url=current_url,
         ...     delete=True
         ... )
-        'fatal: Will not delete all non-push URLs'
+        True
 
         """
         local_flags: list[str] = []
@@ -4211,12 +4235,12 @@ class GitRemoteManager:
         >>> GitRemoteManager(path=tmp_path)
         <GitRemoteManager path=...>
 
-        >>> GitRemoteManager(path=tmp_path).run(check_returncode=False)
+        >>> GitRemoteManager(path=tmp_path).run(check_returncode=False, trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitRemoteManager(
         ...     path=example_git_repo.path
-        ... ).run()
+        ... ).run(trim=True)
         'origin'
         """
         #: Directory to check out
@@ -4248,7 +4272,7 @@ class GitRemoteManager:
 
         Examples
         --------
-        >>> GitRemoteManager(path=example_git_repo.path).run()
+        >>> GitRemoteManager(path=example_git_repo.path).run(trim=True)
         'origin'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -4319,12 +4343,13 @@ class GitRemoteManager:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git remote show.
 
         Examples
         --------
-        >>> GitRemoteManager(path=example_git_repo.path).show()
+        >>> GitRemoteManager(path=example_git_repo.path).show(trim=True)
         'origin'
 
         For the example below, add a remote:
@@ -4354,18 +4379,20 @@ class GitRemoteManager:
             local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
-    def _ls(self) -> str:
+    def _ls(self, trim: bool = False) -> str:
         r"""List remotes (raw output).
 
         Examples
         --------
-        >>> GitRemoteManager(path=example_git_repo.path)._ls()
+        >>> GitRemoteManager(path=example_git_repo.path)._ls(trim=True)
         'origin\tfile:///... (fetch)\norigin\tfile:///... (push)'
         """
         return self.run(
             "--verbose",
+            trim=trim,
         )
 
     def ls(self) -> QueryList[GitRemoteCmd]:
@@ -4579,6 +4606,7 @@ class GitStashEntryCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git stash show for this stash entry.
 
@@ -4590,13 +4618,15 @@ class GitStashEntryCmd:
             Show patch (-p)
         include_untracked :
             Include untracked files (-u)
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitStashEntryCmd(
         ...     path=example_git_repo.path,
         ...     index=0,
-        ... ).show()
+        ... ).show(trim=True)
         'error: stash@{0} is not a valid reference'
         """
         local_flags: list[str] = []
@@ -4615,6 +4645,7 @@ class GitStashEntryCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def apply(
@@ -4625,6 +4656,7 @@ class GitStashEntryCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git stash apply for this stash entry.
 
@@ -4636,13 +4668,15 @@ class GitStashEntryCmd:
             Try to reinstate not only the working tree but also the index (--index)
         quiet :
             Suppress output (-q)
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitStashEntryCmd(
         ...     path=example_git_repo.path,
         ...     index=0,
-        ... ).apply()
+        ... ).apply(trim=True)
         'error: stash@{0} is not a valid reference'
         """
         local_flags: list[str] = []
@@ -4659,6 +4693,7 @@ class GitStashEntryCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def pop(
@@ -4669,6 +4704,7 @@ class GitStashEntryCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git stash pop for this stash entry.
 
@@ -4680,13 +4716,15 @@ class GitStashEntryCmd:
             Try to reinstate not only the working tree but also the index (--index)
         quiet :
             Suppress output (-q)
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitStashEntryCmd(
         ...     path=example_git_repo.path,
         ...     index=0,
-        ... ).pop()
+        ... ).pop(trim=True)
         'error: stash@{0} is not a valid reference'
         """
         local_flags: list[str] = []
@@ -4703,6 +4741,7 @@ class GitStashEntryCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def drop(
@@ -4712,6 +4751,7 @@ class GitStashEntryCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git stash drop for this stash entry.
 
@@ -4721,13 +4761,15 @@ class GitStashEntryCmd:
         ----------
         quiet :
             Suppress output (-q)
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitStashEntryCmd(
         ...     path=example_git_repo.path,
         ...     index=0,
-        ... ).drop()
+        ... ).drop(trim=True)
         'error: stash@{0} is not a valid reference'
         """
         local_flags: list[str] = []
@@ -4742,6 +4784,7 @@ class GitStashEntryCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def create_branch(
@@ -4751,6 +4794,7 @@ class GitStashEntryCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git stash branch for this stash entry.
 
@@ -4760,13 +4804,15 @@ class GitStashEntryCmd:
         ----------
         branch_name :
             Name of the branch to create
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitStashEntryCmd(
         ...     path=example_git_repo.path,
         ...     index=0,
-        ... ).create_branch('new-branch')
+        ... ).create_branch('new-branch', trim=True)
         'error: stash@{0} is not a valid reference'
         """
         local_flags: list[str] = [branch_name, self.stash_ref]
@@ -4776,6 +4822,7 @@ class GitStashEntryCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
 
@@ -4795,7 +4842,7 @@ class GitStashCmd:
         >>> GitStashCmd(path=tmp_path)
         <GitStashCmd path=...>
 
-        >>> GitStashCmd(path=tmp_path).run(quiet=True)
+        >>> GitStashCmd(path=tmp_path).run(quiet=True, trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitStashCmd(path=example_git_repo.path).run(quiet=True)
@@ -4831,7 +4878,7 @@ class GitStashCmd:
 
         Examples
         --------
-        >>> GitStashCmd(path=example_git_repo.path).run()
+        >>> GitStashCmd(path=example_git_repo.path).run(trim=True)
         'No local changes to save'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -4845,6 +4892,7 @@ class GitStashCmd:
             ["stash", *local_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
     def ls(
@@ -4876,6 +4924,7 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Push changes to the stash.
@@ -4890,13 +4939,15 @@ class GitStashCmd:
             Interactively select hunks to stash.
         staged :
             Stash only staged changes.
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
-        >>> GitStashCmd(path=example_git_repo.path).push()
+        >>> GitStashCmd(path=example_git_repo.path).push(trim=True)
         'No local changes to save'
 
-        >>> GitStashCmd(path=example_git_repo.path).push(path='.')
+        >>> GitStashCmd(path=example_git_repo.path).push(path='.', trim=True)
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -4917,6 +4968,7 @@ class GitStashCmd:
             local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def pop(
@@ -4928,25 +4980,26 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Git stash pop.
 
         Examples
         --------
-        >>> GitStashCmd(path=example_git_repo.path).pop()
+        >>> GitStashCmd(path=example_git_repo.path).pop(trim=True)
         'No stash entries found.'
 
-        >>> GitStashCmd(path=example_git_repo.path).pop(stash=0)
+        >>> GitStashCmd(path=example_git_repo.path).pop(stash=0, trim=True)
         'error: stash@{0} is not a valid reference'
 
-        >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, index=True)
+        >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, index=True, trim=True)
         'error: stash@{1} is not a valid reference'
 
-        >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, quiet=True)
+        >>> GitStashCmd(path=example_git_repo.path).pop(stash=1, quiet=True, trim=True)
         'error: stash@{1} is not a valid reference'
 
-        >>> GitStashCmd(path=example_git_repo.path).push(path='.')
+        >>> GitStashCmd(path=example_git_repo.path).push(path='.', trim=True)
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -4963,6 +5016,7 @@ class GitStashCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def save(
@@ -4978,16 +5032,17 @@ class GitStashCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
         **kwargs: t.Any,
     ) -> str:
         """Git stash save.
 
         Examples
         --------
-        >>> GitStashCmd(path=example_git_repo.path).save()
+        >>> GitStashCmd(path=example_git_repo.path).save(trim=True)
         'No local changes to save'
 
-        >>> GitStashCmd(path=example_git_repo.path).save(message="Message")
+        >>> GitStashCmd(path=example_git_repo.path).save(message="Message", trim=True)
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -5014,6 +5069,7 @@ class GitStashCmd:
             local_flags=local_flags + stash_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
 
@@ -5038,12 +5094,12 @@ class GitStashManager:
         >>> GitStashManager(path=tmp_path)
         <GitStashManager path=...>
 
-        >>> GitStashManager(path=tmp_path).run()
+        >>> GitStashManager(path=tmp_path).run(trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitStashManager(
         ...     path=example_git_repo.path
-        ... ).run()
+        ... ).run(trim=True)
         'No local changes to save'
         """
         #: Directory to check out
@@ -5076,7 +5132,7 @@ class GitStashManager:
 
         Examples
         --------
-        >>> GitStashManager(path=example_git_repo.path).run()
+        >>> GitStashManager(path=example_git_repo.path).run(trim=True)
         'No local changes to save'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -5107,6 +5163,7 @@ class GitStashManager:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Git stash push.
 
@@ -5130,13 +5187,15 @@ class GitStashManager:
             Include ignored files (-a)
         quiet :
             Suppress output (-q)
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
-        >>> GitStashManager(path=example_git_repo.path).push()
+        >>> GitStashManager(path=example_git_repo.path).push(trim=True)
         'No local changes to save'
 
-        >>> GitStashManager(path=example_git_repo.path).push(message='WIP')
+        >>> GitStashManager(path=example_git_repo.path).push(message='WIP', trim=True)
         'No local changes to save'
         """
         local_flags: list[str] = []
@@ -5171,6 +5230,7 @@ class GitStashManager:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def clear(
@@ -5332,13 +5392,13 @@ class GitBranchCmd:
         >>> GitBranchCmd(
         ...     path=tmp_path,
         ...     branch_name='master'
-        ... ).run(quiet=True)
+        ... ).run(quiet=True, trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='master'
-        ... ).run(quiet=True)
+        ... ).run(quiet=True, trim=True)
         '* master'
         """
         #: Directory to check out
@@ -5375,7 +5435,7 @@ class GitBranchCmd:
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='master'
-        ... ).run()
+        ... ).run(trim=True)
         '* master'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -5390,7 +5450,7 @@ class GitBranchCmd:
             **kwargs,
         )
 
-    def checkout(self) -> str:
+    def checkout(self, trim: bool = False) -> str:
         """Git branch checkout.
 
         Examples
@@ -5398,7 +5458,7 @@ class GitBranchCmd:
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='master'
-        ... ).checkout()
+        ... ).checkout(trim=True)
         "Your branch is up to date with 'origin/master'."
         """
         return self.cmd.run(
@@ -5406,12 +5466,14 @@ class GitBranchCmd:
                 "checkout",
                 *[self.branch_name],
             ],
+            trim=trim,
         )
 
     def create(
         self,
         *,
         checkout: bool = False,
+        trim: bool = False,
     ) -> str:
         """Create a git branch.
 
@@ -5420,18 +5482,21 @@ class GitBranchCmd:
         checkout :
             If True, also checkout the newly created branch.
             Defaults to False (create only, don't switch HEAD).
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='master'
-        ... ).create()
+        ... ).create(trim=True)
         "fatal: a branch named 'master' already exists"
         """
         result = self.cmd.run(
             ["branch", self.branch_name],
             check_returncode=False,
+            trim=trim,
         )
         if checkout and "fatal" not in result.lower():
             self.cmd.run(["checkout", self.branch_name])
@@ -5444,6 +5509,7 @@ class GitBranchCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Delete this git branch.
 
@@ -5451,13 +5517,15 @@ class GitBranchCmd:
         ----------
         force :
             Use ``-D`` instead of ``-d`` to force deletion.
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='nonexistent'
-        ... ).delete()
+        ... ).delete(trim=True)
         "error: branch 'nonexistent' not found"
         """
         flag = "-D" if force else "-d"
@@ -5465,6 +5533,7 @@ class GitBranchCmd:
             ["branch", flag, self.branch_name],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def rename(
@@ -5540,6 +5609,7 @@ class GitBranchCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Set the upstream (tracking) branch.
 
@@ -5547,19 +5617,22 @@ class GitBranchCmd:
         ----------
         upstream :
             The upstream branch in format ``remote/branch`` (e.g., ``origin/main``).
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='master'
-        ... ).set_upstream('origin/master')
+        ... ).set_upstream('origin/master', trim=True)
         "branch 'master' set up to track 'origin/master'."
         """
         return self.cmd.run(
             ["branch", f"--set-upstream-to={upstream}", self.branch_name],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def unset_upstream(
@@ -5592,6 +5665,7 @@ class GitBranchCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Create branch tracking a remote branch.
 
@@ -5601,6 +5675,8 @@ class GitBranchCmd:
         ----------
         remote_branch :
             Remote branch to track (e.g., 'origin/main').
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
@@ -5610,13 +5686,14 @@ class GitBranchCmd:
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
         ...     branch_name='tracking-branch'
-        ... ).track('origin/master')
+        ... ).track('origin/master', trim=True)
         "branch 'tracking-branch' set up to track 'origin/master'."
         """
         return self.cmd.run(
             ["branch", "-t", self.branch_name, remote_branch],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
 
@@ -5643,11 +5720,11 @@ class GitBranchManager:
         >>> GitBranchManager(path=tmp_path)
         <GitBranchManager path=...>
 
-        >>> GitBranchManager(path=tmp_path).run(quiet=True)
+        >>> GitBranchManager(path=tmp_path).run(quiet=True, trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitBranchManager(
-        ...     path=example_git_repo.path).run(quiet=True)
+        ...     path=example_git_repo.path).run(quiet=True, trim=True)
         '* master'
         """
         #: Directory to check out
@@ -5679,7 +5756,7 @@ class GitBranchManager:
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).run()
+        >>> GitBranchManager(path=example_git_repo.path).run(trim=True)
         '* master'
         """
         local_flags = local_flags if isinstance(local_flags, list) else []
@@ -5694,12 +5771,13 @@ class GitBranchManager:
             **kwargs,
         )
 
-    def checkout(self, *, branch: str) -> str:
+    def checkout(self, *, branch: str, trim: bool = False) -> str:
         """Git branch checkout.
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).checkout(branch='master')
+        >>> branch_mgr = GitBranchManager(path=example_git_repo.path)
+        >>> branch_mgr.checkout(branch='master', trim=True)
         "Your branch is up to date with 'origin/master'."
         """
         return self.cmd.run(
@@ -5707,6 +5785,7 @@ class GitBranchManager:
                 "checkout",
                 *[branch],
             ],
+            trim=trim,
         )
 
     def create(
@@ -5714,6 +5793,7 @@ class GitBranchManager:
         *,
         branch: str,
         checkout: bool = False,
+        trim: bool = False,
     ) -> str:
         """Create a git branch.
 
@@ -5724,15 +5804,19 @@ class GitBranchManager:
         checkout :
             If True, also checkout the newly created branch.
             Defaults to False (create only, don't switch HEAD).
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
-        >>> GitBranchManager(path=example_git_repo.path).create(branch='master')
+        >>> branch_mgr = GitBranchManager(path=example_git_repo.path)
+        >>> branch_mgr.create(branch='master', trim=True)
         "fatal: a branch named 'master' already exists"
         """
         result = self.cmd.run(
             ["branch", branch],
             check_returncode=False,
+            trim=trim,
         )
         if checkout and "fatal" not in result.lower():
             self.cmd.run(["checkout", branch])
@@ -6086,7 +6170,7 @@ class GitTagManager:
         >>> GitTagManager(path=tmp_path)
         <GitTagManager path=...>
 
-        >>> GitTagManager(path=tmp_path).run()
+        >>> GitTagManager(path=tmp_path).run(trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> mgr = GitTagManager(path=example_git_repo.path)
@@ -6486,6 +6570,7 @@ class GitWorktreeCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Remove this worktree.
 
@@ -6493,13 +6578,15 @@ class GitWorktreeCmd:
         ----------
         force :
             Force removal even if worktree is dirty or locked.
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitWorktreeCmd(
         ...     path=example_git_repo.path,
         ...     worktree_path='/tmp/nonexistent-worktree',
-        ... ).remove()
+        ... ).remove(trim=True)
         "fatal: '/tmp/nonexistent-worktree' is not a working tree"
         """
         local_flags: list[str] = []
@@ -6514,6 +6601,7 @@ class GitWorktreeCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def lock(
@@ -6523,6 +6611,7 @@ class GitWorktreeCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Lock this worktree.
 
@@ -6530,13 +6619,15 @@ class GitWorktreeCmd:
         ----------
         reason :
             Reason for locking the worktree.
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitWorktreeCmd(
         ...     path=example_git_repo.path,
         ...     worktree_path='/tmp/nonexistent-worktree',
-        ... ).lock()
+        ... ).lock(trim=True)
         "fatal: '/tmp/nonexistent-worktree' is not a working tree"
         """
         local_flags: list[str] = []
@@ -6551,6 +6642,7 @@ class GitWorktreeCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def unlock(
@@ -6559,6 +6651,7 @@ class GitWorktreeCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Unlock this worktree.
 
@@ -6567,7 +6660,7 @@ class GitWorktreeCmd:
         >>> GitWorktreeCmd(
         ...     path=example_git_repo.path,
         ...     worktree_path='/tmp/nonexistent-worktree',
-        ... ).unlock()
+        ... ).unlock(trim=True)
         "fatal: '/tmp/nonexistent-worktree' is not a working tree"
         """
         local_flags: list[str] = [self.worktree_path]
@@ -6577,6 +6670,7 @@ class GitWorktreeCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def move(
@@ -6587,6 +6681,7 @@ class GitWorktreeCmd:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Move this worktree to a new location.
 
@@ -6596,13 +6691,15 @@ class GitWorktreeCmd:
             New path for the worktree.
         force :
             Force move even if worktree is dirty or locked.
+        trim : bool, default: False
+            Strip trailing whitespace/newline from command output.
 
         Examples
         --------
         >>> GitWorktreeCmd(
         ...     path=example_git_repo.path,
         ...     worktree_path='/tmp/nonexistent-worktree',
-        ... ).move('/tmp/new-worktree')
+        ... ).move('/tmp/new-worktree', trim=True)
         "fatal: '/tmp/nonexistent-worktree' is not a working tree"
         """
         local_flags: list[str] = []
@@ -6617,6 +6714,7 @@ class GitWorktreeCmd:
             local_flags=local_flags,
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def repair(
@@ -6668,7 +6766,7 @@ class GitWorktreeManager:
         >>> GitWorktreeManager(path=tmp_path)
         <GitWorktreeManager path=...>
 
-        >>> GitWorktreeManager(path=tmp_path).run('list')
+        >>> GitWorktreeManager(path=tmp_path).run('list', trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> len(GitWorktreeManager(path=example_git_repo.path).run('list')) > 0
@@ -7287,7 +7385,7 @@ class GitNotesManager:
         >>> GitNotesManager(path=tmp_path)
         <GitNotesManager path=...>
 
-        >>> GitNotesManager(path=tmp_path).run('list')
+        >>> GitNotesManager(path=tmp_path).run('list', trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> GitNotesManager(path=example_git_repo.path).run('list')
@@ -7529,18 +7627,20 @@ class GitNotesManager:
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
+        trim: bool = False,
     ) -> str:
         """Get the current notes ref.
 
         Examples
         --------
-        >>> GitNotesManager(path=example_git_repo.path).get_ref()
+        >>> GitNotesManager(path=example_git_repo.path).get_ref(trim=True)
         'refs/notes/commits'
         """
         return self.run(
             "get-ref",
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            trim=trim,
         )
 
     def _ls(self) -> list[tuple[str, str]]:
@@ -7834,7 +7934,7 @@ class GitReflogManager:
         >>> GitReflogManager(path=tmp_path)
         <GitReflogManager path=...>
 
-        >>> GitReflogManager(path=tmp_path).run('show')
+        >>> GitReflogManager(path=tmp_path).run('show', trim=True)
         'fatal: not a git repository (or any of the parent directories): .git'
 
         >>> len(GitReflogManager(path=example_git_repo.path).run('show')) > 0
