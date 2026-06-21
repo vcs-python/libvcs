@@ -326,7 +326,9 @@ class GitSync(BaseSync):
     def get_revision(self) -> str:
         """Return current revision. Initial repositories return 'initial'."""
         try:
-            return self.cmd.rev_parse(verify=True, args="HEAD", check_returncode=True)
+            return self.cmd.rev_parse(
+                verify=True, args="HEAD", check_returncode=True
+            ).strip()
         except exc.CommandError:
             return "initial"
 
@@ -477,7 +479,7 @@ class GitSync(BaseSync):
                 commit="HEAD",
                 max_count=1,
                 check_returncode=True,
-            )
+            ).strip()
         except exc.CommandError as e:
             self.log.exception("Failed to get the hash for HEAD")
             result.add_error("rev-list-head", str(e), exception=e)
@@ -543,7 +545,7 @@ class GitSync(BaseSync):
             tag_sha = self.cmd.rev_list(
                 commit=rev_list_commit,
                 max_count=1,
-            )
+            ).strip()
 
         except exc.CommandError as e:
             # Intentionally not recorded in SyncResult: the ref may not be
