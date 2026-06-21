@@ -58,17 +58,17 @@ capture path. This is implemented in two phases so the stable
 - Capture stdout and stderr as raw bytes and decode once, without
   per-line stripping or blank-line dropping. Interior whitespace, blank
   lines, and stream structure are preserved exactly.
-- `.run()` keeps returning a convenience string. By default it applies a
-  single **whole-output** `rstrip()` (trailing whitespace only),
-  matching the established "bare value" behavior callers already rely on
-  for reads like `rev-parse HEAD`.
-- Add an opt-in for verbatim output (e.g. `trim=False`) so callers that
-  need byte-accurate output — diffs destined for `git apply`, blob
-  contents — get exactly what the VCS produced, trailing newline
-  included.
-- Decode stderr for error messages with `errors="backslashreplace"` and
-  preserve its line structure, so `libvcs.exc.CommandError.output` is
-  readable and never hides an undecodable byte.
+- `.run()` returns the captured output **verbatim by default**, including
+  the trailing newline, so whitespace-significant output (diffs destined
+  for `git apply`, blob contents) round-trips byte-for-byte.
+- Add a `trim=True` opt-in that applies a single **whole-output**
+  `rstrip()` for the convenient "bare value" reads where a trailing
+  newline is just noise (e.g. `rev-parse HEAD`). Trimming is a deliberate
+  caller choice, never the capture default.
+- Preserve stderr's line structure for error messages, and decode it
+  tolerantly: the UTF-8 fallback uses `errors="backslashreplace"`, so an
+  undecodable byte surfaces as an escape sequence in
+  `libvcs.exc.CommandError.output` instead of raising `UnicodeDecodeError`.
 
 ### Phase 2 — pristine structured backend
 
@@ -93,43 +93,46 @@ is byte-identical.
 
 | Approach | diff applies | blob identical | `rev-parse` bare | errors intact | tests failing |
 |----------|:------------:|:--------------:|:----------------:|:-------------:|:-------------:|
-| Per-line `strip` + drop-blanks (current) | no | no | yes | no | baseline |
-| Verbatim string everywhere | yes | yes | no (`+\n`) | yes | 77 |
-| Whole-output `rstrip` | no | no | yes | yes | 1 |
-| Per-call `trim` flag (chosen, Phase 1) | yes (opt-in) | yes (opt-in) | yes (default) | yes | 1 |
-| Structured `CompletedProcess` (chosen, Phase 2) | yes | yes | edge decides | yes | 0 (via facade) |
+| Per-line `strip` + drop-blanks (original) | no | no | yes | no | baseline |
+| Whole-output `rstrip` default | no | no | yes | yes | 1 |
+| Verbatim default + `trim=True` opt-in (chosen, Phase 1) | yes | yes | opt-in | yes | doctests only |
+| Structured `CompletedProcess` (Phase 2) | yes | yes | edge decides | yes | 0 (via facade) |
 
-Two results are decisive. Returning fully verbatim output as the default
-fixes fidelity but breaks 77 tests, because the project's own doctests
-and downstream consumers expect `.run()` to return a value with no
-trailing newline. A global trailing trim keeps that contract but cannot
-produce an applyable patch, since the patch's required final newline is
-exactly what gets trimmed. Only a per-call choice satisfies both, and a
-structured result removes the choice from the runner entirely by handing
-the caller pristine bytes plus separate streams.
+The decisive measurement: flipping the default to verbatim broke only
+doctests in `cmd/git.py`, `cmd/hg.py`, and `cmd/svn.py` — example output
+that gained a trailing newline. No functional test, sync-layer call, or
+downstream consumer broke, because those already strip where they need a
+bare value (`vcspull`, like the sync layer, trims defensively). A global
+trailing trim, by contrast, cannot produce an applyable patch: the
+patch's required final newline is exactly what it strips. So verbatim
+becomes the default — fixing the original `git apply` failure for the
+plain `.run(["diff"])` call — and trimming is an explicit `trim=True`
+opt-in for bare-value reads.
 
-The single failing test under the chosen approaches is a `Svn.blame`
-doctest whose expected value had encoded the bug (column-padding spaces
-already stripped). It is corrected to expect the faithful output.
+Every affected doctest was updated to show the real verbatim output. The
+`Svn.blame` doctest is a notable case: its original expected value had
+encoded the old bug (column-padding spaces already stripped), so it now
+reflects the true, faithful output.
 
 ## Consequences
 
 ### Positive
 
-- Captured diffs and patches re-apply; blob reads are byte-identical;
-  error messages keep their line structure.
-- The default `.run()` contract (no trailing newline) is preserved, so
-  existing callers and the downstream `vcspull`, which strips defensively
-  before comparing, are unaffected.
-- Two latent defects are removed: stderr lines are no longer concatenated
-  without a separator, and routing through `subprocess.run` avoids the
+- Captured diffs and patches re-apply by default; blob reads are
+  byte-identical; error messages keep their line structure.
+- The default now returns output with its trailing newline. Callers that
+  want a bare value pass `trim=True`; existing consumers are unaffected
+  because the sync layer and `vcspull` already strip defensively before
+  comparing.
+- The stderr concatenation defect is removed: error lines keep their
+  separators. (Phase 2's structured backend additionally avoids the
   pipe-buffer deadlock the legacy poll loop can hit when a child floods
-  stdout.
+  stdout.)
 
 ### Tradeoffs
 
-- Callers that need pristine output must opt in (Phase 1) or use the
-  structured accessor (Phase 2); the convenience default still trims.
+- Callers that relied on the implicit trailing-newline trim must now pass
+  `trim=True` (or strip themselves) for bare-value reads.
 - Phase 2 introduces a second return shape (`CompletedProcess`) alongside
   the string facade, and migrates the command classes onto a new backend.
 
