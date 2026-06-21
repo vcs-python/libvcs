@@ -695,7 +695,7 @@ def test_branch_cmd_create_checkout_parameter(
     branch_name = f"test-create-{test_id}"
 
     # Record current branch before creating
-    current_before = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+    current_before = git_repo.cmd.symbolic_ref(name="HEAD", short=True).strip()
 
     # Create branch using GitBranchCmd
     branch_cmd = git.GitBranchCmd(path=git_repo.path, branch_name=branch_name)
@@ -710,7 +710,7 @@ def test_branch_cmd_create_checkout_parameter(
     assert branch_name in branch_names
 
     # Check if HEAD switched
-    current_after = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+    current_after = git_repo.cmd.symbolic_ref(name="HEAD", short=True).strip()
     if expect_switch:
         assert current_after == branch_name
     else:
@@ -736,7 +736,7 @@ def test_branch_manager_create_checkout_parameter(
     branch_name = f"test-mgr-create-{test_id}"
 
     # Record current branch before creating
-    current_before = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+    current_before = git_repo.cmd.symbolic_ref(name="HEAD", short=True).strip()
 
     # Create branch using GitBranchManager
     result = git_repo.cmd.branches.create(branch=branch_name, checkout=checkout)
@@ -750,7 +750,7 @@ def test_branch_manager_create_checkout_parameter(
     assert branch_name in branch_names
 
     # Check if HEAD switched
-    current_after = git_repo.cmd.symbolic_ref(name="HEAD", short=True)
+    current_after = git_repo.cmd.symbolic_ref(name="HEAD", short=True).strip()
     if expect_switch:
         assert current_after == branch_name
     else:
@@ -1894,7 +1894,7 @@ def test_notes_get(git_repo: GitSync) -> None:
     git_repo.cmd.notes.add(message="Test note for get", force=True)
 
     # Get the HEAD revision
-    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    head_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
 
     # Get the note by object_sha
     note = git_repo.cmd.notes.get(object_sha=head_sha)
@@ -1920,7 +1920,7 @@ def test_notes_show(git_repo: GitSync) -> None:
     git_repo.cmd.notes.add(message=note_message, force=True)
 
     # Get the note
-    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    head_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
     note = git_repo.cmd.notes.get(object_sha=head_sha)
     assert note is not None
 
@@ -1936,7 +1936,7 @@ def test_notes_append(git_repo: GitSync) -> None:
     git_repo.cmd.notes.add(message=initial_message, force=True)
 
     # Get the note
-    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    head_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
     note = git_repo.cmd.notes.get(object_sha=head_sha)
     assert note is not None
 
@@ -1956,7 +1956,7 @@ def test_notes_remove(git_repo: GitSync) -> None:
     git_repo.cmd.notes.add(message="Note to be removed", force=True)
 
     # Get the note
-    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    head_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
     note = git_repo.cmd.notes.get(object_sha=head_sha)
     assert note is not None
 
@@ -1998,7 +1998,7 @@ def test_notes_edit(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
     git_repo.cmd.notes.add(message="Initial note for edit test", force=True)
 
     # Get the note
-    head_sha = git_repo.cmd.rev_parse(args="HEAD")
+    head_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
     note = git_repo.cmd.notes.get(object_sha=head_sha)
     assert note is not None
 
@@ -2019,14 +2019,14 @@ def test_notes_copy(git_repo: GitSync) -> None:
     git_repo.cmd.run(["commit", "-m", "Commit for copy note test"])
 
     # Get the new commit SHA
-    new_commit_sha = git_repo.cmd.rev_parse(args="HEAD")
+    new_commit_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
 
     # Checkout previous commit to add note there
     git_repo.cmd.run(["checkout", "HEAD~1"])
     git_repo.cmd.notes.add(message="Note to copy", force=True)
 
     # Get the note and copy to new commit
-    old_commit_sha = git_repo.cmd.rev_parse(args="HEAD")
+    old_commit_sha = git_repo.cmd.rev_parse(args="HEAD").strip()
     note = git_repo.cmd.notes.get(object_sha=old_commit_sha)
     assert note is not None
 
@@ -2760,12 +2760,13 @@ def test_run_trim_false_preserves_blob(git_repo: GitSync) -> None:
     assert blob == base
 
 
-def test_run_default_trims_trailing_newline(git_repo: GitSync) -> None:
-    """Default run() keeps the no-trailing-newline contract callers rely on."""
-    sha = git_repo.cmd.run(["rev-parse", "HEAD"])
+def test_run_default_preserves_trailing_newline(git_repo: GitSync) -> None:
+    """Default run() returns output verbatim, including the trailing newline."""
+    verbatim = git_repo.cmd.run(["rev-parse", "HEAD"])
 
-    assert "\n" not in sha
-    assert sha == sha.strip()
+    assert verbatim.endswith("\n")
+    # trim=True still yields the convenient bare value.
+    assert git_repo.cmd.run(["rev-parse", "HEAD"], trim=True) == verbatim.strip()
 
 
 def test_run_failure_preserves_stderr_lines(git_repo: GitSync) -> None:

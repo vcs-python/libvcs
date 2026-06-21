@@ -115,7 +115,7 @@ def test_repo_git_obtain_full(
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()
 
-    test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote_repo)
+    test_repo_revision = run(["git", "rev-parse", "HEAD"], cwd=git_remote_repo).strip()
 
     assert git_repo.get_revision() == test_repo_revision
     assert (tmp_path / "myrepo").exists()
@@ -155,7 +155,7 @@ def test_git_shallow_and_tls_verify_kwargs_are_honored(
         ["git", "rev-parse", "--is-shallow-repository"],
         cwd=tmp_path / "myrepo",
     )
-    assert is_shallow == "true"
+    assert is_shallow.strip() == "true"
 
 
 class DepthFixture(t.NamedTuple):
@@ -228,7 +228,7 @@ def test_obtain_honors_clone_depth(
     commit_count = run(["git", "rev-list", "--count", "HEAD"], cwd=checkout)
     is_shallow = run(["git", "rev-parse", "--is-shallow-repository"], cwd=checkout)
     assert int(commit_count) == expected_count
-    assert is_shallow == ("true" if expected_shallow else "false")
+    assert is_shallow.strip() == ("true" if expected_shallow else "false")
 
 
 @pytest.mark.parametrize(
@@ -800,7 +800,7 @@ def test_git_sync_remotes(git_repo: GitSync) -> None:
     remotes = git_repo.remotes()
 
     assert "origin" in remotes
-    assert git_repo.cmd.remotes.show() == "origin"
+    assert git_repo.cmd.remotes.show().strip() == "origin"
     git_origin = git_repo.cmd.remotes.get(remote_name="origin")
     assert git_origin is not None
     assert "origin" in git_origin.show()
@@ -849,7 +849,7 @@ def test_set_remote(git_repo: GitSync, repo_name: str, new_repo_url: str) -> Non
 
 def test_get_git_version(git_repo: GitSync) -> None:
     """Test get_git_version()."""
-    expected_version = git_repo.run(["--version"]).replace("git version ", "")
+    expected_version = git_repo.run(["--version"]).replace("git version ", "").strip()
     assert git_repo.get_git_version()
     assert expected_version == git_repo.get_git_version()
 
