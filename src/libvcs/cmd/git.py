@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import os
 import pathlib
 import re
@@ -2207,7 +2206,7 @@ class Git:
             (max_age, "--max-age"),
             (min_age, "--min-age"),
         ]:
-            if datetime_kwarg is not None and isinstance(datetime, str):
+            if datetime_kwarg is not None and isinstance(datetime_kwarg, str):
                 local_flags.extend([datetime_shell_flag, datetime_kwarg])
 
         for int_flag, int_shell_flag in [
