@@ -14,11 +14,15 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.44.x (unreleased)
+## libvcs 0.45.x (unreleased)
 
 <!-- KEEP THIS PLACEHOLDER - DO NOT REMOVE OR MODIFY THIS LINE -->
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
+
+## libvcs 0.44.0 (2026-06-21)
+
+libvcs 0.44.0 returns VCS command output verbatim by default. {meth}`~libvcs.cmd.git.Git.run` and its `Hg`/`Svn` counterparts now return exactly what the VCS printed, so a captured `git diff` re-applies with `git apply` and `git cat-file blob` round-trips byte-for-byte; the previous per-line trimming corrupted whitespace-significant output. This is a breaking change — reads that want a bare value (a lone SHA, a branch name) pass the new `trim=True`. Downstream tools such as vcspull are the primary beneficiaries.
 
 ### Breaking changes
 
@@ -44,6 +48,7 @@ High-level helpers are unaffected: {meth}`~libvcs.sync.git.GitSync.get_revision`
 
 - A captured `git diff` re-applies with `git apply` and `git cat-file blob` is byte-identical — leading indentation, blank lines, and the trailing newline are preserved instead of stripped (#538).
 - Multi-line stderr in {exc}`~libvcs.exc.CommandError` keeps its line breaks instead of being concatenated into one run-on line (#538).
+- {meth}`~libvcs.cmd.git.Git.rev_list` now honors its date-range filters (`since`, `after`, `until`, `before`, `max_age`, `min_age`); they were silently ignored before (#538).
 
 ## libvcs 0.43.0 (2026-06-20)
 
