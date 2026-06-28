@@ -8,4 +8,5 @@ Significant design decisions and their rationale.
 :maxdepth: 1
 
 0001-faithful-subprocess-output-capture
+0002-order-independent-tests
 ```
