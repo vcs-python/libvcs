@@ -178,6 +178,10 @@ class RuleMap(SkipDefaultFieldsReprMixin):
         >>> GitURL.is_valid(url='gitlab:vcs-python/libvcs')
         True
 
+        Clean up so the examples below see the default rules:
+
+        >>> GitURL.rule_map.unregister('gl-prefix')
+
         **Example: git URLs + pip-style git URLs:**
 
         This is already in :class:`GitURL` via :data:`PIP_DEFAULT_RULES`. For the
