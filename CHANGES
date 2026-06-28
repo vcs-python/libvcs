@@ -20,6 +20,15 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Fixes
+
+#### `VCSRegistry` no longer shares parser state across instances (#539)
+
+{class}`~libvcs.url.registry.VCSRegistry` kept its parser map in a class
+variable, so constructing any second registry mutated the shared
+{data}`~libvcs.url.registry.registry`. Each registry now owns its own parser
+map, leaving the global one untouched.
+
 ### Development
 
 #### Opt-in parallel test runs (#539)
