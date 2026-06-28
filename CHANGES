@@ -20,6 +20,17 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Development
+
+#### Opt-in parallel test runs (#539)
+
+The test suite can now run in parallel via [pytest-xdist], a new development
+dependency. Enable workers with `just test-parallel` or `uv run pytest -n
+auto`. The plain `uv run pytest` invocation still runs serially and is
+unchanged.
+
+[pytest-xdist]: https://pytest-xdist.readthedocs.io/
+
 ## libvcs 0.44.0 (2026-06-21)
 
 libvcs 0.44.0 returns VCS command output verbatim by default. {meth}`~libvcs.cmd.git.Git.run` and its `Hg`/`Svn` counterparts now return exactly what the VCS printed, so a captured `git diff` re-applies with `git apply` and `git cat-file blob` round-trips byte-for-byte; the previous per-line trimming corrupted whitespace-significant output. This is a breaking change — reads that want a bare value (a lone SHA, a branch name) pass the new `trim=True`. Downstream tools such as vcspull are the primary beneficiaries.
