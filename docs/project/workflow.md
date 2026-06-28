@@ -28,6 +28,31 @@ $ uv run py.test
 
 Helpers: `just test` Rerun tests on file change: `just watch-test` (requires [entr(1)])
 
+### Running tests in parallel
+
+The suite spawns real `git`, `hg`, and `svn` processes, so on a multi-core
+machine it runs faster across workers with [pytest-xdist] (a dev dependency):
+
+```console
+$ just test-parallel
+```
+
+This runs `uv run py.test -n auto`, where `auto` sizes the worker pool to the
+machine's cores. Parallelism is opt-in — `just test` and `uv run py.test` stay
+serial by default.
+
+### Order independence
+
+Tests must pass regardless of the order they run in. Parallel and shuffled runs
+spread tests across workers, so any hidden coupling — shared global state, or a
+fixture that leaks into a later test — surfaces as a failure. Keep fixtures
+self-contained and reset any global state in teardown. Check locally with a
+shuffled run:
+
+```console
+$ uv run --with pytest-randomly py.test -p randomly
+```
+
 ## Documentation
 
 Default preview server: http://localhost:8068
@@ -220,6 +245,7 @@ Update `__version__` in `__about__.py` and `pyproject.toml`::
     uv publish
 
 [uv]: https://github.com/astral-sh/uv 
+[pytest-xdist]: https://pytest-xdist.readthedocs.io/
 [entr(1)]: http://eradman.com/entrproject/
 [`entr(1)`]: http://eradman.com/entrproject/
 [ruff format]: https://docs.astral.sh/ruff/formatter/

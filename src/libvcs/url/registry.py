@@ -30,9 +30,8 @@ class ParserMatch(t.NamedTuple):
 class VCSRegistry:
     """Index of parsers."""
 
-    parser_map: t.ClassVar[ParserMap] = {}
-
     def __init__(self, parsers: ParserLazyMap) -> None:
+        self.parser_map: ParserMap = {}
         for k, v in parsers.items():
             if isinstance(v, str):
                 v = import_string(v)

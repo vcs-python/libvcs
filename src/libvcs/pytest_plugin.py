@@ -238,7 +238,7 @@ def projects_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
-    """User's local checkouts and clones. Emphemeral directory."""
+    """User's local checkouts and clones. Ephemeral directory."""
     path = user_path / "projects"
     path.mkdir(exist_ok=True)
 
@@ -254,7 +254,7 @@ def remote_repos_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
-    """System's remote (file-based) repos to clone and push to. Emphemeral directory."""
+    """System's remote (file-based) repos to clone and push to. Ephemeral directory."""
     path = user_path / "remote_repos"
     path.mkdir(exist_ok=True)
 
@@ -474,7 +474,7 @@ def git_remote_repo(
     vcs_gitconfig: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
 ) -> pathlib.Path:
-    """Copy the session-scoped Git repository to a temporary directory."""
+    """Session-scoped remote Git repository with one commit, as a clone source."""
     _skip_if_git_missing()
     # TODO: Cache the effect of of this in a session-based repo
     repo_path = create_git_remote_repo()
@@ -714,31 +714,38 @@ def git_repo(
     set_vcs_gitconfig: pathlib.Path,
     set_home: None,  # Needed for child processes (e.g. submodules)
 ) -> GitSync:
-    """Pre-made git clone of remote repo checked out to user's projects dir."""
+    """Return an isolated git clone of the remote repo, one per test.
+
+    Every consumer gets its own checkout under the user's projects dir, copied
+    from a session-cached master. A test may freely mutate it (commit, add
+    remotes, switch branches) without affecting any other test, so the fixture
+    is safe under parallel runs (``pytest-xdist``).
+    """
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "git_repo"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return GitSync(
+    # Build the master copy once as a pristine, read-only cache. Every consumer
+    # gets an isolated copytree of it (including the first), so a test that
+    # mutates its checkout cannot pollute the cache for later tests.
+    if not master_copy.exists():
+        GitSync(
             url=f"file://{git_remote_repo}",
-            path=str(new_checkout_path),
-        )
+            path=master_copy,
+            remotes={
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=f"file://{git_remote_repo}",
+                ),
+            },
+        ).obtain()
 
-    git_repo = GitSync(
+    shutil.copytree(master_copy, new_checkout_path)
+    return GitSync(
         url=f"file://{git_remote_repo}",
-        path=master_copy,
-        remotes={
-            "origin": GitRemote(
-                name="origin",
-                push_url=f"file://{git_remote_repo}",
-                fetch_url=f"file://{git_remote_repo}",
-            ),
-        },
+        path=str(new_checkout_path),
     )
-    git_repo.obtain()
-    return git_repo
 
 
 @pytest.fixture
@@ -748,24 +755,30 @@ def hg_repo(
     hg_remote_repo: pathlib.Path,
     set_vcs_hgconfig: pathlib.Path,
 ) -> HgSync:
-    """Pre-made hg clone of remote repo checked out to user's projects dir."""
+    """Return an isolated hg clone of the remote repo, one per test.
+
+    Every consumer gets its own checkout under the user's projects dir, copied
+    from a session-cached master. A test may freely mutate it without affecting
+    any other test, so the fixture is safe under parallel runs (``pytest-xdist``).
+    """
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "hg_repo"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return HgSync(
+    # Build the master copy once as a pristine, read-only cache. Every consumer
+    # gets an isolated copytree of it (including the first), so a test that
+    # mutates its checkout cannot pollute the cache for later tests.
+    if not master_copy.exists():
+        HgSync(
             url=f"file://{hg_remote_repo}",
-            path=str(new_checkout_path),
-        )
+            path=master_copy,
+        ).obtain()
 
-    hg_repo = HgSync(
+    shutil.copytree(master_copy, new_checkout_path)
+    return HgSync(
         url=f"file://{hg_remote_repo}",
-        path=master_copy,
+        path=str(new_checkout_path),
     )
-    hg_repo.obtain()
-    return hg_repo
 
 
 @pytest.fixture
@@ -774,24 +787,31 @@ def svn_repo(
     projects_path: pathlib.Path,
     svn_remote_repo: pathlib.Path,
 ) -> SvnSync:
-    """Pre-made svn clone of remote repo checked out to user's projects dir."""
+    """Return an isolated svn checkout of the remote repo, one per test.
+
+    Every consumer gets its own working copy under the user's projects dir,
+    copied from a session-cached master. A test may freely mutate it without
+    affecting any other test, so the fixture is safe under parallel runs
+    (``pytest-xdist``).
+    """
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "svn_repo"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return SvnSync(
+    # Build the master copy once as a pristine, read-only cache. Every consumer
+    # gets an isolated copytree of it (including the first), so a test that
+    # mutates its checkout cannot pollute the cache for later tests.
+    if not master_copy.exists():
+        SvnSync(
             url=f"file://{svn_remote_repo}",
-            path=str(new_checkout_path),
-        )
+            path=master_copy,
+        ).obtain()
 
-    svn_repo = SvnSync(
+    shutil.copytree(master_copy, new_checkout_path)
+    return SvnSync(
         url=f"file://{svn_remote_repo}",
-        path=str(projects_path / "svn_repo"),
+        path=str(new_checkout_path),
     )
-    svn_repo.obtain()
-    return svn_repo
 
 
 @pytest.fixture

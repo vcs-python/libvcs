@@ -39,8 +39,8 @@ One call to fetch or create a working copy.
 :::{grid-item-card} pytest Plugin
 :link: /api/pytest-plugin
 :link-type: doc
-Session-scoped fixtures for Git, SVN, and Mercurial
-repositories. Drop-in test isolation.
+Per-test isolated Git, SVN, and Mercurial repository fixtures,
+backed by session-cached remotes. Drop-in test isolation.
 :::
 
 ::::

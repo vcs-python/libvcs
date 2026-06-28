@@ -20,6 +20,34 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Fixes
+
+#### `VCSRegistry` no longer shares parser state across instances (#539)
+
+{class}`~libvcs.url.registry.VCSRegistry` kept its parser map in a class
+variable, so constructing any second registry mutated the shared
+{data}`~libvcs.url.registry.registry`. Each registry now owns its own parser
+map, leaving the global one untouched.
+
+#### `git_repo` and `hg_repo` fixtures return isolated clones (#539)
+
+The first consumer of the `git_repo` / `hg_repo` pytest fixtures received a live
+handle to the session-cached master checkout, so mutating that checkout (adding
+a remote, switching branches) polluted the cache for every later test. The
+master copy is now treated as a pristine, read-only cache and every consumer —
+including the first — gets its own copytree.
+
+### Development
+
+#### Opt-in parallel test runs (#539)
+
+The test suite can now run in parallel via [pytest-xdist], a new development
+dependency. Enable workers with `just test-parallel` or `uv run pytest -n
+auto`. The plain `uv run pytest` invocation still runs serially and is
+unchanged.
+
+[pytest-xdist]: https://pytest-xdist.readthedocs.io/
+
 ## libvcs 0.44.0 (2026-06-21)
 
 libvcs 0.44.0 returns VCS command output verbatim by default. {meth}`~libvcs.cmd.git.Git.run` and its `Hg`/`Svn` counterparts now return exactly what the VCS printed, so a captured `git diff` re-applies with `git apply` and `git cat-file blob` round-trips byte-for-byte; the previous per-line trimming corrupted whitespace-significant output. This is a breaking change — reads that want a bare value (a lone SHA, a branch name) pass the new `trim=True`. Downstream tools such as vcspull are the primary beneficiaries.

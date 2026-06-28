@@ -40,6 +40,14 @@ def setup(
 ) -> None:
     pass
 ```
+
+## Repository isolation
+
+{fixture}`git_repo`, {fixture}`hg_repo`, and {fixture}`svn_repo` hand each test
+its own clone. The remote is built once and cached for the session, then copied
+for every consumer, so a test can commit, add remotes, or rewrite history
+without affecting any other test — and the fixtures stay safe under parallel
+runs (`pytest-xdist`).
 :::
 
 ## Types
