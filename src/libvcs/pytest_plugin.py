@@ -238,7 +238,7 @@ def projects_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
-    """User's local checkouts and clones. Emphemeral directory."""
+    """User's local checkouts and clones. Ephemeral directory."""
     path = user_path / "projects"
     path.mkdir(exist_ok=True)
 
@@ -254,7 +254,7 @@ def remote_repos_path(
     user_path: pathlib.Path,
     request: pytest.FixtureRequest,
 ) -> pathlib.Path:
-    """System's remote (file-based) repos to clone and push to. Emphemeral directory."""
+    """System's remote (file-based) repos to clone and push to. Ephemeral directory."""
     path = user_path / "remote_repos"
     path.mkdir(exist_ok=True)
 
@@ -474,7 +474,7 @@ def git_remote_repo(
     vcs_gitconfig: pathlib.Path,
     git_commit_envvars: GitCommitEnvVars,
 ) -> pathlib.Path:
-    """Copy the session-scoped Git repository to a temporary directory."""
+    """Session-scoped remote Git repository with one commit, as a clone source."""
     _skip_if_git_missing()
     # TODO: Cache the effect of of this in a session-based repo
     repo_path = create_git_remote_repo()
@@ -714,7 +714,13 @@ def git_repo(
     set_vcs_gitconfig: pathlib.Path,
     set_home: None,  # Needed for child processes (e.g. submodules)
 ) -> GitSync:
-    """Pre-made git clone of remote repo checked out to user's projects dir."""
+    """Return an isolated git clone of the remote repo, one per test.
+
+    Every consumer gets its own checkout under the user's projects dir, copied
+    from a session-cached master. A test may freely mutate it (commit, add
+    remotes, switch branches) without affecting any other test, so the fixture
+    is safe under parallel runs (``pytest-xdist``).
+    """
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "git_repo"
@@ -749,7 +755,12 @@ def hg_repo(
     hg_remote_repo: pathlib.Path,
     set_vcs_hgconfig: pathlib.Path,
 ) -> HgSync:
-    """Pre-made hg clone of remote repo checked out to user's projects dir."""
+    """Return an isolated hg clone of the remote repo, one per test.
+
+    Every consumer gets its own checkout under the user's projects dir, copied
+    from a session-cached master. A test may freely mutate it without affecting
+    any other test, so the fixture is safe under parallel runs (``pytest-xdist``).
+    """
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "hg_repo"
@@ -776,7 +787,13 @@ def svn_repo(
     projects_path: pathlib.Path,
     svn_remote_repo: pathlib.Path,
 ) -> SvnSync:
-    """Pre-made svn clone of remote repo checked out to user's projects dir."""
+    """Return an isolated svn checkout of the remote repo, one per test.
+
+    Every consumer gets its own working copy under the user's projects dir,
+    copied from a session-cached master. A test may freely mutate it without
+    affecting any other test, so the fixture is safe under parallel runs
+    (``pytest-xdist``).
+    """
     remote_repo_name = unique_repo_name(remote_repos_path=projects_path)
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "svn_repo"
