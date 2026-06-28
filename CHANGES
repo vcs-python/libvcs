@@ -29,6 +29,14 @@ variable, so constructing any second registry mutated the shared
 {data}`~libvcs.url.registry.registry`. Each registry now owns its own parser
 map, leaving the global one untouched.
 
+#### `git_repo` and `hg_repo` fixtures return isolated clones (#539)
+
+The first consumer of the `git_repo` / `hg_repo` pytest fixtures received a live
+handle to the session-cached master checkout, so mutating that checkout (adding
+a remote, switching branches) polluted the cache for every later test. The
+master copy is now treated as a pristine, read-only cache and every consumer —
+including the first — gets its own copytree.
+
 ### Development
 
 #### Opt-in parallel test runs (#539)

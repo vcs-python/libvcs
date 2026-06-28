@@ -719,26 +719,27 @@ def git_repo(
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "git_repo"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return GitSync(
+    # Build the master copy once as a pristine, read-only cache. Every consumer
+    # gets an isolated copytree of it (including the first), so a test that
+    # mutates its checkout cannot pollute the cache for later tests.
+    if not master_copy.exists():
+        GitSync(
             url=f"file://{git_remote_repo}",
-            path=str(new_checkout_path),
-        )
+            path=master_copy,
+            remotes={
+                "origin": GitRemote(
+                    name="origin",
+                    push_url=f"file://{git_remote_repo}",
+                    fetch_url=f"file://{git_remote_repo}",
+                ),
+            },
+        ).obtain()
 
-    git_repo = GitSync(
+    shutil.copytree(master_copy, new_checkout_path)
+    return GitSync(
         url=f"file://{git_remote_repo}",
-        path=master_copy,
-        remotes={
-            "origin": GitRemote(
-                name="origin",
-                push_url=f"file://{git_remote_repo}",
-                fetch_url=f"file://{git_remote_repo}",
-            ),
-        },
+        path=str(new_checkout_path),
     )
-    git_repo.obtain()
-    return git_repo
 
 
 @pytest.fixture
@@ -753,19 +754,20 @@ def hg_repo(
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "hg_repo"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return HgSync(
+    # Build the master copy once as a pristine, read-only cache. Every consumer
+    # gets an isolated copytree of it (including the first), so a test that
+    # mutates its checkout cannot pollute the cache for later tests.
+    if not master_copy.exists():
+        HgSync(
             url=f"file://{hg_remote_repo}",
-            path=str(new_checkout_path),
-        )
+            path=master_copy,
+        ).obtain()
 
-    hg_repo = HgSync(
+    shutil.copytree(master_copy, new_checkout_path)
+    return HgSync(
         url=f"file://{hg_remote_repo}",
-        path=master_copy,
+        path=str(new_checkout_path),
     )
-    hg_repo.obtain()
-    return hg_repo
 
 
 @pytest.fixture
