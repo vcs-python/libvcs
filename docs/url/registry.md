@@ -29,7 +29,7 @@ Detect VCS from `git`, `hg`, and `svn` URLs.
 ```python
 >>> import dataclasses
 >>> from libvcs.url.base import Rule, RuleMap
->>> from libvcs.url.registry import ParserMatch, VCSRegistry
+>>> from libvcs.url.registry import ParserMatch, VCSRegistry, registry
 >>> from libvcs.url.git import GitURL
 
 This will match `github:org/repo`:
@@ -68,6 +68,10 @@ Prefix for KDE infrastructure, `kde:group/repository`:
 ...        }
 ...    )
 
+Subclassing with its own ``RuleMap`` keeps these rules local. Registering on
+``GitURL.rule_map`` instead would mutate the shared class-level map and change
+``GitURL`` for every caller in the process.
+
 >>> my_parsers: "ParserLazyMap" = {
 ...    "git": MyGitURLParser,
 ...    "hg": "libvcs.url.hg.HgURL",
@@ -75,6 +79,12 @@ Prefix for KDE infrastructure, `kde:group/repository`:
 ... }
 
 >>> vcs_matcher = VCSRegistry(parsers=my_parsers)
+
+Each registry owns its parsers, so building a custom one leaves the
+module-level ``registry`` untouched -- it still resolves git to ``GitURL``:
+
+>>> registry.match('git@invent.kde.org:plasma/plasma-sdk.git')
+[ParserMatch(vcs='git', match=GitURL(...))]
 
 >>> vcs_matcher.match('git@invent.kde.org:plasma/plasma-sdk.git')
 [ParserMatch(vcs='git', match=MyGitURLParser(...)),
