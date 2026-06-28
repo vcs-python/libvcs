@@ -781,19 +781,20 @@ def svn_repo(
     new_checkout_path = projects_path / remote_repo_name
     master_copy = remote_repos_path / "svn_repo"
 
-    if master_copy.exists():
-        shutil.copytree(master_copy, new_checkout_path)
-        return SvnSync(
+    # Build the master copy once as a pristine, read-only cache. Every consumer
+    # gets an isolated copytree of it (including the first), so a test that
+    # mutates its checkout cannot pollute the cache for later tests.
+    if not master_copy.exists():
+        SvnSync(
             url=f"file://{svn_remote_repo}",
-            path=str(new_checkout_path),
-        )
+            path=master_copy,
+        ).obtain()
 
-    svn_repo = SvnSync(
+    shutil.copytree(master_copy, new_checkout_path)
+    return SvnSync(
         url=f"file://{svn_remote_repo}",
-        path=str(projects_path / "svn_repo"),
+        path=str(new_checkout_path),
     )
-    svn_repo.obtain()
-    return svn_repo
 
 
 @pytest.fixture
