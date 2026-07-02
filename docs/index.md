@@ -58,7 +58,7 @@ $ uv add libvcs
 ```
 
 ```{tip}
-libvcs is pre-1.0. Pin to a range: `libvcs>=0.39,<0.40`
+libvcs is pre-1.0. Pin to a range, e.g. `libvcs>=0.45,<0.46`
 ```
 
 See {ref}`quickstart` for all methods and first steps.

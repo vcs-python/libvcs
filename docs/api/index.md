@@ -8,7 +8,7 @@ libvcs exposes three public subsystems -- URL parsing, command execution,
 and repository synchronization -- plus a pytest plugin for test fixtures.
 
 All APIs are pre-1.0 and may change between minor versions.
-Pin to a range: `libvcs>=0.39,<0.40`.
+Pin to a range, e.g. `libvcs>=0.45,<0.46`.
 
 ## Subsystems
 

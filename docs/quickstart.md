@@ -21,7 +21,7 @@ $ pip install --user --upgrade libvcs
 ### Developmental releases
 
 New versions of libvcs are published to PyPI as alpha, beta, or release candidates.
-In their versions you will see notification like `a1`, `b1`, and `rc1`, respectively.
+Their version numbers carry suffixes like `a1`, `b1`, and `rc1`, respectively.
 `1.10.0b4` would mean the 4th beta release of `1.10.0` before general availability.
 
 - [pip]\:
@@ -54,6 +54,23 @@ via trunk (can break easily):
 [uv]: https://docs.astral.sh/uv/
 
 ## Basic Usage
+
+### Parse URLs
+
+Detect and parse a VCS URL with {class}`~libvcs.url.git.GitURL`:
+
+```python
+>>> from libvcs.url.git import GitURL
+>>> GitURL.is_valid(url='git@github.com:vcs-python/libvcs.git')
+True
+>>> url = GitURL(url='git@github.com:vcs-python/libvcs.git')
+>>> url.hostname
+'github.com'
+>>> url.to_url()
+'git@github.com:vcs-python/libvcs.git'
+```
+
+See {ref}`url-parsing` for the full tour.
 
 ### Commands
 
