@@ -22,7 +22,7 @@ _Notes on the upcoming release will go here._
 
 ### Documentation
 
-#### Documentation examples now run as doctests
+#### Documentation examples now run as doctests (#540)
 
 Every Python example under `docs/` executes against real temporary
 repositories on each test run, so copied examples work as printed. The
@@ -34,7 +34,7 @@ that don't exist, `worktrees.add(branch=...)` for `new_branch`, and
 {class}`~libvcs._internal.query_list.QueryList` filter examples using
 attribute names the objects don't have.
 
-#### Cross-references link objects on first mention
+#### Cross-references link objects on first mention (#540)
 
 Documentation pages now link classes, methods, and exceptions to their API
 reference the first time prose names them, and man-page citations link to
