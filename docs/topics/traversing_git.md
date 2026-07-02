@@ -245,7 +245,8 @@ True
 
 ## Error Handling
 
-When `get()` finds no match, it raises `ObjectDoesNotExist`:
+When `get()` finds no match, it raises
+{exc}`~libvcs._internal.query_list.ObjectDoesNotExist`:
 
 ```python
 >>> from libvcs.cmd.git import Git

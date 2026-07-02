@@ -2,13 +2,16 @@
 
 # QueryList Filtering
 
-libvcs uses `QueryList` to enable Django-style filtering on git entities.
+libvcs uses {class}`~libvcs._internal.query_list.QueryList` to enable
+[Django-style](https://docs.djangoproject.com/en/stable/topics/db/queries/)
+filtering on git entities.
 Every `ls()` method returns a `QueryList`, letting you filter branches, tags,
 remotes, and more with a fluent, chainable API.
 
 ## Basic Filtering
 
-The `filter()` method accepts keyword arguments with optional lookup suffixes:
+The {meth}`~libvcs._internal.query_list.QueryList.filter` method accepts
+keyword arguments with optional lookup suffixes:
 
 ```python
 >>> from libvcs.cmd.git import Git
@@ -75,7 +78,8 @@ True
 
 ## Getting a Single Item
 
-Use `get()` to retrieve exactly one matching item:
+Use {meth}`~libvcs._internal.query_list.QueryList.get` to retrieve exactly
+one matching item:
 
 ```python
 >>> from libvcs.cmd.git import Git
@@ -85,7 +89,9 @@ Use `get()` to retrieve exactly one matching item:
 'master'
 ```
 
-If no match or multiple matches are found, `get()` raises an exception.
+If no match is found, `get()` raises
+{exc}`~libvcs._internal.query_list.ObjectDoesNotExist`; multiple matches
+raise {exc}`~libvcs._internal.query_list.MultipleObjectsReturned`.
 
 ## Chaining Filters
 

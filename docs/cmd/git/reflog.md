@@ -1,6 +1,6 @@
 # `reflog`
 
-For `git-reflog(1)`.
+For [`git-reflog(1)`](https://git-scm.com/docs/git-reflog).
 
 ## Overview
 

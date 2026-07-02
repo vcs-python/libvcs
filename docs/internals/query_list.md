@@ -1,6 +1,7 @@
 # List querying - `libvcs._internal.query_list`
 
-`QueryList` is the backbone of the Manager/Cmd pattern. Every `ls()` method in
+{class}`~libvcs._internal.query_list.QueryList` is the backbone of the
+{ref}`Manager/Cmd pattern <traversing-git-repos>`. Every `ls()` method in
 libvcs returns a `QueryList`, enabling chainable filtering on the results.
 
 ## How It's Used
@@ -23,7 +24,9 @@ True
 
 ## Filtering
 
-`QueryList` extends Python's built-in `list` with Django-style lookups.
+`QueryList` extends Python's built-in {class}`list` with
+[Django-style](https://docs.djangoproject.com/en/stable/topics/db/queries/)
+lookups.
 Filter on any attribute of the contained objects — exact by default, or with
 a lookup suffix:
 

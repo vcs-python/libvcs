@@ -15,9 +15,9 @@ versions.
 
 ## Overview
 
-The `libvcs.cmd` module provides Python wrappers for VCS command-line tools:
+The {mod}`libvcs.cmd` module provides Python wrappers for VCS command-line tools:
 
-- {mod}`libvcs.cmd.git` - Git commands with Managers for intuitive entity traversal and Commands for targeted execution
+- {mod}`libvcs.cmd.git` - Git commands with {ref}`Managers <traversing-git-repos>` for intuitive entity traversal and Commands for targeted execution
 - {mod}`libvcs.cmd.hg` - Mercurial commands
 - {mod}`libvcs.cmd.svn` - Subversion commands
 
@@ -26,7 +26,7 @@ The `libvcs.cmd` module provides Python wrappers for VCS command-line tools:
 | Module | Use Case |
 |--------|----------|
 | `libvcs.cmd` | Fine-grained control over individual VCS commands |
-| `libvcs.sync` | High-level repository cloning and updating |
+| {mod}`libvcs.sync` | High-level repository cloning and updating |
 
 ## Modules
 

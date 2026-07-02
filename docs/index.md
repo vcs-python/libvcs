@@ -61,7 +61,7 @@ $ uv add libvcs
 libvcs is pre-1.0. Pin to a range: `libvcs>=0.39,<0.40`
 ```
 
-See [Quickstart](quickstart.md) for all methods and first steps.
+See {ref}`quickstart` for all methods and first steps.
 
 ## At a glance
 
@@ -88,7 +88,7 @@ updates a local checkout in one call.
 
 ## Testing
 
-libvcs ships a [pytest plugin](/api/pytest-plugin/) with
+libvcs ships a {doc}`pytest plugin </api/pytest-plugin>` with
 session-scoped fixtures for Git, SVN, and Mercurial repositories:
 
 ```python

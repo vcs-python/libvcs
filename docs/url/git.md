@@ -8,7 +8,8 @@ myst:
 
 # Git URL Parser - `libvcs.url.git`
 
-Detect, parse, and change git URLs using libvcs's URL parser for `git(1)`. It builds on top of the
+Detect, parse, and change git URLs using libvcs's URL parser for
+[`git(1)`](https://git-scm.com/docs/git). It builds on top of the
 {ref}`VCS-friendly URL parser framework <parser-framework>`.
 
 ```{eval-rst}

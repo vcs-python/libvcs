@@ -3,12 +3,13 @@
 # URL Parsing
 
 libvcs provides typed URL parsing for git, Mercurial, and Subversion repositories.
-Think of it as `urllib.parse` for VCS URLs—detecting URL types, extracting components,
-and converting between formats.
+Think of it as {mod}`urllib.parse` for VCS URLs—detecting URL types, extracting
+components, and converting between formats.
 
 ## Detecting URL Types
 
-Use `is_valid()` to check if a string is a valid VCS URL:
+Use {meth}`GitURL.is_valid() <libvcs.url.git.GitURL.is_valid>` to check if a
+string is a valid VCS URL:
 
 ```python
 >>> from libvcs.url.git import GitURL
@@ -22,7 +23,7 @@ False
 
 ## Parsing URLs
 
-Create a URL object to extract components:
+Create a {class}`~libvcs.url.git.GitURL` to extract components:
 
 ```python
 >>> from libvcs.url.git import GitURL
@@ -63,7 +64,8 @@ Git's SCP-style syntax (`user@host:path`) is also supported:
 
 ## Converting URL Formats
 
-Use `to_url()` to export a URL in a specific format:
+Use {meth}`~libvcs.url.git.GitURL.to_url` to export a URL in a specific
+format:
 
 ```python
 >>> from libvcs.url.git import GitURL
@@ -74,7 +76,8 @@ Use `to_url()` to export a URL in a specific format:
 
 ## Pip-style URLs
 
-libvcs handles pip-style VCS URLs with branch/tag specifiers:
+libvcs handles [pip-style VCS URLs](https://pip.pypa.io/en/stable/topics/vcs-support/)
+with branch/tag specifiers:
 
 ```python
 >>> from libvcs.url.git import GitURL
@@ -89,6 +92,9 @@ libvcs handles pip-style VCS URLs with branch/tag specifiers:
 
 ### Mercurial
 
+The same interface works for Mercurial through
+{class}`~libvcs.url.hg.HgURL`:
+
 ```python
 >>> from libvcs.url.hg import HgURL
 >>> HgURL.is_valid(url='https://hg.mozilla.org/mozilla-central')
@@ -99,6 +105,8 @@ True
 ```
 
 ### Subversion
+
+Subversion URLs parse through {class}`~libvcs.url.svn.SvnURL`:
 
 ```python
 >>> from libvcs.url.svn import SvnURL
@@ -111,7 +119,7 @@ True
 
 ## URL Registry
 
-The registry can auto-detect VCS type from a URL:
+The {doc}`URL registry </url/registry>` can auto-detect VCS type from a URL:
 
 ```python
 >>> from libvcs.url.registry import registry

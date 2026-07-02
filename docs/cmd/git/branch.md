@@ -1,6 +1,6 @@
 # `branch`
 
-For `git-branch(1)`.
+For [`git-branch(1)`](https://git-scm.com/docs/git-branch).
 
 ## Overview
 

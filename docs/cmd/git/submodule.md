@@ -1,6 +1,6 @@
 # `submodule`
 
-For `git-submodule(1)`.
+For [`git-submodule(1)`](https://git-scm.com/docs/git-submodule).
 
 ## Overview
 
@@ -9,7 +9,8 @@ and {class}`~libvcs.cmd.git.GitSubmoduleEntryCmd` (per-submodule operations).
 
 :::{note}
 {class}`~libvcs.cmd.git.GitSubmoduleCmd` is the legacy interface. Use `git.submodules`
-({class}`~libvcs.cmd.git.GitSubmoduleManager`) for the new Manager/Cmd pattern.
+({class}`~libvcs.cmd.git.GitSubmoduleManager`) for the new
+{ref}`Manager/Cmd pattern <traversing-git-repos>`.
 :::
 
 ### Examples

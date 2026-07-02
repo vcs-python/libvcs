@@ -1,6 +1,6 @@
 # `libvcs.cmd.git`
 
-For `git(1)`.
+For [`git(1)`](https://git-scm.com/docs/git).
 
 _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.html#git-module),
 [`salt.modules.git`](https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.git.html),
@@ -11,8 +11,11 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 libvcs provides **Managers** and **Commands** for git subcommands:
 
 - **Managers** (`git.branches`, `git.tags`, etc.) let you traverse repository
-  entities intuitively with ORM-like filtering via QueryList
+  entities intuitively with ORM-like filtering via
+  {class}`~libvcs._internal.query_list.QueryList`
 - **Commands** are contextual ways to run git commands against a specific target entity
+
+See {ref}`traversing-git-repos` for the full guide.
 
 ```
 Git instance

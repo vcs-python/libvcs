@@ -1,6 +1,6 @@
 # `remote`
 
-For `git-remote(1)`.
+For [`git-remote(1)`](https://git-scm.com/docs/git-remote).
 
 ## Overview
 

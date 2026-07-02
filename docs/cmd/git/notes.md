@@ -1,6 +1,6 @@
 # `notes`
 
-For `git-notes(1)`.
+For [`git-notes(1)`](https://git-scm.com/docs/git-notes).
 
 ## Overview
 

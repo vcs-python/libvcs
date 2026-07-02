@@ -1,6 +1,6 @@
 # `worktree`
 
-For `git-worktree(1)`.
+For [`git-worktree(1)`](https://git-scm.com/docs/git-worktree).
 
 ## Overview
 

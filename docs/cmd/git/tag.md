@@ -1,6 +1,6 @@
 # `tag`
 
-For `git-tag(1)`.
+For [`git-tag(1)`](https://git-scm.com/docs/git-tag).
 
 ## Overview
 

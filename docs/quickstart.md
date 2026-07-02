@@ -84,7 +84,8 @@ Clone an existing repository and check its status:
 
 ### Subcommand Managers
 
-Work with branches, tags, remotes, and more using the Manager/Cmd pattern:
+Work with branches, tags, remotes, and more using the
+{ref}`Manager/Cmd pattern <traversing-git-repos>`:
 
 ```python
 >>> from libvcs.cmd.git import Git

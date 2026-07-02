@@ -1,6 +1,6 @@
 # `stash`
 
-For `git-stash(1)`.
+For [`git-stash(1)`](https://git-scm.com/docs/git-stash).
 
 ## Overview
 
@@ -9,7 +9,8 @@ and {class}`~libvcs.cmd.git.GitStashEntryCmd` (per-stash operations).
 
 :::{note}
 {class}`~libvcs.cmd.git.GitStashCmd` is the legacy interface. Use `git.stashes`
-({class}`~libvcs.cmd.git.GitStashManager`) for the new Manager/Cmd pattern.
+({class}`~libvcs.cmd.git.GitStashManager`) for the new
+{ref}`Manager/Cmd pattern <traversing-git-repos>`.
 :::
 
 ### Examples
