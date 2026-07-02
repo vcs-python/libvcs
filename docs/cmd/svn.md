@@ -1,6 +1,7 @@
 # `libvcs.cmd.svn`
 
-For subversion, aka `svn(1)`
+Run [Subversion](https://subversion.apache.org/) commands through
+{class}`~libvcs.cmd.svn.Svn`, aka `svn(1)`.
 
 ```{eval-rst}
 .. automodule:: libvcs.cmd.svn

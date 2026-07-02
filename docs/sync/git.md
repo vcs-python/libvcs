@@ -1,6 +1,8 @@
 # `libvcs.sync.git`
 
-For `git(1)`.
+Clone and update git repositories through
+{class}`~libvcs.sync.git.GitSync`, for
+[`git(1)`](https://git-scm.com/docs/git).
 
 Compare to:
 [`fabtools.require.git`](https://fabtools.readthedocs.io/en/0.19.0/api/require/git.html),

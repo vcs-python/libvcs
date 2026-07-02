@@ -2,6 +2,11 @@
 
 # Sync - `libvcs.sync`
 
+Keep a local checkout in sync with its remote: one call clones the
+repository when it doesn't exist yet and updates it when it does, through
+{class}`~libvcs.sync.git.GitSync`, {class}`~libvcs.sync.hg.HgSync`, and
+{class}`~libvcs.sync.svn.SvnSync` — built on top of {mod}`libvcs.cmd`.
+
 Compare to:
 [`fabtools.require.git`](https://fabtools.readthedocs.io/en/0.19.0/api/require/git.html),
 [`salt.states.git`](https://docs.saltproject.io/en/latest/ref/states/all/salt.states.git.html),

@@ -1,9 +1,7 @@
 # `libvcs.sync.base`
 
-Base objects / classes for projects.
-
-Adding your own VCS / Extending libvcs can be done through subclassing
-{class}`~libvcs.sync.base.BaseSync`.
+Foundation for the sync classes. Add your own VCS — or extend libvcs — by
+subclassing {class}`~libvcs.sync.base.BaseSync`.
 
 ```{eval-rst}
 .. automodule:: libvcs.sync.base

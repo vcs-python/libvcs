@@ -1,6 +1,8 @@
 # Mercurial URL Parser - `libvcs.url.hg`
 
-For hg, aka `hg(1)`.
+Detect and parse [Mercurial](https://www.mercurial-scm.org/) URLs through
+{class}`~libvcs.url.hg.HgURL`, aka
+[`hg(1)`](https://www.mercurial-scm.org/doc/hg.1.html).
 
 ```{eval-rst}
 .. automodule:: libvcs.url.hg
