@@ -31,25 +31,24 @@ Git instance
 
 ### Quick Example
 
+List branches, rename one through its Cmd object, and manage tags:
+
 ```python
-from libvcs.cmd.git import Git
-
-git = Git(path='/path/to/repo')
-
-# List all branches
-branches = git.branches.ls()
-
-# Filter to remote branches only
-remote_branches = git.branches.ls(remotes=True)
-
-# Get a specific branch and rename it
-branch = git.branches.get(branch_name='old-name')
-branch.rename('new-name')
-
-# Create and manage tags
-git.tags.create(name='v1.0.0', message='Release 1.0')
-tag = git.tags.get(tag_name='v1.0.0')
-tag.delete()
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> branches = git.branches.ls()
+>>> len(branches) >= 1
+True
+>>> git.branches.create(branch='old-name')
+''
+>>> branch = git.branches.get(branch_name='old-name')
+>>> branch.rename('new-name')
+''
+>>> git.tags.create(name='v1.0.0', message='Release 1.0')
+''
+>>> tag = git.tags.get(tag_name='v1.0.0')
+>>> tag.delete()  # doctest: +ELLIPSIS
+"Deleted tag 'v1.0.0' ..."
 ```
 
 ```{toctree}

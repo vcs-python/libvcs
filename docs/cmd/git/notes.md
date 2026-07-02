@@ -7,27 +7,44 @@ For `git-notes(1)`.
 Manage git notes using {class}`~libvcs.cmd.git.GitNotesManager` (collection-level)
 and {class}`~libvcs.cmd.git.GitNoteCmd` (per-note operations).
 
-### Example
+### Examples
+
+Add a note to the current commit (`object_sha` defaults to `HEAD`), then list
+notes:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.notes.add(message='This is a note')
+''
+>>> notes = git.notes.ls()
+>>> len(notes) >= 1
+True
+```
 
-git = Git(path='/path/to/repo')
+Operate on a note through its Cmd object — show it, append to it, remove it:
 
-# Add a note to a commit
-git.notes.add(object='HEAD', message='This is a note')
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.notes.add(message='Reviewed by Alice')
+''
+>>> note = git.notes.ls()[0]
+>>> note.show()
+'Reviewed by Alice\n'
+>>> note.append(message='Additional info')
+''
+>>> note.remove()  # doctest: +ELLIPSIS
+'...'
+```
 
-# List all notes
-notes = git.notes.ls()
+Prune notes attached to objects that no longer exist:
 
-# Get a specific note and operate on it
-note = git.notes.get(object='HEAD')
-note.show()
-note.append(message='Additional info')
-note.remove()
-
-# Prune notes for non-existent objects
-git.notes.prune()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.notes.prune()
+''
 ```
 
 ## API Reference

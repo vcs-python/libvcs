@@ -7,26 +7,35 @@ For `git-tag(1)`.
 Manage git tags using {class}`~libvcs.cmd.git.GitTagManager` (collection-level)
 and {class}`~libvcs.cmd.git.GitTagCmd` (per-tag operations).
 
-### Example
+### Examples
+
+Create a tag, then list tags — optionally narrowed to a pattern:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.tags.create(name='v1.0.0', message='Release 1.0.0')
+''
+>>> tags = git.tags.ls()
+>>> len(tags) >= 1
+True
+>>> release_tags = git.tags.ls(pattern='v*')  # doctest: +ELLIPSIS
+>>> release_tags[0].tag_name
+'v1.0.0'
+```
 
-git = Git(path='/path/to/repo')
+Get a specific tag and operate on it through its Cmd object:
 
-# Create a tag
-git.tags.create(name='v1.0.0', message='Release 1.0.0')
-
-# List all tags
-tags = git.tags.ls()
-
-# Filter tags
-release_tags = git.tags.ls(pattern='v*')
-
-# Get a specific tag and operate on it
-tag = git.tags.get(tag_name='v1.0.0')
-tag.show()
-tag.delete()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.tags.create(name='v2.0.0', message='Release 2.0.0')
+''
+>>> tag = git.tags.get(tag_name='v2.0.0')
+>>> tag.show()  # doctest: +ELLIPSIS
+'tag v2.0.0...'
+>>> tag.delete()  # doctest: +ELLIPSIS
+"Deleted tag 'v2.0.0' ..."
 ```
 
 ## API Reference

@@ -120,9 +120,11 @@ With Managers and Commands, you get typed objects:
 ```python
 >>> from libvcs.cmd.git import Git
 >>> git = Git(path=example_git_repo.path)
->>> tags = git.tags.ls()
->>> for tag in tags:  # doctest: +SKIP
-...     print(f"{tag.tag_name}")
+>>> git.tags.create(name='v1.0.0', message='Release 1.0')
+''
+>>> for tag in git.tags.ls():
+...     print(tag.tag_name)
+v1.0.0
 ```
 
 ## Working with Remotes

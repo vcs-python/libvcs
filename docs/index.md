@@ -66,14 +66,14 @@ See [Quickstart](quickstart.md) for all methods and first steps.
 ## At a glance
 
 ```python
-from libvcs.url.git import GitURL
-
-url = GitURL(url="git@github.com:vcs-python/libvcs.git")
-url.hostname  # 'github.com'
-url.path      # 'vcs-python/libvcs'
-
-GitURL.is_valid(url="https://github.com/vcs-python/libvcs.git")
-# True
+>>> from libvcs.url.git import GitURL
+>>> url = GitURL(url="git@github.com:vcs-python/libvcs.git")
+>>> url.hostname
+'github.com'
+>>> url.path
+'vcs-python/libvcs'
+>>> GitURL.is_valid(url="https://github.com/vcs-python/libvcs.git")
+True
 ```
 
 libvcs gives you typed dataclasses for every parsed URL, thin CLI

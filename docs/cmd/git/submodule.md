@@ -12,28 +12,25 @@ and {class}`~libvcs.cmd.git.GitSubmoduleEntryCmd` (per-submodule operations).
 ({class}`~libvcs.cmd.git.GitSubmoduleManager`) for the new Manager/Cmd pattern.
 :::
 
-### Example
+### Examples
+
+List submodules — a repository without any simply returns an empty list — and
+sync submodule URLs into `.git/config`:
 
 ```python
-from libvcs.cmd.git import Git
-
-git = Git(path='/path/to/repo')
-
-# Add a submodule
-git.submodules.add(url='https://github.com/org/lib.git', path='vendor/lib')
-
-# List all submodules
-submodules = git.submodules.ls()
-
-# Get a specific submodule and operate on it
-submodule = git.submodules.get(path='vendor/lib')
-submodule.init()
-submodule.update()
-submodule.deinit()
-
-# Sync submodule URLs
-git.submodules.sync()
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.submodules.ls()
+[]
+>>> git.submodules.sync()
+''
 ```
+
+Register a submodule with {meth}`~libvcs.cmd.git.GitSubmoduleManager.add`,
+then initialize and fetch it through the entry's
+{meth}`~libvcs.cmd.git.GitSubmoduleEntryCmd.init` and
+{meth}`~libvcs.cmd.git.GitSubmoduleEntryCmd.update` — each method's API
+reference below carries a runnable example.
 
 ## API Reference
 

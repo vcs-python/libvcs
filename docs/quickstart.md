@@ -57,21 +57,29 @@ via trunk (can break easily):
 
 ### Commands
 
-Run git commands directly using {class}`~libvcs.cmd.git.Git`:
+Run git commands directly using {class}`~libvcs.cmd.git.Git`. Initialize a
+new repository:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> repo_path = tmp_path / 'example'
+>>> repo_path.mkdir()
+>>> git = Git(path=repo_path)
+>>> git.init()  # doctest: +ELLIPSIS
+'Initialized empty Git repository in ...'
+```
 
-git = Git(path='/path/to/repo')
+Clone an existing repository and check its status:
 
-# Initialize a new repository
-git.init()
-
-# Clone a repository
-git.clone(url='https://github.com/vcs-python/libvcs.git')
-
-# Check status
-git.status()
+```python
+>>> from libvcs.cmd.git import Git
+>>> clone_path = tmp_path / 'clone'
+>>> clone_path.mkdir()
+>>> git = Git(path=clone_path)
+>>> git.clone(url=f'file://{create_git_remote_repo()}')
+''
+>>> git.status()  # doctest: +ELLIPSIS
+"On branch master..."
 ```
 
 ### Subcommand Managers
@@ -79,22 +87,19 @@ git.status()
 Work with branches, tags, remotes, and more using the Manager/Cmd pattern:
 
 ```python
-from libvcs.cmd.git import Git
-
-git = Git(path='/path/to/repo')
-
-# List and filter branches
-branches = git.branches.ls()
-remote_branches = git.branches.ls(remotes=True)
-
-# Create and manage tags
-git.tags.create(name='v1.0.0', message='Release 1.0')
-tag = git.tags.get(tag_name='v1.0.0')
-
-# Work with remotes
-remotes = git.remotes.ls()
-origin = git.remotes.get(remote_name='origin')
-origin.prune()
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> branches = git.branches.ls()
+>>> len(branches) >= 1
+True
+>>> git.tags.create(name='v1.0.0', message='Release 1.0')
+''
+>>> tag = git.tags.get(tag_name='v1.0.0')
+>>> tag.tag_name
+'v1.0.0'
+>>> origin = git.remotes.get(remote_name='origin')
+>>> origin.prune()
+''
 ```
 
 See {doc}`/cmd/git/index` for the full API reference.
