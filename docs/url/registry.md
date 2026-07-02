@@ -45,13 +45,13 @@ local — registering on `GitURL.rule_map` directly would mutate the shared
 class-level map and change `GitURL` for every caller in the process.
 
 This registry understands `github:org/repo` and converts matches to
-cloneable URLs. An ambiguous SSH URL still matches every VCS — narrow it
-with `is_explicit=True`:
+cloneable URLs, leaving the module-level `registry` untouched. An ambiguous
+SSH URL still matches every VCS — narrow it with `is_explicit=True`:
 
 ```python
 >>> import dataclasses
 >>> from libvcs.url.base import Rule, RuleMap
->>> from libvcs.url.registry import ParserMatch, VCSRegistry
+>>> from libvcs.url.registry import ParserMatch, VCSRegistry, registry
 >>> from libvcs.url.git import GitURL
 
 >>> class GitHubPrefix(Rule):
@@ -82,6 +82,9 @@ with `is_explicit=True`:
 
 >>> vcs_matcher = VCSRegistry(parsers=my_parsers)
 
+>>> registry.match('git@invent.kde.org:plasma/plasma-sdk.git')
+[ParserMatch(vcs='git', match=GitURL(...))]
+
 >>> vcs_matcher.match('git@invent.kde.org:plasma/plasma-sdk.git')
 [ParserMatch(vcs='git', match=MyGitURLParser(...)),
     ParserMatch(vcs='hg', match=HgURL(...)),
@@ -110,14 +113,12 @@ with `is_explicit=True`:
 ```
 
 The same pattern handles infrastructure shorthands like KDE's
-`kde:group/repository` convention — and a custom registry never leaks into
-the module-level one, which still resolves the same URLs to plain
-{class}`~libvcs.url.git.GitURL`:
+`kde:group/repository` convention:
 
 ```python
 >>> import dataclasses
 >>> from libvcs.url.base import Rule, RuleMap
->>> from libvcs.url.registry import ParserMatch, VCSRegistry, registry
+>>> from libvcs.url.registry import ParserMatch, VCSRegistry
 >>> from libvcs.url.git import GitURL
 
 >>> class KDEPrefix(Rule):  # https://community.kde.org/Infrastructure/Git
@@ -163,9 +164,6 @@ the module-level one, which still resolves the same URLs to plain
 
 >>> kde_match.to_url()
 'git@invent.kde.org:frameworks/kirigami'
-
->>> registry.match('git@invent.kde.org:plasma/plasma-sdk.git')
-[ParserMatch(vcs='git', match=GitURL(...))]
 ```
 
 ## API Reference
