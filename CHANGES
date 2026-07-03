@@ -20,6 +20,34 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Documentation
+
+#### Documentation examples now run as doctests (#540)
+
+Every Python example under `docs/` executes against real temporary
+repositories on each test run, so copied examples work as printed. The
+conversion surfaced and fixed documented calls that had drifted from the
+API: `git.branches.create()` and `remote.set_url()` shown positionally
+where keyword arguments are required, `notes.add(object=...)` for what is
+named `object_sha`, `reflog.ls(ref=...)` and `expire(ref=...)` parameters
+that don't exist, `worktrees.add(branch=...)` for `new_branch`, and
+{class}`~libvcs._internal.query_list.QueryList` filter examples using
+attribute names the objects don't have.
+
+#### Cross-references link objects on first mention (#540)
+
+Documentation pages now link classes, methods, and exceptions to their API
+reference the first time prose names them, and man-page citations link to
+upstream documentation. The {mod}`libvcs.url.registry` guide untangles its
+examples into narrated, runnable steps, and the module hub pages open with
+what each layer does.
+
+#### Quickstart now demonstrates URL parsing (#540)
+
+The quickstart's "Basic Usage" adds a "Parse URLs" section that detects
+and parses a repository URL with {class}`~libvcs.url.git.GitURL`. See
+{ref}`url-parsing` for the full tour.
+
 ## libvcs 0.45.0 (2026-06-28)
 
 libvcs 0.45.0 makes test behavior independent of execution order by removing shared state from the URL registry and the pytest fixtures. {class}`~libvcs.url.registry.VCSRegistry` now keeps its parsers per instance, so building a custom registry no longer mutates the module-level `registry`, and the `git_repo`, `hg_repo`, and `svn_repo` fixtures hand every test its own clone instead of a shared checkout — fixing cross-test state leakage for downstream test suites such as vcspull. Contributors also gain an opt-in parallel test mode via pytest-xdist.

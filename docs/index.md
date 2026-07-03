@@ -58,22 +58,22 @@ $ uv add libvcs
 ```
 
 ```{tip}
-libvcs is pre-1.0. Pin to a range: `libvcs>=0.39,<0.40`
+libvcs is pre-1.0. Pin to a range, e.g. `libvcs>=0.45,<0.46`
 ```
 
-See [Quickstart](quickstart.md) for all methods and first steps.
+See {ref}`quickstart` for all methods and first steps.
 
 ## At a glance
 
 ```python
-from libvcs.url.git import GitURL
-
-url = GitURL(url="git@github.com:vcs-python/libvcs.git")
-url.hostname  # 'github.com'
-url.path      # 'vcs-python/libvcs'
-
-GitURL.is_valid(url="https://github.com/vcs-python/libvcs.git")
-# True
+>>> from libvcs.url.git import GitURL
+>>> url = GitURL(url="git@github.com:vcs-python/libvcs.git")
+>>> url.hostname
+'github.com'
+>>> url.path
+'vcs-python/libvcs'
+>>> GitURL.is_valid(url="https://github.com/vcs-python/libvcs.git")
+True
 ```
 
 libvcs gives you typed dataclasses for every parsed URL, thin CLI
@@ -88,7 +88,7 @@ updates a local checkout in one call.
 
 ## Testing
 
-libvcs ships a [pytest plugin](/api/pytest-plugin/) with
+libvcs ships a {doc}`pytest plugin </api/pytest-plugin>` with
 session-scoped fixtures for Git, SVN, and Mercurial repositories:
 
 ```python

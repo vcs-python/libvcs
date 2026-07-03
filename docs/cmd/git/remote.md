@@ -1,30 +1,44 @@
 # `remote`
 
-For `git-remote(1)`.
+For [`git-remote(1)`](https://git-scm.com/docs/git-remote).
 
 ## Overview
 
 Manage git remotes using {class}`~libvcs.cmd.git.GitRemoteManager` (collection-level)
 and {class}`~libvcs.cmd.git.GitRemoteCmd` (per-remote operations).
 
-### Example
+### Examples
+
+List remotes — a freshly cloned repository has its `origin`:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.remotes.ls()  # doctest: +ELLIPSIS
+[<GitRemoteCmd path=... remote_name=origin>]
+```
 
-git = Git(path='/path/to/repo')
+Add a remote:
 
-# List all remotes
-remotes = git.remotes.ls()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.remotes.add(name='upstream', url='https://github.com/org/repo.git')
+''
+```
 
-# Add a new remote
-git.remotes.add(name='upstream', url='https://github.com/org/repo.git')
+Get a specific remote and operate on it through its Cmd object:
 
-# Get a specific remote and operate on it
-origin = git.remotes.get(remote_name='origin')
-origin.show()
-origin.prune()
-origin.set_url('https://new-url.git')
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> origin = git.remotes.get(remote_name='origin')
+>>> 'origin' in origin.show()
+True
+>>> origin.prune()
+''
+>>> origin.set_url(url='https://example.com/new.git')
+''
 ```
 
 ## API Reference

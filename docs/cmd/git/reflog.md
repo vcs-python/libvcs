@@ -1,30 +1,43 @@
 # `reflog`
 
-For `git-reflog(1)`.
+For [`git-reflog(1)`](https://git-scm.com/docs/git-reflog).
 
 ## Overview
 
 Manage git reflog using {class}`~libvcs.cmd.git.GitReflogManager` (collection-level)
 and {class}`~libvcs.cmd.git.GitReflogEntryCmd` (per-entry operations).
 
-### Example
+### Examples
+
+List reflog entries and look one up by refspec:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> entries = git.reflog.ls()
+>>> len(entries) >= 1
+True
+>>> entry = git.reflog.get(refspec='HEAD@{0}')
+>>> entry.refspec
+'HEAD@{0}'
+```
 
-git = Git(path='/path/to/repo')
+Check whether a ref has a reflog:
 
-# List reflog entries
-entries = git.reflog.ls()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.reflog.exists('HEAD')
+True
+```
 
-# List entries for a specific ref
-head_entries = git.reflog.ls(ref='HEAD')
+Expire old reflog entries:
 
-# Check if reflog exists for a ref
-git.reflog.exists(ref='main')
-
-# Expire old reflog entries
-git.reflog.expire(ref='HEAD', expire='90.days.ago')
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.reflog.expire(expire='90.days.ago')
+''
 ```
 
 ## API Reference

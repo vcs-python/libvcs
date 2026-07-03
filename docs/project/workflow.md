@@ -4,7 +4,7 @@
 
 ## Development environment
 
-[uv] is a required package to develop.
+Development requires [uv].
 
 ```console
 $ git clone https://github.com/vcs-python/libvcs.git
@@ -14,8 +14,10 @@ $ git clone https://github.com/vcs-python/libvcs.git
 $ cd libvcs
 ```
 
+Install the project and its development dependency groups:
+
 ```console
-$ uv install -E "docs test coverage lint"
+$ uv sync
 ```
 
 Justfile commands prefixed with `watch-` will watch files and rerun.
@@ -26,7 +28,7 @@ Justfile commands prefixed with `watch-` will watch files and rerun.
 $ uv run py.test
 ```
 
-Helpers: `just test` Rerun tests on file change: `just watch-test` (requires [entr(1)])
+Helper: `just test`. Rerun tests on file change: `just watch-test` (requires [entr(1)]).
 
 ### Running tests in parallel
 
@@ -59,7 +61,7 @@ Default preview server: http://localhost:8068
 
 [sphinx-autobuild] will automatically build the docs, watch for file changes and launch a server.
 
-From home directory: `just start-docs` From inside `docs/`: `just start`
+From the project root: `just start-docs`. From inside `docs/`: `just start`.
 
 [sphinx-autobuild]: https://github.com/executablebooks/sphinx-autobuild
 
@@ -84,7 +86,7 @@ The project uses [ruff] to handle formatting, sorting imports and linting.
 uv:
 
 ```console
-$ uv run ruff
+$ uv run ruff check .
 ```
 
 If you setup manually:
@@ -196,55 +198,9 @@ requires [`entr(1)`].
 
 ## Releasing
 
-Since this software is used in production projects, we don't want to release breaking changes.
+See {ref}`releasing` for the version policy and release checklist.
 
-Choose what the next version is. Assuming it's version 0.9.0, it could be:
-
-- 0.9.0post0: postrelease, if there was a packaging issue
-- 0.9.1: bugfix / security / tweak
-- 0.10.0: breaking changes, new features
-
-Let's assume we pick 0.9.1
-
-`CHANGES`: Assure any PRs merged since last release are mentioned. Give a thank you to the
-contributor. Set the header with the new version and the date. Leave the "current" header and
-_Insert changes/features/fixes for next release here_ at the top::
-
-    current
-    -------
-    - *Insert changes/features/fixes for next release here*
-
-    libvcs 0.9.1 (2020-10-12)
-    -------------------------
-    - :issue:`1`: Fix bug
-
-`libvcs/__init__.py` and `__about__.py` - Set version
-
-```console
-$ git commit -m 'Tag v0.9.1'
-```
-
-```console
-$ git tag v0.9.1
-```
-
-After `git push` and `git push --tags`, CI will automatically build and deploy to PyPI.
-
-### Releasing (manual)
-
-As of 0.10, [uv] handles virtualenv creation, package requirements, versioning, building, and
-publishing. Therefore there is no setup.py or requirements files.
-
-Update `__version__` in `__about__.py` and `pyproject.toml`::
-
-    git commit -m 'build(libvcs): Tag v0.1.1'
-    git tag v0.1.1
-    git push
-    git push --tags
-    uv build
-    uv publish
-
-[uv]: https://github.com/astral-sh/uv 
+[uv]: https://github.com/astral-sh/uv
 [pytest-xdist]: https://pytest-xdist.readthedocs.io/
 [entr(1)]: http://eradman.com/entrproject/
 [`entr(1)`]: http://eradman.com/entrproject/

@@ -1,6 +1,8 @@
 # `libvcs.sync.svn`
 
-For subversion, aka `svn(1)`
+Check out and update [Subversion](https://subversion.apache.org/) working
+copies through {class}`~libvcs.sync.svn.SvnSync`, aka
+[`svn(1)`](https://svnbook.red-bean.com/en/1.7/svn.ref.svn.html).
 
 ```{eval-rst}
 .. automodule:: libvcs.sync.svn

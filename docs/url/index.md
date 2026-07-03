@@ -2,17 +2,14 @@
 
 # URL Parser - `libvcs.url`
 
-We all love {mod}`urllib.parse`, but what about VCS systems?
+Parse VCS URLs into typed, editable structures — {mod}`urllib.parse` for git,
+Mercurial, and Subversion. You validate a URL string, read its parts back as
+{mod}`dataclasses` fields (`hostname`, `path`, `rev`), change any of them,
+and export a form the VCS binary accepts.
 
-Also, things like completions and typings being in demand, what of all these factories? Good python
-code, but how to we get editor support and the nice satisfaction of types snapping together?
-
-If there was a type-friendly structure - like writing our own abstract base class - or a
-{mod}`dataclasses` - while also being extensible to patterns and groupings, maybe we could strike a
-perfect balance.
-
-If we could make it ready-to-go out of the box, but also have framework-like extensibility, it could
-satisfy the niche.
+The common URL shapes work out of the box; when your host or shorthand
+isn't covered, you can [add your own rules](#extendability). For a guided
+tour, start with {ref}`url-parsing`.
 
 ## Modules
 
@@ -58,6 +55,8 @@ Shared regex patterns and URL constants.
 ::::
 
 ## Validate and detect VCS URLs
+
+Check whether a string is a URL the VCS recognizes:
 
 ````{tab} git
 
@@ -122,7 +121,8 @@ True
 
 ## Parse VCS URLs
 
-_Compare to {class}`urllib.parse.ParseResult`_
+Turn a URL string into a typed structure with named fields — compare to
+{class}`urllib.parse.ParseResult`:
 
 ````{tab} git
 
@@ -185,24 +185,21 @@ SvnURL(url=svn+ssh://svn.debian.org/svn/aliothproj/path/in/project/repository,
 - hg: {meth}`libvcs.url.hg.HgURL.to_url()`
 - svn: {meth}`libvcs.url.svn.SvnURL.to_url()`
 
-`pip` knows what a certain URL string means, but `git clone` won't.
-
-e.g. `pip install git+https://github.com/django/django.git@3.2` works great with `pip`.
+`pip` knows what a certain URL string means, but `git clone` won't. This
+works great with `pip`:
 
 ```console
 $ pip install git+https://github.com/django/django.git@3.2
 ...
 Successfully installed Django-3.2
-
 ```
 
-but `git clone` can't use that:
+but `git clone` can't use that URL:
 
 ```console
-$ git clone git+https://github.com/django/django.git@3.2  # Fail
-...
-Cloning into django.git@3.2''...'
-git: 'remote-git+https' is not a git command. See 'git --help'.
+$ git clone git+https://github.com/django/django.git@3.2
+Cloning into 'django.git@3.2'...
+fatal: Unable to find remote helper for 'git+https'
 ```
 
 It needs something like this:
@@ -211,23 +208,18 @@ It needs something like this:
 $ git clone https://github.com/django/django.git --branch 3.2
 ```
 
-But before we get there, we don't know if we want a URL yet. We return a structure, e.g. `GitURL`.
-
-- Common result primitives across VCS, e.g. `GitURL`.
-
-  Compare to a {class}`urllib.parse.ParseResult` in `urlparse`
-
-  This is where fun can happen, or you can just parse a URL.
-
-- Allow mutating / replacing parse of a vcs (e.g. just the hostname)
-- Support common cases with popular VCS systems
-- Support extending parsing for users needing to do so
+That translation is why parsing returns a structure — `GitURL` — rather
+than a string. As with {class}`urllib.parse.ParseResult`, you inspect or
+replace individual fields (swap just the hostname, drop the scheme), then
+call `to_url()` when you finally need a string the VCS accepts. The same
+structure covers the popular hosts out of the box and takes custom rules
+for everything else.
 
 ## Scope
 
 ### Out of the box
 
-The ambition for this is to build extendable parsers for package-like URLs, e.g.
+libvcs parses package-like URLs, e.g.
 
 - Vanilla VCS URLs
 
@@ -255,12 +247,12 @@ The ambition for this is to build extendable parsers for package-like URLs, e.g.
 ## Extendability
 
 Patterns can be registered. [Similar behavior](https://stackoverflow.com/a/6264214/1396928) exists
-in {mod}`urlparse` (undocumented).
+in {mod}`urllib.parse` (undocumented).
 
-- Any formats not covered by the stock
-- Custom urls
+- Any formats not covered by the stock rules
+- Custom URLs
 
-  - For orgs on , e.g:
+  - For orgs on GitHub or GitLab, e.g.:
 
     - `python:mypy` -> `git@github.com:python/mypy.git`
     - `inkscape:inkscape` -> `git@gitlab.com:inkscape/inkscape.git`
@@ -269,7 +261,7 @@ in {mod}`urlparse` (undocumented).
 
     Direct to site:
 
-    - `cb:python-vcs/libtmux` -> `https://codeberg.org/vcs-python/libvcs`
+    - `cb:vcs-python/libvcs` -> `https://codeberg.org/vcs-python/libvcs`
     - `kde:plasma/plasma-sdk` -> `git@invent.kde.org:plasma/plasma-sdk.git`
 
       Aside: Note [KDE's git docs] use of [`url.<base>.insteadOf`] and [`url.<base>.pushInsteadOf`]
@@ -284,20 +276,17 @@ in {mod}`urlparse` (undocumented).
 [`url.<base>.insteadof`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtinsteadOf
 [`url.<base>.pushinsteadof`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtpushInsteadOf
 
-From there, `GitURL` can be used downstream directly by other projects.
+From there, `GitURL` can be used downstream directly by other projects:
+libvcs's own {ref}`cmd` and {ref}`sync <projects>` layers, as well as
+[vcspull configurations](https://vcspull.git-pull.com/), detect and accept
+these URL patterns.
 
-In our case, `libvcs`s' own {ref}`cmd` and {ref}`projects`, as well as a
-[vcspull configuration](https://vcspull.git-pull.com/), will be able to detect and accept various
-URL patterns.
+### How matching resolves
 
-### Matchers: Defaults
-
-When a match occurs, its `defaults` will fill in non-matched groups.
-
-### Matchers: First wins
-
-When registering new matchers, higher `weight`s are checked first. If it's a valid regex grouping,
-it will be picked.
+When a rule matches, its `defaults` fill in the groups the pattern didn't
+capture — a `github:` prefix implies `hostname=github.com`. When several
+rules could match, higher `weight`s are checked first; the first rule whose
+pattern produces a valid match wins.
 
 ```{toctree}
 :hidden:

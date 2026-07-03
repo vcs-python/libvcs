@@ -1,32 +1,52 @@
 # `branch`
 
-For `git-branch(1)`.
+For [`git-branch(1)`](https://git-scm.com/docs/git-branch).
 
 ## Overview
 
 Manage git branches using {class}`~libvcs.cmd.git.GitBranchManager` (collection-level)
 and {class}`~libvcs.cmd.git.GitBranchCmd` (per-branch operations).
 
-### Example
+### Examples
+
+List branches — local by default, remote with `remotes=True`:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> branches = git.branches.ls()
+>>> len(branches) >= 1
+True
+>>> remote_branches = git.branches.ls(remotes=True)
+>>> isinstance(remote_branches, list)
+True
+```
 
-git = Git(path='/path/to/repo')
+Create a branch, then look it up:
 
-# List all branches
-branches = git.branches.ls()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.branches.create(branch='feature-branch')
+''
+>>> branch = git.branches.get(branch_name='feature-branch')
+>>> branch.branch_name
+'feature-branch'
+```
 
-# List remote branches only
-remote_branches = git.branches.ls(remotes=True)
+Rename or delete a branch through its Cmd object:
 
-# Create a new branch
-git.branches.create('feature-branch')
-
-# Get a specific branch and operate on it
-branch = git.branches.get(branch_name='feature-branch')
-branch.rename('new-feature')
-branch.delete()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.branches.create(branch='old-name')
+''
+>>> branch = git.branches.get(branch_name='old-name')
+>>> branch.rename('new-feature')
+''
+>>> renamed = git.branches.get(branch_name='new-feature')
+>>> renamed.delete()  # doctest: +ELLIPSIS
+'Deleted branch new-feature ...'
 ```
 
 ## API Reference

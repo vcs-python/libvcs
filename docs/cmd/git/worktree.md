@@ -1,33 +1,37 @@
 # `worktree`
 
-For `git-worktree(1)`.
+For [`git-worktree(1)`](https://git-scm.com/docs/git-worktree).
 
 ## Overview
 
 Manage git worktrees using {class}`~libvcs.cmd.git.GitWorktreeManager` (collection-level)
 and {class}`~libvcs.cmd.git.GitWorktreeCmd` (per-worktree operations).
 
-### Example
+### Examples
+
+Add a worktree checked out at `HEAD`, then look it up — the main worktree
+always exists, so the list grows to two:
 
 ```python
-from libvcs.cmd.git import Git
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.worktrees.add(path=tmp_path / 'example-worktree', commit_ish='HEAD')  # doctest: +ELLIPSIS
+'HEAD is now at ...'
+>>> worktrees = git.worktrees.ls()
+>>> len(worktrees) >= 2
+True
+>>> wt = git.worktrees.get(worktree_path=worktrees[0].worktree_path)
+>>> wt.worktree_path == worktrees[0].worktree_path
+True
+```
 
-git = Git(path='/path/to/repo')
+Prune stale worktree metadata:
 
-# List all worktrees
-worktrees = git.worktrees.ls()
-
-# Add a new worktree
-git.worktrees.add(path='/path/to/worktree', branch='feature-branch')
-
-# Get a specific worktree and operate on it
-wt = git.worktrees.get(worktree_path='/path/to/worktree')
-wt.lock(reason='Do not delete')
-wt.unlock()
-wt.remove()
-
-# Prune stale worktrees
-git.worktrees.prune()
+```python
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> git.worktrees.prune()
+''
 ```
 
 ## API Reference

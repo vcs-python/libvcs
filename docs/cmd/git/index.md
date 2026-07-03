@@ -1,6 +1,6 @@
 # `libvcs.cmd.git`
 
-For `git(1)`.
+For [`git(1)`](https://git-scm.com/docs/git).
 
 _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.html#git-module),
 [`salt.modules.git`](https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.git.html),
@@ -11,8 +11,11 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 libvcs provides **Managers** and **Commands** for git subcommands:
 
 - **Managers** (`git.branches`, `git.tags`, etc.) let you traverse repository
-  entities intuitively with ORM-like filtering via QueryList
+  entities intuitively with ORM-like filtering via
+  {class}`~libvcs._internal.query_list.QueryList`
 - **Commands** are contextual ways to run git commands against a specific target entity
+
+See {ref}`traversing-git-repos` for the full guide.
 
 ```
 Git instance
@@ -31,25 +34,24 @@ Git instance
 
 ### Quick Example
 
+List branches, rename one through its Cmd object, and manage tags:
+
 ```python
-from libvcs.cmd.git import Git
-
-git = Git(path='/path/to/repo')
-
-# List all branches
-branches = git.branches.ls()
-
-# Filter to remote branches only
-remote_branches = git.branches.ls(remotes=True)
-
-# Get a specific branch and rename it
-branch = git.branches.get(branch_name='old-name')
-branch.rename('new-name')
-
-# Create and manage tags
-git.tags.create(name='v1.0.0', message='Release 1.0')
-tag = git.tags.get(tag_name='v1.0.0')
-tag.delete()
+>>> from libvcs.cmd.git import Git
+>>> git = Git(path=example_git_repo.path)
+>>> branches = git.branches.ls()
+>>> len(branches) >= 1
+True
+>>> git.branches.create(branch='old-name')
+''
+>>> branch = git.branches.get(branch_name='old-name')
+>>> branch.rename('new-name')
+''
+>>> git.tags.create(name='v1.0.0', message='Release 1.0')
+''
+>>> tag = git.tags.get(tag_name='v1.0.0')
+>>> tag.delete()  # doctest: +ELLIPSIS
+"Deleted tag 'v1.0.0' ..."
 ```
 
 ```{toctree}
