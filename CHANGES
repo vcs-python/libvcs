@@ -42,6 +42,12 @@ upstream documentation. The {mod}`libvcs.url.registry` guide untangles its
 examples into narrated, runnable steps, and the module hub pages open with
 what each layer does.
 
+#### Quickstart now demonstrates URL parsing (#540)
+
+The quickstart's "Basic Usage" adds a "Parse URLs" section that detects
+and parses a repository URL with {class}`~libvcs.url.git.GitURL`. See
+{ref}`url-parsing` for the full tour.
+
 ## libvcs 0.45.0 (2026-06-28)
 
 libvcs 0.45.0 makes test behavior independent of execution order by removing shared state from the URL registry and the pytest fixtures. {class}`~libvcs.url.registry.VCSRegistry` now keeps its parsers per instance, so building a custom registry no longer mutates the module-level `registry`, and the `git_repo`, `hg_repo`, and `svn_repo` fixtures hand every test its own clone instead of a shared checkout — fixing cross-test state leakage for downstream test suites such as vcspull. Contributors also gain an opt-in parallel test mode via pytest-xdist.
