@@ -191,7 +191,7 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         errors: str | None = None,
         **kwargs: t.Any,
     ) -> subprocess.Popen[t.Any]:
-        """Run commands :class:`subprocess.Popen`, optionally overrides via kwargs.
+        r"""Run commands :class:`subprocess.Popen`, optionally overrides via kwargs.
 
         Parameters
         ----------
@@ -202,7 +202,8 @@ class SubprocessCommand(SkipDefaultFieldsReprMixin):
         --------
         >>> cmd = SubprocessCommand(args=['echo', 'hello'])
         >>> proc = cmd.Popen(stdout=subprocess.PIPE)
-        >>> proc.communicate() # doctest: +SKIP
+        >>> proc.communicate()
+        (b'hello\n', None)
         """
         return subprocess.Popen(
             **dataclasses.replace(

@@ -4,16 +4,16 @@
 
     From https://github.com/saltstack/salt (Apache License):
 
-    - [`GitSync.remote`](libvcs.git.GitProject.remote) (renamed to ``remote``)
-    - [`GitSync.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
+    - :meth:`~libvcs.sync.git.GitSync.remote`
+    - :meth:`~libvcs.sync.git.GitSync.set_remote`
 
-    From pip (MIT Licnese):
+    From pip (MIT License):
 
-    - [`GitSync.remote`](libvcs.git.GitProject.remote_set) (renamed to ``set_remote``)
-    - [`GitSync.convert_pip_url`](libvcs.git.GitProject.convert_pip_url`) (``get_url_rev``)
-    - [`GitSync.get_revision`](libvcs.git.GitProject.get_revision)
-    - [`GitSync.get_git_version`](libvcs.git.GitProject.get_git_version)
-"""  # NOQA: E501
+    - :meth:`~libvcs.sync.git.GitSync.set_remote`
+    - :func:`~libvcs.sync.git.convert_pip_url`
+    - :meth:`~libvcs.sync.git.GitSync.get_revision`
+    - :meth:`~libvcs.sync.git.GitSync.get_git_version`
+"""
 
 from __future__ import annotations
 

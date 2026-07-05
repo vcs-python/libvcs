@@ -2,8 +2,8 @@
 
 # Commands - `libvcs.cmd`
 
-Run git, hg, and svn from Python through typed wrappers — one class per VCS
-binary, one method per operation.
+Run [`git(1)`], [`hg(1)`], and [`svn(1)`] from Python through typed wrappers
+— one class per VCS binary, one method per operation.
 
 Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.html#git-module),
 [`salt.modules.git`](https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.git.html),
@@ -20,7 +20,7 @@ versions.
 
 The {mod}`libvcs.cmd` module provides Python wrappers for VCS command-line tools:
 
-- {mod}`libvcs.cmd.git` - Git commands with {ref}`Managers <traversing-git-repos>` for intuitive entity traversal and Commands for targeted execution
+- {mod}`libvcs.cmd.git` - Git commands with {ref}`Managers and Commands <traversing-git-repos>` for intuitive entity traversal and targeted execution
 - {mod}`libvcs.cmd.hg` - Mercurial commands
 - {mod}`libvcs.cmd.svn` - Subversion commands
 
@@ -63,3 +63,7 @@ git/index
 hg
 svn
 ```
+
+[`git(1)`]: https://git-scm.com/docs/git
+[`hg(1)`]: https://www.mercurial-scm.org/doc/hg.1.html
+[`svn(1)`]: https://svnbook.red-bean.com/en/1.7/svn.ref.svn.html

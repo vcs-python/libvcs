@@ -8,8 +8,8 @@ Mercurial, and Subversion. You validate a URL string, read its parts back as
 and export a form the VCS binary accepts.
 
 The common URL shapes work out of the box; when your host or shorthand
-isn't covered, you can [add your own rules](#extendability). For a guided
-tour, start with {ref}`url-parsing`.
+isn't covered, you can {ref}`add your own rules <url-parser-extendability>`.
+For a guided tour, start with {ref}`url-parsing`.
 
 ## Modules
 
@@ -208,10 +208,11 @@ It needs something like this:
 $ git clone https://github.com/django/django.git --branch 3.2
 ```
 
-That translation is why parsing returns a structure — `GitURL` — rather
-than a string. As with {class}`urllib.parse.ParseResult`, you inspect or
-replace individual fields (swap just the hostname, drop the scheme), then
-call `to_url()` when you finally need a string the VCS accepts. The same
+That translation is why parsing returns a structure —
+{class}`~libvcs.url.git.GitURL` — rather than a string. As with
+{class}`urllib.parse.ParseResult`, you inspect or replace individual fields
+(swap just the hostname, drop the scheme), then call
+{meth}`~libvcs.url.git.GitURL.to_url` when you finally need a string the VCS accepts. The same
 structure covers the popular hosts out of the box and takes custom rules
 for everything else.
 
@@ -243,6 +244,8 @@ libvcs parses package-like URLs, e.g.
 [^npm-url]: NPM style URLs
 
     https://docs.npmjs.com/about-packages-and-modules#npm-package-git-url-formats
+
+(url-parser-extendability)=
 
 ## Extendability
 
@@ -276,7 +279,7 @@ in {mod}`urllib.parse` (undocumented).
 [`url.<base>.insteadof`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtinsteadOf
 [`url.<base>.pushinsteadof`]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtpushInsteadOf
 
-From there, `GitURL` can be used downstream directly by other projects:
+From there, {class}`~libvcs.url.git.GitURL` can be used downstream directly by other projects:
 libvcs's own {ref}`cmd` and {ref}`sync <projects>` layers, as well as
 [vcspull configurations](https://vcspull.git-pull.com/), detect and accept
 these URL patterns.

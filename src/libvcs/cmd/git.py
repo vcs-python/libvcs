@@ -210,7 +210,7 @@ class Git:
             ``None`` (default) preserves the legacy behaviour of blocking
             until the process exits. When the deadline is exceeded the
             process is sent ``SIGTERM`` (then ``SIGKILL`` after a grace
-            period) and :class:`libvcs.exc.CommandTimeoutError` is raised
+            period) and :exc:`libvcs.exc.CommandTimeoutError` is raised
             with any output collected so far.
 
         Examples
@@ -1243,7 +1243,7 @@ class Git:
         >>> sha256_repo = tmp_path / 'sha256_example'
         >>> sha256_repo.mkdir()
         >>> git = Git(path=sha256_repo)
-        >>> git.init(object_format='sha256')  # doctest: +SKIP
+        >>> git.init(object_format='sha256')
         'Initialized empty Git repository in ...'
         """
         local_flags: list[str] = []
@@ -2416,7 +2416,7 @@ GitSubmoduleCmdCommandLiteral = t.Literal[
 
 
 class GitSubmoduleCmd:
-    """Run git submodule commands (low-level, use GitSubmoduleManager for traversal)."""
+    """Run git submodule commands (low-level, use :class:`GitSubmoduleManager`)."""
 
     def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
         """Lite, typed, pythonic wrapper for git-submodule(1).
@@ -2977,7 +2977,7 @@ class GitSubmoduleEntryCmd:
 
 
 class GitSubmoduleManager:
-    """Traverse and manage git submodules with ORM-like filtering via QueryList."""
+    """Traverse git submodules with :class:`~libvcs._internal.query_list.QueryList`."""
 
     def __init__(
         self,
@@ -3532,7 +3532,7 @@ class GitSubmoduleManager:
         recursive: bool = False,
         cached: bool = False,
     ) -> QueryList[GitSubmodule]:
-        """List submodules as GitSubmodule objects.
+        """List submodules as :class:`~libvcs.cmd.git.GitSubmodule` objects.
 
         Parameters
         ----------
@@ -3598,15 +3598,20 @@ class GitSubmoduleManager:
 
         Raises
         ------
-        ObjectDoesNotExist
+        :exc:`~libvcs._internal.query_list.ObjectDoesNotExist`
             If no matching submodule found.
-        MultipleObjectsReturned
+        :exc:`~libvcs._internal.query_list.MultipleObjectsReturned`
             If multiple submodules match.
 
         Examples
         --------
+        >>> from libvcs._internal.query_list import ObjectDoesNotExist
         >>> submodules = GitSubmoduleManager(path=example_git_repo.path)
-        >>> # submodule = submodules.get(path='vendor/lib')
+        >>> try:
+        ...     submodules.get(path='vendor/lib')
+        ... except ObjectDoesNotExist:
+        ...     True
+        True
         """
         filters: dict[str, t.Any] = {}
         if path is not None:
@@ -3629,7 +3634,8 @@ class GitSubmoduleManager:
         Parameters
         ----------
         *args :
-            Positional arguments for QueryList.filter().
+            Positional arguments for
+            :meth:`~libvcs._internal.query_list.QueryList.filter`.
         **kwargs :
             Keyword arguments for filtering (supports Django-style lookups).
 
@@ -4212,7 +4218,7 @@ GitRemoteManagerLiteral = t.Literal[
 
 
 class GitRemoteManager:
-    """Traverse and manage git remotes with ORM-like filtering via QueryList."""
+    """Traverse git remotes with :class:`~libvcs._internal.query_list.QueryList`."""
 
     remote_name: str
 
@@ -4826,7 +4832,7 @@ class GitStashEntryCmd:
 
 
 class GitStashCmd:
-    """Run git stash commands (low-level, use GitStashManager for traversal)."""
+    """Run git stash commands (low-level, use :class:`GitStashManager`)."""
 
     def __init__(self, *, path: StrPath, cmd: Git | None = None) -> None:
         """Lite, typed, pythonic wrapper for git-stash(1).
@@ -5073,7 +5079,7 @@ class GitStashCmd:
 
 
 class GitStashManager:
-    """Traverse and manage git stashes with ORM-like filtering via QueryList."""
+    """Traverse git stashes with :class:`~libvcs._internal.query_list.QueryList`."""
 
     def __init__(
         self,
@@ -5270,7 +5276,8 @@ class GitStashManager:
     def ls(self) -> QueryList[GitStashEntryCmd]:
         """List stashes.
 
-        Returns a QueryList of GitStashEntryCmd objects.
+        Returns a :class:`~libvcs._internal.query_list.QueryList` of
+        :class:`~libvcs.cmd.git.GitStashEntryCmd` objects.
 
         Parses stash list format:
         - ``stash@{0}: On master: message``
@@ -5679,8 +5686,10 @@ class GitBranchCmd:
 
         Examples
         --------
-        For existing branches, use set_upstream() instead.
-        track() is for creating new branches that track a remote:
+        For existing branches, use
+        :meth:`~libvcs.cmd.git.GitBranchCmd.set_upstream` instead.
+        :meth:`~libvcs.cmd.git.GitBranchCmd.track` is for creating new
+        branches that track a remote:
 
         >>> GitBranchCmd(
         ...     path=example_git_repo.path,
@@ -5697,7 +5706,7 @@ class GitBranchCmd:
 
 
 class GitBranchManager:
-    """Traverse and manage git branches with ORM-like filtering via QueryList."""
+    """Traverse git branches with :class:`~libvcs._internal.query_list.QueryList`."""
 
     branch_name: str
 
@@ -6149,7 +6158,7 @@ class GitTagCmd:
 
 
 class GitTagManager:
-    """Traverse and manage git tags with ORM-like filtering via QueryList."""
+    """Traverse git tags with :class:`~libvcs._internal.query_list.QueryList`."""
 
     def __init__(
         self,
@@ -6745,7 +6754,7 @@ class GitWorktreeCmd:
 
 
 class GitWorktreeManager:
-    """Traverse and manage git worktrees with ORM-like filtering via QueryList."""
+    """Traverse git worktrees with :class:`~libvcs._internal.query_list.QueryList`."""
 
     def __init__(
         self,
@@ -6982,7 +6991,8 @@ class GitWorktreeManager:
     ) -> QueryList[GitWorktreeCmd]:
         """List worktrees.
 
-        Returns a QueryList of GitWorktreeCmd objects.
+        Returns a :class:`~libvcs._internal.query_list.QueryList` of
+        :class:`~libvcs.cmd.git.GitWorktreeCmd` objects.
 
         Parameters
         ----------
@@ -7361,7 +7371,7 @@ class GitNoteCmd:
 
 
 class GitNotesManager:
-    """Traverse and manage git notes with ORM-like filtering via QueryList."""
+    """Traverse git notes with :class:`~libvcs._internal.query_list.QueryList`."""
 
     def __init__(
         self,
@@ -7666,7 +7676,8 @@ class GitNotesManager:
     def ls(self) -> QueryList[GitNoteCmd]:
         """List notes.
 
-        Returns a QueryList of GitNoteCmd objects.
+        Returns a :class:`~libvcs._internal.query_list.QueryList` of
+        :class:`~libvcs.cmd.git.GitNoteCmd` objects.
 
         Examples
         --------
@@ -7913,7 +7924,7 @@ class GitReflogEntryCmd:
 
 
 class GitReflogManager:
-    """Traverse and manage git reflog entries with ORM-like filtering via QueryList."""
+    """Traverse reflog entries with :class:`~libvcs._internal.query_list.QueryList`."""
 
     def __init__(
         self,
@@ -8247,7 +8258,7 @@ class GitReflogManager:
         *,
         number: int | None = None,
     ) -> QueryList[GitReflogEntry]:
-        """List reflog entries as GitReflogEntry objects.
+        """List reflog entries as :class:`~libvcs.cmd.git.GitReflogEntry` objects.
 
         Parameters
         ----------
@@ -8313,9 +8324,9 @@ class GitReflogManager:
 
         Raises
         ------
-        ObjectDoesNotExist
+        :exc:`~libvcs._internal.query_list.ObjectDoesNotExist`
             If no matching entry found.
-        MultipleObjectsReturned
+        :exc:`~libvcs._internal.query_list.MultipleObjectsReturned`
             If multiple entries match.
 
         Examples
@@ -8347,7 +8358,8 @@ class GitReflogManager:
         Parameters
         ----------
         *args :
-            Positional arguments for QueryList.filter().
+            Positional arguments for
+            :meth:`~libvcs._internal.query_list.QueryList.filter`.
         **kwargs :
             Keyword arguments for filtering (supports Django-style lookups).
 

@@ -11,10 +11,9 @@
 
 .. Note::
 
-   Use Mercurial at your job or project? This module welcomes a champion / maintainer to
-   assure support is top-tier. Stop by the `project tracker
-   <https://github.com/vcs-python/libvcs>`_ and make yourself known. We won't stabilize
-   any APIs until we're satisfied support is up to snuff and is bullet proofed.
+   Mercurial URL support is experimental. If you rely on these URL shapes in
+   production, please verify them against your hosts and report gaps in the
+   `project tracker <https://github.com/vcs-python/libvcs>`_.
 """
 
 from __future__ import annotations
@@ -209,7 +208,7 @@ class HgBaseURL(
     rule_map = RuleMap(_rule_map={m.label: m for m in DEFAULT_RULES})
 
     def __post_init__(self) -> None:
-        """Initialize GitURL params into attributes."""
+        """Initialize :class:`~libvcs.url.hg.HgBaseURL` params into attributes."""
         url = self.url
         for rule in self.rule_map.values():
             match = re.match(rule.pattern, url)

@@ -1,7 +1,10 @@
 # `libvcs.sync.git`
 
 Clone and update git repositories through
-{class}`~libvcs.sync.git.GitSync`, for
+{class}`~libvcs.sync.git.GitSync`: {meth}`~libvcs.sync.git.GitSync.obtain`
+creates the checkout, {meth}`~libvcs.sync.git.GitSync.update_repo` refreshes
+it, and {meth}`~libvcs.sync.git.GitSync.get_revision` reads the current
+revision for
 [`git(1)`](https://git-scm.com/docs/git).
 
 Compare to:

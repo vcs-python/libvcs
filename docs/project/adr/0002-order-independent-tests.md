@@ -18,7 +18,7 @@ the suite is **order-independent**: every test must pass regardless of what ran
 before it. The suite was not. Two pieces of shared mutable state passed in the
 fixed collection order but failed once tests were reordered:
 
-- `libvcs.url.registry.VCSRegistry` stored its `parser_map` in a class
+- {class}`~libvcs.url.registry.VCSRegistry` stored its `parser_map` in a class
   variable, so constructing any second registry mutated the module-level
   `registry` singleton — whichever test built a custom registry first changed
   URL detection for every later test.
@@ -28,9 +28,10 @@ fixed collection order but failed once tests were reordered:
   every later test that copied it.
 
 These were invisible under the default order and surfaced only when a
-shuffled run (`pytest-randomly`) or a parallel run (`pytest-xdist`) changed
+shuffled run ([pytest-randomly]) or a parallel run ([pytest-xdist]) changed
 which tests ran together and in what sequence. They are also genuine bugs for
-downstream consumers (e.g. vcspull) that build on `VCSRegistry` and the
+downstream consumers (e.g. [vcspull]) that build on
+{class}`~libvcs.url.registry.VCSRegistry` and the
 fixtures, independent of how the tests run.
 
 ## Decision
@@ -56,7 +57,7 @@ py.test -p randomly`).
 
 ### Parallelism is opt-in, not the default
 
-`pytest-xdist` is a development dependency exposed via `just test-parallel`
+[pytest-xdist] is a development dependency exposed via `just test-parallel`
 (`uv run py.test -n auto`). The default `uv run py.test` stays serial.
 
 - The worker count is **not** hardcoded. `-n auto` adapts to the machine; the
@@ -88,7 +89,8 @@ checks (`uv run --with pytest-randomly`) rather than committed.
 ### Positive
 
 - The suite passes under serial, shuffled, and parallel (`-n auto`) execution.
-- Two real isolation bugs in shipped code (`VCSRegistry`, the repo fixtures)
+- Two real isolation bugs in shipped code
+  ({class}`~libvcs.url.registry.VCSRegistry`, the repo fixtures)
   are fixed, benefiting downstream consumers regardless of parallelism.
 - A faster opt-in run is available without changing the stable default.
 
@@ -108,11 +110,15 @@ checks (`uv run --with pytest-randomly`) rather than committed.
 
 ## Prior art
 
-- `pytest-xdist` provides the `load`, `loadscope`, and `loadfile` schedulers;
+- [pytest-xdist] provides the `load`, `loadscope`, and `loadfile` schedulers;
   its guidance is that tests must be independent for `load` to be safe.
-- `pytest-randomly` randomizes order specifically to surface inter-test
+- [pytest-randomly] randomizes order specifically to surface inter-test
   coupling.
 - The broader convention across test suites: parallel execution requires
   order-independent tests, and shared mutable state (global registries, cached
   fixtures handed out by reference) is the usual cause of order-dependent
   failures.
+
+[pytest-randomly]: https://github.com/pytest-dev/pytest-randomly
+[pytest-xdist]: https://pytest-xdist.readthedocs.io/
+[vcspull]: https://vcspull.git-pull.com/

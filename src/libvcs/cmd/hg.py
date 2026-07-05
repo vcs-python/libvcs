@@ -155,7 +155,7 @@ class Hg:
             ``None`` (default) preserves the legacy behaviour of blocking
             until the process exits. When the deadline is exceeded the
             process is sent ``SIGTERM`` (then ``SIGKILL`` after a grace
-            period) and :class:`libvcs.exc.CommandTimeoutError` is raised
+            period) and :exc:`libvcs.exc.CommandTimeoutError` is raised
             with any output collected so far.
 
         Examples

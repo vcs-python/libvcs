@@ -1,6 +1,8 @@
 # `libvcs.cmd.git`
 
-For [`git(1)`](https://git-scm.com/docs/git).
+Use {class}`~libvcs.cmd.git.Git` when you need direct access to
+[`git(1)`](https://git-scm.com/docs/git) from Python, with typed helpers for
+common subcommands and an escape hatch to run raw git arguments.
 
 _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.html#git-module),
 [`salt.modules.git`](https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.git.html),
@@ -8,7 +10,8 @@ _Compare to: [`fabtools.git`](https://fabtools.readthedocs.io/en/0.19.0/api/git.
 
 ## Managers and Commands
 
-libvcs provides **Managers** and **Commands** for git subcommands:
+libvcs provides {ref}`Managers and Commands <traversing-git-repos>` for git
+subcommands:
 
 - **Managers** (`git.branches`, `git.tags`, etc.) let you traverse repository
   entities intuitively with ORM-like filtering via

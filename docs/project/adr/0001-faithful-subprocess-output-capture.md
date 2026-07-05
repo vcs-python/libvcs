@@ -8,9 +8,10 @@ Proposed. 2026-06-20.
 
 ## Context
 
-The legacy command runner `libvcs._internal.run.run` — used by every
-`Git`, `Hg`, and `Svn` command class via `.run()` — does not return what
-the underlying VCS actually printed. After the process exits it splits
+The legacy command runner {func}`libvcs._internal.run.run` — used by every
+{class}`~libvcs.cmd.git.Git`, {class}`~libvcs.cmd.hg.Hg`, and
+{class}`~libvcs.cmd.svn.Svn` command class via `run()` — does not return
+what the underlying VCS actually printed. After the process exits it splits
 captured stdout into lines, calls `bytes.strip()` on each line, drops any
 line that is empty after stripping, and rejoins with `\n` and no trailing
 newline. stderr is treated the same way and then rejoined with no
@@ -41,8 +42,8 @@ human-readable progress lines, not to capture structured output. The
 runner's own module docstring already states that it "will be deprecated
 by `libvcs._internal.subprocess`".
 
-`libvcs._internal.subprocess.SubprocessCommand` already exists as a thin,
-typed wrapper that returns a real `subprocess.CompletedProcess` with
+{class}`~libvcs._internal.subprocess.SubprocessCommand` already exists as a thin,
+typed wrapper that returns a real {class}`subprocess.CompletedProcess` with
 separate, untouched `stdout` and `stderr`. It is bytes-first with opt-in
 text decoding, and it is currently wired into nothing.
 
@@ -73,8 +74,8 @@ capture path. This is implemented in two phases so the stable
 ### Phase 2 — pristine structured backend
 
 - Route the `cmd/*` classes through
-  `libvcs._internal.subprocess.SubprocessCommand`, which returns a
-  `subprocess.CompletedProcess` (bytes-first, separate
+  {class}`~libvcs._internal.subprocess.SubprocessCommand`, which returns a
+  {class}`subprocess.CompletedProcess` (bytes-first, separate
   stdout/stderr/returncode).
 - Expose a structured accessor that returns the `CompletedProcess` for
   callers that want streams, exit code, and exact bytes. Keep
@@ -102,7 +103,7 @@ The decisive measurement: flipping the default to verbatim broke only
 doctests in `cmd/git.py`, `cmd/hg.py`, and `cmd/svn.py` — example output
 that gained a trailing newline. No functional test, sync-layer call, or
 downstream consumer broke, because those already strip where they need a
-bare value (`vcspull`, like the sync layer, trims defensively). A global
+bare value ([vcspull], like the sync layer, trims defensively). A global
 trailing trim, by contrast, cannot produce an applyable patch: the
 patch's required final newline is exactly what it strips. So verbatim
 becomes the default — fixing the original `git apply` failure for the
@@ -122,7 +123,7 @@ reflects the true, faithful output.
   byte-identical; error messages keep their line structure.
 - The default now returns output with its trailing newline. Callers that
   want a bare value pass `trim=True`; existing consumers are unaffected
-  because the sync layer and `vcspull` already strip defensively before
+  because the sync layer and [vcspull] already strip defensively before
   comparing.
 - The stderr concatenation defect is removed: error lines keep their
   separators. (Phase 2's structured backend additionally avoids the
@@ -150,19 +151,28 @@ reflects the true, faithful output.
 The decision follows the convergent practice of mature VCS and
 subprocess-wrapping tools, none of which trim inside the capture path:
 
-- **pip** added a per-call mode (`stdout_only`) that returns VCS output
+- **[pip]** added a per-call mode (`stdout_only`) that returns VCS output
   verbatim, and replaced its `console_to_str` helper with
   `errors="backslashreplace"`.
-- **uv** captures into a raw `Output { stdout, stderr }` and applies
+- **[uv]** captures into a raw `Output { stdout, stderr }` and applies
   `trim_end()` at each call site for scalar reads.
-- **mise** relies on whole-output trailing trim for scalars, decodes
+- **[mise]** relies on whole-output trailing trim for scalars, decodes
   strictly for data and lossily for stderr.
-- **Mercurial**, **gitoxide**, and **Jujutsu** are bytes-first and keep
+- **[Mercurial]**, **[gitoxide]**, and **[Jujutsu]** are bytes-first and keep
   output verbatim; gitoxide treats newline-stripping as a named, opt-in
   view, and tracks the missing-final-newline case explicitly.
-- **git** itself confirms the constraint: its patch parser requires each
+- **[git]** itself confirms the constraint: its patch parser requires each
   line, including the last, to be newline-terminated.
 
 The lesson shared by all of them: capture pristine, keep streams
 separate, and make trimming and decoding explicit edge transformations.
 `SubprocessCommand` already embodies that shape inside libvcs.
+
+[vcspull]: https://vcspull.git-pull.com/
+[pip]: https://pip.pypa.io/
+[uv]: https://docs.astral.sh/uv/
+[mise]: https://mise.jdx.dev/
+[Mercurial]: https://www.mercurial-scm.org/
+[gitoxide]: https://github.com/GitoxideLabs/gitoxide
+[Jujutsu]: https://jj-vcs.github.io/jj/
+[git]: https://git-scm.com/

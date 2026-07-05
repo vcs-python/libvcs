@@ -2,6 +2,11 @@
 
 # Workflow
 
+Use this page for the day-to-day development loop: install the environment,
+run the tests, preview docs, and run the project checks. For the rationale
+behind order-independent and opt-in parallel tests, see
+{ref}`adr-order-independent-tests`.
+
 ## Development environment
 
 Development requires [uv].

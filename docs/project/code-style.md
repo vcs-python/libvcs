@@ -2,6 +2,11 @@
 
 # Code Style
 
+Use this page when you are changing Python code or docstrings and need the
+project's formatting, typing, and import conventions. The command examples are
+the common local checks; the root contributor guide still owns the full
+pre-commit gate.
+
 ## Formatting and linting
 
 libvcs uses [ruff](https://ruff.rs) for formatting **and** linting in a
@@ -21,7 +26,7 @@ $ uv run ruff check . --fix --show-fixes
 [mypy](http://mypy-lang.org/) runs in strict mode:
 
 ```console
-$ uv run mypy src tests
+$ uv run mypy .
 ```
 
 ## Docstrings
@@ -29,21 +34,22 @@ $ uv run mypy src tests
 All public APIs use **NumPy-style** docstrings:
 
 ```python
-def fetch(url: str, *, branch: str | None = None) -> str:
-    """Fetch a remote branch.
-
-    Parameters
-    ----------
-    url : str
-        Repository URL.
-    branch : str or None
-        Branch name. ``None`` means the default branch.
-
-    Returns
-    -------
-    str
-        The fetched commit hash.
-    """
+>>> def fetch(url: str, *, branch: str | None = None) -> str:
+...     """Fetch a remote branch.
+...
+...     Parameters
+...     ----------
+...     url : str
+...         Repository URL.
+...     branch : str or None
+...         Branch name. ``None`` means the default branch.
+...
+...     Returns
+...     -------
+...     str
+...         The fetched commit hash.
+...     """
+...     return "abc123"
 ```
 
 ## Imports

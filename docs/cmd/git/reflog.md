@@ -4,8 +4,9 @@ For [`git-reflog(1)`](https://git-scm.com/docs/git-reflog).
 
 ## Overview
 
-Manage git reflog using {class}`~libvcs.cmd.git.GitReflogManager` (collection-level)
-and {class}`~libvcs.cmd.git.GitReflogEntryCmd` (per-entry operations).
+Manage git reflog using {class}`~libvcs.cmd.git.GitReflogManager`
+(collection-level), {class}`~libvcs.cmd.git.GitReflogEntry` (entry data), and
+{class}`~libvcs.cmd.git.GitReflogEntryCmd` (per-entry operations).
 
 ### Examples
 

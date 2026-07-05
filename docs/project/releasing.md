@@ -2,6 +2,9 @@
 
 # Releasing
 
+Use this page to prepare release notes, the release commit, tags, and publish
+fallback commands. Keep release notes accurate before running any publish step.
+
 ## Version policy
 
 libvcs is pre-1.0. Any minor bump (e.g. 0.39 to 0.40) **may** contain
@@ -10,8 +13,8 @@ bug-fixes and documentation.
 
 ## Checklist
 
-1. Ensure `CHANGES` lists every merged PR since the last tag. Credit
-   contributors by GitHub handle.
+1. Ensure {ref}`CHANGES <history>` lists every merged PR since the last tag.
+   Credit contributors by [GitHub] handle.
 
 2. Update the version in `src/libvcs/__about__.py` **and**
    `pyproject.toml`.
@@ -26,7 +29,7 @@ bug-fixes and documentation.
    $ git tag v0.39.1
    ```
 
-4. Push the commit and tag -- CI will publish to PyPI automatically:
+4. Push the commit and tag -- CI will publish to [PyPI] automatically:
 
    ```console
    $ git push && git push --tags
@@ -41,3 +44,6 @@ $ uv build
 ```console
 $ uv publish
 ```
+
+[GitHub]: https://github.com/vcs-python/libvcs
+[PyPI]: https://pypi.org/project/libvcs/

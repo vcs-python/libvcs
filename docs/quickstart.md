@@ -2,6 +2,11 @@
 
 # Quickstart
 
+Start here when you want libvcs installed and one URL or repository operation
+working quickly. The first sections cover installation and the common URL,
+command, and manager flows; the linked topic pages go deeper when you need
+more than the basics.
+
 ## Installation
 
 For latest official version:
@@ -20,7 +25,7 @@ $ pip install --user --upgrade libvcs
 
 ### Developmental releases
 
-New versions of libvcs are published to PyPI as alpha, beta, or release candidates.
+New versions of libvcs are published to [PyPI] as alpha, beta, or release candidates.
 Their version numbers carry suffixes like `a1`, `b1`, and `rc1`, respectively.
 `1.10.0b4` would mean the 4th beta release of `1.10.0` before general availability.
 
@@ -52,6 +57,7 @@ via trunk (can break easily):
 
 [pip]: https://pip.pypa.io/en/stable/
 [uv]: https://docs.astral.sh/uv/
+[PyPI]: https://pypi.org/project/libvcs/
 
 ## Basic Usage
 

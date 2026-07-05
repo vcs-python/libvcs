@@ -2,8 +2,9 @@
 
 # Sync - `libvcs.sync`
 
-Keep a local checkout in sync with its remote: one call clones the
-repository when it doesn't exist yet and updates it when it does, through
+Keep a local checkout in sync with its remote: {meth}`~libvcs.sync.git.GitSync.obtain`
+and its Mercurial and Subversion counterparts clone the repository when it
+doesn't exist yet and update it when it does, through
 {class}`~libvcs.sync.git.GitSync`, {class}`~libvcs.sync.hg.HgSync`, and
 {class}`~libvcs.sync.svn.SvnSync` — built on top of {mod}`libvcs.cmd`.
 

@@ -5,12 +5,11 @@
 
     The follow are from saltstack/salt (Apache license):
 
-    - [`SvnSync.get_revision_file`](libvcs.svn.SvnSync.get_revision_file)
+    - :meth:`~libvcs.sync.svn.SvnSync.get_revision_file`
 
     The following are pypa/pip (MIT license):
 
-    - [`SvnSync.get_url`](libvcs.svn.SvnSync.get_url)
-    - [`SvnSync.get_revision`](libvcs.svn.SvnSync.get_revision)
+    - :meth:`~libvcs.sync.svn.SvnSync.get_revision`
 """
 
 from __future__ import annotations

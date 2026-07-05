@@ -2,7 +2,7 @@
 
 # `pytest` Plugin
 
-:::{doc-pytest-plugin} libvcs.pytest_plugin
+:::{auto-pytest-plugin} libvcs.pytest_plugin
 :project: libvcs
 :package: libvcs
 :summary: libvcs ships a pytest plugin for creating isolated Git, Mercurial, and Subversion repositories during tests.
@@ -29,16 +29,14 @@ Keep autouse setup explicit in your own `conftest.py` instead of having the
 plugin force global side effects.
 
 ```python
-import pytest
-
-
-@pytest.fixture(autouse=True)
-def setup(
-    set_home: None,
-    set_vcs_gitconfig: None,
-    set_vcs_hgconfig: None,
-) -> None:
-    pass
+>>> import pytest
+>>> @pytest.fixture(autouse=True)
+... def setup(
+...     set_home: None,
+...     set_vcs_gitconfig: None,
+...     set_vcs_hgconfig: None,
+... ) -> None:
+...     pass
 ```
 
 ## Repository isolation

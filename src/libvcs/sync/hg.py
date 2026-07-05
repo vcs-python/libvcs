@@ -4,9 +4,8 @@
 
    The following is from pypa/pip (MIT license):
 
-   - [`HgSync.convert_pip_url`](libvcs.hg.convert_pip_url)
-   - [`HgSync.get_url`](libvcs.hg.HgSync.get_url)
-   - [`HgSync.get_revision`](libvcs.hg.HgSync.get_revision)
+   - :meth:`~libvcs.sync.base.BaseSync.from_pip_url`
+   - :meth:`~libvcs.sync.hg.HgSync.get_revision`
 """  # E5
 
 from __future__ import annotations
@@ -43,7 +42,7 @@ class HgSync(BaseSync):
         Parameters
         ----------
         url : str
-            URL in subversion repository
+            Mercurial repository URL.
         """
         super().__init__(url=url, path=path, **kwargs)
 

@@ -5,7 +5,8 @@
 # API Reference
 
 libvcs exposes three public subsystems -- URL parsing, command execution,
-and repository synchronization -- plus a pytest plugin for test fixtures.
+and repository synchronization -- plus a {doc}`pytest plugin <pytest-plugin>`
+for test fixtures.
 
 All APIs are pre-1.0 and may change between minor versions.
 Pin to a range, e.g. `libvcs>=0.45,<0.46`.

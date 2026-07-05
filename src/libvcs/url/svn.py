@@ -11,11 +11,9 @@
 
 .. Note::
 
-   Subversion isn't seen as often these days, can you "rage against the dying of the
-   light" and assure its light is not extinguished? Help assure SVN URL parsing is
-   correct and robust. Visit the `project tracker <https://github.com/vcs-python/libvcs>`_
-   and give us a wave. This API won't be stabilized until we're confident Subversion is
-   covered accurately and can handle all-terrain scenarios.
+   Subversion URL support is experimental. If you rely on these URL shapes in
+   production, please verify them against your repositories and report gaps in
+   the `project tracker <https://github.com/vcs-python/libvcs>`_.
 """
 
 from __future__ import annotations
@@ -308,7 +306,7 @@ class SvnPipURL(
         return super().is_valid(url=url, is_explicit=is_explicit)
 
     def to_url(self) -> str:
-        """Return a ``svn(1)``-compatible URL. Can be used with ``svn clone``.
+        """Return a ``svn(1)``-compatible URL. Can be used with ``svn checkout``.
 
         Examples
         --------
@@ -451,7 +449,7 @@ class SvnURL(
         return super().is_valid(url=url, is_explicit=is_explicit)
 
     def to_url(self) -> str:
-        """Return a ``svn(1)``-compatible URL. Can be used with ``svn clone``.
+        """Return a ``svn(1)``-compatible URL. Can be used with ``svn checkout``.
 
         Examples
         --------

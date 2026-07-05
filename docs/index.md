@@ -2,7 +2,7 @@
 
 # libvcs
 
-Typed Python utilities for Git, SVN, and Mercurial. Parse URLs,
+Typed Python utilities for [Git], [Subversion], and [Mercurial]. Parse URLs,
 execute commands, and synchronize repositories -- all with a
 consistent, type-friendly API.
 
@@ -92,10 +92,14 @@ libvcs ships a {doc}`pytest plugin </api/pytest-plugin>` with
 session-scoped fixtures for Git, SVN, and Mercurial repositories:
 
 ```python
-def test_my_tool(create_git_remote_repo):
-    repo_path = create_git_remote_repo()
-    assert repo_path.exists()
+>>> def test_my_tool(create_git_remote_repo):
+...     repo_path = create_git_remote_repo()
+...     assert repo_path.exists()
 ```
+
+[Git]: https://git-scm.com/docs/git
+[Subversion]: https://subversion.apache.org/
+[Mercurial]: https://www.mercurial-scm.org/
 
 ```{toctree}
 :hidden:
