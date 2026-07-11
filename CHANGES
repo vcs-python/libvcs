@@ -20,11 +20,18 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+## libvcs 0.45.1 (2026-07-11)
+
+libvcs 0.45.1 unbreaks test suites that build their documentation before running pytest: the bundled pytest plugin no longer overrides pytest's own collection-ignore rules, so generated `_build/` output stops aborting collection. The documentation now runs every Python example as a doctest against real temporary repositories, which surfaced and corrected examples that had drifted from the API.
+
 ### Fixes
 
-- libvcs's bundled pytest plugin no longer overrides pytest's own
-  collection-ignore rules; suites that build their docs before running
-  no longer abort on the generated `_build/` output (#544).
+#### pytest plugin defers to pytest's collection ignores (#544)
+
+The plugin's `pytest_ignore_collect` hook returned a verdict for every path,
+overriding `--ignore`, `norecursedirs`, and `collect_ignore`. It now abstains
+with `None` for paths it has no opinion on, so suites that build their docs
+before running no longer abort on the generated `_build/` output.
 
 ### Documentation
 
