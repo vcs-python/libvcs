@@ -119,18 +119,30 @@ class RandomStrSequence:
 namer = RandomStrSequence()
 
 
-def pytest_ignore_collect(collection_path: pathlib.Path, config: pytest.Config) -> bool:
-    """Skip tests if VCS binaries are missing."""
+def pytest_ignore_collect(
+    collection_path: pathlib.Path,
+    config: pytest.Config,
+) -> bool | None:
+    """Skip collection of tests that require a missing VCS binary.
+
+    ``pytest_ignore_collect`` is a ``firstresult`` hook: the first
+    implementation to return a non-``None`` value wins and short-circuits the
+    rest. This hook must therefore return ``None`` (abstain) for paths it has
+    no opinion on, so that other implementations -- gp-libs' Sphinx ``_build``
+    skip and pytest's own ``__pycache__``/``norecursedirs``/``collect_ignore``
+    handling -- still run. Returning ``False`` here would suppress all of them.
+    """
     if (not shutil.which("svn") or not shutil.which("svnadmin")) and any(
         needle in str(collection_path) for needle in ["svn", "subversion"]
     ):
         return True
     if not shutil.which("git") and "git" in str(collection_path):
         return True
-    return bool(
-        not shutil.which("hg")
-        and any(needle in str(collection_path) for needle in ["hg", "mercurial"]),
-    )
+    if not shutil.which("hg") and any(
+        needle in str(collection_path) for needle in ["hg", "mercurial"]
+    ):
+        return True
+    return None
 
 
 @pytest.fixture(scope="session")
