@@ -11,6 +11,7 @@ import typing as t
 import pytest
 
 from libvcs._internal.run import run
+from libvcs.pytest_plugin import pytest_ignore_collect
 
 if t.TYPE_CHECKING:
     import pathlib
@@ -311,3 +312,47 @@ def test_git_repo_fixture_submodule_file_protocol(
         f"git submodule add failed: {result}\n"
         "git_repo fixture needs set_home dependency for child processes"
     )
+
+
+def test_pytest_ignore_collect_abstains_on_non_vcs_path(
+    pytestconfig: pytest.Config,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Non-VCS paths abstain (``None``) rather than voting ``False``.
+
+    ``pytest_ignore_collect`` is a ``firstresult`` hook, so returning ``False``
+    would short-circuit the chain and suppress gp-libs' Sphinx ``_build`` skip
+    and pytest's builtin ignores. A path mentioning no VCS must yield ``None``
+    regardless of which VCS binaries are installed.
+    """
+    build_artifact = tmp_path / "docs" / "_build" / "html" / "history.md"
+
+    assert pytest_ignore_collect(build_artifact, config=pytestconfig) is None
+
+
+def test_pytest_ignore_collect_ignores_missing_vcs(
+    pytestconfig: pytest.Config,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Paths for a missing VCS binary are ignored (``True``)."""
+    monkeypatch.setattr(
+        shutil,
+        "which",
+        lambda cmd, *args, **kwargs: None if cmd == "git" else f"/usr/bin/{cmd}",
+    )
+    git_test = tmp_path / "tests" / "sync" / "test_git.py"
+
+    assert pytest_ignore_collect(git_test, config=pytestconfig) is True
+
+
+def test_pytest_ignore_collect_abstains_when_binaries_present(
+    pytestconfig: pytest.Config,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """A VCS path abstains when its binary is present, deferring to others."""
+    monkeypatch.setattr(shutil, "which", lambda cmd, *args, **kwargs: f"/usr/bin/{cmd}")
+    git_test = tmp_path / "tests" / "sync" / "test_git.py"
+
+    assert pytest_ignore_collect(git_test, config=pytestconfig) is None
