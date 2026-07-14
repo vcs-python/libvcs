@@ -67,10 +67,10 @@ dev = [
   "gp-sphinx==0.0.1a34",
   "sphinx-autodoc-api-style==0.0.1a34",
   "sphinx-autodoc-pytest-fixtures==0.0.1a34",
-  "gp-libs>=0.0.18",
+  "gp-libs>=0.0.19",
   "sphinx-autobuild",
   # Testing
-  "gp-libs>=0.0.18",
+  "gp-libs>=0.0.19",
   "pytest",
   "pytest-rerunfailures",
   "pytest-mock",
@@ -89,11 +89,11 @@ docs = [
   "gp-sphinx==0.0.1a34",
   "sphinx-autodoc-api-style==0.0.1a34",
   "sphinx-autodoc-pytest-fixtures==0.0.1a34",
-  "gp-libs>=0.0.18",
+  "gp-libs>=0.0.19",
   "sphinx-autobuild",
 ]
 testing = [
-  "gp-libs>=0.0.18",
+  "gp-libs>=0.0.19",
   "pytest",
   "pytest-rerunfailures",
   "pytest-mock",
