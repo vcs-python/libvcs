@@ -86,7 +86,18 @@ class GitRemoteRefNotFound(exc.CommandError):
 
 @dataclasses.dataclass
 class GitRemote:
-    """Structure containing git working copy information."""
+    """Structure containing git working copy information.
+
+    Attributes
+    ----------
+    name : str
+        Remote name as git records it, e.g. ``origin``.
+    fetch_url : str
+        URL git fetches from for this remote.
+    push_url : str
+        URL git pushes to for this remote. Same as ``fetch_url`` unless a
+        separate push URL is configured.
+    """
 
     name: str
     fetch_url: str
@@ -99,7 +110,31 @@ GitRemotesArgs = None | GitSyncRemoteDict | dict[str, str]
 
 @dataclasses.dataclass
 class GitStatus:
-    """Git status information."""
+    """Git status information.
+
+    Fields hold the ``# branch.*`` headers of ``git status -sb
+    --porcelain=2`` as strings, unconverted. Each is ``None`` when the header
+    is absent from the output :meth:`GitStatus.from_stdout` parsed.
+
+    Attributes
+    ----------
+    branch_oid : str | None
+        Commit SHA of ``HEAD``. ``None`` on an unborn branch, where git
+        reports ``(initial)`` instead of a SHA.
+    branch_head : str | None
+        Checked-out branch name, or ``(detached)`` when ``HEAD`` points at a
+        commit rather than a branch.
+    branch_upstream : str | None
+        Upstream branch ``HEAD`` tracks, e.g. ``origin/master``. ``None``
+        when the branch has no upstream configured.
+    branch_ab : str | None
+        Ahead/behind counts as git prints them, e.g. ``+0 -0``. ``None``
+        without an upstream to compare against.
+    branch_ahead : str | None
+        Commit count ahead of the upstream, taken from ``branch_ab``.
+    branch_behind : str | None
+        Commit count behind the upstream, taken from ``branch_ab``.
+    """
 
     branch_oid: str | None = None
     branch_head: str | None = None
