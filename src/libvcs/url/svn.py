@@ -150,6 +150,36 @@ class SvnBaseURL(
 ):
     """SVN repository location. Parses URLs on initialization.
 
+    Attributes
+    ----------
+    url : str
+        Location as given, kept verbatim. Every other field is filled from it
+        by the first :class:`~libvcs.url.base.Rule` that matches.
+    scheme : str | None
+        Transport scheme, e.g. ``https``, ``svn+ssh``, or ``svn+file``.
+        ``None`` for scp-style locations, which carry no scheme.
+    user : str | None
+        User in front of the hostname, e.g. ``svn``. ``None`` when the URL
+        omits one.
+    hostname : str
+        Server hosting the repository, e.g. ``svn.debian.org``. Empty when
+        the matched rule captures no host, as with ``svn+file://`` URLs.
+    port : int | None
+        Port the URL specifies, or ``None`` to use the transport's default.
+    separator : str
+        Character sitting between the host (and port) and the path, ``/``
+        unless the URL used ``:`` or ``,``. :meth:`to_url` re-emits it.
+    path : str
+        Server-side path to the repository, e.g.
+        ``svn/aliothproj/path/in/project``. Empty when the URL carries no
+        path.
+    ref : str | None
+        Commit-ish (tag, branch, revision) for callers to set; the bundled
+        rules capture no ref, so parsing leaves it ``None``.
+    rule : str | None
+        :attr:`~libvcs.url.base.Rule.label` of the rule that matched, or
+        ``None`` when no rule did and the remaining fields stayed unset.
+
     Examples
     --------
     >>> SvnBaseURL(
@@ -279,7 +309,16 @@ class SvnPipURL(
     URLProtocol,
     SkipDefaultFieldsReprMixin,
 ):
-    """Supports pip svn URLs."""
+    """Supports pip svn URLs.
+
+    Parses the fields of :class:`SvnBaseURL` plus the one below.
+
+    Attributes
+    ----------
+    rev : str | None
+        Commit-ish (tag, branch, revision) from a pip-style ``@rev``, e.g.
+        ``2019``. ``None`` when the URL names no revision.
+    """
 
     # commit-ish (rev): tag, branch, ref
     rev: str | None = None

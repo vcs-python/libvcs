@@ -294,6 +294,32 @@ class GitBaseURL(
 ):
     """Git repository location. Parses URLs on initialization.
 
+    Attributes
+    ----------
+    url : str
+        Location as given, kept verbatim. Every other field is filled from it
+        by the first :class:`~libvcs.url.base.Rule` that matches.
+    scheme : str | None
+        Transport scheme, e.g. ``https`` or ``ssh``. ``None`` for scp-style
+        locations such as ``git@github.com:vcs-python/libvcs.git``, which
+        carry no scheme.
+    user : str | None
+        User in front of the hostname, e.g. ``git``. ``None`` when the URL
+        omits one; :meth:`to_url` falls back to ``git`` for scp-style output.
+    hostname : str | None
+        Server hosting the repository, e.g. ``github.com``.
+    port : int | None
+        Port the URL specifies, or ``None`` to use the transport's default.
+    path : str | None
+        Server-side path to the repository with the suffix split off, e.g.
+        ``vcs-python/libvcs``.
+    suffix : str | None
+        Trailing ``.git`` split off the path, or ``None`` when the URL has
+        none. :meth:`to_url` re-appends it.
+    rule : str | None
+        :attr:`~libvcs.url.base.Rule.label` of the rule that matched, or
+        ``None`` when no rule did and the remaining fields stayed unset.
+
     Examples
     --------
     >>> GitBaseURL(url='https://github.com/vcs-python/libvcs.git')
@@ -454,7 +480,21 @@ class GitAWSCodeCommitURL(
     URLProtocol,
     SkipDefaultFieldsReprMixin,
 ):
-    """Supports AWS CodeCommit git URLs."""
+    """Supports AWS CodeCommit git URLs.
+
+    Parses the fields of :class:`GitBaseURL` plus the two below.
+
+    Attributes
+    ----------
+    region : str | None
+        AWS region from a ``codecommit::<region>://`` URL, e.g.
+        ``us-east-1``. ``None`` for region-less GRC URLs and for the HTTPS
+        and SSH forms, which carry the region inside the hostname.
+    rev : str | None
+        Commit-ish (tag, branch, ref) trailing the URL as ``@rev``, or
+        ``None`` when the URL names no revision. :meth:`to_url` re-appends
+        it.
+    """
 
     # AWS CodeCommit Region
     region: str | None = None
@@ -589,7 +629,17 @@ class GitPipURL(
     URLProtocol,
     SkipDefaultFieldsReprMixin,
 ):
-    """Supports pip git URLs."""
+    """Supports pip git URLs.
+
+    Parses the fields of :class:`GitBaseURL` plus the one below.
+
+    Attributes
+    ----------
+    rev : str | None
+        Commit-ish (tag, branch, ref) from a pip-style ``@rev``, e.g.
+        ``v0.10.0``. ``None`` when the URL names no revision.
+        :meth:`to_url` re-appends it.
+    """
 
     # commit-ish (rev): tag, branch, ref
     rev: str | None = None
