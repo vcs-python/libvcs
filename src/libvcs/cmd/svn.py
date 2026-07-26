@@ -29,7 +29,7 @@ class SvnPropsetValueOrValuePathRequired(exc.LibVCSException, TypeError):
     """Raised when required parameters are not passed."""
 
     def __init__(self, *args: object) -> None:
-        return super().__init__("Must enter a value or value_path")
+        super().__init__("Must enter a value or value_path")
 
 
 class Svn:

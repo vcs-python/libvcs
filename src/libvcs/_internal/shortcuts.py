@@ -18,17 +18,17 @@ from libvcs.url import registry as url_tools
 
 class VCSNoMatchFoundForUrl(exc.LibVCSException):
     def __init__(self, url: str, *args: object) -> None:
-        return super().__init__(f"No VCS found for url: {url}")
+        super().__init__(f"No VCS found for url: {url}")
 
 
 class VCSMultipleMatchFoundForUrl(exc.LibVCSException):
     def __init__(self, url: str, *args: object) -> None:
-        return super().__init__(f"Multiple VCS found for url: {url}")
+        super().__init__(f"Multiple VCS found for url: {url}")
 
 
 class VCSNotSupported(exc.LibVCSException):
     def __init__(self, url: str, vcs: str, *args: object) -> None:
-        return super().__init__(f"VCS '{vcs}' not supported, based on URL: {url}")
+        super().__init__(f"VCS '{vcs}' not supported, based on URL: {url}")
 
 
 @t.overload
