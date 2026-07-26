@@ -64,9 +64,7 @@ from libvcs.sync.git import GitSync
 repo = GitSync(
     url="https://github.com/vcs-python/libvcs",
     path=pathlib.Path.cwd() / "libvcs",
-    remotes={
-        'gitlab': 'https://gitlab.com/vcs-python/libvcs'
-    }
+    remotes={"gitlab": "https://gitlab.com/vcs-python/libvcs"},
 )
 
 # Clone (if not exists) or fetch & update (if exists)
@@ -89,19 +87,19 @@ import pathlib
 from libvcs.cmd.git import Git
 
 # Initialize the wrapper
-git = Git(path=pathlib.Path.cwd() / 'libvcs')
+git = Git(path=pathlib.Path.cwd() / "libvcs")
 
 # Run commands directly
-git.clone(url='https://github.com/vcs-python/libvcs.git')
-git.checkout(ref='master')
+git.clone(url="https://github.com/vcs-python/libvcs.git")
+git.checkout(ref="master")
 
 # Traverse branches with ORM-like filtering
-git.branches.create('feature/new-gui')
+git.branches.create("feature/new-gui")
 print(git.branches.ls())  # Returns QueryList for filtering
 
 # Target specific entities with contextual commands
-git.remotes.set_url(name='origin', url='git@github.com:vcs-python/libvcs.git')
-git.tags.create(name='v1.0.0', message='Release version 1.0.0')
+git.remotes.set_url(name="origin", url="git@github.com:vcs-python/libvcs.git")
+git.tags.create(name="v1.0.0", message="Release version 1.0.0")
 ```
 
 ### 3. URL Parsing
@@ -113,17 +111,17 @@ Stop writing regex for Git URLs. Let `libvcs` handle the edge cases.
 from libvcs.url.git import GitURL
 
 # Validate URLs
-GitURL.is_valid(url='https://github.com/vcs-python/libvcs.git')  # True
+GitURL.is_valid(url="https://github.com/vcs-python/libvcs.git")  # True
 
 # Parse complex URLs
-url = GitURL(url='git@github.com:vcs-python/libvcs.git')
+url = GitURL(url="git@github.com:vcs-python/libvcs.git")
 
-print(url.user)      # 'git'
+print(url.user)  # 'git'
 print(url.hostname)  # 'github.com'
-print(url.path)      # 'vcs-python/libvcs'
+print(url.path)  # 'vcs-python/libvcs'
 
 # Transform URLs
-url.hostname = 'gitlab.com'
+url.hostname = "gitlab.com"
 print(url.to_url())  # 'git@gitlab.com:vcs-python/libvcs.git'
 ```
 
@@ -137,18 +135,16 @@ import pathlib
 from libvcs.pytest_plugin import CreateRepoFn
 from libvcs.sync.git import GitSync
 
-def test_my_git_tool(
-    create_git_remote_repo: CreateRepoFn,
-    tmp_path: pathlib.Path
-):
+
+def test_my_git_tool(create_git_remote_repo: CreateRepoFn, tmp_path: pathlib.Path):
     # Spin up a real, temporary Git server
     git_server = create_git_remote_repo()
-    
+
     # Clone it to a temporary directory
     checkout_path = tmp_path / "checkout"
     repo = GitSync(path=checkout_path, url=f"file://{git_server}")
     repo.obtain()
-    
+
     assert checkout_path.exists()
     assert (checkout_path / ".git").is_dir()
 ```
