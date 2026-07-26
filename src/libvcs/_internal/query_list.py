@@ -30,7 +30,7 @@ class ObjectDoesNotExist(Exception):
 def keygetter(
     obj: Mapping[str, t.Any],
     path: str,
-) -> None | t.Any | str | list[str] | Mapping[str, str]:
+) -> t.Any | str | list[str] | Mapping[str, str] | None:
     """Fetch values in objects and keys, supported nested data.
 
     **With dictionaries**:

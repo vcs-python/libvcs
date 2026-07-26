@@ -58,7 +58,7 @@ def test_create_project(
     tmp_path: pathlib.Path,
     repo_dict: CreateProjectKwargsDict,
     repo_class: type[SvnSync | GitSync | HgSync],
-    raises_exception: None | type[E] | tuple[type[E], ...],
+    raises_exception: type[E] | tuple[type[E], ...] | None,
 ) -> None:
     """Tests for create_project()."""
     # add parent_dir via fixture
