@@ -20,6 +20,18 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Fixes
+
+#### Progress callback timestamps carry a time zone (#549)
+
+The `timestamp` passed to a
+{class}`~libvcs._internal.run.ProgressCallbackProtocol` is now an aware
+`datetime` in UTC. It was a naive local-time value, so timestamps taken on
+hosts in different zones compared and serialized as though they named the
+same instant, and a DST rollover made them ambiguous on a single host.
+Callbacks that format the value for display are unaffected; callbacks that
+compare, subtract, or serialize it will see the offset.
+
 ### Documentation
 
 #### Class fields describe themselves in the API reference (#548)
@@ -44,6 +56,15 @@ Minimum `ruff>=0.16.0` (was unpinned). Contributors need the newer formatter:
 `ruff format` descends into Python code blocks inside Markdown, so
 `just ruff-format` now reaches `README.md` and the design notes alongside
 `src/` and `tests/`.
+
+Linting also picks up ruff's own default rule set. The project used to name
+its linters with `select`, which replaces the defaults rather than adding to
+them; `extend-select` layers the same list on top instead, so `just ruff` now
+enforces the rules ruff recommends out of the box as well as the ones libvcs
+asks for. Rules that flag a deliberate idiom — the blind excepts that let
+{class}`~libvcs._internal.query_list.QueryList` treat an unresolvable lookup
+as a non-match, `subprocess.Popen`'s `preexec_fn` pass-through — are scoped
+per file with the reason recorded in `pyproject.toml`.
 
 ## libvcs 0.45.1 (2026-07-11)
 
