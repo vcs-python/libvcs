@@ -558,23 +558,23 @@ reflog_pattern = r"(?P<sha>[a-f0-9]+) (?P<ref>[^@]+)@\{(?P<index>\d+)\}: (?P<act
 ```python
 class Git:
     submodule: GitSubmoduleCmd
-    remotes: GitRemoteManager      # ✓ Manager pattern
+    remotes: GitRemoteManager  # ✓ Manager pattern
     stash: GitStashCmd
-    branches: GitBranchManager     # ✓ Manager pattern
+    branches: GitBranchManager  # ✓ Manager pattern
 ```
 
 ### Planned
 
 ```python
 class Git:
-    submodules: GitSubmoduleManager    # Renamed + Manager pattern
-    remotes: GitRemoteManager          # ✓ Already done
-    stash: GitStashManager             # Refactored to Manager pattern
-    branches: GitBranchManager         # ✓ Already done
-    tags: GitTagManager                # New
-    worktrees: GitWorktreeManager      # New
-    notes: GitNotesManager             # New
-    reflog: GitReflogManager           # New
+    submodules: GitSubmoduleManager  # Renamed + Manager pattern
+    remotes: GitRemoteManager  # ✓ Already done
+    stash: GitStashManager  # Refactored to Manager pattern
+    branches: GitBranchManager  # ✓ Already done
+    tags: GitTagManager  # New
+    worktrees: GitWorktreeManager  # New
+    notes: GitNotesManager  # New
+    reflog: GitReflogManager  # New
 ```
 
 ---

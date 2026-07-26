@@ -3482,35 +3482,26 @@ class GitSubmoduleManager:
                 branch = None
 
                 # Try to get name and URL from git config
-                try:
-                    name_result = self.cmd.run(
-                        ["config", "-f", ".gitmodules", f"submodule.{path}.name"],
-                        check_returncode=False,
-                    )
-                    if name_result and "error" not in name_result.lower():
-                        submodule_name = name_result.strip()
-                except Exception:
-                    pass
+                name_result = self.cmd.run(
+                    ["config", "-f", ".gitmodules", f"submodule.{path}.name"],
+                    check_returncode=False,
+                )
+                if name_result and "error" not in name_result.lower():
+                    submodule_name = name_result.strip()
 
-                try:
-                    url_result = self.cmd.run(
-                        ["config", "-f", ".gitmodules", f"submodule.{path}.url"],
-                        check_returncode=False,
-                    )
-                    if url_result and "error" not in url_result.lower():
-                        url = url_result.strip()
-                except Exception:
-                    pass
+                url_result = self.cmd.run(
+                    ["config", "-f", ".gitmodules", f"submodule.{path}.url"],
+                    check_returncode=False,
+                )
+                if url_result and "error" not in url_result.lower():
+                    url = url_result.strip()
 
-                try:
-                    branch_result = self.cmd.run(
-                        ["config", "-f", ".gitmodules", f"submodule.{path}.branch"],
-                        check_returncode=False,
-                    )
-                    if branch_result and "error" not in branch_result.lower():
-                        branch = branch_result.strip()
-                except Exception:
-                    pass
+                branch_result = self.cmd.run(
+                    ["config", "-f", ".gitmodules", f"submodule.{path}.branch"],
+                    check_returncode=False,
+                )
+                if branch_result and "error" not in branch_result.lower():
+                    branch = branch_result.strip()
 
                 submodules.append(
                     {

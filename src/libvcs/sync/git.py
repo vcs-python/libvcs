@@ -42,7 +42,7 @@ class GitStatusParsingException(exc.LibVCSException):
     """Raised when git status output is not in the expected format."""
 
     def __init__(self, git_status_output: str, *args: object) -> None:
-        return super().__init__(
+        super().__init__(
             "Could not find match for git-status(1)" + f"Output: {git_status_output}",
         )
 
@@ -51,21 +51,21 @@ class GitRemoteOriginMissing(exc.LibVCSException):
     """Raised when git origin remote was not found."""
 
     def __init__(self, remotes: list[str], *args: object) -> None:
-        return super().__init__(f"Missing origin. Remotes: {', '.join(remotes)}")
+        super().__init__(f"Missing origin. Remotes: {', '.join(remotes)}")
 
 
 class GitRemoteSetError(exc.LibVCSException):
     """Raised when a git remote could not be set."""
 
     def __init__(self, remote_name: str) -> None:
-        return super().__init__(f"Remote {remote_name} not found after setting")
+        super().__init__(f"Remote {remote_name} not found after setting")
 
 
 class GitNoBranchFound(exc.LibVCSException):
     """Raised with git branch could not be found."""
 
     def __init__(self, *args: object) -> None:
-        return super().__init__("No branch found for git repository")
+        super().__init__("No branch found for git repository")
 
 
 class GitRemoteRefNotFound(exc.CommandError):

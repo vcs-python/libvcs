@@ -81,7 +81,7 @@ dev = [
   "coverage",
   "pytest-cov",
   # Lint
-  "ruff",
+  "ruff>=0.16.0",
   "mypy",
 ]
 
@@ -106,7 +106,7 @@ coverage =[
   "pytest-cov",
 ]
 lint = [
-  "ruff",
+  "ruff>=0.16.0",
   "mypy",
 ]
 
@@ -176,7 +176,10 @@ exclude_lines = [
 target-version = "py310"
 
 [tool.ruff.lint]
-select = [
+# `select` is deliberately unset: ruff 0.16 enables a curated default rule
+# set, and an explicit `select` would replace it rather than extend it.
+# `extend-select` layers this project's additional linters on top.
+extend-select = [
   "E", # pycodestyle
   "F", # pyflakes
   "I", # isort
@@ -193,7 +196,7 @@ select = [
   "PERF", # Perflint
   "RUF", # Ruff-specific rules
   "D", # pydocstyle
-  "FA100",  # future annotations
+  "FA100", # future annotations
 ]
 ignore = [
   "COM812", # missing trailing comma, ruff format conflict
@@ -227,6 +230,24 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["F401"]
 "src/libvcs/_internal/subprocess.py" = ["A002"]
+# Sphinx conf reads version metadata by exec'ing `__about__.py` rather than
+# importing libvcs, so the docs build does not depend on the package being
+# importable. The exec'd file is this repository's own source.
+"docs/conf.py" = ["S102"]
+# `run()` mirrors the full `subprocess.Popen` signature, `preexec_fn`
+# included, and defaults it to None. Dropping the parameter would break
+# callers who need it; whether it is safe to pass is the caller's call.
+"src/libvcs/_internal/run.py" = ["PLW1509"]
+# QueryList traverses and compares caller-supplied objects, whose
+# `__getattr__`, properties, and `__eq__` may raise anything at all. A
+# lookup that cannot be resolved is a non-match, not an error, so each
+# handler degrades to None/False after logging rather than propagating.
+"src/libvcs/_internal/query_list.py" = ["BLE001"]
+# `SvnSync.url_rev` falls back to shelling out to `svn info --xml` and
+# scraping it. Whether that path yields a URL depends on the installed
+# svn, the working copy layout, and the output format; an unreadable
+# working copy answers `(None, 0)` rather than raising at the caller.
+"src/libvcs/sync/svn.py" = ["BLE001"]
 
 [tool.pytest.ini_options]
 addopts = [

@@ -30,7 +30,7 @@ class ObjectDoesNotExist(Exception):
 def keygetter(
     obj: Mapping[str, t.Any],
     path: str,
-) -> None | t.Any | str | list[str] | Mapping[str, str]:
+) -> t.Any | str | list[str] | Mapping[str, str] | None:
     """Fetch values in objects and keys, supported nested data.
 
     **With dictionaries**:
@@ -311,12 +311,12 @@ LOOKUP_NAME_MAP: Mapping[str, LookupProtocol] = {
 
 class PKRequiredException(Exception):
     def __init__(self, *args: object) -> None:
-        return super().__init__("items() require a pk_key exists")
+        super().__init__("items() require a pk_key exists")
 
 
 class OpNotFound(ValueError):
     def __init__(self, op: str, *args: object) -> None:
-        return super().__init__(f"{op} not in LOOKUP_NAME_MAP")
+        super().__init__(f"{op} not in LOOKUP_NAME_MAP")
 
 
 class QueryList(list[T], t.Generic[T]):

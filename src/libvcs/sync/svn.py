@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Tool to manage a local SVN (Subversion) working copy from a repository.
 
 .. todo::
@@ -33,7 +32,7 @@ class SvnUrlRevFormattingError(ValueError):
     """Raised when SVN Revision output is not in the expected format."""
 
     def __init__(self, data: str, *args: object) -> None:
-        return super().__init__(f"Badly formatted data: {data!r}")
+        super().__init__(f"Badly formatted data: {data!r}")
 
 
 class SvnSync(BaseSync):

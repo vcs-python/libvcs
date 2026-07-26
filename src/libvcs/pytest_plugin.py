@@ -24,7 +24,7 @@ class MaxUniqueRepoAttemptsExceeded(exc.LibVCSException):
 
     def __init__(self, attempts: int, *args: object) -> None:
         """Raise LibVCSException exception with message including attempts tried."""
-        return super().__init__(
+        super().__init__(
             f"Could not find unused repo destination (attempts: {attempts})",
         )
 
