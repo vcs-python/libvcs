@@ -243,6 +243,11 @@ convention = "numpy"
 # lookup that cannot be resolved is a non-match, not an error, so each
 # handler degrades to None/False after logging rather than propagating.
 "src/libvcs/_internal/query_list.py" = ["BLE001"]
+# `SvnSync.url_rev` falls back to shelling out to `svn info --xml` and
+# scraping it. Whether that path yields a URL depends on the installed
+# svn, the working copy layout, and the output format; an unreadable
+# working copy answers `(None, 0)` rather than raising at the caller.
+"src/libvcs/sync/svn.py" = ["BLE001"]
 
 [tool.pytest.ini_options]
 addopts = [
