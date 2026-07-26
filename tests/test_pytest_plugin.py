@@ -248,6 +248,7 @@ def test_gitconfig_submodule_file_protocol(
         cwd=main_repo,
         capture_output=True,
         text=True,
+        check=False,
     )
 
     # Assert: submodule add should succeed (no "fatal" errors)

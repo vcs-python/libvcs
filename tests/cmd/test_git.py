@@ -2744,6 +2744,7 @@ def test_run_trim_false_preserves_diff(git_repo: GitSync) -> None:
         input=captured,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert check.returncode == 0, check.stderr
 
