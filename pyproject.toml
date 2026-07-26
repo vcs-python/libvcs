@@ -234,6 +234,10 @@ convention = "numpy"
 # importing libvcs, so the docs build does not depend on the package being
 # importable. The exec'd file is this repository's own source.
 "docs/conf.py" = ["S102"]
+# `run()` mirrors the full `subprocess.Popen` signature, `preexec_fn`
+# included, and defaults it to None. Dropping the parameter would break
+# callers who need it; whether it is safe to pass is the caller's call.
+"src/libvcs/_internal/run.py" = ["PLW1509"]
 
 [tool.pytest.ini_options]
 addopts = [
