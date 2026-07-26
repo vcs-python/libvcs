@@ -63,7 +63,6 @@ if sys.platform == "win32":
 else:
     _ENV: t.TypeAlias = Mapping[bytes, StrOrBytesPath] | Mapping[str, StrOrBytesPath]
 _FILE: t.TypeAlias = int | t.IO[t.Any] | None
-_TXT: t.TypeAlias = bytes | str
 #: Command
 _CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 
