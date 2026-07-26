@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Tool to manage a local SVN (Subversion) working copy from a repository.
 
 .. todo::
