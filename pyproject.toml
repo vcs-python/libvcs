@@ -230,6 +230,10 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["F401"]
 "src/libvcs/_internal/subprocess.py" = ["A002"]
+# Sphinx conf reads version metadata by exec'ing `__about__.py` rather than
+# importing libvcs, so the docs build does not depend on the package being
+# importable. The exec'd file is this repository's own source.
+"docs/conf.py" = ["S102"]
 
 [tool.pytest.ini_options]
 addopts = [
