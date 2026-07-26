@@ -72,6 +72,91 @@ _CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
 class SubprocessCommand(SkipDefaultFieldsReprMixin):
     """Wraps a :mod:`subprocess` request. Inspect, mutate, control before invocation.
 
+    Fields mirror the parameters of :class:`subprocess.Popen`. Each is passed
+    through as-is when :meth:`Popen`, :meth:`run`, :meth:`check_call`, or
+    :meth:`check_output` fires, and the defaults match the ones
+    :mod:`subprocess` uses.
+
+    Attributes
+    ----------
+    args : _CMD
+        Program and its arguments, as a sequence like ``['echo', 'hi']`` or
+        as a single string when ``shell`` is set.
+    bufsize : int
+        Buffering policy for the pipe file objects: ``-1`` for
+        :data:`io.DEFAULT_BUFFER_SIZE`, ``0`` for unbuffered, ``1`` for line
+        buffered in text mode.
+    executable : StrOrBytesPath | None
+        Program to execute in place of ``args[0]``, or the shell to use when
+        ``shell`` is set. ``None`` runs ``args[0]`` itself.
+    stdin : _FILE
+        Child's standard input: a file descriptor, a file object,
+        :data:`subprocess.PIPE`, :data:`subprocess.DEVNULL`, or ``None`` to
+        inherit the parent's.
+    stdout : _FILE
+        Child's standard output, taking the same values as ``stdin``.
+    stderr : _FILE
+        Child's standard error, taking the same values as ``stdin``, plus
+        :data:`subprocess.STDOUT` to fold it into ``stdout``.
+    preexec_fn : t.Callable[[], t.Any] | None
+        POSIX-only callable run in the child between fork and exec, or
+        ``None`` to run nothing.
+    close_fds : bool
+        Close inherited file descriptors above stderr in the child before
+        exec.
+    shell : bool
+        Run ``args`` through the system shell instead of exec'ing it
+        directly.
+    cwd : StrOrBytesPath | None
+        Directory to change into before running, or ``None`` to inherit the
+        parent's working directory.
+    env : _ENV | None
+        Environment for the child, replacing the parent's, or ``None`` to
+        inherit it.
+    creationflags : int
+        Windows-only process creation flags, e.g.
+        :data:`subprocess.CREATE_NEW_CONSOLE`. ``0`` applies none.
+    startupinfo : t.Any | None
+        Windows-only :class:`subprocess.STARTUPINFO` controlling how the
+        child's window appears, or ``None`` for the defaults.
+    restore_signals : bool
+        POSIX-only: reset signals Python set to ``SIG_IGN`` back to
+        ``SIG_DFL`` in the child before exec.
+    start_new_session : bool
+        POSIX-only: run :func:`os.setsid` in the child, detaching it from the
+        parent's process group and controlling terminal.
+    pass_fds : t.Any
+        POSIX-only file descriptors to keep open in the child regardless of
+        ``close_fds``. The empty ``()`` passes none.
+    umask : int
+        POSIX-only umask to apply in the child before exec. ``-1`` leaves the
+        inherited umask alone.
+    pipesize : int
+        Capacity of the pipes opened for ``stdin``, ``stdout``, and
+        ``stderr``. ``-1`` keeps the operating system default.
+    user : str | None
+        POSIX-only user to switch the child to, or ``None`` to stay as the
+        calling user.
+    group : str | None
+        POSIX-only group to switch the child to, or ``None`` to keep the
+        calling group.
+    extra_groups : list[str] | None
+        POSIX-only supplementary groups for the child, or ``None`` to leave
+        them untouched.
+    universal_newlines : bool | None
+        Alias of ``text``, kept for backwards compatibility. ``None`` leaves
+        the mode to the other text options.
+    text : t.Literal[True] | None
+        Open the pipe file objects in text mode. ``None`` leaves them binary
+        unless ``encoding``, ``errors``, or ``universal_newlines`` selects
+        text.
+    encoding : str | None
+        Codec for the text-mode pipe file objects. Setting it turns text mode
+        on; ``None`` leaves the choice to the other text options.
+    errors : str | None
+        Decoding error handler for the text-mode pipe file objects, e.g.
+        ``"replace"``. Setting it turns text mode on.
+
     Examples
     --------
     >>> cmd = SubprocessCommand("ls")

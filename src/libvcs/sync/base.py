@@ -19,6 +19,16 @@ logger = logging.getLogger(__name__)
 class SyncError:
     """An error encountered during a sync step.
 
+    Attributes
+    ----------
+    step : str
+        Name of the sync step that failed, e.g. ``"fetch"`` or ``"checkout"``.
+    message : str
+        Human-readable description of what went wrong.
+    exception : Exception | None
+        Underlying exception, or ``None`` when the step reported a failure
+        without raising.
+
     Examples
     --------
     >>> error = SyncError(step="fetch", message="remote not found")
@@ -38,6 +48,15 @@ class SyncError:
 @dataclasses.dataclass
 class SyncResult:
     """Result of a repository synchronization.
+
+    Attributes
+    ----------
+    ok : bool
+        Whether every sync step succeeded. :meth:`SyncResult.add_error` flips
+        this to ``False``.
+    errors : list[SyncError]
+        Errors recorded during the sync, in the order they happened. Empty
+        while the sync is still clean.
 
     Examples
     --------
@@ -92,7 +111,15 @@ class SyncResult:
 
 
 class VCSLocation(t.NamedTuple):
-    """Generic VCS Location (URL and optional revision)."""
+    """Generic VCS Location (URL and optional revision).
+
+    Attributes
+    ----------
+    url : str
+        Repository URL, with any revision suffix stripped.
+    rev : str | None
+        Revision to check out, or ``None`` when unspecified.
+    """
 
     url: str
     rev: str | None

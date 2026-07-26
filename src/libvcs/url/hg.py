@@ -154,6 +154,38 @@ class HgBaseURL(
 ):
     """Mercurial repository location. Parses URLs on initialization.
 
+    Attributes
+    ----------
+    url : str
+        Location as given, kept verbatim. Every other field is filled from it
+        by the first :class:`~libvcs.url.base.Rule` that matches.
+    scheme : str | None
+        Transport scheme, e.g. ``https``, ``ssh``, or ``hg+file``. ``None``
+        when the matched rule captured none.
+    user : str | None
+        User in front of the hostname, e.g. ``hg``. ``None`` when the URL
+        omits one; :meth:`to_url` falls back to ``hg`` for scp-style output.
+    hostname : str
+        Server hosting the repository, e.g. ``hg.mozilla.org``. Empty when
+        the matched rule captures no host, as with ``hg+file://`` URLs.
+    port : int | None
+        Port the URL specifies, or ``None`` to use the transport's default.
+    separator : str
+        Character sitting between the host (and port) and the path, ``/``
+        unless the URL used ``:`` or ``,``. :meth:`to_url` re-emits it.
+    path : str
+        Server-side path to the repository, e.g. ``mozilla-central/``. Empty
+        when the URL carries no path.
+    suffix : str | None
+        Trailing ``.git``-style decoration split off the path, or ``None``
+        when the URL has none.
+    ref : str | None
+        Commit-ish (tag, branch, ref, revision) for callers to set; the
+        bundled rules capture no ref, so parsing leaves it ``None``.
+    rule : str | None
+        :attr:`~libvcs.url.base.Rule.label` of the rule that matched, or
+        ``None`` when no rule did and the remaining fields stayed unset.
+
     Examples
     --------
     >>> HgBaseURL(url='https://hg.mozilla.org/mozilla-central/')
@@ -341,7 +373,16 @@ class HgPipURL(
     URLProtocol,
     SkipDefaultFieldsReprMixin,
 ):
-    """Supports pip hg URLs."""
+    """Supports pip hg URLs.
+
+    Parses the fields of :class:`HgBaseURL` plus the one below.
+
+    Attributes
+    ----------
+    rev : str | None
+        Commit-ish (tag, branch, ref) from a pip-style ``@rev``, e.g.
+        ``v1.0``. ``None`` when the URL names no revision.
+    """
 
     # commit-ish (rev): tag, branch, ref
     rev: str | None = None

@@ -28,18 +28,32 @@ class URLProtocol(t.Protocol):
 
 @dataclasses.dataclass(repr=False)
 class Rule(SkipDefaultFieldsReprMixin):
-    """A Rule represents an eligible pattern mapping to URL."""
+    """A Rule represents an eligible pattern mapping to URL.
+
+    Attributes
+    ----------
+    label : str
+        Computer readable name / ID. Keys the rule inside a
+        :class:`RuleMap` and is recorded on a matched URL's ``rule``.
+    description : str
+        Human readable description of the URL shape the rule covers.
+    pattern : Pattern[str]
+        Regex pattern. Its named groups are assigned onto the URL object's
+        fields of the same name.
+    defaults : dict[str, str]
+        Values to apply to fields the pattern left unset, e.g. the
+        ``hostname`` and ``scheme`` a bare prefix such as ``github:`` implies.
+    is_explicit : bool
+        Is the match unambiguous with other VCS systems? e.g. git+ prefix
+    weight : int
+        Weight: Higher is more likely to win
+    """
 
     label: str
-    """Computer readable name / ID"""
     description: str
-    """Human readable description"""
     pattern: Pattern[str]
-    """Regex pattern"""
     defaults: dict[str, str] = dataclasses.field(default_factory=dict)
-    """Is the match unambiguous with other VCS systems? e.g. git+ prefix"""
     is_explicit: bool = False
-    """Weight: Higher is more likely to win"""
     weight: int = 0
 
 
