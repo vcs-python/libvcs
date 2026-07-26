@@ -20,6 +20,15 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### Documentation
+
+#### Class fields describe themselves in the API reference (#548)
+
+The URL, command, and sync types — parsed URLs, rules, remotes, status, and
+the subprocess wrapper — now say what each field holds. They previously
+reached the rendered API reference as "Alias for field number 0" or as a
+bare name carrying only its type.
+
 ### Development
 
 #### CI actions updated to current majors
