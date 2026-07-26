@@ -238,6 +238,11 @@ convention = "numpy"
 # included, and defaults it to None. Dropping the parameter would break
 # callers who need it; whether it is safe to pass is the caller's call.
 "src/libvcs/_internal/run.py" = ["PLW1509"]
+# QueryList traverses and compares caller-supplied objects, whose
+# `__getattr__`, properties, and `__eq__` may raise anything at all. A
+# lookup that cannot be resolved is a non-match, not an error, so each
+# handler degrades to None/False after logging rather than propagating.
+"src/libvcs/_internal/query_list.py" = ["BLE001"]
 
 [tool.pytest.ini_options]
 addopts = [
