@@ -276,7 +276,10 @@ def run(
             if callback and callable(callback) and proc.stderr is not None:
                 line = console_to_str(proc.stderr.read(128))
                 if line:
-                    callback(output=line, timestamp=datetime.datetime.now())
+                    callback(
+                        output=line,
+                        timestamp=datetime.datetime.now(tz=datetime.timezone.utc),
+                    )
     else:
         code, timeout_stdout, timeout_stderr = _wait_with_deadline(
             proc,
@@ -286,7 +289,7 @@ def run(
             cmd=_stringify_command(normalized_args),
         )
     if callback and callable(callback):
-        callback(output="\r", timestamp=datetime.datetime.now())
+        callback(output="\r", timestamp=datetime.datetime.now(tz=datetime.timezone.utc))
 
     if proc.stdout is not None:
         raw_stdout: bytes = (
@@ -403,7 +406,9 @@ def _wait_with_deadline(
                         ):
                             callback(
                                 output=console_to_str(trailing),
-                                timestamp=datetime.datetime.now(),
+                                timestamp=datetime.datetime.now(
+                                    tz=datetime.timezone.utc
+                                ),
                             )
                 break
 
@@ -464,7 +469,7 @@ def _wait_with_deadline(
                 ):
                     callback(
                         output=console_to_str(chunk),
-                        timestamp=datetime.datetime.now(),
+                        timestamp=datetime.datetime.now(tz=datetime.timezone.utc),
                     )
     finally:
         # Restore blocking mode so any subsequent read by the caller behaves
