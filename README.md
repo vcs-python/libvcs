@@ -154,7 +154,7 @@ The bundled pytest plugin builds a real, temporary VCS repository per test
 and tears it down after — no network access, no shared state between tests.
 A VCS's fixtures are only available when its binary is installed.
 
-[**Learn more about Pytest Fixtures**](https://libvcs.git-pull.com/pytest-plugin.html)
+[**Learn more about Pytest Fixtures**](https://libvcs.git-pull.com/api/pytest-plugin/)
 
 ```python
 import pathlib
