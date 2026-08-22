@@ -1,7 +1,7 @@
 <div align="center">
   <a href="https://libvcs.git-pull.com/"><img src="https://raw.githubusercontent.com/vcs-python/libvcs/master/docs/_static/img/libvcs.svg" alt="libvcs logo" height="120"></a>
   <h1>libvcs</h1>
-  <p><strong>The Swiss Army Knife for Version Control Systems in Python.</strong></p>
+  <p><strong>A typed Python interface for Git, Mercurial, and Subversion repositories.</strong></p>
   <p>
     <a href="https://pypi.org/project/libvcs/"><img src="https://img.shields.io/pypi/v/libvcs.svg" alt="PyPI version"></a>
     <a href="https://pypi.org/project/libvcs/"><img src="https://img.shields.io/pypi/pyversions/libvcs.svg" alt="Python versions"></a>
@@ -11,18 +11,29 @@
   </p>
 </div>
 
-**libvcs** provides a unified, [typed](https://docs.python.org/3/library/typing.html), and pythonic interface for managing Git, Mercurial, and Subversion repositories. Whether you're building a deployment tool, a developer utility, or just need to clone a repo in a script, libvcs handles the heavy lifting.
+**libvcs** parses and validates Git, Mercurial, and Subversion URLs, wraps
+each VCS's command-line tool in a [typed](https://docs.python.org/3/library/typing.html)
+Python object, and synchronizes a local checkout against a remote —
+cloning it if it does not exist, fetching and updating it if it does. It
+also ships a pytest plugin for creating disposable repositories in your own
+test suite.
 
-It powers [vcspull](https://github.com/vcs-python/vcspull) and simplifies VCS interactions down to a few lines of code.
+It powers [vcspull](https://github.com/vcs-python/vcspull), which uses it to
+sync many repositories from a single config file.
 
 ---
 
 ## Features at a Glance
 
-- **🔄 Repository Synchronization**: Clone, update, and manage local repository copies with a high-level API.
-- **🛠 Command Abstraction**: Speak fluent `git`, `hg`, and `svn` through fully-typed Python objects.
-- **🔗 URL Parsing**: Robustly validate, parse, and manipulate VCS URLs (including SCP-style).
-- **🧪 Pytest Fixtures**: Batteries-included fixtures for spinning up temporary repositories in your test suite.
+- **Repository synchronization**: One `obtain()` / `update_repo()` call
+  clones a repository if it is missing and fetches it if it already exists,
+  the same way for git, hg, and svn.
+- **Command abstraction**: Call `git`, `hg`, and `svn` through typed Python
+  objects instead of shelling out and parsing text yourself.
+- **URL parsing**: Parse, validate, and transform VCS URLs, including
+  SCP-style `git@host:path` remotes.
+- **Pytest fixtures**: Create disposable local git, hg, and svn repositories
+  for your own tests, with per-test isolation.
 
 ## Installation
 
@@ -42,17 +53,22 @@ Try it interactively:
 $ uvx --with libvcs ipython
 ```
 
-Tip: libvcs is pre-1.0. Pin a version range in projects to avoid surprises:
+libvcs is pre-1.0: a minor version bump (0.45 to 0.46) may change the public
+API. Pin a version range in projects to avoid surprises:
 
 ```toml
 # pyproject.toml
-dependencies = ["libvcs>=0.37,<0.38"]
+dependencies = ["libvcs>=0.45,<0.46"]
 ```
 
 ## Usage
 
 ### 1. Synchronize Repositories
-Clone and update repositories with a consistent API, regardless of the VCS.
+
+`GitSync`, `HgSync`, and `SvnSync` give the same two calls regardless of the
+underlying VCS: `obtain()` clones if the path does not exist yet, and
+`update_repo()` does that or fetches and updates an existing checkout — call
+it either way and let libvcs decide.
 
 [**Learn more about Synchronization**](https://libvcs.git-pull.com/sync/)
 
@@ -78,7 +94,11 @@ else:
 ```
 
 ### 2. Command Abstraction
-Traverse repository entities intuitively with ORM-like filtering, then run targeted commands against them.
+
+`Git`, `Hg`, and `Svn` wrap the binary directly — each call maps to one
+subprocess invocation of the real VCS tool, so there is no divergent
+reimplementation to trust. Branches, remotes, and tags are also reachable
+through `QueryList`, which filters like a Django ORM queryset.
 
 [**Learn more about Command Abstraction**](https://libvcs.git-pull.com/cmd/)
 
@@ -103,7 +123,10 @@ git.tags.create(name="v1.0.0", message="Release version 1.0.0")
 ```
 
 ### 3. URL Parsing
-Stop writing regex for Git URLs. Let `libvcs` handle the edge cases.
+
+`GitURL`, `HgURL`, and `SvnURL` parse and validate VCS URLs — including
+SCP-style git remotes — without hand-written regular expressions, and let
+you rewrite a parsed URL's parts back into a valid URL string.
 
 [**Learn more about URL Parsing**](https://libvcs.git-pull.com/url/)
 
@@ -126,9 +149,12 @@ print(url.to_url())  # 'git@gitlab.com:vcs-python/libvcs.git'
 ```
 
 ### 4. Testing with Pytest
-Writing a tool that interacts with VCS? Use our fixtures to keep your tests clean and isolated.
 
-[**Learn more about Pytest Fixtures**](https://libvcs.git-pull.com/pytest-plugin.html)
+The bundled pytest plugin builds a real, temporary VCS repository per test
+and tears it down after — no network access, no shared state between tests.
+A VCS's fixtures are only available when its binary is installed.
+
+[**Learn more about Pytest Fixtures**](https://libvcs.git-pull.com/api/pytest-plugin/)
 
 ```python
 import pathlib

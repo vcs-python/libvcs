@@ -2,36 +2,11 @@
 
 # Code Style
 
-Use this page when you are changing Python code or docstrings and need the
-project's formatting, typing, and import conventions. The command examples are
-the common local checks; the root contributor guide still owns the full
-pre-commit gate.
-
-## Formatting and linting
-
-libvcs uses [ruff](https://ruff.rs) for formatting **and** linting in a
-single tool. The full rule set is declared in `pyproject.toml` under
-`[tool.ruff]`.
-
-```console
-$ uv run ruff format .
-```
-
-```console
-$ uv run ruff check . --fix --show-fixes
-```
-
-## Type checking
-
-[mypy](http://mypy-lang.org/) runs in strict mode:
-
-```console
-$ uv run mypy .
-```
-
-## Docstrings
-
-All public APIs use **NumPy-style** docstrings:
+Formatting, typing, and import conventions moved to
+[`.github/CONTRIBUTING.md`][contributing-file]; the NumPy docstring
+convention moved to [`.github/WRITING.md`][writing-file]. This page keeps
+the one runnable example that used to live here, because it is collected as
+a test under `docs/` — moving it into `.github/` would stop it running.
 
 ```python
 >>> def fetch(url: str, *, branch: str | None = None) -> str:
@@ -52,9 +27,5 @@ All public APIs use **NumPy-style** docstrings:
 ...     return "abc123"
 ```
 
-## Imports
-
-- `from __future__ import annotations` at the top of every file.
-- Standard-library modules use **namespace imports**: `import pathlib`,
-  not `from pathlib import Path`.
-- Typing: `import typing as t`, then `t.Optional`, `t.Any`, etc.
+[contributing-file]: https://github.com/vcs-python/libvcs/blob/master/.github/CONTRIBUTING.md
+[writing-file]: https://github.com/vcs-python/libvcs/blob/master/.github/WRITING.md
