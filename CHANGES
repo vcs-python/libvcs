@@ -14,11 +14,15 @@ $ pip install --user --upgrade --pre libvcs
 $ uv add libvcs --prerelease allow
 ```
 
-## libvcs 0.46.x (unreleased)
+## libvcs 0.47.x (unreleased)
 
 <!-- KEEP THIS PLACEHOLDER - DO NOT REMOVE OR MODIFY THIS LINE -->
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
+
+## libvcs 0.46.0 (2026-08-30)
+
+libvcs 0.46.0 hardens the command wrappers against argument injection: `Git.pull()`, a `GitSync` revision, and `Svn.checkout()` now reject a value a VCS binary would parse as an option in the positions an end-of-options `--` cannot guard, closing paths that could otherwise run a command or truncate a file. It also gives progress-callback timestamps an aware UTC value, documents what every field holds in the API reference, and moves the lint and CI toolchain to current majors.
 
 ### Fixes
 
