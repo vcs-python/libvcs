@@ -22,6 +22,28 @@ _Notes on the upcoming release will go here._
 
 ### Fixes
 
+#### Reject option-like URLs, revisions, and refs across VCS backends
+
+libvcs now rejects an argument that a VCS binary would parse as an option in a
+position where an end-of-options `--` cannot neutralize it:
+
+- {meth}`~libvcs.cmd.git.Git.pull` raises {exc}`~libvcs.exc.LibVCSException`
+  when `repository` or `reftag` begins with `-`. `git pull` re-invokes `git
+  fetch` without a `--`, so the separator before pull's positionals never
+  reached the child; a value such as `--upload-pack=<cmd>` was parsed there and
+  ran an arbitrary command.
+- {meth}`~libvcs.sync.git.GitSync.update_repo` records a `rev` error instead of
+  running the command when the configured revision begins with `-`. The
+  revision reached `git rev-list <commit>`, where `--output=<file>` was parsed
+  as `git`'s diff `--output` option and truncated that file.
+- {meth}`~libvcs.cmd.svn.Svn.checkout` raises when `url` begins with `-`; svn's
+  `--config-option` can set a tunnel command, an execution primitive. This
+  matches the protection the git and hg clone paths already carried.
+
+A report from [Harsh Raj Singhania](https://github.com/HarshRajSinghania)
+prompted this audit of how arguments reach the git, hg, and svn binaries. The
+reported issue did not reproduce; the fixes above are what the audit found.
+
 #### Progress callback timestamps carry a time zone (#549)
 
 The `timestamp` passed to a

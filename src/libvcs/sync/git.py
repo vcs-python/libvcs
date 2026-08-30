@@ -26,6 +26,7 @@ import typing as t
 from urllib import parse as urlparse
 
 from libvcs import exc
+from libvcs._internal.run import reject_option_like
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
 from libvcs.sync.base import (
@@ -490,6 +491,13 @@ class GitSync(BaseSync):
 
         # Get requested revision or tag
         url, git_tag = self.url, getattr(self, "rev", None)
+
+        if git_tag:
+            try:
+                reject_option_like(str(git_tag), name="rev")
+            except exc.LibVCSException as e:
+                result.add_error("rev", str(e), exception=e)
+                return result
 
         if not git_tag:
             self.log.debug("No git revision set, defaulting to origin/master")

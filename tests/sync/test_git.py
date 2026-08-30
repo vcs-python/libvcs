@@ -1847,3 +1847,24 @@ def test_remote_swallows_libvcs_exception(
     )
 
     assert git_repo.remote("origin") is None
+
+
+def test_update_repo_rejects_option_like_rev(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Reject a revision that git would parse as an option.
+
+    A `rev` reaches `git rev-list <commit>`, which has no end-of-options `--`
+    before the operand. A value such as `--output=<file>` is parsed there as
+    the diff `--output` option, whose callback truncates the file during
+    option parsing -- arbitrary file destruction from a config-supplied rev.
+    """
+    victim = tmp_path / "victim.txt"
+    victim.write_text("important\n")
+    git_repo.rev = f"--output={victim}"
+
+    result = git_repo.update_repo()
+
+    assert not result.ok, "update_repo() should fail for an option-like rev"
+    assert victim.read_text() == "important\n", "Prevent rev argument injection"

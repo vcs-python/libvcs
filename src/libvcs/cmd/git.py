@@ -12,7 +12,12 @@ import typing as t
 from collections.abc import Sequence
 
 from libvcs._internal.query_list import QueryList
-from libvcs._internal.run import ProgressCallbackProtocol, _normalize_command_args, run
+from libvcs._internal.run import (
+    ProgressCallbackProtocol,
+    _normalize_command_args,
+    reject_option_like,
+    run,
+)
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
@@ -914,9 +919,9 @@ class Git:
         """
         required_flags: list[str] = []
         if repository:
-            required_flags.insert(0, repository)
+            required_flags.insert(0, reject_option_like(repository, name="repository"))
         if reftag:
-            required_flags.insert(0, reftag)
+            required_flags.insert(0, reject_option_like(str(reftag), name="reftag"))
         local_flags: list[str] = []
 
         #
