@@ -115,6 +115,23 @@ def _normalize_command_args(args: _CMD) -> list[StrOrBytesPath]:
     return [os.fspath(arg) for arg in args]
 
 
+def reject_option_like(value: str, *, name: str) -> str:
+    """Return ``value`` unless it would be parsed as a command-line option.
+
+    A value beginning with ``-`` lands in the argv where the tool reads an
+    operand and is instead parsed as an option. Where an end-of-options ``--``
+    cannot neutralize that — ``git pull`` re-spawns ``git fetch`` without one,
+    and a rev separator means a pathspec — the value must be rejected instead.
+    """
+    if value.startswith("-"):
+        msg = (
+            f"{name} may not begin with '-': {value!r} would be parsed as a "
+            "command-line option (argument injection)."
+        )
+        raise exc.LibVCSException(msg)
+    return value
+
+
 def _stringify_command(args: _CMD) -> str | list[str]:
     """Return a human-readable command for CommandError."""
     if isinstance(args, (str, bytes, os.PathLike)):

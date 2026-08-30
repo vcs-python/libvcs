@@ -2785,3 +2785,29 @@ def test_run_failure_preserves_stderr_lines(git_repo: GitSync) -> None:
     # localize, rather than on translatable English error text.
     assert "\n" in output
     assert "no-such-remote" in output
+
+
+def test_pull_rejects_option_like_repository(
+    create_git_remote_repo: CreateRepoFn,
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Reject a repository argument that git would parse as an option.
+
+    ``git pull`` re-spawns ``git fetch`` without an end-of-options ``--``, so
+    the separator libvcs places before its positionals does not protect this
+    command. A ``reftag`` beginning with ``-`` reaches the child ``git fetch``
+    as an option; ``--upload-pack=<cmd>`` there is arbitrary command execution.
+    """
+    remote_repo = create_git_remote_repo()
+    git_repo.cmd.remotes.add(name="origin", url=f"file://{remote_repo}")
+    canary = tmp_path / "PULL_PWNED"
+
+    with pytest.raises(exc.LibVCSException):
+        git_repo.cmd.pull(
+            reftag=f"--upload-pack=touch {canary}",
+            repository="origin",
+            check_returncode=True,
+        )
+
+    assert not canary.exists(), "Prevent argument injection via git pull"
