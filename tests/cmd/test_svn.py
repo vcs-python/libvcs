@@ -8,6 +8,7 @@ import typing as t
 
 import pytest
 
+from libvcs import exc
 from libvcs.cmd.svn import Svn
 
 if t.TYPE_CHECKING:
@@ -38,3 +39,16 @@ def test_svn_run_timeout_propagates_to_runner(
 
     _args, kwargs = mock_run.call_args
     assert kwargs.get("timeout") == 2.5
+
+
+def test_checkout_rejects_option_like_url(tmp_path: pathlib.Path) -> None:
+    """Reject a checkout URL that svn would parse as an option.
+
+    ``svn checkout`` takes the URL as its first positional. A value beginning
+    with ``-`` -- e.g. ``--config-option=config:tunnels:ssh=<cmd>`` -- is parsed
+    as an option instead, and svn's tunnel config is an execution primitive.
+    """
+    svn = Svn(path=tmp_path)
+
+    with pytest.raises(exc.LibVCSException, match="may not begin with"):
+        svn.checkout(url="--config-option=config:tunnels:ssh=touch ./PWNED")

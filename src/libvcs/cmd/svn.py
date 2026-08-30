@@ -16,7 +16,12 @@ import typing as t
 from collections.abc import Sequence
 
 from libvcs import exc
-from libvcs._internal.run import ProgressCallbackProtocol, _normalize_command_args, run
+from libvcs._internal.run import (
+    ProgressCallbackProtocol,
+    _normalize_command_args,
+    reject_option_like,
+    run,
+)
 from libvcs._internal.types import StrOrBytesPath, StrPath
 
 _CMD: t.TypeAlias = StrOrBytesPath | Sequence[StrOrBytesPath]
@@ -212,7 +217,7 @@ class Svn:
         >>> svn.checkout(url=f'file://{svn_remote_repo}', revision=10)
         'svn: E160006: No such revision 10...'
         """
-        local_flags: list[str] = [url, str(self.path)]
+        local_flags: list[str] = [reject_option_like(url, name="url"), str(self.path)]
 
         if revision is not None:
             local_flags.extend(["--revision", str(revision)])
