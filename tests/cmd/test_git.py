@@ -2811,3 +2811,28 @@ def test_pull_rejects_option_like_repository(
         )
 
     assert not canary.exists(), "Prevent argument injection via git pull"
+
+
+def test_clone_places_end_of_options_before_url(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Pin the ``--`` separator ahead of the clone URL.
+
+    ``git clone`` reads the URL as a positional; the ``--`` libvcs emits before
+    it is what stops a ``--upload-pack=<cmd>`` URL from being parsed as an
+    option. No other test covers this separator, so a refactor dropping it would
+    otherwise pass -- the single-positional clone shape does not execute the
+    payload, making an end-to-end canary test vacuous here.
+    """
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch("libvcs.cmd.git.run", return_value="")
+
+    repo.clone(url="https://example.com/repo.git")
+
+    _args, kwargs = mock_run.call_args
+    argv = [os.fspath(a) for a in kwargs["args"]]
+    assert "--" in argv, "clone must emit an end-of-options separator"
+    assert argv[argv.index("--") + 1] == "https://example.com/repo.git", (
+        "URL must follow the -- separator, not precede it"
+    )
