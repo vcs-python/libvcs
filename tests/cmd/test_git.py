@@ -2207,6 +2207,35 @@ def test_remote_url_with_spaces(
     )
 
 
+def test_remote_manager_ls_promisor_remote(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    r"""GitRemoteManager.ls() keeps the fetch URL of a promisor remote.
+
+    A remote with ``remote.<name>.partialclonefilter`` set, as a ``--filter``
+    clone leaves behind, prints as ``<name>\t<url> (fetch) [<filter-spec>]``.
+    """
+    remote_path = tmp_path / "promisor_remote"
+    remote_path.mkdir()
+    git.Git(path=remote_path).init(bare=True)
+
+    # GIT_CONFIG points `git config` writes at the session-wide gitconfig;
+    # drop it so the promisor settings land in this checkout only.
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    git_repo.cmd.remotes.add(name="promisor", url=str(remote_path))
+    git_repo.cmd.run(["config", "remote.promisor.promisor", "true"])
+    git_repo.cmd.run(["config", "remote.promisor.partialclonefilter", "blob:none"])
+    assert "(fetch) [blob:none]" in git_repo.cmd.run(["remote", "-v"])
+
+    remote = git_repo.cmd.remotes.get(remote_name="promisor")
+
+    assert remote is not None
+    assert remote.fetch_url == str(remote_path)
+    assert remote.push_url == str(remote_path)
+
+
 # GitReflog tests
 
 

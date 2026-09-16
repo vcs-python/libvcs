@@ -4423,6 +4423,11 @@ class GitRemoteManager:
             (?P<url>.+?)            # URL: any characters (non-greedy) - supports spaces
             \s+                     # One or more whitespace characters
             \((?P<cmd_type>fetch|push)\)  # 'fetch' or 'push' in parentheses
+            # A remote with `remote.<name>.partialclonefilter` set (e.g. from
+            # a `--filter=` clone) gets a trailing ` [<filter-spec>]` on its
+            # fetch line -- tolerate and discard it, or this line fails to
+            # match at all and the remote silently loses its fetch URL.
+            (?:\s+\[[^\]\n]*\])?    # Optional partial-clone filter annotation
             $                       # End of line
         """,
             re.VERBOSE | re.MULTILINE,
