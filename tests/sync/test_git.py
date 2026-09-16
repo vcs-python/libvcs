@@ -231,6 +231,22 @@ def test_obtain_honors_clone_depth(
     assert is_shallow.strip() == ("true" if expected_shallow else "false")
 
 
+def test_obtain_raises_on_clone_failure(tmp_path: pathlib.Path) -> None:
+    """A failed clone raises from the clone itself, with git's own message.
+
+    Without a return-code check, obtain() carried on past the failed clone
+    and surfaced an unrelated ``git remote add`` error instead.
+    """
+    missing_remote = tmp_path / "missing_remote"
+    git_repo = GitSync(url=missing_remote.as_uri(), path=tmp_path / "checkout")
+
+    with pytest.raises(exc.CommandError) as excinfo:
+        git_repo.obtain()
+
+    assert "git clone" in str(excinfo.value)
+    assert "remote add" not in str(excinfo.value)
+
+
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
     ("constructor", "lazy_constructor_options"),

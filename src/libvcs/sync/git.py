@@ -428,6 +428,7 @@ class GitSync(BaseSync):
             depth=clone_depth,
             config={"http.sslVerify": False} if self.tls_verify else None,
             log_in_real_time=True,
+            check_returncode=True,
         )
 
         self.log.info("Initializing submodules.")
