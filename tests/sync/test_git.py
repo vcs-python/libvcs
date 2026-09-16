@@ -18,6 +18,13 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.cmd.git_filter import (
+    BlobLimit,
+    BlobNone,
+    Combine,
+    TreeDepth,
+    parse_filter,
+)
 from libvcs.sync.base import SyncResult
 from libvcs.sync.git import (
     GitRemote,
@@ -245,6 +252,130 @@ def test_obtain_raises_on_clone_failure(tmp_path: pathlib.Path) -> None:
 
     assert "git clone" in str(excinfo.value)
     assert "remote add" not in str(excinfo.value)
+
+
+def _seed_filterable_remote(
+    remote_repo: pathlib.Path,
+    env: dict[str, str],
+) -> None:
+    """Let ``remote_repo`` serve filtered clones and give it two commits.
+
+    ``uploadpack.allowFilter`` makes the remote honor ``--filter=``;
+    ``uploadpack.allowAnySHA1InWant`` lets a checkout fetch the blobs it
+    needs by object id afterwards. The first commit's blob is then only
+    reachable from history, so a ``blob:none`` clone leaves it out.
+    """
+    # GIT_CONFIG would redirect these writes to the session-wide gitconfig.
+    config_env = {key: value for key, value in env.items() if key != "GIT_CONFIG"}
+    for key in ("uploadpack.allowFilter", "uploadpack.allowAnySHA1InWant"):
+        run(["git", "config", key, "true"], cwd=remote_repo, env=config_env)
+    for i in range(1, 3):
+        (remote_repo / "f.txt").write_text(f"content-{i}")
+        run(["git", "add", "f.txt"], cwd=remote_repo, env=env)
+        run(["git", "commit", "-m", f"c{i}"], cwd=remote_repo, env=env)
+
+
+class FilterFixture(t.NamedTuple):
+    """Parameters for :func:`test_obtain_honors_partial_clone_filter`."""
+
+    test_id: str
+    git_filter: t.Any
+
+
+FILTER_FIXTURES: list[FilterFixture] = [
+    FilterFixture(test_id="model", git_filter=BlobNone()),
+    FilterFixture(test_id="spec-string", git_filter="blob:none"),
+]
+
+
+@pytest.mark.parametrize(
+    list(FilterFixture._fields),
+    FILTER_FIXTURES,
+    ids=[f.test_id for f in FILTER_FIXTURES],
+)
+def test_obtain_honors_partial_clone_filter(
+    tmp_path: pathlib.Path,
+    create_git_remote_repo: CreateRepoFn,
+    git_commit_envvars: GitCommitEnvVars,
+    test_id: str,
+    git_filter: t.Any,
+) -> None:
+    """obtain() clones with the filter, leaving history blobs on the remote."""
+    remote_repo = create_git_remote_repo()
+    env = os.environ.copy()
+    env.update(git_commit_envvars)
+    _seed_filterable_remote(remote_repo, env)
+
+    checkout = tmp_path / "checkout"
+    git_repo = GitSync(url=remote_repo.as_uri(), path=checkout, git_filter=git_filter)
+    git_repo.obtain()
+
+    partialclonefilter = run(
+        ["git", "config", "remote.origin.partialclonefilter"],
+        cwd=checkout,
+    ).strip()
+    assert partialclonefilter == "blob:none"
+
+    objects = run(
+        ["git", "rev-list", "--objects", "--missing=print", "--all"],
+        cwd=checkout,
+    )
+    assert any(line.startswith("?") for line in objects.splitlines())
+
+
+def test_obtain_partial_clone_filter_list(
+    tmp_path: pathlib.Path,
+    create_git_remote_repo: CreateRepoFn,
+    git_commit_envvars: GitCommitEnvVars,
+) -> None:
+    """A list of filters clones with all of them; git records a ``combine:``."""
+    remote_repo = create_git_remote_repo()
+    env = os.environ.copy()
+    env.update(git_commit_envvars)
+    _seed_filterable_remote(remote_repo, env)
+
+    checkout = tmp_path / "checkout"
+    git_repo = GitSync(
+        url=remote_repo.as_uri(),
+        path=checkout,
+        git_filter=[BlobLimit(size="1m"), TreeDepth(depth=3)],
+    )
+    git_repo.obtain()
+
+    partialclonefilter = run(
+        ["git", "config", "remote.origin.partialclonefilter"],
+        cwd=checkout,
+    ).strip()
+    assert parse_filter(partialclonefilter) == Combine(
+        filters=(BlobLimit(size="1m"), TreeDepth(depth=3)),
+    )
+
+
+def test_obtain_passes_filter_to_submodule_update(
+    tmp_path: pathlib.Path,
+    create_git_remote_repo: CreateRepoFn,
+    git_commit_envvars: GitCommitEnvVars,
+    mocker: MockerFixture,
+) -> None:
+    """obtain() hands the same filter to ``git submodule update``.
+
+    Submodules are fetched separately from the top-level clone, so without
+    the filter they would come down in full.
+    """
+    remote_repo = create_git_remote_repo()
+    env = os.environ.copy()
+    env.update(git_commit_envvars)
+    _seed_filterable_remote(remote_repo, env)
+
+    checkout = tmp_path / "checkout"
+    git_filter = BlobNone()
+    git_repo = GitSync(url=remote_repo.as_uri(), path=checkout, git_filter=git_filter)
+
+    update_spy = mocker.spy(git_repo.cmd.submodule, "update")
+    git_repo.obtain()
+
+    assert update_spy.call_count == 1
+    assert update_spy.call_args.kwargs["_filter"] is git_filter
 
 
 @pytest.mark.parametrize(

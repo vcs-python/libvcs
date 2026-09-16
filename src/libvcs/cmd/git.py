@@ -19,6 +19,7 @@ from libvcs._internal.run import (
     run,
 )
 from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs.cmd.git_filter import GitFilter, filter_specs
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 
@@ -302,6 +303,7 @@ class Git:
         separate_git_dir: StrOrBytesPath | None = None,
         template: str | None = None,
         depth: int | None = None,
+        _filter: GitFilter | str | Sequence[GitFilter | str] | None = None,
         branch: str | None = None,
         origin: str | None = None,
         upload_pack: str | None = None,
@@ -348,6 +350,9 @@ class Git:
             Separate repository (.git/ ) from working tree
         force : bool, optional
             force operation to run
+        _filter : GitFilter | str | Sequence[GitFilter | str], optional
+            Partial-clone filter(s), e.g. :class:`~libvcs.cmd.git_filter.BlobNone`
+            or ``"blob:none"``. Emits one ``--filter=`` flag per item.
         make_parents : bool, default: ``True``
             Creates checkout directory (`:attr:`self.path`) if it doesn't already exist.
 
@@ -367,8 +372,7 @@ class Git:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
             local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(f"--filter={spec}" for spec in filter_specs(_filter))
         if depth is not None:
             local_flags.extend(["--depth", str(depth)])
         if branch is not None:
@@ -436,6 +440,7 @@ class Git:
         reftag: t.Any | None = None,
         deepen: str | None = None,
         depth: str | None = None,
+        _filter: GitFilter | str | Sequence[GitFilter | str] | None = None,
         upload_pack: str | None = None,
         shallow_since: str | None = None,
         shallow_exclude: str | None = None,
@@ -503,8 +508,7 @@ class Git:
 
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(f"--filter={spec}" for spec in filter_specs(_filter))
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -809,6 +813,7 @@ class Git:
         repository: str | None = None,
         deepen: str | None = None,
         depth: str | None = None,
+        _filter: GitFilter | str | Sequence[GitFilter | str] | None = None,
         upload_pack: str | None = None,
         shallow_since: str | None = None,
         shallow_exclude: str | None = None,
@@ -999,8 +1004,7 @@ class Git:
         #
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(f"--filter={spec}" for spec in filter_specs(_filter))
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -2532,6 +2536,7 @@ class GitSubmoduleCmd:
         rebase: bool | None = None,
         merge: bool | None = None,
         recursive: bool | None = None,
+        _filter: GitFilter | str | Sequence[GitFilter | str] | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -2577,8 +2582,7 @@ class GitSubmoduleCmd:
             local_flags.append("--rebase")
         elif merge is True:
             local_flags.append("--merge")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(f"--filter={spec}" for spec in filter_specs(_filter))
 
         return self.run(
             "update",

@@ -23,12 +23,14 @@ import logging
 import pathlib
 import re
 import typing as t
+from collections.abc import Sequence
 from urllib import parse as urlparse
 
 from libvcs import exc
 from libvcs._internal.run import reject_option_like
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
+from libvcs.cmd.git_filter import GitFilter
 from libvcs.sync.base import (
     BaseSync,
     SyncResult,
@@ -250,6 +252,7 @@ class GitSync(BaseSync):
         git_shallow: bool = False,
         tls_verify: bool = False,
         depth: int | None = None,
+        git_filter: GitFilter | str | Sequence[GitFilter | str] | None = None,
         **kwargs: t.Any,
     ) -> None:
         """Local git repository.
@@ -267,6 +270,13 @@ class GitSync(BaseSync):
             Clone with history truncated to ``depth`` commits
             (``git clone --depth N``). Takes precedence over ``git_shallow``.
             Default None (full clone).
+
+        git_filter : GitFilter | str | Sequence[GitFilter | str], optional
+            Partial-clone filter(s) passed to ``git clone --filter=`` and
+            ``git submodule update --filter=``, e.g.
+            :class:`~libvcs.cmd.git_filter.BlobNone` or ``"blob:none"``.
+            Named ``git_filter`` (not ``filter``) to avoid shadowing the
+            builtin. Default None (full objects).
 
         tls_verify : bool
             Should certificate for https be checked (default False)
@@ -309,6 +319,7 @@ class GitSync(BaseSync):
         self.git_shallow = git_shallow
         self.tls_verify = tls_verify
         self.depth = depth
+        self.git_filter = git_filter
 
         self._remotes: GitSyncRemoteDict
 
@@ -426,6 +437,7 @@ class GitSync(BaseSync):
             url=url,
             progress=True,
             depth=clone_depth,
+            _filter=self.git_filter,
             config={"http.sslVerify": False} if self.tls_verify else None,
             log_in_real_time=True,
             check_returncode=True,
@@ -438,6 +450,7 @@ class GitSync(BaseSync):
         self.cmd.submodule.update(
             init=True,
             recursive=True,
+            _filter=self.git_filter,
             log_in_real_time=True,
         )
 
