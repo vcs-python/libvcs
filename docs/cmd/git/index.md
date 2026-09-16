@@ -69,6 +69,7 @@ tag
 worktree
 notes
 reflog
+filter
 ```
 
 ```{eval-rst}
