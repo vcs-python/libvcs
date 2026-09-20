@@ -18,6 +18,7 @@ import pytest
 from libvcs import exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
+from libvcs.cmd.git_filter import Auto, BlobNone
 from libvcs.sync.base import SyncResult
 from libvcs.sync.git import (
     GitRemote,
@@ -72,6 +73,146 @@ def test_git_position_distinguishes_attached_and_detached(git_repo: GitSync) -> 
     assert (position.ref_kind, position.ref_name) == ("commit", revision)
     assert position.revision == revision
     assert not position.follows
+
+
+def test_git_sync_rejects_invalid_filter_before_destination(
+    tmp_path: pathlib.Path,
+) -> None:
+    """GitSync validates filters without touching the destination."""
+    destination = tmp_path / "checkout"
+
+    with pytest.raises(ValueError, match="limit"):
+        GitSync(
+            url="file:///unused",
+            path=destination,
+            git_filter={"kind": "blob:limit", "limit": False},
+        )
+
+    assert not destination.exists()
+
+
+def test_git_sync_rejects_auto_for_submodule_forwarding(
+    tmp_path: pathlib.Path,
+) -> None:
+    """GitSync cannot forward Git's clone-only auto mode to submodule update."""
+    with pytest.raises(ValueError, match="auto"):
+        GitSync(
+            url="file:///unused",
+            path=tmp_path / "checkout",
+            git_filter=Auto(),
+        )
+
+
+def test_git_sync_obtain_partial_clone(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    git_commit_envvars: GitCommitEnvVars,
+) -> None:
+    """GitSync obtains history while leaving old blobs promised by the remote."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    monkeypatch.delenv("GIT_CONFIG_GLOBAL", raising=False)
+    remote = tmp_path / "remote"
+    run(["git", "init", str(remote)], env=git_commit_envvars)
+    run(["git", "config", "uploadpack.allowFilter", "true"], cwd=remote)
+    run(["git", "config", "uploadpack.allowAnySHA1InWant", "true"], cwd=remote)
+    tracked = remote / "tracked.txt"
+    for version in range(3):
+        tracked.write_text(f"version {version}\n", encoding="utf-8")
+        run(["git", "add", "tracked.txt"], cwd=remote, env=git_commit_envvars)
+        run(
+            ["git", "commit", "-m", f"version {version}"],
+            cwd=remote,
+            env=git_commit_envvars,
+        )
+
+    destination = tmp_path / "checkout"
+    repo = GitSync(
+        url=remote.as_uri(),
+        path=destination,
+        git_filter=BlobNone(),
+    )
+    repo.obtain()
+
+    assert (
+        repo.cmd.run(["config", "--get", "remote.origin.partialclonefilter"], trim=True)
+        == "blob:none"
+    )
+    assert repo.cmd.run(["rev-list", "--count", "HEAD"], trim=True) == "3"
+    missing = repo.cmd.run(["rev-list", "--objects", "--missing=print", "--all"])
+    assert any(line.startswith("?") for line in missing.splitlines())
+    assert (destination / "tracked.txt").read_text(encoding="utf-8") == "version 2\n"
+    assert repo.cmd.run(["ls-remote", "origin"]).strip()
+
+
+def test_git_sync_obtain_forwards_filter_to_submodule(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    git_commit_envvars: GitCommitEnvVars,
+) -> None:
+    """GitSync creates submodules as partial clones with the configured filter."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    monkeypatch.delenv("GIT_CONFIG_GLOBAL", raising=False)
+    monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "file")
+
+    submodule_remote = tmp_path / "submodule-remote"
+    run(["git", "init", str(submodule_remote)], env=git_commit_envvars)
+    run(["git", "config", "uploadpack.allowFilter", "true"], cwd=submodule_remote)
+    run(
+        ["git", "config", "uploadpack.allowAnySHA1InWant", "true"],
+        cwd=submodule_remote,
+    )
+    submodule_file = submodule_remote / "data.txt"
+    submodule_file.write_text("submodule data\n", encoding="utf-8")
+    run(["git", "add", "data.txt"], cwd=submodule_remote, env=git_commit_envvars)
+    run(
+        ["git", "commit", "-m", "submodule data"],
+        cwd=submodule_remote,
+        env=git_commit_envvars,
+    )
+
+    parent_remote = tmp_path / "parent-remote"
+    run(["git", "init", str(parent_remote)], env=git_commit_envvars)
+    run(["git", "config", "uploadpack.allowFilter", "true"], cwd=parent_remote)
+    run(
+        ["git", "config", "uploadpack.allowAnySHA1InWant", "true"],
+        cwd=parent_remote,
+    )
+    run(
+        [
+            "git",
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            submodule_remote.as_uri(),
+            "deps/sub",
+        ],
+        cwd=parent_remote,
+        env=git_commit_envvars,
+    )
+    run(
+        ["git", "commit", "-m", "add submodule"],
+        cwd=parent_remote,
+        env=git_commit_envvars,
+    )
+
+    destination = tmp_path / "checkout"
+    GitSync(
+        url=parent_remote.as_uri(),
+        path=destination,
+        git_filter=BlobNone(),
+    ).obtain()
+
+    assert (destination / "deps" / "sub" / "data.txt").read_text(
+        encoding="utf-8"
+    ) == "submodule data\n"
+    assert (
+        run(
+            ["git", "config", "--get", "remote.origin.partialclonefilter"],
+            cwd=destination / ".git" / "modules" / "deps" / "sub",
+        ).strip()
+        == "blob:none"
+    )
 
 
 @pytest.mark.parametrize(

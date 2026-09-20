@@ -2853,3 +2853,80 @@ def test_clone_places_end_of_options_before_url(
     assert argv[argv.index("--") + 1] == "https://example.com/repo.git", (
         "URL must follow the -- separator, not precede it"
     )
+
+
+def test_git_commands_emit_one_flag_per_filter(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Clone, fetch, pull, and submodule update preserve repeated filters."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+    filters = ["blob:none", {"kind": "tree", "depth": 2}]
+
+    repo.clone(
+        url="https://example.com/repo.git",
+        _filter=filters,
+        make_parents=False,
+    )
+    repo.fetch(_filter=filters)
+    repo.pull(_filter=filters)
+    repo.submodule.update(_filter=filters)
+
+    for call in mock_run.call_args_list:
+        argv = [os.fspath(arg) for arg in call.args[0]]
+        assert [arg for arg in argv if arg.startswith("--filter=")] == [
+            "--filter=blob:none",
+            "--filter=tree:2",
+        ]
+
+
+def test_git_commands_accept_legacy_filter_string(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Existing string filter calls keep their argv."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    repo.fetch(_filter="blob:none")
+
+    argv = [os.fspath(arg) for arg in mock_run.call_args.args[0]]
+    assert "--filter=blob:none" in argv
+
+
+@pytest.mark.parametrize("command", ["pull", "submodule"])
+def test_git_commands_reject_auto_before_process(
+    command: str,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Commands without Git's auto mode reject it before running Git."""
+    from libvcs.cmd.git_filter import Auto
+
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    with pytest.raises(ValueError, match="auto"):
+        if command == "pull":
+            repo.pull(_filter=Auto())
+        else:
+            repo.submodule.update(_filter=Auto())
+
+    mock_run.assert_not_called()
+
+
+def test_clone_rejects_filter_before_creating_destination(
+    tmp_path: pathlib.Path,
+) -> None:
+    """Invalid filter config does not create the clone destination."""
+    destination = tmp_path / "checkout"
+    repo = git.Git(path=destination)
+
+    with pytest.raises(ValueError, match="limit"):
+        repo.clone(
+            url="https://example.com/repo.git",
+            _filter={"kind": "blob:limit", "limit": -1},
+        )
+
+    assert not destination.exists()

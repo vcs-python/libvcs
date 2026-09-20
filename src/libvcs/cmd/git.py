@@ -19,8 +19,21 @@ from libvcs._internal.run import (
     run,
 )
 from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs.cmd.git_filter import Auto, GitFilterInput, filter_specs
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
+
+
+def _filter_flags(
+    value: GitFilterInput | None,
+    *,
+    allow_auto: bool,
+) -> list[str]:
+    specs = filter_specs(value)
+    if not allow_auto and any(spec == Auto().to_spec() for spec in specs):
+        msg = "auto filter is not supported by this Git command"
+        raise ValueError(msg)
+    return [f"--filter={spec}" for spec in specs]
 
 
 class Git:
@@ -328,6 +341,7 @@ class Git:
         no_remote_submodules: bool | None = None,
         verbose: bool | None = None,
         quiet: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # Pass-through to run
         config: dict[str, t.Any] | None = None,
         log_in_real_time: bool = False,
@@ -367,8 +381,7 @@ class Git:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
             local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(_filter_flags(_filter, allow_auto=True))
         if depth is not None:
             local_flags.extend(["--depth", str(depth)])
         if branch is not None:
@@ -477,6 +490,7 @@ class Git:
         show_forced_updates: bool | None = None,
         no_show_forced_updates: bool | None = None,
         negotiate_only: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # libvcs special behavior
         check_returncode: bool | None = None,
         **kwargs: t.Any,
@@ -503,8 +517,7 @@ class Git:
 
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(_filter_flags(_filter, allow_auto=True))
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -891,6 +904,7 @@ class Git:
         show_forced_updates: bool | None = None,
         no_show_forced_updates: bool | None = None,
         negotiate_only: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # Pass-through to run
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -999,8 +1013,7 @@ class Git:
         #
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(_filter_flags(_filter, allow_auto=False))
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -2532,6 +2545,7 @@ class GitSubmoduleCmd:
         rebase: bool | None = None,
         merge: bool | None = None,
         recursive: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -2577,8 +2591,7 @@ class GitSubmoduleCmd:
             local_flags.append("--rebase")
         elif merge is True:
             local_flags.append("--merge")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(_filter_flags(_filter, allow_auto=False))
 
         return self.run(
             "update",

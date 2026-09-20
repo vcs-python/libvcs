@@ -29,6 +29,7 @@ from libvcs import exc
 from libvcs._internal.run import reject_option_like
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
+from libvcs.cmd.git_filter import GitFilterInput, filter_specs
 from libvcs.sync.base import (
     BaseSync,
     SyncResult,
@@ -251,6 +252,7 @@ class GitSync(BaseSync):
         git_shallow: bool = False,
         tls_verify: bool = False,
         depth: int | None = None,
+        git_filter: GitFilterInput | None = None,
         **kwargs: t.Any,
     ) -> None:
         """Local git repository.
@@ -310,6 +312,11 @@ class GitSync(BaseSync):
         self.git_shallow = git_shallow
         self.tls_verify = tls_verify
         self.depth = depth
+        git_filter_specs = filter_specs(git_filter)
+        if "auto" in git_filter_specs:
+            msg = "git_filter: auto cannot be forwarded to submodule update"
+            raise ValueError(msg)
+        self.git_filter: tuple[str, ...] | None = git_filter_specs or None
 
         self._remotes: GitSyncRemoteDict
 
@@ -427,6 +434,7 @@ class GitSync(BaseSync):
             url=url,
             progress=True,
             depth=clone_depth,
+            _filter=self.git_filter,
             config={"http.sslVerify": False} if self.tls_verify else None,
             log_in_real_time=True,
             check_returncode=True,
@@ -439,6 +447,7 @@ class GitSync(BaseSync):
         self.cmd.submodule.update(
             init=True,
             recursive=True,
+            _filter=self.git_filter,
             log_in_real_time=True,
         )
 
