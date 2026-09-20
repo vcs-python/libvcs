@@ -155,3 +155,23 @@ def test_update_repo_pull_failure_returns_sync_result(
     assert len(result.errors) > 0
     assert result.errors[0].step == "pull"
     assert isinstance(result.errors[0].exception, exc.CommandError)
+
+
+@pytest.mark.parametrize("prefix,revision", [("hg+", None), ("", "0")])
+def test_obtain_transport_and_revision(
+    hg_repo: HgSync,
+    tmp_path: pathlib.Path,
+    prefix: str,
+    revision: str | None,
+) -> None:
+    """Clone strips adapter prefixes and checks out the requested initial revision."""
+    base = hg_repo.cmd.run(["log", "-r", "0", "-T", "{node}"])
+    (hg_repo.path / "later").write_text("later\n")
+    hg_repo.cmd.run(["add", "later"])
+    hg_repo.cmd.run(["commit", "-m", "later"])
+    repo = HgSync(
+        url=prefix + hg_repo.path.as_uri(), path=tmp_path / "clone", rev=revision
+    )
+    repo.obtain()
+    expected = base if revision else hg_repo.get_position().revision
+    assert repo.get_position().revision == expected

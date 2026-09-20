@@ -29,6 +29,11 @@ configured-target drift separate from local-change handling and defaults to
 `dirty="abort"`. `SyncResult` now reports update and preservation outcomes,
 conflicts, and retained recovery tokens independently.
 
+#### Mercurial clone applies transport and revision selection
+
+`HgSync` strips the `hg+` adapter prefix before invoking Mercurial and applies
+the constructor's `rev` when checking out a new clone.
+
 #### Git retains dirty changes for independent recovery
 
 `GitSync.update_repo()` aborts on dirty checkouts by default. Explicit

@@ -20,7 +20,7 @@ from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath
 from libvcs.cmd.hg import Hg
 
-from .base import BaseSync, SyncResult, WorkingCopyPosition
+from .base import BaseSync, SyncResult, SyncTarget, WorkingCopyPosition
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class HgSync(BaseSync):
             raise TypeError(msg)
         self.options = options
         super().__init__(
-            url=url,
+            url=url.removeprefix("hg+"),
             path=path,
             progress_callback=progress_callback,
             rev=rev,
@@ -92,6 +92,8 @@ class HgSync(BaseSync):
 
     def obtain(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Clone and update a Mercurial repository to this location."""
+        if self.rev is not None:
+            SyncTarget(rev=self.rev)
         self.cmd.clone(
             no_update=True,
             quiet=True,
@@ -103,10 +105,12 @@ class HgSync(BaseSync):
             insecure=not self.options.tls_verify,
             check_returncode=True,
         )
-        self.cmd.update(
-            quiet=True,
-            check_returncode=True,
-        )
+        if self.rev is None:
+            self.cmd.update(quiet=True, check_returncode=True)
+        else:
+            self.cmd.run(
+                ["update", "--quiet", "--rev", self.rev], check_returncode=True
+            )
 
     def get_revision(self) -> str:
         """Get latest revision of this mercurial repository."""
