@@ -337,6 +337,25 @@ class HgSync(BaseSync):
                 msg = "invalid Mercurial recovery record status entry"
                 raise ValueError(msg)
             self._work_path(name)
+        for field in ("missing_added", "recreated"):
+            values = original.get(field, {})
+            if not isinstance(values, dict):
+                msg = "invalid Mercurial recovery schedule"
+                raise ValueError(msg)  # noqa: TRY004 - persisted record validation
+            for name, value in values.items():
+                if not isinstance(name, str) or not isinstance(value, str):
+                    msg = "invalid Mercurial recovery schedule entry"
+                    raise ValueError(msg)  # noqa: TRY004 - persisted record validation
+                self._work_path(name)
+                if field == "missing_added":
+                    if status.get(name) != "!":
+                        msg = "missing addition does not match native status"
+                        raise ValueError(msg)
+                    if value:
+                        self._work_path(value)
+                elif status.get(name) != "R" or not value.isdecimal():
+                    msg = "recreated removal does not match native status"
+                    raise ValueError(msg)
         for field in ("branch", "ref_name", "default"):
             if not isinstance(original.get(field), str) or "\0" in original[field]:
                 msg = "invalid Mercurial recovery record metadata"
@@ -368,7 +387,60 @@ class HgSync(BaseSync):
         return directory
 
     def _needs_shelf(self, record: preservation.Record) -> bool:
-        return any(value != "!" for value in record["original"]["status"].values())
+        return any(
+            value != "!" and name not in record["original"].get("recreated", {})
+            for name, value in record["original"]["status"].items()
+        )
+
+    def _capture_recreated(
+        self,
+        store: preservation.RecoveryStore,
+        token: RecoveryToken,
+        record: preservation.Record,
+    ) -> None:
+        recreated = record["original"]["recreated"]
+        if not recreated:
+            return
+        material = store.token_path(token) / "recreated"
+        material.mkdir(mode=0o700)
+        for name, item in recreated.items():
+            source = self._work_path(name)
+            destination = material / item
+            shutil.copy2(source, destination, follow_symlinks=False)
+            if not destination.is_symlink():
+                with destination.open("rb") as stream:
+                    os.fsync(stream.fileno())
+        record["native"]["recreated_inventory"] = preservation.inventory(material)
+        preservation.flush_directory(material)
+        store.write(token, record)
+
+    def _restore_recreated(
+        self,
+        store: preservation.RecoveryStore,
+        token: RecoveryToken,
+        record: preservation.Record,
+    ) -> tuple[SyncConflict, ...]:
+        recreated = record["original"].get("recreated", {})
+        if not recreated:
+            return ()
+        self._material(store, token, record)
+        conflicts = []
+        status = self._status()
+        before = self._manifest(record["original"]["revision"])
+        after = self._manifest(self._node("."))
+        for name, item in recreated.items():
+            path = self._work_path(name)
+            if before.get(name) != after.get(name) or status.get(name) is not None:
+                conflicts.append(SyncConflict(name, "tree"))
+                continue
+            self.cmd.run(["remove", "--", name], check_returncode=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(
+                store.token_path(token) / "recreated" / item,
+                path,
+                follow_symlinks=False,
+            )
+        return tuple(conflicts)
 
     def _seal(
         self,
@@ -391,7 +463,7 @@ class HgSync(BaseSync):
                 with destination.open("rb") as stream:
                     os.fsync(stream.fileno())
         preservation.flush_directory(material)
-        record["native"] = {"inventory": preservation.inventory(material)}
+        record["native"]["inventory"] = preservation.inventory(material)
         store.phase(token, record, "sealed")
 
     def _material(
@@ -400,6 +472,13 @@ class HgSync(BaseSync):
         token: RecoveryToken,
         record: preservation.Record,
     ) -> pathlib.Path | None:
+        if record["original"].get("recreated"):
+            recreated = preservation.safe_path(store.token_path(token) / "recreated")
+            if not recreated.is_dir() or preservation.inventory(recreated) != record[
+                "native"
+            ].get("recreated_inventory"):
+                msg = "retained recreated Mercurial files are incomplete or corrupt"
+                raise ValueError(msg)
         if "inventory" in record["native"]:
             material = preservation.safe_path(store.token_path(token) / "material")
             if (
@@ -453,6 +532,22 @@ class HgSync(BaseSync):
             path = self._work_path(name)
             if before.get(name) != after.get(name):
                 conflicts.append(SyncConflict(name, "missing-intent-upstream-changed"))
+            elif name in original.get("missing_added", {}):
+                if path.exists() or path.is_symlink():
+                    conflicts.append(SyncConflict(name, "untracked-obstruction"))
+                    continue
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch(exist_ok=False)
+                try:
+                    source = original["missing_added"][name]
+                    args = (
+                        ["copy", "--after", "--", source, name]
+                        if source
+                        else ["add", "--", name]
+                    )
+                    self.cmd.run(args, check_returncode=True)
+                finally:
+                    path.unlink()
             elif path.is_file() or path.is_symlink():
                 path.unlink()
             elif path.exists():
@@ -546,7 +641,11 @@ class HgSync(BaseSync):
                     ):
                         logger.warning(
                             "configured Mercurial target drifted",
-                            extra={"vcs_type": "hg", "vcs_repo_path": str(self.path)},
+                            extra={
+                                "vcs_event": "target_drift",
+                                "vcs_type": "hg",
+                                "vcs_repo_path": str(self.path),
+                            },
                         )
                     return result
                 if dirty and policy.dirty == "abort":
@@ -577,9 +676,29 @@ class HgSync(BaseSync):
                 record: preservation.Record | None = None
                 if dirty and policy.dirty == "preserve":
                     step = "capture"
+                    manifest = self._manifest(original.revision)
+                    schedules = json.loads(
+                        self._read_hg(["status", "--copies", "-Tjson"])
+                    )
+                    missing_added = {
+                        item["path"]: item.get("source", "")
+                        for item in schedules
+                        if item["status"] == "!" and item["path"] not in manifest
+                    }
+                    recreated = {
+                        name: str(index)
+                        for index, (name, state) in enumerate(status.items())
+                        if state == "R"
+                        and (
+                            self._work_path(name).exists()
+                            or self._work_path(name).is_symlink()
+                        )
+                    }
                     original_data = dataclasses.asdict(original)
                     original_data.update(
                         status=status,
+                        missing_added=missing_added,
+                        recreated=recreated,
                         branch=branch,
                         pending_branch=pending_branch,
                         default=self.url,
@@ -591,6 +710,7 @@ class HgSync(BaseSync):
                     result.preservation_state = "unknown"
                     try:
                         backup = store.token_path(token) / "backups"
+                        self._capture_recreated(store, token, record)
                         if self._needs_shelf(record):
                             self.cmd.run(
                                 [
@@ -604,6 +724,11 @@ class HgSync(BaseSync):
                                     self._shelf_name(token),
                                     "--message",
                                     record["marker"],
+                                    *[
+                                        argument
+                                        for name in recreated
+                                        for argument in ("--exclude", "path:" + name)
+                                    ],
                                 ],
                                 check_returncode=True,
                             )
@@ -643,7 +768,9 @@ class HgSync(BaseSync):
                 try:
                     if token is not None and record is not None:
                         missing = [
-                            name for name, state in status.items() if state == "!"
+                            name
+                            for name, state in status.items()
+                            if state == "!" or name in record["original"]["recreated"]
                         ]
                         if missing:
                             self.cmd.run(
@@ -709,6 +836,7 @@ class HgSync(BaseSync):
                             self._unshelve(
                                 token, backup=store.token_path(token) / "backups"
                             )
+                        result.conflicts = self._restore_recreated(store, token, record)
                         if record["original"]["pending_branch"]:
                             self.cmd.run(
                                 [
@@ -730,7 +858,7 @@ class HgSync(BaseSync):
                         result.preservation_state = "failed"
                         result.add_error("restore", str(error), error)
                     try:
-                        result.conflicts = self._conflicts()
+                        result.conflicts += self._conflicts()
                         if (
                             result.update_state == "completed"
                             and not result.conflicts
@@ -816,7 +944,8 @@ class HgSync(BaseSync):
                         if path.exists():
                             shutil.copy2(path, shelf_dir / path.name)
                     recovered._unshelve(token, backup=dest / ".hg" / "libvcs-backups")
-                conflicts = recovered._restore_missing(original, original["revision"])
+                conflicts = recovered._restore_recreated(store, token, record)
+                conflicts += recovered._restore_missing(original, original["revision"])
                 if (
                     conflicts
                     or recovered._conflicts()

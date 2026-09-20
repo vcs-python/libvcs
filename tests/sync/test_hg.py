@@ -236,6 +236,69 @@ def test_hg_preservation_offline_exact_status(
 
 
 @pytest.mark.slow
+@pytest.mark.parametrize(
+    "state",
+    ["missing-added", "missing-copy", "removed-present", "removed-capture-failure"],
+)
+def test_hg_preservation_overlapping_schedule_and_files(
+    hg_repo: HgSync,
+    tmp_path: pathlib.Path,
+    state: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Retain schedules hidden by status and files hidden by removal schedules."""
+    (hg_repo.path / "tracked").write_bytes(b"base\n")
+    hg_repo.cmd.run(["add", "tracked"])
+    hg_repo.cmd.run(["commit", "-m", "tracked base"])
+    _, target = _hg_advance(hg_repo)
+    if state.startswith("removed"):
+        hg_repo.cmd.run(["remove", "tracked"])
+        (hg_repo.path / "tracked").write_bytes(b"valuable\x00recreated\n")
+    else:
+        if state == "missing-copy":
+            hg_repo.cmd.run(["copy", "tracked", "added"])
+        else:
+            (hg_repo.path / "added").write_text("added\n")
+            hg_repo.cmd.run(["add", "added"])
+        (hg_repo.path / "added").unlink()
+        (hg_repo.path / "unknown").write_text("unknown\n")
+    if state == "removed-capture-failure":
+        (hg_repo.path / "unknown").write_text("unknown\n")
+        native_run = hg_repo.cmd.run
+
+        def fail_shelve(args: t.Any, **kwargs: t.Any) -> str:
+            if "shelve" in args:
+                raise exc.CommandError(
+                    cmd=args, returncode=1, output="native shelve did not start"
+                )
+            return native_run(args, **kwargs)
+
+        monkeypatch.setattr(hg_repo.cmd, "run", fail_shelve)
+    before = hg_repo.cmd.run(["status", "--copies", "-Tjson"])
+    result = hg_repo.update_repo(
+        target=SyncTarget(commit=target), policy=SyncPolicy(dirty="preserve")
+    )
+    if state == "removed-capture-failure":
+        assert not result.ok
+        assert (hg_repo.path / "tracked").read_bytes() == b"valuable\x00recreated\n"
+        assert hg_repo.cmd.run(["status", "--copies", "-Tjson"]) == before
+        return
+    assert result.ok, result.errors
+    assert result.recovery is not None
+    assert hg_repo.cmd.run(["status", "--copies", "-Tjson"]) == before
+    destination = tmp_path / "recovered"
+    restored = hg_repo.recover_changes(result.recovery, destination=destination)
+    assert restored.ok, restored.errors
+    assert run(["hg", "status", "--copies", "-Tjson"], cwd=destination) == before
+    if state == "removed-present":
+        for root in (hg_repo.path, destination):
+            assert (root / "tracked").read_bytes() == b"valuable\x00recreated\n"
+    else:
+        assert not (destination / "added").exists()
+        assert (destination / "unknown").read_text() == "unknown\n"
+
+
+@pytest.mark.slow
 @pytest.mark.parametrize("kind", ["disjoint", "text", "binary", "unknown", "missing"])
 def test_hg_preservation_native_conflict_recovery(
     hg_repo: HgSync,
