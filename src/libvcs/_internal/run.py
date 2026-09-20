@@ -275,13 +275,22 @@ def run(
 
         callback = progress_cb
 
-    code, timeout_stdout, timeout_stderr = _wait_with_deadline(
-        proc,
-        deadline=time.monotonic() + timeout if timeout is not None else None,
-        timeout=timeout,
-        callback=callback,
-        cmd=_stringify_command(normalized_args),
-    )
+    try:
+        code, timeout_stdout, timeout_stderr = _wait_with_deadline(
+            proc,
+            deadline=time.monotonic() + timeout if timeout is not None else None,
+            timeout=timeout,
+            callback=callback,
+            cmd=_stringify_command(normalized_args),
+        )
+    except BaseException:
+        try:
+            _terminate_process(proc, _stringify_command(normalized_args))
+        finally:
+            for stream in (proc.stdin, proc.stdout, proc.stderr):
+                if stream is not None:
+                    stream.close()
+        raise
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now(tz=datetime.timezone.utc))
 

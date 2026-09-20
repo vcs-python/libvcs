@@ -22,6 +22,10 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+Progress callback exceptions and interrupts terminate and reap the direct
+subprocess before propagating. Direct calls own the immediate child; callers
+that need descendant cancellation must supervise an owned process group.
+
 #### Subversion retains complete working copies for recovery
 
 `SvnSync.update_repo()` aborts on dirty checkouts by default. Explicit

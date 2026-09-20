@@ -131,6 +131,57 @@ def test_run_without_timeout_completes_successfully() -> None:
     assert "ok" in output
 
 
+@pytest.mark.parametrize("error_type", [RuntimeError, KeyboardInterrupt])
+def test_run_callback_failure_reaps_child(
+    monkeypatch: pytest.MonkeyPatch, error_type: type[BaseException]
+) -> None:
+    """An exception from streamed output stops the child before propagating."""
+    processes: list[subprocess.Popen[bytes]] = []
+    original_popen = subprocess.Popen
+
+    def capture(*args: t.Any, **kwargs: t.Any) -> subprocess.Popen[bytes]:
+        process = original_popen(*args, **kwargs)
+        processes.append(process)
+        return process
+
+    # Capture the owned child so the assertion distinguishes cleanup from leakage.
+    monkeypatch.setattr(subprocess, "Popen", capture)
+    expected = error_type("callback stopped")
+
+    def fail(output: str, timestamp: t.Any) -> None:
+        raise expected
+
+    try:
+        with pytest.raises(error_type) as caught:
+            run(
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "import sys; print('ready', file=sys.stderr, flush=True); "
+                        "sys.stdin.buffer.read()"
+                    ),
+                ],
+                stdin=subprocess.PIPE,
+                callback=fail,
+                timeout=1,
+            )
+        assert caught.value is expected
+        assert processes[0].returncode is not None
+        assert all(
+            stream is None or stream.closed
+            for stream in (processes[0].stdin, processes[0].stdout, processes[0].stderr)
+        )
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.kill()
+            process.wait(timeout=1)
+            for stream in (process.stdin, process.stdout, process.stderr):
+                if stream is not None:
+                    stream.close()
+
+
 def test_run_timeout_none_is_the_default() -> None:
     """Omitting ``timeout`` is equivalent to ``timeout=None``."""
     output = run([sys.executable, "-c", "print('default')"], timeout=None)
