@@ -6916,10 +6916,16 @@ class GitWorktreeManager:
 
         Examples
         --------
-        >>> GitWorktreeManager(path=example_git_repo.path).add(
-        ...     path='/tmp/test-worktree-add', commit_ish='HEAD'
+        >>> worktree_path = tmp_path / "linked"
+        >>> _ = GitWorktreeManager(path=example_git_repo.path).add(
+        ...     path=worktree_path, commit_ish="HEAD", detach=True,
+        ...     check_returncode=True,
         ... )
-        "Preparing worktree (detached HEAD ...)..."
+        >>> (worktree_path / ".git").is_file()
+        True
+        >>> revision = Git(path=worktree_path).rev_parse(args="HEAD").strip()
+        >>> revision == example_git_repo.get_revision()
+        True
         """
         local_flags: list[str] = []
 
