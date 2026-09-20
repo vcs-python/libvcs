@@ -7,11 +7,14 @@ import os
 import pathlib
 import random
 import shutil
+import socket
 import subprocess
+import sys
 import textwrap
 import time
 import typing as t
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -87,6 +90,277 @@ def test_detach_resolves_branch_after_native_fetch(
     position = git_repo.get_position()
     assert position.revision == expected
     assert not position.follows
+
+
+@pytest.fixture
+def worktree_git_repo(git_repo: GitSync, tmp_path: pathlib.Path) -> GitSync:
+    """Give creation tests a private upstream for branch pushes."""
+    upstream = tmp_path / "upstream.git"
+    git_repo.run(["clone", "--bare", git_repo.url, str(upstream)])
+    project = GitSync(url=upstream.as_uri(), path=git_repo.path)
+    project.set_remotes(overwrite=True)
+    return project
+
+
+@pytest.mark.parametrize(
+    "state", ["behind", "ahead", "diverged", "attached", "occupied"]
+)
+def test_create_worktree_preserves_existing_branch(
+    worktree_git_repo: GitSync, tmp_path: pathlib.Path, state: str
+) -> None:
+    """Creation advances behind branches but never loses commits or caller data."""
+    git_repo = worktree_git_repo
+    base = git_repo.get_revision()
+    git_repo.run(["branch", "chosen"])
+    git_repo.run(["commit", "--allow-empty", "-m", "remote successor"])
+    desired = git_repo.get_revision()
+    git_repo.run(["push", "--force", "origin", "HEAD:chosen"])
+    git_repo.run(["checkout", "--detach", base])
+    if state in {"ahead", "diverged"}:
+        git_repo.run(["checkout", "chosen"])
+        if state == "ahead":
+            git_repo.run(["merge", "--ff-only", desired])
+        git_repo.run(["commit", "--allow-empty", "-m", "local work"])
+        git_repo.run(["checkout", "--detach", base])
+    elif state == "attached":
+        git_repo.run(["checkout", "chosen"])
+    local = git_repo.run(["rev-parse", "refs/heads/chosen"]).strip()
+    destination = tmp_path / "created"
+    if state == "occupied":
+        destination.mkdir()
+        (destination / "caller").write_bytes(b"caller bytes\x00")
+    (git_repo.path / "ordinary-dirt").write_bytes(b"untouched parent\x00")
+    before = git_repo.get_position()
+    result = git_repo.create_worktree(destination, target=SyncTarget(branch="chosen"))
+    assert git_repo.get_position() == before
+    assert (git_repo.path / "ordinary-dirt").read_bytes() == b"untouched parent\x00"
+    if state in {"diverged", "attached", "occupied"}:
+        assert not result.ok
+        assert git_repo.run(["rev-parse", "refs/heads/chosen"]).strip() == local
+        if state == "occupied":
+            assert (destination / "caller").read_bytes() == b"caller bytes\x00"
+        else:
+            assert not destination.exists()
+    else:
+        assert result.ok, result.errors
+        assert result.update_state == "completed"
+        created = GitSync(url=git_repo.url, path=destination).get_position()
+        assert created.ref_name == "chosen"
+        assert created.revision == (local if state == "ahead" else desired)
+
+
+@pytest.mark.parametrize(
+    "selector", ["branch", "tag", "commit", "rev", "remote", "local", "detach"]
+)
+def test_create_worktree_resolves_typed_target(
+    worktree_git_repo: GitSync, tmp_path: pathlib.Path, selector: str
+) -> None:
+    """Typed identities resolve after fetch; parent dirt and attachment survive."""
+    git_repo = worktree_git_repo
+    base = git_repo.get_revision()
+    git_repo.run(["tag", "chosen"])
+    git_repo.run(["commit", "--allow-empty", "-m", "branch successor"])
+    desired = git_repo.get_revision()
+    git_repo.run(["push", "--force", "origin", "HEAD:chosen"])
+    git_repo.run(["update-ref", "-d", "refs/remotes/origin/chosen"])
+    git_repo.run(["branch", "local-only"])
+    git_repo.run(["checkout", "--detach", base])
+    targets = {
+        "branch": SyncTarget(branch="chosen"),
+        "tag": SyncTarget(tag="chosen"),
+        "commit": SyncTarget(commit=base),
+        "rev": SyncTarget(rev="chosen"),
+        "remote": SyncTarget(branch="chosen", remote="selected"),
+        "local": SyncTarget(branch="local-only"),
+        "detach": SyncTarget(branch="chosen"),
+    }
+    selected_url = git_repo.url
+    if selector == "remote":
+        alternate = tmp_path / "alternate.git"
+        git_repo.run(["clone", "--bare", git_repo.url, str(alternate)])
+        git_repo.run(
+            [
+                "--git-dir",
+                str(alternate),
+                "update-ref",
+                "refs/heads/chosen",
+                base,
+            ]
+        )
+        selected_url = alternate.as_uri()
+    git_repo = GitSync(
+        url=git_repo.url,
+        path=git_repo.path,
+        remotes={"selected": GitRemote("selected", selected_url, "unavailable-push")},
+    )
+    destination = tmp_path / "created"
+    result = git_repo.create_worktree(
+        destination,
+        target=targets[selector],
+        detach=selector == "detach",
+        set_remotes=selector == "remote",
+        lock=selector != "remote",
+        lock_reason="keep checkout",
+    )
+    assert result.ok, result.errors
+    position = GitSync(url=git_repo.url, path=destination).get_position()
+    fixed = selector in {"tag", "commit", "rev"}
+    assert position.revision == (base if fixed or selector == "remote" else desired)
+    assert position.follows == (not fixed and selector != "detach")
+    listing = git_repo.run(["worktree", "list", "--porcelain"])
+    assert "locked keep checkout" in listing
+
+
+@pytest.mark.parametrize("linked_owner", [False, True])
+@pytest.mark.parametrize("damaged", [False, True])
+def test_create_worktree_refuses_retained_owner(
+    git_repo: GitSync, tmp_path: pathlib.Path, damaged: bool, linked_owner: bool
+) -> None:
+    """An interrupted linked owner blocks creation before remotes or destination."""
+    from libvcs._internal import preservation
+
+    owner = git_repo
+    if linked_owner:
+        linked = tmp_path / "linked"
+        git_repo.run(["worktree", "add", "--detach", str(linked)])
+        owner = GitSync(url=git_repo.url, path=linked)
+    store = owner._store()
+    token, record = store.create(original={}, target={})
+    if linked_owner:
+        preservation.atomic_record(
+            store.repository / ".libvcs-preserve-active.json",
+            {
+                "source": str(store.source),
+                "token": {
+                    "id": token.id,
+                    "backend": token.backend,
+                    "location": token.location,
+                },
+            },
+        )
+    if damaged:
+        record["phase"] = []
+        preservation.atomic_record(store.token_path(token) / "operation.json", record)
+    git_repo = GitSync(
+        url=git_repo.url, path=git_repo.path, remotes={"forbidden": git_repo.url}
+    )
+    before = git_repo.run(["show-ref"])
+    destination = tmp_path / "created"
+    result = git_repo.create_worktree(
+        destination,
+        target=SyncTarget(commit=git_repo.get_revision()),
+        set_remotes=True,
+    )
+    assert not result.ok
+    assert result.recovery == token
+    assert result.update_state == "unknown"
+    assert not destination.exists()
+    assert "forbidden" not in git_repo.run(["remote"]).splitlines()
+    assert git_repo.run(["show-ref"]) == before
+
+
+def test_create_worktree_initializes_submodules(
+    worktree_git_repo: GitSync, tmp_path: pathlib.Path
+) -> None:
+    """New worktrees initialize submodules without disturbing parent local bytes."""
+    git_repo = worktree_git_repo
+    git_repo.run(
+        ["-c", "protocol.file.allow=always", "submodule", "add", git_repo.url, "child"]
+    )
+    git_repo.run(["commit", "-am", "add child"])
+    (git_repo.path / "child" / "local").write_bytes(b"parent child bytes\x00")
+    destination = tmp_path / "created"
+    result = git_repo.create_worktree(
+        destination,
+        target=SyncTarget(commit=git_repo.get_revision()),
+    )
+    assert result.ok, result.errors
+    expected = git_repo.run(["-C", "child", "rev-parse", "HEAD"]).strip()
+    actual = git_repo.run(
+        ["-C", str(destination / "child"), "rev-parse", "HEAD"]
+    ).strip()
+    assert actual == expected
+    assert (destination / "child" / ".git").is_file()
+    assert not (destination / "child" / "local").exists()
+    assert (git_repo.path / "child" / "local").read_bytes() == b"parent child bytes\x00"
+
+
+def test_create_worktree_reports_failed_lock_after_creation(
+    git_repo: GitSync, tmp_path: pathlib.Path
+) -> None:
+    """A native setup failure reports the checkout that already exists."""
+    hook = git_repo.path / ".git" / "hooks" / "post-checkout"
+    hook.write_text("#!/bin/sh\nexec git worktree lock --reason native-hook .\n")
+    hook.chmod(0o755)
+    destination = tmp_path / "created"
+    result = git_repo.create_worktree(
+        destination,
+        target=SyncTarget(commit=git_repo.get_revision()),
+        lock=True,
+    )
+    assert not result.ok
+    assert result.update_state == "completed"
+    assert result.errors[0].step == "worktree-lock"
+    assert (
+        GitSync(url=git_repo.url, path=destination).get_revision()
+        == git_repo.get_revision()
+    )
+    assert "locked native-hook" in git_repo.run(["worktree", "list", "--porcelain"])
+
+
+@pytest.mark.slow  # Native hook barrier tests competing writers.
+def test_create_worktree_owns_native_add(
+    git_repo: GitSync, tmp_path: pathlib.Path
+) -> None:
+    """A native post-checkout hook observes common ownership until creation ends."""
+    destination = tmp_path / "created"
+    other_destination = tmp_path / "forbidden"
+    hook = git_repo.path / ".git" / "hooks" / "post-checkout"
+    with socket.socket() as server:
+        server.bind(("127.0.0.1", 0))
+        server.listen(1)
+        server.settimeout(10)
+        hook.write_text(
+            f"#!{sys.executable}\nimport os, socket, sys\n"
+            f"if os.getcwd() != {str(destination)!r}: sys.exit(0)\n"
+            f"address = {server.getsockname()!r}\n"
+            "with socket.create_connection(address, timeout=10) as connection:\n"
+            "    connection.sendall(b'ready')\n"
+            "    assert connection.recv(1) == b'x'\n"
+        )
+        hook.chmod(0o755)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(
+                git_repo.create_worktree,
+                destination,
+                target=SyncTarget(commit=git_repo.get_revision()),
+            )
+            with server.accept()[0] as connection:
+                assert connection.recv(5) == b"ready"
+                assert (destination / ".git").is_file()
+                contender = GitSync(
+                    url=git_repo.url,
+                    path=git_repo.path,
+                    remotes={"forbidden": git_repo.url},
+                )
+                try:
+                    refused = contender.create_worktree(
+                        other_destination,
+                        target=SyncTarget(commit=git_repo.get_revision()),
+                        set_remotes=True,
+                    )
+                    assert not refused.ok
+                    assert "ownership is busy" in refused.errors[0].message
+                    assert "forbidden" not in git_repo.run(["remote"]).splitlines()
+                    assert not other_destination.exists()
+                    refused_update = contender.update_repo(set_remotes=True)
+                    assert not refused_update.ok
+                    assert "ownership is busy" in refused_update.errors[0].message
+                finally:
+                    connection.sendall(b"x")
+            result = future.result(timeout=10)
+    assert result.ok, result.errors
+    assert (destination / ".git").is_file()
 
 
 def test_obtain_reports_clone_failure(tmp_path: pathlib.Path) -> None:

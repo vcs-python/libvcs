@@ -22,6 +22,15 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+#### Create linked Git worktrees under shared ownership
+
+`GitSync.create_worktree()` fetches and creates an absent linked checkout at a
+typed target while holding the repository ownership lock. It retains local
+commits, rejects divergence and occupied destinations, and supports detached
+checkouts and worktree lock reasons. Interrupted recovery records refuse
+creation with their retained token; parent working files remain untouched.
+
+
 `GitSync.update_repo(detach=True)` detaches at the resolved target after
 fetching under the ownership lock. Branch targets retain their native
 tracking-ref and local-branch fallback rules.

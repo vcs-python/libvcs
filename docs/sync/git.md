@@ -59,6 +59,38 @@ objects in a partial clone cause recovery to fail without fetching. Keep that
 database until you release its tokens. Preservation rejects submodule scopes
 and independent nested repositories; clean recursive updates remain available.
 
+## Linked worktrees
+
+{meth}`~libvcs.sync.git.GitSync.create_worktree` creates an absent destination
+at a typed target. It fetches and resolves the target under the common repository
+lock, then creates the checkout and initializes its submodules. Parent working
+files remain untouched. Branch targets retain ahead local commits, advance only
+by fast-forward, and are refused when checked out elsewhere.
+
+```python
+>>> from libvcs.sync.base import SyncTarget
+>>> result = example_git_repo.create_worktree(
+...     tmp_path / "linked",
+...     target=SyncTarget(commit=example_git_repo.get_revision()),
+...     lock_reason="retained checkout",
+... )
+>>> result.ok
+True
+>>> result.update_state
+'completed'
+```
+
+`detach=True` detaches at the resolved target. `lock=True` locks the worktree;
+`lock_reason` also requests a lock. `set_remotes=True` applies configured remotes
+before fetching. Existing interrupted recovery records refuse creation and
+retain their token in the result.
+
+An occupied destination is rejected before branch movement. Native failures
+can still leave changed refs or a partial checkout: `update_state="unknown"`
+means creation began without reported completion. A completed update with errors
+means later lock or submodule setup failed. Creation holds the same ownership
+lock as updates; callers must exclude external native writers and editors.
+
 ```{eval-rst}
 .. automodule:: libvcs.sync.git
    :members:

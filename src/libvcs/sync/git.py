@@ -606,7 +606,7 @@ class GitSync(BaseSync):
         )
         return preservation.RecoveryStore(self.path, "git", common)
 
-    def _precondition(self) -> tuple[str, ...]:
+    def _native_precondition(self) -> None:
         root = pathlib.Path(self._read_git(["rev-parse", "--show-toplevel"]).strip())
         if root != self.path.absolute():
             msg = "Git synchronization requires the working-copy root"
@@ -628,6 +628,9 @@ class GitSync(BaseSync):
             if path.exists():
                 msg = f"native Git activity prevents synchronization: {name}"
                 raise ValueError(msg)
+
+    def _precondition(self) -> tuple[str, ...]:
+        self._native_precondition()
         dirty = self._dirty_paths()
         tracked = self._read_git(["ls-files", "--stage", "-z"])
         submodules = {
@@ -850,6 +853,152 @@ class GitSync(BaseSync):
                     result.add_error("recovery-material", str(error), error)
             return results
 
+    def _retained_refusal(self, store: preservation.RecoveryStore) -> SyncResult | None:
+        """Inspect interrupted owners while the caller holds the common lock."""
+        result = SyncResult()
+        try:
+            active = store.repository / ".libvcs-preserve-active.json"
+            if active.exists():
+                preservation.safe_path(active)
+                owner = json.loads(active.read_text())
+                owner_store = preservation.RecoveryStore(
+                    pathlib.Path(owner["source"]), "git", store.repository
+                )
+                owner_token = RecoveryToken(**owner["token"])
+                result.recovery = owner_token
+                result.update_state = "unknown"
+                result.preservation_state = "unknown"
+                owner_record = owner_store.read(owner_token)
+                if owner_record["phase"] not in preservation.TERMINAL:
+                    return owner_store.snapshot(owner_token, owner_record)
+                result = SyncResult()
+            for retained in store.discover():
+                assert retained.recovery is not None
+                if any(error.step == "recovery-record" for error in retained.errors):
+                    return retained
+                result = retained
+                retained_record = store.read(retained.recovery)
+                if retained_record["phase"] not in preservation.TERMINAL:
+                    return retained
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.add_error("precondition", str(error), error)
+            return result
+        return None
+
+    def _fast_forward_target(self, target: WorkingCopyPosition) -> WorkingCopyPosition:
+        """Retain local commits and reject divergence before any checkout writes."""
+        if target.follows:
+            try:
+                local = self._oid(f"refs/heads/{target.ref_name}")
+            except exc.CommandError:
+                return target
+            if self._ancestor(target.revision, local):
+                return dataclasses.replace(target, revision=local)
+            if not self._ancestor(local, target.revision):
+                msg = "target diverges; fast-forward required"
+                raise ValueError(msg)
+        return target
+
+    def create_worktree(
+        self,
+        destination: StrPath,
+        *,
+        target: SyncTarget,
+        detach: bool = False,
+        lock: bool = False,
+        lock_reason: str | None = None,
+        set_remotes: bool = False,
+    ) -> SyncResult:
+        """Create a linked checkout at its resolved target under shared ownership.
+
+        The destination must be absent. Branches advance only by fast-forward,
+        retain local commits, and cannot be checked out elsewhere. Parent working
+        files remain untouched. Fetch, creation, submodules, and lock metadata
+        share one repository lock; callers must exclude external native writers.
+
+        Native failures may leave refs or a partial checkout. An unknown update
+        state means creation began but did not report completion; a completed
+        update with errors means subsequent submodule or lock setup failed.
+        ``lock_reason`` implies ``lock=True``.
+        """
+        result = SyncResult()
+        step = "precondition"
+        try:
+            store = self._store()
+            with store.lock():
+                refused = self._retained_refusal(store)
+                if refused is not None:
+                    return refused
+                self._native_precondition()
+                dest = preservation.safe_path(pathlib.Path(destination))
+                # Native add -B can move a branch before rejecting an occupied path.
+                if dest.exists():
+                    msg = f"worktree destination already exists: {dest}"
+                    raise ValueError(msg)  # noqa: TRY301 - refuse before native mutation
+                if set_remotes:
+                    step = "set-remotes"
+                    self.set_remotes(overwrite=True)
+                step = "fetch"
+                self.cmd.fetch(
+                    _all=True,
+                    prune=True,
+                    config={"http.sslVerify": False}
+                    if not self.options.tls_verify
+                    else None,
+                    check_returncode=True,
+                )
+                step = "target"
+                resolved = self.resolve_target(target)
+                args = ["worktree", "add"]
+                if resolved.follows and not detach:
+                    resolved = self._fast_forward_target(resolved)
+                    try:
+                        self._oid(f"refs/heads/{resolved.ref_name}")
+                    except exc.CommandError:
+                        args += ["-b", resolved.ref_name]
+                    else:
+                        args += ["-B", resolved.ref_name]
+                else:
+                    args += ["--detach"]
+                args += ["--", str(dest), resolved.revision]
+                step = "worktree-add"
+                result.update_state = "unknown"
+                self.cmd.run(
+                    args,
+                    config={"http.sslVerify": False}
+                    if not self.options.tls_verify
+                    else None,
+                    check_returncode=True,
+                )
+                result.update_state = "completed"
+                if lock or lock_reason is not None:
+                    step = "worktree-lock"
+                    lock_args = ["worktree", "lock"]
+                    if lock_reason is not None:
+                        lock_args += ["--reason", lock_reason]
+                    self.cmd.run([*lock_args, "--", str(dest)], check_returncode=True)
+                step = "submodule-update"
+                GitSync(
+                    url=self.url, path=dest, options=self.options
+                )._sync_submodules()
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.add_error(step, str(error), error)
+        return result
+
     def update_repo(
         self,
         set_remotes: bool = False,
@@ -881,29 +1030,9 @@ class GitSync(BaseSync):
             store = self._store()
             with store.lock():
                 active = store.repository / ".libvcs-preserve-active.json"
-                if active.exists():
-                    preservation.safe_path(active)
-                    owner = json.loads(active.read_text())
-                    owner_store = preservation.RecoveryStore(
-                        pathlib.Path(owner["source"]), "git", store.repository
-                    )
-                    owner_token = RecoveryToken(**owner["token"])
-                    result.recovery = owner_token
-                    result.update_state = "unknown"
-                    result.preservation_state = "unknown"
-                    owner_record = owner_store.read(owner_token)
-                    if owner_record["phase"] not in preservation.TERMINAL:
-                        return owner_store.snapshot(owner_token, owner_record)
-                    result = SyncResult()
-                for retained in store.discover():
-                    assert retained.recovery is not None
-                    if any(
-                        error.step == "recovery-record" for error in retained.errors
-                    ):
-                        return retained
-                    retained_record = store.read(retained.recovery)
-                    if retained_record["phase"] not in preservation.TERMINAL:
-                        return retained
+                refused = self._retained_refusal(store)
+                if refused is not None:
+                    return refused
                 dirty = self._precondition()
                 original = self.get_position()
                 step = "target"
@@ -951,18 +1080,7 @@ class GitSync(BaseSync):
                         step = "submodule-update"
                         self._sync_submodules()
                     return result
-                if resolved.follows:
-                    branch_ref = f"refs/heads/{resolved.ref_name}"
-                    try:
-                        local = self._oid(branch_ref)
-                    except exc.CommandError:
-                        local = None
-                    if local is not None:
-                        if self._ancestor(resolved.revision, local):
-                            resolved = dataclasses.replace(resolved, revision=local)
-                        elif not self._ancestor(local, resolved.revision):
-                            msg = "target diverges; fast-forward required"
-                            raise ValueError(msg)  # noqa: TRY301 - return target error before capture
+                resolved = self._fast_forward_target(resolved)
                 target_tree = self._read_git(["ls-tree", "-r", "-z", resolved.revision])
                 if dirty and any(
                     entry.startswith("160000 ") for entry in target_tree.split("\0")
