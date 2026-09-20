@@ -43,6 +43,72 @@ class WorkingCopyPosition:
     switched: bool = False
 
 
+@dataclasses.dataclass(frozen=True)
+class SyncTarget:
+    """Select one backend ref; omission from a sync call follows the current ref."""
+
+    branch: str | None = None
+    tag: str | None = None
+    commit: str | None = None
+    rev: str | int | None = None
+    remote: str | None = None
+
+    def __post_init__(self) -> None:
+        """Reject ambiguous targets and option-like native arguments."""
+        selectors = (self.branch, self.tag, self.commit, self.rev)
+        if sum(value is not None for value in selectors) != 1:
+            msg = "target requires exactly one of branch, tag, commit, or rev"
+            raise ValueError(msg)
+        for name in ("branch", "tag", "commit", "rev", "remote"):
+            value = getattr(self, name)
+            if value is None:
+                continue
+            if name == "rev" and type(value) is int and value >= 0:
+                continue
+            if not isinstance(value, str):
+                msg = f"{name} must be a string" + (
+                    " or nonnegative integer" if name == "rev" else ""
+                )
+                raise TypeError(msg)
+            if not value or value.startswith("-") or "\0" in value:
+                msg = f"{name} must be nonempty without a leading '-' or NUL"
+                raise ValueError(msg)
+
+
+@dataclasses.dataclass(frozen=True)
+class SyncPolicy:
+    """Control configured-target drift and local changes independently."""
+
+    drift: t.Literal["keep", "follow", "warn"] = "follow"
+    dirty: t.Literal["abort", "preserve", "discard"] = "abort"
+
+    def __post_init__(self) -> None:
+        """Reject unsupported policies before repository access."""
+        if self.drift not in ("keep", "follow", "warn"):
+            msg = "drift must be keep, follow, or warn"
+            raise ValueError(msg)
+        if self.dirty not in ("abort", "preserve", "discard"):
+            msg = "dirty must be abort, preserve, or discard"
+            raise ValueError(msg)
+
+
+@dataclasses.dataclass(frozen=True)
+class RecoveryToken:
+    """Identify retained private recovery material until explicit release."""
+
+    id: str
+    backend: str
+    location: str
+
+
+@dataclasses.dataclass(frozen=True)
+class SyncConflict:
+    """Identify a conflicting relative path and its stable backend reason."""
+
+    path: str
+    reason: str
+
+
 @dataclasses.dataclass
 class SyncError:
     """An error encountered during a sync step.
@@ -106,6 +172,15 @@ class SyncResult:
 
     ok: bool = True
     errors: list[SyncError] = dataclasses.field(default_factory=list)
+
+    recovery: RecoveryToken | None = None
+    update_state: t.Literal["not-started", "completed", "failed", "unknown"] = (
+        "not-started"
+    )
+    preservation_state: t.Literal[
+        "not-needed", "saved", "restored", "conflicted", "failed", "unknown"
+    ] = "not-needed"
+    conflicts: tuple[SyncConflict, ...] = ()
 
     def __bool__(self) -> bool:
         """Return True if the sync succeeded without errors.
@@ -317,6 +392,28 @@ class BaseSync:
 
     def get_position(self) -> WorkingCopyPosition:
         """Read the backend's local checkout metadata without contacting a remote."""
+        raise NotImplementedError
+
+    def resolve_target(self, target: SyncTarget | None = None) -> WorkingCopyPosition:
+        """Resolve a target from available metadata without fetching or checking out."""
+        raise NotImplementedError
+
+    def is_dirty(self) -> bool:
+        """Read native local-change metadata without contacting a remote."""
+        raise NotImplementedError
+
+    def list_recoveries(self) -> tuple[SyncResult, ...]:
+        """List retained and interrupted operations without resuming their updates."""
+        raise NotImplementedError
+
+    def recover_changes(
+        self, token: RecoveryToken, *, destination: StrPath
+    ) -> SyncResult:
+        """Recover original state into a new destination while retaining the token."""
+        raise NotImplementedError
+
+    def release_changes(self, token: RecoveryToken) -> None:
+        """Release owned recovery material explicitly, without changing the checkout."""
         raise NotImplementedError
 
     def ensure_dir(self, *args: t.Any, **kwargs: t.Any) -> bool:
