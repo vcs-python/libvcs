@@ -784,9 +784,17 @@ class GitSync(BaseSync):
             results = store.discover()
             for result in results:
                 assert result.recovery is not None
+                if any(error.step == "recovery-record" for error in result.errors):
+                    continue
                 try:
                     self._owned_stash(result.recovery, store.read(result.recovery))
-                except (exc.LibVCSException, OSError, ValueError, KeyError) as error:
+                except (
+                    exc.LibVCSException,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                ) as error:
                     result.add_error("recovery-material", str(error), error)
             return results
 
@@ -1067,6 +1075,7 @@ class GitSync(BaseSync):
             ValueError,
             RuntimeError,
             KeyError,
+            TypeError,
         ) as error:
             result.add_error(step, str(error), error)
         return result
@@ -1109,6 +1118,7 @@ class GitSync(BaseSync):
             ValueError,
             RuntimeError,
             KeyError,
+            TypeError,
         ) as error:
             result.add_error("publication", str(error), error)
 
@@ -1163,6 +1173,7 @@ class GitSync(BaseSync):
             ValueError,
             RuntimeError,
             KeyError,
+            TypeError,
         ) as error:
             result.preservation_state = "failed"
             result.add_error("recovery", str(error), error)

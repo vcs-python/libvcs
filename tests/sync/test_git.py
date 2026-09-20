@@ -2126,3 +2126,44 @@ def test_preservation_damaged_record_retains_token(git_repo: GitSync) -> None:
     assert not result.ok
     assert result.recovery == saved.recovery
     assert result.update_state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "damage", ["phase-list", "phase-dict", "record-list", "result-errors"]
+)
+def test_preservation_schema_damage_returns_token(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+    damage: str,
+) -> None:
+    """Every public recovery operation reports malformed JSON schemas with its token."""
+    import json
+
+    _preservation_update(git_repo)
+    (git_repo.path / "local").write_text("local\n")
+    saved = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert saved.ok, saved.errors
+    assert saved.recovery is not None
+    path = pathlib.Path(saved.recovery.location) / "operation.json"
+    record = json.loads(path.read_text())
+    if damage == "record-list":
+        record = []
+    elif damage == "result-errors":
+        record["result"]["errors"] = {"malformed": True}
+    else:
+        record["phase"] = [] if damage == "phase-list" else {}
+    path.write_text(json.dumps(record))
+    before = git_repo.get_revision()
+    destination = tmp_path / "recovered"
+    for result in (
+        git_repo.list_recoveries()[0],
+        git_repo.update_repo(),
+        git_repo.recover_changes(saved.recovery, destination=destination),
+    ):
+        assert not result.ok
+        assert result.recovery == saved.recovery
+    assert git_repo.get_revision() == before
+    assert not destination.exists()
+    assert git_repo.run(
+        ["rev-parse", f"refs/libvcs/preserve/{saved.recovery.id}"]
+    ).strip()

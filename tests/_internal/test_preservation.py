@@ -103,3 +103,35 @@ def test_destination_and_inventory_boundaries(tmp_path: pathlib.Path) -> None:
     assert data["link"]["target"] == "file"
     (source / "file").write_bytes(b"changed")
     assert inventory(source) != data
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("phase", []),
+        ("phase", {}),
+        ("phase", 1),
+        ("result", {"update_state": []}),
+        ("result", {"preservation_state": {}}),
+        ("result", {"errors": {}}),
+        ("result", {"errors": [{"step": 1, "message": "bad"}]}),
+        ("result", {"conflicts": [{"path": [], "reason": "text"}]}),
+    ],
+)
+def test_store_rejects_record_schema_damage(
+    tmp_path: pathlib.Path,
+    field: str,
+    value: object,
+) -> None:
+    """Valid JSON with malformed field types fails as a record validation error."""
+    source = tmp_path / "source"
+    source.mkdir()
+    store = RecoveryStore(source, "git", source)
+    token, record = store.create(original={}, target={})
+    record[field] = value
+    store.write(token, record)
+    with pytest.raises(ValueError, match=r"record|result"):
+        store.read(token)
+    found = store.discover()[0]
+    assert not found.ok
+    assert found.recovery == token

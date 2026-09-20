@@ -184,7 +184,7 @@ class RecoveryStore:
         value: object = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(value, dict):
             msg = "invalid recovery record"
-            raise TypeError(msg)
+            raise ValueError(msg)  # noqa: TRY004 - persisted schema validation
         record: Record = value
         expected = {
             "version": 1,
@@ -198,13 +198,46 @@ class RecoveryStore:
         if any(record.get(key) != value for key, value in expected.items()):
             msg = "recovery record identity does not match"
             raise ValueError(msg)
-        if record.get("phase") not in PHASES or any(
-            not isinstance(record.get(key), dict)
-            for key in ("original", "target", "native", "result")
+        phase = record.get("phase")
+        if (
+            not isinstance(phase, str)
+            or phase not in PHASES
+            or any(
+                not isinstance(record.get(key), dict)
+                for key in ("original", "target", "native", "result")
+            )
         ):
             msg = "invalid recovery record phase or payload"
             raise ValueError(msg)
+        self._validate_result(record["result"])
         return record
+
+    @staticmethod
+    def _validate_result(data: Record) -> None:
+        for key, allowed in (
+            ("update_state", {"not-started", "completed", "failed", "unknown"}),
+            (
+                "preservation_state",
+                {"not-needed", "saved", "restored", "conflicted", "failed", "unknown"},
+            ),
+        ):
+            value = data.get(key, "unknown")
+            if not isinstance(value, str) or value not in allowed:
+                msg = "invalid persisted recovery result state"
+                raise ValueError(msg)
+        for key, fields in (
+            ("errors", {"step", "message"}),
+            ("conflicts", {"path", "reason"}),
+        ):
+            values = data.get(key, [])
+            if not isinstance(values, list) or any(
+                not isinstance(value, dict)
+                or set(value) != fields
+                or any(not isinstance(value[field], str) for field in fields)
+                for value in values
+            ):
+                msg = "invalid persisted recovery result details"
+                raise ValueError(msg)
 
     def validate_source(self, record: Record) -> None:
         """Refuse ownership inferred from a replaced checkout's old pathname."""
@@ -219,7 +252,7 @@ class RecoveryStore:
 
     def phase(self, token: RecoveryToken, record: Record, phase: str) -> None:
         """Persist a phase before starting its next native mutation."""
-        if phase not in PHASES:
+        if not isinstance(phase, str) or phase not in PHASES:
             msg = "invalid recovery phase"
             raise ValueError(msg)
         record["phase"] = phase
@@ -245,23 +278,9 @@ class RecoveryStore:
         """Expose interrupted records as uncertain outcomes, never as successes."""
         result = SyncResult(recovery=token)
         data = record["result"]
+        self._validate_result(data)
         update = data.get("update_state", "unknown")
         preservation = data.get("preservation_state", "unknown")
-        if update not in {
-            "not-started",
-            "completed",
-            "failed",
-            "unknown",
-        } or preservation not in {
-            "not-needed",
-            "saved",
-            "restored",
-            "conflicted",
-            "failed",
-            "unknown",
-        }:
-            msg = "invalid persisted recovery result"
-            raise ValueError(msg)
         result.update_state = update
         result.preservation_state = preservation
         for error in data.get("errors", []):
