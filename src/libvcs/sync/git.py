@@ -870,7 +870,8 @@ class GitSync(BaseSync):
         try:
             if target is None and self.rev is not None:
                 target = SyncTarget(rev=self.rev)
-            if not (self.path / ".git").exists():
+            created = not (self.path / ".git").exists()
+            if created:
                 step = "obtain"
                 self.obtain()
             store = self._store()
@@ -902,8 +903,8 @@ class GitSync(BaseSync):
                 dirty = self._precondition()
                 original = self.get_position()
                 step = "target"
-                # Keep/warn only inspect metadata: these policies never fetch.
-                if policy.drift != "follow":
+                # Existing keep/warn checkouts inspect metadata without fetching.
+                if not created and policy.drift != "follow":
                     resolved = self.resolve_target(target)
                     if original.revision != resolved.revision:
                         if policy.drift == "warn":

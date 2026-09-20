@@ -91,6 +91,9 @@ Clean recursive submodule updates reject ignored-file collisions in initialized
 children before any checkout advances. Target resolution refreshes every
 configured remote; clone and fetch honor command-scoped TLS configuration.
 
+New Git checkouts follow the configured target before keep or warn policy
+applies. Those policies continue to leave existing checkouts unchanged.
+
 #### Git command configuration precedes subcommands
 
 {meth}`~libvcs.cmd.git.Git.run` places global flags before the subcommand and

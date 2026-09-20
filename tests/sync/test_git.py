@@ -41,6 +41,26 @@ ProjectTestFactoryLazyKwargs = Callable[..., dict[str, str]]
 ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
 
 
+@pytest.mark.parametrize("drift", ["follow", "keep", "warn"])
+def test_initial_checkout_respects_target_before_drift_policy(
+    git_repo: GitSync,
+    tmp_path: pathlib.Path,
+    drift: t.Literal["follow", "keep", "warn"],
+) -> None:
+    """A new checkout starts at its configured target even under keep or warn."""
+    original = git_repo.get_revision()
+    git_repo.run(["tag", "pinned"])
+    git_repo.run(["commit", "--allow-empty", "-m", "advance"])
+    project = GitSync(url=git_repo.path.as_uri(), path=tmp_path / "new-checkout")
+    result = project.update_repo(
+        target=SyncTarget(tag="pinned"), policy=SyncPolicy(drift=drift)
+    )
+    assert result.ok, result.errors
+    position = project.get_position()
+    assert position.revision == original
+    assert not position.follows
+
+
 def test_obtain_reports_clone_failure(tmp_path: pathlib.Path) -> None:
     """A missing remote must fail at clone, before submodule or remote setup."""
     missing_remote = tmp_path / "missing-remote"
