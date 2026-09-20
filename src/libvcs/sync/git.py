@@ -851,7 +851,7 @@ class GitSync(BaseSync):
         remote_cmd = self.cmd.remotes.get(remote_name=name, default=None)
 
         if remote_cmd is not None and overwrite:
-            remote_cmd.set_url(url=url, check_returncode=True)
+            remote_cmd.set_url(url=url, push=push, check_returncode=True)
         else:
             self.cmd.remotes.add(name=name, url=url, check_returncode=True)
 

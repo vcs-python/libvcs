@@ -58,6 +58,10 @@ Git remote listing retains fetch URLs annotated with a partial-clone filter.
 A failed `GitSync.obtain()` reports the clone command and Git's original
 message before attempting submodule or remote setup.
 
+#### Keep fetch and push destinations separate
+
+`GitSync` configures a remote's push URL without replacing its fetch URL.
+
 #### Keep Subversion options before command targets
 
 `Svn.run()` places global options before command arguments, so an explicit

@@ -75,6 +75,26 @@ def test_git_position_distinguishes_attached_and_detached(git_repo: GitSync) -> 
     assert not position.follows
 
 
+def test_git_remotes_keep_fetch_and_push_destinations(
+    tmp_path: pathlib.Path,
+    git_remote_repo: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setting a separate push URL never changes where the repository fetches."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    fetch_url = git_remote_repo.as_uri()
+    push_url = (tmp_path / "push.git").as_uri()
+    repo = GitSync(
+        url=fetch_url,
+        path=tmp_path / "copy",
+        remotes={"origin": GitRemote("origin", fetch_url, push_url)},
+    )
+
+    repo.obtain()
+
+    assert repo.remote("origin") == GitRemote("origin", fetch_url, push_url)
+
+
 def test_git_sync_rejects_invalid_filter_before_destination(
     tmp_path: pathlib.Path,
 ) -> None:
