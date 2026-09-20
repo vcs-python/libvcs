@@ -15,6 +15,100 @@ from libvcs._internal.types import StrPath
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass(frozen=True)
+class WorkingCopyPosition:
+    """Describe a checkout using the backend's local metadata.
+
+    Attributes
+    ----------
+    revision : str
+        Full commit identifier or Subversion base revision.
+    ref_name : str
+        Branch, bookmark, detached commit, or checkout URL.
+    ref_kind : str
+        Meaning of ``ref_name`` in the backend.
+    follows : bool
+        Whether the selected ref follows new revisions on update.
+    mixed : bool
+        Whether Subversion entries have different base revisions.
+    switched : bool
+        Whether a Subversion subtree follows a different repository URL.
+    """
+
+    revision: str
+    ref_name: str
+    ref_kind: t.Literal["branch", "bookmark", "tag", "commit", "url"]
+    follows: bool
+    mixed: bool = False
+    switched: bool = False
+
+
+@dataclasses.dataclass(frozen=True)
+class SyncTarget:
+    """Select one backend ref; omission from a sync call follows the current ref."""
+
+    branch: str | None = None
+    tag: str | None = None
+    commit: str | None = None
+    rev: str | int | None = None
+    remote: str | None = None
+
+    def __post_init__(self) -> None:
+        """Reject ambiguous targets and option-like native arguments."""
+        selectors = (self.branch, self.tag, self.commit, self.rev)
+        if sum(value is not None for value in selectors) != 1:
+            msg = "target requires exactly one of branch, tag, commit, or rev"
+            raise ValueError(msg)
+        for name in ("branch", "tag", "commit", "rev", "remote"):
+            value = getattr(self, name)
+            if value is None:
+                continue
+            if name == "rev" and type(value) is int and value >= 0:
+                continue
+            if not isinstance(value, str):
+                msg = f"{name} must be a string" + (
+                    " or nonnegative integer" if name == "rev" else ""
+                )
+                raise TypeError(msg)
+            if not value or value.startswith("-") or "\0" in value:
+                msg = f"{name} must be nonempty without a leading '-' or NUL"
+                raise ValueError(msg)
+
+
+@dataclasses.dataclass(frozen=True)
+class SyncPolicy:
+    """Control configured-target drift and local changes independently."""
+
+    drift: t.Literal["keep", "follow", "warn"] = "follow"
+    dirty: t.Literal["abort", "preserve", "discard"] = "abort"
+
+    def __post_init__(self) -> None:
+        """Reject unsupported policies before repository access."""
+        if self.drift not in ("keep", "follow", "warn"):
+            msg = "drift must be keep, follow, or warn"
+            raise ValueError(msg)
+        if self.dirty not in ("abort", "preserve", "discard"):
+            msg = "dirty must be abort, preserve, or discard"
+            raise ValueError(msg)
+
+
+@dataclasses.dataclass(frozen=True)
+class RecoveryToken:
+    """Identify retained private recovery material until explicit release."""
+
+    id: str
+    backend: str
+    location: str
+
+
+@dataclasses.dataclass(frozen=True)
+class SyncConflict:
+    """Identify a conflicting relative path and its stable backend reason."""
+
+    path: str
+    reason: str
+
+
 @dataclasses.dataclass
 class SyncError:
     """An error encountered during a sync step.
@@ -78,6 +172,15 @@ class SyncResult:
 
     ok: bool = True
     errors: list[SyncError] = dataclasses.field(default_factory=list)
+
+    recovery: RecoveryToken | None = None
+    update_state: t.Literal["not-started", "completed", "failed", "unknown"] = (
+        "not-started"
+    )
+    preservation_state: t.Literal[
+        "not-needed", "saved", "restored", "conflicted", "failed", "unknown"
+    ] = "not-needed"
+    conflicts: tuple[SyncConflict, ...] = ()
 
     def __bool__(self) -> bool:
         """Return True if the sync succeeded without errors.
@@ -160,7 +263,7 @@ class BaseSync:
         url: str,
         path: StrPath,
         progress_callback: ProgressCallbackProtocol | None = None,
-        **kwargs: t.Any,
+        rev: str | None = None,
     ) -> None:
         r"""Initialize a tool to manage a local VCS Checkout, Clone, Copy, or Work tree.
 
@@ -212,8 +315,7 @@ class BaseSync:
         else:
             self.path = pathlib.Path(path)
 
-        if "rev" in kwargs:
-            self.rev = kwargs["rev"]
+        self.rev = rev
 
         # Register more schemes with urlparse for various version control
         # systems
@@ -287,6 +389,32 @@ class BaseSync:
             log_in_real_time=log_in_real_time or self.log_in_real_time or False,
             cwd=cwd,
         )
+
+    def get_position(self) -> WorkingCopyPosition:
+        """Read the backend's local checkout metadata without contacting a remote."""
+        raise NotImplementedError
+
+    def resolve_target(self, target: SyncTarget | None = None) -> WorkingCopyPosition:
+        """Resolve a target from available metadata without fetching or checking out."""
+        raise NotImplementedError
+
+    def is_dirty(self) -> bool:
+        """Read native local-change metadata without contacting a remote."""
+        raise NotImplementedError
+
+    def list_recoveries(self) -> tuple[SyncResult, ...]:
+        """List retained and interrupted operations without resuming their updates."""
+        raise NotImplementedError
+
+    def recover_changes(
+        self, token: RecoveryToken, *, destination: StrPath
+    ) -> SyncResult:
+        """Recover original state into a new destination while retaining the token."""
+        raise NotImplementedError
+
+    def release_changes(self, token: RecoveryToken) -> None:
+        """Release owned recovery material explicitly, without changing the checkout."""
+        raise NotImplementedError
 
     def ensure_dir(self, *args: t.Any, **kwargs: t.Any) -> bool:
         """Assure destination path exists. If not, create directories."""

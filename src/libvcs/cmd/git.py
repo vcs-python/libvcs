@@ -19,8 +19,39 @@ from libvcs._internal.run import (
     run,
 )
 from libvcs._internal.types import StrOrBytesPath, StrPath
+from libvcs.cmd.git_filter import (
+    Auto,
+    Combine,
+    GitFilter,
+    GitFilterInput,
+    coerce_filter,
+    filter_specs,
+)
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
+
+
+def _filter_flags(
+    value: GitFilterInput | None,
+    *,
+    allow_auto: bool,
+    combine_multiple: bool = False,
+) -> list[str]:
+    specs = filter_specs(value)
+    if not allow_auto and any(spec == Auto().to_spec() for spec in specs):
+        msg = "auto filter is not supported by this Git command"
+        raise ValueError(msg)
+    if combine_multiple and len(specs) > 1:
+        pending = [coerce_filter(spec) for spec in reversed(specs)]
+        filters: list[GitFilter] = []
+        while pending:
+            child = pending.pop()
+            if isinstance(child, Combine):
+                pending.extend(reversed(child.filters))
+            else:
+                filters.append(child)
+        specs = (Combine(tuple(filters)).to_spec(),)
+    return [f"--filter={spec}" for spec in specs]
 
 
 class Git:
@@ -207,7 +238,7 @@ class Git:
         no_pager : bool
             ``-P / --no-pager``
         config :
-            ``--config=<name>=<value>``
+            ``-c <name>=<value>`` for this command and its child processes.
         config_env :
             ``--config-env=<name>=<envvar>``
         timeout : float, optional
@@ -224,7 +255,7 @@ class Git:
         >>> git.run(['help'])
         "usage: git [...--version] [...--help] [-C <path>]..."
         """
-        cli_args: list[StrOrBytesPath] = ["git", *_normalize_command_args(args)]
+        cli_args: list[StrOrBytesPath] = ["git"]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path if cwd is None else cwd
@@ -262,7 +293,7 @@ class Git:
                 return v
 
             for k, v in config.items():
-                cli_args.extend(["--config", f"{k}={stringify(v)}"])
+                cli_args.extend(["-c", f"{k}={stringify(v)}"])
         if config_env is not None:
             cli_args.append(f"--config-env={config_env}")
         if git_dir is not None:
@@ -289,6 +320,8 @@ class Git:
             cli_args.append("--icase-pathspecs")
         if no_optional_locks is True:
             cli_args.append("--no-optional-locks")
+
+        cli_args.extend(_normalize_command_args(args))
 
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback
@@ -328,6 +361,7 @@ class Git:
         no_remote_submodules: bool | None = None,
         verbose: bool | None = None,
         quiet: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # Pass-through to run
         config: dict[str, t.Any] | None = None,
         log_in_real_time: bool = False,
@@ -367,8 +401,7 @@ class Git:
             local_flags.append(f"--template={template}")
         if separate_git_dir is not None:
             local_flags.append(f"--separate-git-dir={separate_git_dir!s}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(_filter_flags(_filter, allow_auto=True))
         if depth is not None:
             local_flags.extend(["--depth", str(depth)])
         if branch is not None:
@@ -477,7 +510,9 @@ class Git:
         show_forced_updates: bool | None = None,
         no_show_forced_updates: bool | None = None,
         negotiate_only: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # libvcs special behavior
+        config: dict[str, t.Any] | None = None,
         check_returncode: bool | None = None,
         **kwargs: t.Any,
     ) -> str:
@@ -503,8 +538,7 @@ class Git:
 
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(_filter_flags(_filter, allow_auto=True))
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -595,6 +629,7 @@ class Git:
             local_flags.append("--negotiate-only")
         return self.run(
             ["fetch", *local_flags, "--", *required_flags],
+            config=config,
             check_returncode=check_returncode,
         )
 
@@ -891,6 +926,7 @@ class Git:
         show_forced_updates: bool | None = None,
         no_show_forced_updates: bool | None = None,
         negotiate_only: bool | None = None,
+        _filter: GitFilterInput | None = None,
         # Pass-through to run
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -999,8 +1035,9 @@ class Git:
         #
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        if filter_specs(_filter):
+            msg = "git pull does not accept filters; call Git.fetch with _filter first"
+            raise ValueError(msg)
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -2532,6 +2569,8 @@ class GitSubmoduleCmd:
         rebase: bool | None = None,
         merge: bool | None = None,
         recursive: bool | None = None,
+        depth: int | None = None,
+        _filter: GitFilterInput | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
         check_returncode: bool | None = None,
@@ -2571,20 +2610,27 @@ class GitSubmoduleCmd:
         if force is True:
             local_flags.append("--force")
 
+        if recursive is True:
+            local_flags.append("--recursive")
+        if depth is not None:
+            local_flags.extend(["--depth", str(depth)])
+
         if checkout is True:
             local_flags.append("--checkout")
         elif rebase is True:
             local_flags.append("--rebase")
         elif merge is True:
             local_flags.append("--merge")
-        if (_filter := kwargs.pop("_filter", None)) is not None:
-            local_flags.append(f"--filter={_filter}")
+        local_flags.extend(
+            _filter_flags(_filter, allow_auto=False, combine_multiple=True)
+        )
 
         return self.run(
             "update",
             local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
 
@@ -4423,6 +4469,7 @@ class GitRemoteManager:
             (?P<url>.+?)            # URL: any characters (non-greedy) - supports spaces
             \s+                     # One or more whitespace characters
             \((?P<cmd_type>fetch|push)\)  # 'fetch' or 'push' in parentheses
+            (?:[ \t]+\[[^\]\r\n]*\])?   # Partial-clone filter annotation
             $                       # End of line
         """,
             re.VERBOSE | re.MULTILINE,
@@ -6869,10 +6916,16 @@ class GitWorktreeManager:
 
         Examples
         --------
-        >>> GitWorktreeManager(path=example_git_repo.path).add(
-        ...     path='/tmp/test-worktree-add', commit_ish='HEAD'
+        >>> worktree_path = tmp_path / "linked"
+        >>> _ = GitWorktreeManager(path=example_git_repo.path).add(
+        ...     path=worktree_path, commit_ish="HEAD", detach=True,
+        ...     check_returncode=True,
         ... )
-        "Preparing worktree (detached HEAD ...)..."
+        >>> (worktree_path / ".git").is_file()
+        True
+        >>> revision = Git(path=worktree_path).rev_parse(args="HEAD").strip()
+        >>> revision == example_git_repo.get_revision()
+        True
         """
         local_flags: list[str] = []
 
@@ -7300,14 +7353,14 @@ class GitNoteCmd:
 
         Examples
         --------
-        Use config to override editor (avoids interactive editor):
+        Set ``GIT_EDITOR`` for a noninteractive command:
 
         >>> result = GitNoteCmd(
         ...     path=example_git_repo.path,
         ...     object_sha='HEAD',
-        ... ).edit(allow_empty=True, config={'core.editor': 'true'})
-        >>> 'error' in result.lower() or result == ''
-        True
+        ... ).edit(allow_empty=True, env=dict(os.environ, GIT_EDITOR='true'))
+        >>> result
+        ''
         """
         local_flags: list[str] = []
 

@@ -19,24 +19,62 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+import json
 import logging
+import os
 import pathlib
 import re
 import typing as t
 from urllib import parse as urlparse
 
 from libvcs import exc
-from libvcs._internal.run import reject_option_like
+from libvcs._internal import preservation
+from libvcs._internal.run import ProgressCallbackProtocol
+from libvcs._internal.subprocess import SubprocessCommand
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
+from libvcs.cmd.git_filter import Auto, GitFilterInput, filter_specs
 from libvcs.sync.base import (
     BaseSync,
+    RecoveryToken,
+    SyncConflict,
+    SyncPolicy,
     SyncResult,
+    SyncTarget,
     VCSLocation,
+    WorkingCopyPosition,
     convert_pip_url as base_convert_pip_url,
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(frozen=True)
+class GitOptions:
+    """Backend-specific options for Git synchronization."""
+
+    depth: int | None = None
+    filter: GitFilterInput | None = None
+    tls_verify: bool = True
+
+    def __post_init__(self) -> None:
+        """Validate and snapshot Git options without running Git."""
+        if self.depth is not None and (
+            isinstance(self.depth, bool)
+            or not isinstance(self.depth, int)
+            or self.depth < 1
+        ):
+            msg = "depth must be a positive integer or None"
+            raise ValueError(msg)
+        if not isinstance(self.tls_verify, bool):
+            msg = "tls_verify must be a boolean"
+            raise TypeError(msg)
+        specs = filter_specs(self.filter)
+        if specs == ("auto",):
+            canonical_filter: GitFilterInput | None = Auto()
+        else:
+            canonical_filter = specs or None
+        object.__setattr__(self, "filter", canonical_filter)
 
 
 class GitStatusParsingException(exc.LibVCSException):
@@ -240,17 +278,17 @@ class GitSync(BaseSync):
     schemes = ("git+http", "git+https", "git+file")
     cmd: Git
     _remotes: GitSyncRemoteDict
+    options_type = GitOptions
 
     def __init__(
         self,
         *,
         url: str,
         path: StrPath,
+        options: GitOptions | None = None,
         remotes: GitRemotesArgs = None,
-        git_shallow: bool = False,
-        tls_verify: bool = False,
-        depth: int | None = None,
-        **kwargs: t.Any,
+        progress_callback: ProgressCallbackProtocol | None = None,
+        rev: str | None = None,
     ) -> None:
         """Local git repository.
 
@@ -259,17 +297,8 @@ class GitSync(BaseSync):
         url : str
             URL of repo
 
-        git_shallow : bool
-            Clone with history truncated to the latest commit (``--depth 1``,
-            default False)
-
-        depth : int, optional
-            Clone with history truncated to ``depth`` commits
-            (``git clone --depth N``). Takes precedence over ``git_shallow``.
-            Default None (full clone).
-
-        tls_verify : bool
-            Should certificate for https be checked (default False)
+        options : GitOptions, optional
+            Git-specific clone and transport configuration.
 
         Examples
         --------
@@ -306,9 +335,12 @@ class GitSync(BaseSync):
                }
             )
         """
-        self.git_shallow = git_shallow
-        self.tls_verify = tls_verify
-        self.depth = depth
+        if options is None:
+            options = GitOptions()
+        elif not isinstance(options, GitOptions):
+            msg = "options must be a GitOptions instance"
+            raise TypeError(msg)
+        self.options = options
 
         self._remotes: GitSyncRemoteDict
 
@@ -340,7 +372,12 @@ class GitSync(BaseSync):
                 fetch_url=url,
                 push_url=url,
             )
-        super().__init__(url=url, path=path, **kwargs)
+        super().__init__(
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            rev=rev,
+        )
 
         self.cmd = Git(path=path, progress_callback=self.progress_callback)
 
@@ -413,22 +450,26 @@ class GitSync(BaseSync):
         url = self.url
 
         self.log.info("Cloning.")
-        # An explicit depth wins; otherwise git_shallow keeps the depth-1
-        # behavior, and neither means a full clone.
-        clone_depth: int | None
-        if self.depth is not None:
-            clone_depth = self.depth
-        elif self.git_shallow:
-            clone_depth = 1
-        else:
-            clone_depth = None
         self.cmd.clone(
             url=url,
             progress=True,
-            depth=clone_depth,
-            config={"http.sslVerify": False} if self.tls_verify else None,
+            depth=self.options.depth,
+            _filter=self.options.filter,
+            config={"http.sslVerify": False} if not self.options.tls_verify else None,
             log_in_real_time=True,
+            check_returncode=True,
         )
+
+        submodule_filter = self.options.filter
+        if isinstance(self.options.filter, Auto):
+            tracked = self.cmd.run(["ls-files", "--stage", "-z"], check_returncode=True)
+            if any(entry.startswith("160000 ") for entry in tracked.split("\0")):
+                msg = (
+                    "git_filter: auto cannot be applied to repository submodules; "
+                    "the parent clone remains at the destination"
+                )
+                raise ValueError(msg)
+            submodule_filter = None
 
         self.log.info("Initializing submodules.")
         self.cmd.submodule.init(
@@ -437,281 +478,959 @@ class GitSync(BaseSync):
         self.cmd.submodule.update(
             init=True,
             recursive=True,
+            depth=self.options.depth,
+            _filter=submodule_filter,
+            config=({"http.sslVerify": False} if not self.options.tls_verify else None),
             log_in_real_time=True,
         )
 
         self.set_remotes(overwrite=True)
 
+    def _read_git(self, args: list[str], *, path: pathlib.Path | None = None) -> str:
+        """Read native metadata without mixing diagnostics into machine output."""
+        command = SubprocessCommand(
+            ["git", "-c", "protocol.allow=never", *args],
+            cwd=path or self.path,
+            env={
+                **{
+                    key: value
+                    for key, value in os.environ.items()
+                    if key != "GIT_CONFIG"
+                },
+                "GIT_NO_LAZY_FETCH": "1",
+                "GIT_TERMINAL_PROMPT": "0",
+            },
+        )
+        completed = command.run(capture_output=True, check=False)
+        if completed.returncode:
+            raise exc.CommandError(
+                cmd=["git", *args],
+                returncode=completed.returncode,
+                output=os.fsdecode(completed.stderr),
+            )
+        return os.fsdecode(completed.stdout)
+
+    def _oid(self, ref: str) -> str:
+        return self._read_git(
+            ["rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}"]
+        ).strip()
+
+    def resolve_target(self, target: SyncTarget | None = None) -> WorkingCopyPosition:
+        """Resolve available local refs without fetching or changing the checkout."""
+        if target is None and self.rev is not None:
+            target = SyncTarget(rev=self.rev)
+        current = self.get_position()
+        if target is None:
+            if not current.follows:
+                return current
+            try:
+                oid = self._oid("@{upstream}")
+            except exc.CommandError:
+                oid = self._oid(f"refs/remotes/origin/{current.ref_name}")
+            return dataclasses.replace(current, revision=oid)
+        if target.branch is not None:
+            branch = target.branch
+            self._read_git(["check-ref-format", f"refs/heads/{branch}"])
+            remote = target.remote or "origin"
+            try:
+                oid = self._oid(f"refs/remotes/{remote}/{branch}")
+            except exc.CommandError:
+                if target.remote is not None:
+                    raise
+                oid = self._oid(f"refs/heads/{branch}")
+            return WorkingCopyPosition(oid, branch, "branch", follows=True)
+        if target.tag is not None:
+            return WorkingCopyPosition(
+                self._oid(f"refs/tags/{target.tag}"), target.tag, "tag", follows=False
+            )
+        if target.commit is not None:
+            oid = self._oid(target.commit)
+            return WorkingCopyPosition(oid, oid, "commit", follows=False)
+        rev = str(target.rev)
+        for prefix, kind in (("refs/heads/", "branch"), ("refs/tags/", "tag")):
+            try:
+                self._oid(prefix + rev)
+            except exc.CommandError:
+                continue
+            return self.resolve_target(
+                SyncTarget(branch=rev, remote=target.remote)
+                if kind == "branch"
+                else SyncTarget(tag=rev)
+            )
+        if rev.startswith("origin/"):
+            return self.resolve_target(
+                SyncTarget(branch=rev.removeprefix("origin/"), remote="origin")
+            )
+        oid = self._oid(rev)
+        return WorkingCopyPosition(oid, oid, "commit", follows=False)
+
+    def _dirty_paths(self) -> tuple[str, ...]:
+        entries = iter(
+            self._read_git(
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"]
+            ).split("\0")
+        )
+        paths = []
+        for entry in entries:
+            if not entry:
+                continue
+            kind = entry[0]
+            if kind in "12u":
+                fields = entry.split(" ", {"1": 8, "2": 9, "u": 10}[kind])
+                if len(fields) != {"1": 9, "2": 10, "u": 11}[kind]:
+                    raise GitStatusParsingException(entry)
+                if kind == "u" or fields[2] != "N...":
+                    msg = "unmerged index or submodule changes are unsupported"
+                    raise ValueError(msg)
+                paths.append(fields[-1])
+                if kind == "2":
+                    original = next(entries, "")
+                    if not original:
+                        raise GitStatusParsingException(entry)
+                    paths.append(original)
+            elif kind == "?":
+                paths.append(entry[2:])
+            else:
+                raise GitStatusParsingException(entry)
+        return tuple(paths)
+
+    def is_dirty(self) -> bool:
+        """Read tracked and untracked changes; ignored output is not ordinary dirt."""
+        return bool(self._dirty_paths())
+
+    def _store(self) -> preservation.RecoveryStore:
+        common = pathlib.Path(
+            self._read_git(
+                ["rev-parse", "--path-format=absolute", "--git-common-dir"]
+            ).strip()
+        )
+        return preservation.RecoveryStore(self.path, "git", common)
+
+    def _native_precondition(self) -> None:
+        root = pathlib.Path(self._read_git(["rev-parse", "--show-toplevel"]).strip())
+        if root != self.path.absolute():
+            msg = "Git synchronization requires the working-copy root"
+            raise ValueError(msg)
+        for name in (
+            "index.lock",
+            "MERGE_HEAD",
+            "CHERRY_PICK_HEAD",
+            "REVERT_HEAD",
+            "rebase-merge",
+            "rebase-apply",
+            "sequencer",
+        ):
+            path = pathlib.Path(
+                self._read_git(["rev-parse", "--git-path", name]).strip()
+            )
+            if not path.is_absolute():
+                path = self.path / path
+            if path.exists():
+                msg = f"native Git activity prevents synchronization: {name}"
+                raise ValueError(msg)
+
+    def _precondition(self) -> tuple[str, ...]:
+        self._native_precondition()
+        dirty = self._dirty_paths()
+        tracked = self._read_git(["ls-files", "--stage", "-z"])
+        submodules = {
+            self.path / entry.split("\t", 1)[1]
+            for entry in tracked.split("\0")
+            if entry.startswith("160000 ")
+        }
+        if submodules and dirty:
+            msg = "dirty submodule scope cannot be preserved"
+            raise ValueError(msg)
+        for directory, dirs, files in os.walk(self.path, followlinks=False):
+            current = pathlib.Path(directory)
+            if current in submodules:
+                dirs[:] = []
+                continue
+            if current != self.path and any(
+                name in dirs or name in files for name in (".git", ".hg", ".svn")
+            ):
+                msg = "nested repository prevents synchronization"
+                raise ValueError(msg)
+            dirs[:] = [name for name in dirs if name not in (".git", ".hg", ".svn")]
+        return dirty
+
+    def _guard_submodules(self, revision: str) -> None:
+        """Guard initialized descendants before recursive checkout writes."""
+        tree = self._read_git(["ls-tree", "-r", "-z", revision])
+        for entry in tree.split("\0"):
+            if not entry.startswith("160000 "):
+                continue
+            metadata, relative = entry.split("\t", 1)
+            desired = metadata.split(" ")[2]
+            path = preservation.safe_path(self.path / relative)
+            if not (path / ".git").exists():
+                continue
+            child = GitSync(url=self.url, path=path, options=self.options)
+            if child._precondition():
+                msg = f"dirty submodule prevents recursive update: {relative}"
+                raise ValueError(msg)
+            original = child.get_position()
+            config = {"http.sslVerify": False} if not self.options.tls_verify else None
+            try:
+                child._oid(desired)
+            except exc.CommandError:
+                child.cmd.run(["fetch"], config=config, check_returncode=True)
+                try:
+                    child._oid(desired)
+                except exc.CommandError:
+                    remote = "origin"
+                    if original.ref_kind == "branch":
+                        with contextlib.suppress(exc.CommandError):
+                            remote = child._read_git(
+                                [
+                                    "config",
+                                    "--get",
+                                    f"branch.{original.ref_name}.remote",
+                                ]
+                            ).strip()
+                    # Native submodule update also fetches a pinned commit
+                    # directly when no advertised ref reaches it.
+                    child.cmd.run(
+                        ["fetch", "--", remote, desired],
+                        config=config,
+                        check_returncode=True,
+                    )
+                    child._oid(desired)
+            target = WorkingCopyPosition(desired, desired, "commit", follows=False)
+            try:
+                child._ignored_collisions(original, target, dirty=False)
+                child._guard_submodules(desired)
+            except ValueError as error:
+                msg = f"submodule {relative}: {error}"
+                raise ValueError(msg) from error
+
+    def _sync_submodules(self) -> None:
+        self._guard_submodules(self._oid("HEAD"))
+        self.cmd.submodule.update(
+            recursive=True,
+            init=True,
+            _filter=self.options.filter,
+            config={"http.sslVerify": False} if not self.options.tls_verify else None,
+            log_in_real_time=True,
+            check_returncode=True,
+        )
+
+    def _ignored_collisions(
+        self, original: WorkingCopyPosition, target: WorkingCopyPosition, *, dirty: bool
+    ) -> None:
+        ignored = self._read_git(
+            ["ls-files", "--others", "--ignored", "--exclude-standard", "-z"]
+        ).split("\0")
+        changed = self._read_git(
+            [
+                "diff",
+                "--name-only",
+                "--diff-filter=ACMRT",
+                "--no-renames",
+                "-z",
+                original.revision,
+                target.revision,
+                "--",
+            ]
+        ).split("\0")
+        if dirty:
+            changed += self._read_git(
+                ["ls-tree", "--name-only", "-r", "-z", original.revision]
+            ).split("\0")
+        for path in ignored:
+            if path and any(
+                name
+                and (
+                    path == name
+                    or path.startswith(name + "/")
+                    or name.startswith(path + "/")
+                )
+                for name in changed
+            ):
+                msg = f"ignored path obstructs target: {path}"
+                raise ValueError(msg)
+
+    def _owned_stash(self, token: RecoveryToken, record: preservation.Record) -> str:
+        ref = f"refs/libvcs/preserve/{token.id}"
+        saved = record["native"].get("oid")
+        if saved:
+            if self._oid(ref) != saved:
+                msg = "owned Git preservation ref changed"
+                raise ValueError(msg)
+            candidates = [saved]
+        else:
+            entries = self._read_git(["stash", "list", "--format=%H%x00%gs%x00"]).split(
+                "\0"
+            )
+            candidates = [
+                entries[index].strip()
+                for index in range(0, len(entries) - 1, 2)
+                if entries[index + 1].endswith(": " + record["marker"])
+            ]
+        if len(candidates) != 1:
+            msg = "owned Git stash is missing or ambiguous"
+            raise ValueError(msg)
+        oid = candidates[0]
+        try:
+            pinned = self._oid(ref)
+        except exc.CommandError:
+            pinned = None
+        if pinned is not None and pinned != oid:
+            msg = "owned Git preservation ref changed"
+            raise ValueError(msg)
+        subject = self._read_git(["show", "-s", "--format=%s", oid]).strip()
+        if (
+            not subject.endswith(": " + record["marker"])
+            or self._oid(f"{oid}^1") != record["original"]["revision"]
+        ):
+            msg = "Git stash does not match capture identity"
+            raise ValueError(msg)
+        return str(oid)
+
+    def _pin_stash(self, token: RecoveryToken, record: preservation.Record) -> str:
+        oid = self._owned_stash(token, record)
+        ref = f"refs/libvcs/preserve/{token.id}"
+        try:
+            existing = self._oid(ref)
+        except exc.CommandError:
+            self.cmd.run(
+                ["update-ref", ref, oid, "0" * len(oid)], check_returncode=True
+            )
+        else:
+            if existing != oid:
+                msg = "owned preservation ref has a different object"
+                raise ValueError(msg)
+        record["native"] = {"oid": oid, "ref": ref}
+        return oid
+
+    def _conflicts(self, oid: str) -> tuple[SyncConflict, ...]:
+        unmerged = self._read_git(["ls-files", "--unmerged", "-z"])
+        paths: dict[str, str] = {}
+        for entry in unmerged.split("\0"):
+            if not entry:
+                continue
+            metadata, path = entry.split("\t", 1)
+            blob = metadata.split(" ")[1]
+            binary = "\0" in self._read_git(["cat-file", "blob", blob])
+            paths[path] = "binary" if binary else paths.get(path, "text")
+        try:
+            unknown_tree = self._oid(f"{oid}^3")
+        except exc.CommandError:
+            pass
+        else:
+            unknown = self._read_git(
+                ["ls-tree", "--name-only", "-r", "-z", unknown_tree]
+            ).split("\0")
+            tracked = set(self._read_git(["ls-files", "-z"]).split("\0"))
+            paths.update(
+                {
+                    path: "untracked-obstruction"
+                    for path in unknown
+                    if path and path in tracked
+                }
+            )
+        return tuple(
+            SyncConflict(path, reason) for path, reason in sorted(paths.items())
+        )
+
+    def list_recoveries(self) -> tuple[SyncResult, ...]:
+        """Find retained and interrupted saves without resuming an update."""
+        store = self._store()
+        with store.lock():
+            results = store.discover()
+            for result in results:
+                assert result.recovery is not None
+                if any(error.step == "recovery-record" for error in result.errors):
+                    continue
+                try:
+                    self._owned_stash(result.recovery, store.read(result.recovery))
+                except (
+                    exc.LibVCSException,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                ) as error:
+                    result.add_error("recovery-material", str(error), error)
+            return results
+
+    def _retained_refusal(self, store: preservation.RecoveryStore) -> SyncResult | None:
+        """Inspect interrupted owners while the caller holds the common lock."""
+        result = SyncResult()
+        try:
+            active = store.repository / ".libvcs-preserve-active.json"
+            if active.exists():
+                preservation.safe_path(active)
+                owner = json.loads(active.read_text())
+                owner_store = preservation.RecoveryStore(
+                    pathlib.Path(owner["source"]), "git", store.repository
+                )
+                owner_token = RecoveryToken(**owner["token"])
+                result.recovery = owner_token
+                result.update_state = "unknown"
+                result.preservation_state = "unknown"
+                owner_record = owner_store.read(owner_token)
+                if owner_record["phase"] not in preservation.TERMINAL:
+                    return owner_store.snapshot(owner_token, owner_record)
+                result = SyncResult()
+            for retained in store.discover():
+                assert retained.recovery is not None
+                if any(error.step == "recovery-record" for error in retained.errors):
+                    return retained
+                result = retained
+                retained_record = store.read(retained.recovery)
+                if retained_record["phase"] not in preservation.TERMINAL:
+                    return retained
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.add_error("precondition", str(error), error)
+            return result
+        return None
+
+    def _fast_forward_target(self, target: WorkingCopyPosition) -> WorkingCopyPosition:
+        """Retain local commits and reject divergence before any checkout writes."""
+        if target.follows:
+            try:
+                local = self._oid(f"refs/heads/{target.ref_name}")
+            except exc.CommandError:
+                return target
+            if self._ancestor(target.revision, local):
+                return dataclasses.replace(target, revision=local)
+            if not self._ancestor(local, target.revision):
+                msg = "target diverges; fast-forward required"
+                raise ValueError(msg)
+        return target
+
+    def create_worktree(
+        self,
+        destination: StrPath,
+        *,
+        target: SyncTarget,
+        detach: bool = False,
+        lock: bool = False,
+        lock_reason: str | None = None,
+        set_remotes: bool = False,
+    ) -> SyncResult:
+        """Create a linked checkout at its resolved target under shared ownership.
+
+        The destination must be absent. Branches advance only by fast-forward,
+        retain local commits, and cannot be checked out elsewhere. Parent working
+        files remain untouched. Fetch, creation, submodules, and lock metadata
+        share one repository lock; callers must exclude external native writers.
+
+        Native failures may leave refs or a partial checkout. An unknown update
+        state means creation began but did not report completion; a completed
+        update with errors means subsequent submodule or lock setup failed.
+        ``lock_reason`` implies ``lock=True``.
+        """
+        result = SyncResult()
+        step = "precondition"
+        try:
+            store = self._store()
+            with store.lock():
+                refused = self._retained_refusal(store)
+                if refused is not None:
+                    return refused
+                self._native_precondition()
+                dest = preservation.safe_path(pathlib.Path(destination))
+                # Native add -B can move a branch before rejecting an occupied path.
+                if dest.exists():
+                    msg = f"worktree destination already exists: {dest}"
+                    raise ValueError(msg)  # noqa: TRY301 - refuse before native mutation
+                if set_remotes:
+                    step = "set-remotes"
+                    self.set_remotes(overwrite=True)
+                step = "fetch"
+                self.cmd.fetch(
+                    _all=True,
+                    prune=True,
+                    config={"http.sslVerify": False}
+                    if not self.options.tls_verify
+                    else None,
+                    check_returncode=True,
+                )
+                step = "target"
+                resolved = self.resolve_target(target)
+                args = ["worktree", "add"]
+                if resolved.follows and not detach:
+                    resolved = self._fast_forward_target(resolved)
+                    try:
+                        self._oid(f"refs/heads/{resolved.ref_name}")
+                    except exc.CommandError:
+                        args += ["-b", resolved.ref_name]
+                    else:
+                        args += ["-B", resolved.ref_name]
+                else:
+                    args += ["--detach"]
+                args += ["--", str(dest), resolved.revision]
+                step = "worktree-add"
+                result.update_state = "unknown"
+                self.cmd.run(
+                    args,
+                    config={"http.sslVerify": False}
+                    if not self.options.tls_verify
+                    else None,
+                    check_returncode=True,
+                )
+                result.update_state = "completed"
+                if lock or lock_reason is not None:
+                    step = "worktree-lock"
+                    lock_args = ["worktree", "lock"]
+                    if lock_reason is not None:
+                        lock_args += ["--reason", lock_reason]
+                    self.cmd.run([*lock_args, "--", str(dest)], check_returncode=True)
+                step = "submodule-update"
+                GitSync(
+                    url=self.url, path=dest, options=self.options
+                )._sync_submodules()
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.add_error(step, str(error), error)
+        return result
+
     def update_repo(
         self,
         set_remotes: bool = False,
         *args: t.Any,
+        target: SyncTarget | None = None,
+        policy: SyncPolicy | None = None,
+        detach: bool = False,
         **kwargs: t.Any,
     ) -> SyncResult:
-        """Pull latest changes from git remote.
+        """Follow targets by fast-forward; abort on dirt unless explicitly permitted.
 
-        .. todo::
+        Preserve retains an owned stash, even after indexed restoration. Recovery
+        needs the retained local object database. Callers must exclude other VCS
+        writers and editors throughout this operation.
 
-            Honor ``depth`` on update by deepening or unshallowing the existing
-            checkout when the requested depth differs from what is on disk.
-            Tracked in https://github.com/vcs-python/libvcs/issues/532. Edges to
-            handle: ``git fetch --depth N`` against a full checkout truncates it
-            to shallow, and ``git fetch --unshallow`` against a complete repo is
-            a fatal error (guard with ``git rev-parse --is-shallow-repository``).
-
-        Parameters
-        ----------
-        set_remotes : bool
-            If True, configure remotes before updating.
-
-        Returns
-        -------
-        SyncResult
-            Result of the sync operation, with any errors recorded.
+        ``detach=True`` checks out the resolved target without attaching its
+        branch. Resolution happens after fetching, under the same ownership lock.
         """
         result = SyncResult()
-        self.ensure_dir()
-
-        if not pathlib.Path(self.path / ".git").is_dir():
-            try:
+        policy = policy or SyncPolicy()
+        step = "precondition"
+        try:
+            if target is None and self.rev is not None:
+                target = SyncTarget(rev=self.rev)
+            created = not (self.path / ".git").exists()
+            if created:
+                step = "obtain"
                 self.obtain()
-            except exc.CommandError as e:
-                self.log.exception("Failed to obtain repository")
-                result.add_error("obtain", str(e), exception=e)
-                return result
-            return self.update_repo(set_remotes=set_remotes)
-
-        if set_remotes:
-            try:
-                self.set_remotes(overwrite=True)
-            except exc.CommandError as e:
-                self.log.exception("Failed to set remotes")
-                result.add_error("set-remotes", str(e), exception=e)
-                return result
-
-        # Get requested revision or tag
-        url, git_tag = self.url, getattr(self, "rev", None)
-
-        if git_tag:
-            try:
-                reject_option_like(str(git_tag), name="rev")
-            except exc.LibVCSException as e:
-                result.add_error("rev", str(e), exception=e)
-                return result
-
-        if not git_tag:
-            self.log.debug("No git revision set, defaulting to origin/master")
-            try:
-                symref = self.cmd.symbolic_ref(
-                    name="HEAD",
-                    short=True,
+            store = self._store()
+            with store.lock():
+                active = store.repository / ".libvcs-preserve-active.json"
+                refused = self._retained_refusal(store)
+                if refused is not None:
+                    return refused
+                dirty = self._precondition()
+                original = self.get_position()
+                step = "target"
+                # Existing keep/warn checkouts inspect metadata without fetching.
+                if not created and policy.drift != "follow":
+                    resolved = self.resolve_target(target)
+                    if original.revision != resolved.revision:
+                        if policy.drift == "warn":
+                            logger.warning(
+                                "configured Git target drifted",
+                                extra={
+                                    "vcs_event": "target_drift",
+                                    "vcs_type": "git",
+                                    "vcs_repo_path": str(self.path),
+                                },
+                            )
+                        return result
+                    return result
+                if dirty and policy.dirty == "abort":
+                    result.add_error("dirty", "working copy has local changes")
+                    return result
+                if set_remotes:
+                    step = "set-remotes"
+                    self.set_remotes(overwrite=True)
+                step = "fetch"
+                self.cmd.fetch(
+                    _all=True,
+                    prune=True,
+                    config={"http.sslVerify": False}
+                    if not self.options.tls_verify
+                    else None,
                     check_returncode=True,
                 )
-                git_tag = symref.rstrip() if symref else "origin/master"
-            except exc.CommandError as e:
-                self.log.exception("Failed to determine current branch")
-                result.add_error("symbolic-ref", str(e), exception=e)
-                return result
-        self.log.debug("git_tag: %s", git_tag)
+                step = "target"
+                resolved = self.resolve_target(target)
+                if detach and resolved.follows:
+                    resolved = dataclasses.replace(
+                        resolved,
+                        ref_name=resolved.revision,
+                        ref_kind="commit",
+                        follows=False,
+                    )
+                if not self._drifted(original, resolved):
+                    if not dirty:
+                        step = "submodule-update"
+                        self._sync_submodules()
+                    return result
+                resolved = self._fast_forward_target(resolved)
+                target_tree = self._read_git(["ls-tree", "-r", "-z", resolved.revision])
+                if dirty and any(
+                    entry.startswith("160000 ") for entry in target_tree.split("\0")
+                ):
+                    msg = "target contains unsupported submodules"
+                    raise ValueError(msg)  # noqa: TRY301 - reject before capture
+                self._ignored_collisions(original, resolved, dirty=bool(dirty))
+                if not dirty:
+                    step = "submodule-preflight"
+                    self._guard_submodules(resolved.revision)
+                token: RecoveryToken | None = None
+                record: preservation.Record | None = None
+                if dirty and policy.dirty == "preserve":
+                    step = "capture"
+                    original_data = dataclasses.asdict(original)
+                    original_data["status_paths"] = dirty
+                    original_data["config"] = self._read_git(
+                        ["config", "--local", "--list", "-z"]
+                    )
+                    token, record = store.create(
+                        original=original_data, target=dataclasses.asdict(resolved)
+                    )
+                    result.recovery = token
+                    result.preservation_state = "unknown"
+                    try:
+                        preservation.atomic_record(
+                            active,
+                            {
+                                "source": str(store.source),
+                                "token": dataclasses.asdict(token),
+                            },
+                        )
+                        self.cmd.run(
+                            [
+                                "stash",
+                                "push",
+                                "--include-untracked",
+                                "--message",
+                                record["marker"],
+                            ],
+                            check_returncode=True,
+                        )
+                        self._pin_stash(token, record)
+                        result.preservation_state = "saved"
+                        store.phase(token, record, "sealed")
+                    except (
+                        exc.LibVCSException,
+                        OSError,
+                        ValueError,
+                        RuntimeError,
+                        KeyError,
+                    ) as error:
+                        result.add_error(step, str(error), error)
+                        try:
+                            self._pin_stash(token, record)
+                            result.preservation_state = "saved"
+                        except (
+                            exc.LibVCSException,
+                            OSError,
+                            ValueError,
+                            RuntimeError,
+                            KeyError,
+                        ) as inspection:
+                            result.add_error(
+                                "capture-inspection", str(inspection), inspection
+                            )
+                        self._finish_git(store, token, record, result)
+                        return result
+                try:
+                    step = "update"
+                    if token is not None and record is not None:
+                        store.phase(token, record, "updating")
+                    if dirty and policy.dirty == "discard":
+                        self.cmd.run(["reset", "--hard", "HEAD"], check_returncode=True)
+                        self.cmd.run(["clean", "-fd"], check_returncode=True)
+                    step = "update"
+                    result.update_state = "unknown"
+                    if resolved.follows:
+                        if (
+                            original.ref_kind != "branch"
+                            or original.ref_name != resolved.ref_name
+                        ):
+                            try:
+                                self._oid(f"refs/heads/{resolved.ref_name}")
+                            except exc.CommandError:
+                                self.cmd.run(
+                                    [
+                                        "checkout",
+                                        "--no-overwrite-ignore",
+                                        "-b",
+                                        resolved.ref_name,
+                                        resolved.revision,
+                                        "--",
+                                    ],
+                                    check_returncode=True,
+                                )
+                            else:
+                                self.cmd.run(
+                                    [
+                                        "checkout",
+                                        "--no-overwrite-ignore",
+                                        resolved.ref_name,
+                                        "--",
+                                    ],
+                                    check_returncode=True,
+                                )
+                        self.cmd.run(
+                            [
+                                "merge",
+                                "--ff-only",
+                                "--no-overwrite-ignore",
+                                resolved.revision,
+                            ],
+                            check_returncode=True,
+                        )
+                    else:
+                        self.cmd.run(
+                            [
+                                "checkout",
+                                "--no-overwrite-ignore",
+                                "--detach",
+                                resolved.revision,
+                            ],
+                            check_returncode=True,
+                        )
+                    result.update_state = "completed"
+                    if not dirty:
+                        step = "submodule-update"
+                        self._sync_submodules()
+                except (
+                    exc.LibVCSException,
+                    OSError,
+                    ValueError,
+                    RuntimeError,
+                    KeyError,
+                ) as error:
+                    if result.update_state == "unknown":
+                        result.update_state = "failed"
+                    result.add_error(step, str(error), error)
+                if token is not None and record is not None:
+                    try:
+                        store.phase(token, record, "inspecting")
+                        self.cmd.run(
+                            ["stash", "apply", "--index", record["native"]["oid"]],
+                            check_returncode=True,
+                        )
+                        result.preservation_state = "restored"
+                    except (
+                        exc.LibVCSException,
+                        OSError,
+                        ValueError,
+                        RuntimeError,
+                        KeyError,
+                    ) as error:
+                        result.preservation_state = "failed"
+                        result.add_error("restore", str(error), error)
+                    try:
+                        result.conflicts = self._conflicts(record["native"]["oid"])
+                        if result.conflicts:
+                            result.preservation_state = "conflicted"
+                            result.add_error(
+                                "conflicts",
+                                "indexed restoration has unresolved conflicts",
+                            )
+                    except (
+                        exc.LibVCSException,
+                        OSError,
+                        ValueError,
+                        RuntimeError,
+                        KeyError,
+                    ) as error:
+                        result.preservation_state = "unknown"
+                        result.add_error("inspection", str(error), error)
+                    self._finish_git(store, token, record, result)
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.add_error(step, str(error), error)
+        return result
 
-        self.log.info("Updating to '%s'.", git_tag)
+    @staticmethod
+    def _drifted(original: WorkingCopyPosition, target: WorkingCopyPosition) -> bool:
+        return (
+            original.revision != target.revision
+            or (
+                target.follows
+                and (
+                    original.ref_kind != "branch"
+                    or original.ref_name != target.ref_name
+                )
+            )
+            or (not target.follows and original.follows)
+        )
 
-        # Get head sha
+    def _ancestor(self, older: str, newer: str) -> bool:
         try:
-            head_sha = self.cmd.rev_list(
-                commit="HEAD",
-                max_count=1,
+            self._read_git(["merge-base", "--is-ancestor", older, newer])
+        except exc.CommandError as error:
+            if error.returncode != 1:
+                raise
+            return False
+        return True
+
+    @staticmethod
+    def _finish_git(
+        store: preservation.RecoveryStore,
+        token: RecoveryToken,
+        record: preservation.Record,
+        result: SyncResult,
+    ) -> None:
+        try:
+            store.finish(token, record, result)
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.add_error("publication", str(error), error)
+
+    def recover_changes(
+        self, token: RecoveryToken, *, destination: StrPath
+    ) -> SyncResult:
+        """Recover the original base and indexed changes using retained local objects.
+
+        The destination is independent; missing source objects fail recovery without
+        fetching from a remote. The token remains available for another recovery.
+        """
+        result = SyncResult(recovery=token, preservation_state="unknown")
+        try:
+            store = self._store()
+            with store.lock():
+                record = store.read(token)
+                store.validate_source(record)
+                dest = store.destination(destination)
+                oid = self._owned_stash(token, record)
+                # Verify the full object closure offline before any destination write.
+                self._read_git(["rev-list", "--objects", "--missing=error", oid])
+                self._read_git(["init", str(dest)], path=dest.parent)
+                self._read_git(
+                    [
+                        "-c",
+                        "protocol.file.allow=always",
+                        "fetch",
+                        "--no-tags",
+                        str(store.repository),
+                        oid,
+                    ],
+                    path=dest,
+                )
+                original = record["original"]
+                checkout = ["checkout", "--no-overwrite-ignore"]
+                if original["ref_kind"] == "branch":
+                    checkout += ["-b", original["ref_name"]]
+                else:
+                    checkout += ["--detach"]
+                self._read_git([*checkout, original["revision"]], path=dest)
+                self._read_git(["stash", "apply", "--index", oid], path=dest)
+                for item in original["config"].split("\0"):
+                    key, separator, value = item.partition("\n")
+                    if separator and (
+                        key.startswith(("remote.", f"branch.{original['ref_name']}."))
+                    ):
+                        self._read_git(["config", "--add", key, value], path=dest)
+                result.preservation_state = "restored"
+        except (
+            exc.LibVCSException,
+            OSError,
+            ValueError,
+            RuntimeError,
+            KeyError,
+            TypeError,
+        ) as error:
+            result.preservation_state = "failed"
+            result.add_error("recovery", str(error), error)
+        return result
+
+    def release_changes(self, token: RecoveryToken) -> None:
+        """Release the exact owned ref and stash entry, retaining ambiguous material."""
+        store = self._store()
+        with store.lock():
+            record = store.read(token)
+            store.validate_source(record)
+            oid = self._owned_stash(token, record)
+            entries = self._read_git(["stash", "list", "--format=%H%x00%gs%x00"]).split(
+                "\0"
+            )
+            matches = [
+                index // 2
+                for index in range(0, len(entries) - 1, 2)
+                if entries[index].strip() == oid
+                and entries[index + 1].endswith(": " + record["marker"])
+            ]
+            if len(matches) > 1:
+                msg = "ambiguous owned stash entries"
+                raise ValueError(msg)
+            if matches:
+                selector = f"stash@{{{matches[0]}}}"
+                if self._oid(selector) != oid:
+                    msg = "owned stash entry changed during release"
+                    raise ValueError(msg)
+                self.cmd.run(["stash", "drop", selector], check_returncode=True)
+            try:
+                pinned = self._oid(f"refs/libvcs/preserve/{token.id}")
+            except exc.CommandError:
+                pinned = None
+            if pinned is not None:
+                if pinned != oid:
+                    msg = "owned preservation ref changed"
+                    raise ValueError(msg)
+                self.cmd.run(
+                    ["update-ref", "-d", f"refs/libvcs/preserve/{token.id}", oid],
+                    check_returncode=True,
+                )
+            active = store.repository / ".libvcs-preserve-active.json"
+            if active.exists():
+                preservation.safe_path(active)
+                owner = json.loads(active.read_text())
+                if owner.get("token") == dataclasses.asdict(token):
+                    active.unlink()
+                    preservation.flush_directory(store.repository)
+            store.remove(token)
+
+    def get_position(self) -> WorkingCopyPosition:
+        """Read HEAD without fetching; detached commits do not follow updates."""
+        revision = self.cmd.run(["rev-parse", "--verify", "HEAD"]).strip()
+        try:
+            branch = self.cmd.run(
+                ["symbolic-ref", "--quiet", "HEAD"],
                 check_returncode=True,
             ).strip()
-        except exc.CommandError as e:
-            self.log.exception("Failed to get the hash for HEAD")
-            result.add_error("rev-list-head", str(e), exception=e)
-            return result
-
-        self.log.debug("head_sha: %s", head_sha)
-
-        # If a remote ref is asked for, which can possibly move around,
-        # we must always do a fetch and checkout.
-        show_ref_output = self.cmd.show_ref(pattern=git_tag, check_returncode=False)
-        self.log.debug("show_ref_output: %s", show_ref_output)
-        is_remote_ref = "remotes" in show_ref_output
-        self.log.debug("is_remote_ref: %s", is_remote_ref)
-
-        # show-ref output is in the form "<sha> refs/remotes/<remote>/<tag>"
-        # we must strip the remote from the tag.
-        try:
-            git_remote_name = self.get_current_remote_name()
-        except (exc.CommandError, GitNoBranchFound, GitRemoteSetError) as e:
-            self.log.exception("Failed to determine remote name")
-            result.add_error("remote-name", str(e), exception=e)
-            return result
-
-        if f"refs/remotes/{git_tag}" in show_ref_output:
-            m = re.match(
-                r"^[0-9a-f]{40} refs/remotes/"
-                r"(?P<git_remote_name>[^/]+)/"
-                r"(?P<git_tag>.+)$",
-                show_ref_output,
-                re.MULTILINE,
+        except exc.CommandError as error:
+            if error.returncode != 1:
+                raise
+        else:
+            return WorkingCopyPosition(
+                revision,
+                branch.removeprefix("refs/heads/"),
+                "branch",
+                follows=True,
             )
-            if m is None:
-                ref_err = GitRemoteRefNotFound(
-                    git_tag=git_tag,
-                    ref_output=show_ref_output,
-                )
-                self.log.error("Remote ref not found: '%s'", git_tag)
-                result.add_error(
-                    "remote-ref-not-found",
-                    str(ref_err),
-                    exception=ref_err,
-                )
-                return result
-            git_remote_name = m.group("git_remote_name")
-            git_tag = m.group("git_tag")
-        self.log.debug("git_remote_name: %s", git_remote_name)
-        self.log.debug("git_tag: %s", git_tag)
-
-        # This will fail if the tag does not exist (it probably has not
-        # been fetched yet).
-        #
-        # When the ref is local, use the fully-qualified refs/heads/ path
-        # if available to avoid ambiguity with paths (e.g. a branch named
-        # "notes" when a directory "notes/" also exists).
-        if is_remote_ref:
-            rev_list_commit = git_remote_name + "/" + git_tag
-        elif f"refs/heads/{git_tag}" in show_ref_output:
-            rev_list_commit = f"refs/heads/{git_tag}"
-        else:
-            rev_list_commit = git_tag
-        try:
-            error_code = 0
-            tag_sha = self.cmd.rev_list(
-                commit=rev_list_commit,
-                max_count=1,
-            ).strip()
-
-        except exc.CommandError as e:
-            # Intentionally not recorded in SyncResult: the ref may not be
-            # fetched yet.  The error_code drives the fetch-then-checkout
-            # logic below.  Ambiguity errors are prevented by the
-            # refs/heads/ disambiguation above.
-            error_code = e.returncode if e.returncode is not None else 0
-            tag_sha = ""
-        self.log.debug("tag_sha: %s", tag_sha)
-
-        # Is the hash checkout out what we want?
-        somethings_up = (error_code, is_remote_ref, tag_sha != head_sha)
-        if all(not x for x in somethings_up):
-            self.log.info("Already up-to-date.")
-            return result
-
-        try:
-            process = self.cmd.fetch(log_in_real_time=True, check_returncode=True)
-        except exc.CommandError as e:
-            self.log.exception("Failed to fetch repository '%s'", url)
-            result.add_error("fetch", str(e), exception=e)
-            return result
-
-        if is_remote_ref:
-            # Check if stash is needed
-            try:
-                process = self.cmd.status(porcelain=True, untracked_files="no")
-            except exc.CommandError as e:
-                self.log.exception("Failed to get the status")
-                result.add_error("status", str(e), exception=e)
-                return result
-            need_stash = len(process) > 0
-
-            # If not in clean state, stash changes in order to be able
-            # to be able to perform git pull --rebase
-            if need_stash:
-                # If Git < 1.7.6, uses --quiet --all
-                git_stash_save_options = "--quiet"
-                try:
-                    process = self.cmd.stash.save(message=git_stash_save_options)
-                except exc.CommandError as e:
-                    self.log.exception("Failed to stash changes")
-                    result.add_error("stash-save", str(e), exception=e)
-                    return result
-
-            # Checkout the remote branch
-            try:
-                process = self.cmd.checkout(
-                    branch=git_tag,
-                    check_returncode=True,
-                )
-            except exc.CommandError as e:
-                self.log.exception("Failed to checkout tag: '%s'", git_tag)
-                result.add_error("checkout", str(e), exception=e)
-                return result
-
-            # Rebase changes from the remote branch
-            try:
-                process = self.cmd.rebase(upstream=git_remote_name + "/" + git_tag)
-            except exc.CommandError as e:
-                if any(msg in str(e) for msg in ["invalid_upstream", "Aborting"]):
-                    self.log.exception("Invalid upstream remote. Rebase aborted.")
-                    result.add_error("rebase", str(e), exception=e)
-                    return result
-                else:
-                    # Rebase failed: Restore previous state.
-                    with contextlib.suppress(exc.CommandError):
-                        self.cmd.rebase(abort=True)
-                    if need_stash:
-                        with contextlib.suppress(exc.CommandError):
-                            self.cmd.stash.pop(index=True, quiet=True)
-
-                    self.log.exception(
-                        f"\nFailed to rebase in: '{self.path}'.\n"
-                        "You will have to resolve the conflicts manually",
-                    )
-                    result.add_error("rebase", str(e), exception=e)
-                    return result
-
-            if need_stash:
-                try:
-                    process = self.cmd.stash.pop(index=True, quiet=True)
-                except exc.CommandError:
-                    # Stash pop --index failed: Try again dropping the index
-                    with contextlib.suppress(exc.CommandError):
-                        self.cmd.reset(hard=True, quiet=True)
-                    try:
-                        process = self.cmd.stash.pop(quiet=True)
-                    except exc.CommandError as e:
-                        # Stash pop failed: Restore previous state.
-                        with contextlib.suppress(exc.CommandError):
-                            self.cmd.reset(
-                                pathspec=head_sha,
-                                hard=True,
-                                quiet=True,
-                            )
-                        with contextlib.suppress(exc.CommandError):
-                            self.cmd.stash.pop(index=True, quiet=True)
-                        self.log.exception(
-                            f"\nFailed to rebase in: '{self.path}'.\n"
-                            "You will have to resolve the "
-                            "conflicts manually",
-                        )
-                        result.add_error("stash-pop", str(e), exception=e)
-                        return result
-
-        else:
-            try:
-                process = self.cmd.checkout(
-                    branch=git_tag,
-                    check_returncode=True,
-                )
-            except exc.CommandError as e:
-                self.log.exception("Failed to checkout tag: '%s'", git_tag)
-                result.add_error("checkout", str(e), exception=e)
-                return result
-
-        try:
-            self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)
-        except exc.CommandError as e:
-            self.log.exception("Failed to update submodules")
-            result.add_error("submodule-update", str(e), exception=e)
-        return result
+        return WorkingCopyPosition(revision, revision, "commit", follows=False)
 
     def remotes(self) -> GitSyncRemoteDict:
         """Return remotes like git remote -v.
@@ -808,7 +1527,7 @@ class GitSync(BaseSync):
         remote_cmd = self.cmd.remotes.get(remote_name=name, default=None)
 
         if remote_cmd is not None and overwrite:
-            remote_cmd.set_url(url=url, check_returncode=True)
+            remote_cmd.set_url(url=url, push=push, check_returncode=True)
         else:
             self.cmd.remotes.add(name=name, url=url, check_returncode=True)
 

@@ -6,19 +6,37 @@ import logging
 
 from .__about__ import __version__
 from ._internal.run import CmdLoggingAdapter
-from .sync.base import BaseSync, SyncError, SyncResult
-from .sync.git import GitSync
-from .sync.hg import HgSync
-from .sync.svn import SvnSync
+from .sync.base import (
+    BaseSync,
+    RecoveryToken,
+    SyncConflict,
+    SyncError,
+    SyncPolicy,
+    SyncResult,
+    SyncTarget,
+    WorkingCopyPosition,
+)
+from .sync.git import GitOptions, GitSync
+from .sync.hg import HgOptions, HgRemote, HgSync
+from .sync.svn import SvnOptions, SvnSync
 
 __all__ = [
     "BaseSync",
     "CmdLoggingAdapter",
+    "GitOptions",
     "GitSync",
+    "HgOptions",
+    "HgRemote",
     "HgSync",
+    "RecoveryToken",
+    "SvnOptions",
     "SvnSync",
+    "SyncConflict",
     "SyncError",
+    "SyncPolicy",
     "SyncResult",
+    "SyncTarget",
+    "WorkingCopyPosition",
     "__version__",
 ]
 

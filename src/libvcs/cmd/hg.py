@@ -164,7 +164,7 @@ class Hg:
         >>> hg.run(['help'])
         "Mercurial Distributed SCM..."
         """
-        cli_args: list[StrOrBytesPath] = ["hg", *_normalize_command_args(args)]
+        cli_args: list[StrOrBytesPath] = ["hg"]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path
@@ -195,6 +195,8 @@ class Hg:
             cli_args.append("--version")
         if _help is True:
             cli_args.append("--help")
+
+        cli_args.extend(_normalize_command_args(args))
 
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback
@@ -312,9 +314,13 @@ class Hg:
         quiet: bool | None = None,
         verbose: bool | None = None,
         update: bool | None = None,
+        ssh: str | None = None,
+        remote_cmd: str | None = None,
+        insecure: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = True,
         *args: object,
+        source: str | None = None,
         **kwargs: t.Any,
     ) -> str:
         r"""Pull changes from a remote repository.
@@ -340,7 +346,15 @@ class Hg:
             local_flags.append("--verbose")
         if update:
             local_flags.append("--update")
+        if ssh is not None:
+            local_flags.extend(["--ssh", ssh])
+        if remote_cmd is not None:
+            local_flags.extend(["--remotecmd", remote_cmd])
+        if insecure is True:
+            local_flags.append("--insecure")
 
         return self.run(
-            ["pull", *local_flags], check_returncode=check_returncode, **kwargs
+            ["pull", *local_flags, *(["--", source] if source is not None else [])],
+            check_returncode=check_returncode,
+            **kwargs,
         )

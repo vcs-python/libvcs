@@ -20,6 +20,177 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### What's new
+
+#### Create linked Git worktrees under shared ownership
+
+`GitSync.create_worktree()` fetches and creates an absent linked checkout at a
+typed target while holding the repository ownership lock. It retains local
+commits, rejects divergence and occupied destinations, and supports detached
+checkouts and worktree lock reasons. Interrupted recovery records refuse
+creation with their retained token; parent working files remain untouched.
+
+
+`GitSync.update_repo(detach=True)` detaches at the resolved target after
+fetching under the ownership lock. Branch targets retain their native
+tracking-ref and local-branch fallback rules.
+
+Progress callback exceptions and interrupts terminate and reap the direct
+subprocess before propagating. Direct calls own the immediate child; callers
+that need descendant cancellation must supervise an owned process group.
+
+#### Subversion retains complete working copies for recovery
+
+`SvnSync.update_repo()` aborts on dirty checkouts by default. Explicit
+preservation uses native update or switch and retains a complete working-copy
+copy, including schedules, binary properties, unknown files, and ignored files.
+Missing paths stay absent only when their complete native and physical scope
+is unchanged. Conflicts and failed inspection retain their recovery token.
+`recover_changes()` creates independent copies offline; `list_recoveries()`
+reports interrupted operations, and `release_changes()` releases verified copies.
+Recovery and release work after the original checkout is deleted or replaced.
+
+SVN targets accept `rev`; the configured repository URL controls switching.
+Branch, tag, commit, and remote selectors are rejected. Preservation requires
+POSIX and SVN working-copy format 31. It rejects externals, nested repositories,
+and linked administrative storage. Callers must stop external editors and native
+writers.
+
+#### Mercurial remotes keep fetch and push separate
+
+`create_project(vcs="hg", remotes=...)` forwards configured Mercurial paths
+through the same factory used by configuration consumers.
+
+`HgRemote` and `HgSync(remotes=...)` expose native `[paths]` aliases with
+separate fetch and push URLs. `SyncTarget(remote=...)` chooses where to pull
+without changing unrelated push destinations. Configured aliases update
+atomically during following syncs; keep, warn, and dirty-abort preflight leave
+native configuration unchanged. Comments and includes survive updates, and
+equivalent relative or environment-expanded paths do not rewrite the file.
+See {doc}`sync/hg`.
+
+#### Shared checkout targets and recovery outcomes
+
+`SyncTarget` selects one branch, tag, commit, or revision. `SyncPolicy` keeps
+configured-target drift separate from local-change handling and defaults to
+`dirty="abort"`. `SyncResult` now reports update and preservation outcomes,
+conflicts, and retained recovery tokens independently.
+
+#### Mercurial retains shelves for independent recovery
+
+`HgSync.update_repo()` aborts on dirty checkouts by default. Explicit
+`SyncPolicy(dirty="preserve")` retains native shelves in private storage,
+including added, removed, modified, and unknown files. Missing files retain
+their unscheduled state; upstream changes to a missing path report a conflict.
+Native unshelve conflicts keep their recovery token and caller-owned backups.
+`recover_changes()` restores the original branch, bookmark, and native status
+in a separate checkout using retained local history, without remote access.
+`list_recoveries()` exposes interrupted saves and damaged records;
+`release_changes()` removes only verified owned shelf artifacts.
+
+#### Mercurial clone applies transport and revision selection
+
+`HgSync` strips the `hg+` adapter prefix before invoking Mercurial and applies
+the constructor's `rev` when checking out a new clone.
+An explicit `update_repo(target=...)` overrides that revision. A new checkout
+starts at its configured target before keep or warn policy applies.
+
+#### Git retains dirty changes for independent recovery
+
+`GitSync.update_repo()` aborts on dirty checkouts by default. Explicit
+`SyncPolicy(dirty="preserve")` retains staged, unstaged, and untracked changes
+in an owned stash and applies them with the index after a fast-forward update.
+Conflicts and failed updates retain a recovery token. `list_recoveries()`
+finds interrupted saves; `recover_changes()` creates a separate original-base
+checkout from local Git objects; `release_changes()` removes owned material.
+Recovery requires those local objects and never fetches from the remote.
+Malformed recovery records remain visible as errors carrying their token.
+Ignored target collisions, divergent commits, active native operations,
+dirty submodule scopes, and nested repositories fail before capture.
+Clean recursive submodule updates reject ignored-file collisions in initialized
+children before any checkout advances. Target resolution refreshes every
+configured remote; clone and fetch honor command-scoped TLS configuration.
+
+New Git checkouts follow the configured target before keep or warn policy
+applies. Those policies continue to leave existing checkouts unchanged.
+
+#### Git command configuration precedes subcommands
+
+{meth}`~libvcs.cmd.git.Git.run` places global flags before the subcommand and
+uses native `-c` arguments for command-scoped configuration. Sync operations
+with `GitOptions(tls_verify=False)` now run clone, fetch, and submodule commands
+without misreading the TLS setting as a repository argument.
+
+#### Sync backends expose typed options
+
+{class}`~libvcs.sync.git.GitOptions`, {class}`~libvcs.sync.hg.HgOptions`, and
+{class}`~libvcs.sync.svn.SvnOptions` are frozen backend configuration objects.
+Each sync class exposes its option class as `options_type` for dataclass
+introspection. Constructors now reject unknown fields and option objects from
+another backend.
+
+Mercurial and Subversion string options reject NUL before command creation.
+Git filter normalization preserves the nesting limit accepted by validation,
+including when the immutable options object is passed to clone.
+
+Git depth and filter settings apply to the initial clone and its submodules.
+Submodule initialization follows nested gitlinks and forwards the history depth.
+Git and Mercurial verify TLS certificates by default; setting `tls_verify` to
+false forwards the native verification override to network operations.
+Mercurial clone transport settings and Subversion authentication, certificate,
+external, and ambient-depth settings now reach their native commands.
+
+#### Typed Git filters validate partial clones before execution
+
+{mod}`libvcs.cmd.git_filter` provides frozen models for Git's `blob:none`,
+`blob:limit`, `tree`, `object:type`, `sparse:oid`, `auto`, and `combine`
+filters. Specs and kind-tagged mappings parse into the same models, with
+validation for numeric ranges, combine escaping, recursion, incompatible
+`auto` filters, and field names.
+
+{meth}`~libvcs.cmd.git.Git.clone`, {meth}`~libvcs.cmd.git.Git.fetch`, and
+{meth}`~libvcs.cmd.git.GitSubmoduleCmd.update` accept models, strings,
+mappings, and sequences through `_filter`. Clone and fetch preserve repeated
+filter arguments; submodule update combines them so Git applies every filter.
+{meth}`~libvcs.cmd.git.Git.pull` rejects filters because native Git does not
+support them.
+
+{class}`~libvcs.sync.git.GitOptions` accepts the same values through `filter`,
+validates them before creating a checkout, and applies them to the initial
+clone and its submodules. `Auto` can clone a repository without gitlinks. If
+the cloned index contains gitlinks, obtain reports that `Auto` cannot be
+forwarded and retains the parent clone.
+
+#### Inspect working-copy positions
+
+`GitSync.get_position()`, `HgSync.get_position()`, and
+`SvnSync.get_position()` report the checkout's local revision and ref without
+contacting a remote. Subversion also reports mixed revisions and switched
+subtrees. See {doc}`sync/index` for an example.
+
+### Fixes
+
+#### Drain command output while the process runs
+
+Commands with large stdout or stderr output complete without filling an
+unread pipe. Both streams drain concurrently with or without a timeout,
+and progress callbacks retain command diagnostics for failure reporting.
+
+#### Keep partial-clone remotes usable
+
+Git remote listing retains fetch URLs annotated with a partial-clone filter.
+A failed `GitSync.obtain()` reports the clone command and Git's original
+message before attempting submodule or remote setup.
+
+#### Keep fetch and push destinations separate
+
+`GitSync` configures a remote's push URL without replacing its fetch URL.
+
+#### Keep Subversion options before command targets
+
+`Svn.run()` places global options before command arguments, so an explicit
+`--` separator does not turn `--non-interactive` into a filename.
+
 ## libvcs 0.46.0 (2026-08-30)
 
 libvcs 0.46.0 hardens the command wrappers against argument injection: `Git.pull()`, a `GitSync` revision, and `Svn.checkout()` now reject a value a VCS binary would parse as an option in the positions an end-of-options `--` cannot guard, closing paths that could otherwise run a command or truncate a file. It also gives progress-callback timestamps an aware UTC value, documents what every field holds in the API reference, and moves the lint and CI toolchain to current majors.

@@ -24,6 +24,93 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### Sync results and dirty checkout policy
+
+`update_repo()` creates or updates a checkout and returns `SyncResult`.
+Check `result.ok` and its ordered `errors` before proceeding. `obtain()` only
+creates the initial checkout.
+
+The default is now `SyncPolicy(drift="follow", dirty="abort")`. Automation
+that updates dirty checkouts must choose `dirty="preserve"` to retain
+recoverable changes or explicitly choose `dirty="discard"` to remove them.
+The library does not prompt for discard. Preservation may report conflicts;
+it never falls back to discard.
+
+Pass `target=SyncTarget(...)` and `policy=SyncPolicy(...)` to `update_repo()`.
+A method target replaces the constructor's `rev` default. Existing Git/Hg
+keep/warn operations do not fetch or change attachment; new checkouts first
+establish their configured target. SVN keep/warn requires a numeric revision
+for local comparison.
+
+Retain `result.recovery` on both successful and failed updates. Tokens stay
+available until `release_changes()`; `list_recoveries()` discovers them and
+`recover_changes()` writes a separate new checkout. See the executing
+{ref}`recovery example <sync-recovery>` and backend limits before deleting
+source repositories or recovery storage.
+
+### Mercurial remotes and selected pull sources
+
+Use `HgSync(remotes={"upstream": HgRemote("upstream", fetch_url, push_url)})`
+to declare native Mercurial paths. A string value sets both destinations to
+that URL. Pass `SyncTarget(branch="default", remote="upstream")` to choose
+the pull source independently of the push URL.
+
+Following updates apply configured paths. On existing checkouts, keep/warn
+policies and dirty-abort preflight leave `.hg/hgrc` unchanged. The library owns a final marked `[paths]`
+block; comments and includes outside it remain intact. Leave that block last
+when editing native configuration manually.
+
+### Sync backends use typed options
+
+Backend-specific constructor arguments move into frozen option objects. Import
+the option class from `libvcs` or beside its sync class:
+
+```python
+>>> from libvcs import GitOptions, GitSync, HgOptions, SvnOptions
+>>> git = GitSync(
+...     url="https://example.com/project.git",
+...     path=tmp_path / "project",
+...     options=GitOptions(depth=1, tls_verify=True),
+... )
+>>> git.options
+GitOptions(depth=1, filter=None, tls_verify=True)
+```
+
+Replace the released Git constructor arguments as follows:
+
+- `git_shallow=True` becomes `options=GitOptions(depth=1)`.
+- `depth=n` becomes `options=GitOptions(depth=n)`.
+- `git_filter=value` becomes `options=GitOptions(filter=value)`.
+- The old `tls_verify=True` disabled verification. Use
+  `options=GitOptions(tls_verify=False)` to retain that behavior. The new
+  default, `tls_verify=True`, verifies certificates.
+
+Mercurial transport settings belong to `HgOptions`. Subversion `username`,
+`password`, and `svn_trust_cert` become `SvnOptions(username=...)`,
+`SvnOptions(password=...)`, and `SvnOptions(trust_server_cert=...)`.
+Constructors and `create_project()` reject unknown keywords instead of
+silently retaining or discarding them. Use `dataclasses.fields(Sync.options_type)`
+to enumerate a backend's accepted configuration fields.
+
+### Git partial-clone filters have typed models
+
+String `_filter` arguments remain valid. Callers that build filters from
+configuration can replace unchecked strings with models or kind-tagged
+mappings from `libvcs.cmd.git_filter`:
+
+```python
+>>> from libvcs.cmd.git_filter import BlobLimit
+>>> BlobLimit("4m")
+BlobLimit(limit='4m')
+```
+
+`GitOptions(filter=...)` validates the value during construction, applies it
+to the initial clone and its submodules, and leaves existing checkout filters
+unchanged during updates. `Auto` requires Git 2.54 or newer. If the cloned
+repository contains gitlinks, `GitSync` retains the parent clone and raises
+before submodule initialization because Git's submodule command rejects
+`auto`. Use an explicit filter for repositories with submodules.
+
 ### pytest fixtures: `gitconfig` / `hgconfig` renamed to `vcs_gitconfig` / `vcs_hgconfig` (#528)
 
 - pytest: `gitconfig` renamed to `vcs_gitconfig`
@@ -69,17 +156,21 @@ references these fixtures.
 
 `URL.rule_map` is now a class attribute rather than a dataclass attribute.
 
-Before Python 3.11 rejected mutable dataclass defaults:
+Python 3.11 and newer reject a `RuleMap` instance as a mutable dataclass
+default. Python 3.10 accepts the field:
 
 ```python
 >>> import dataclasses
+>>> import sys
 >>> from libvcs.url.base import RuleMap
->>> @dataclasses.dataclass(repr=False)
-... class GitLabURL:
-...     rule_map: RuleMap = RuleMap(_rule_map={})
-Traceback (most recent call last):
-...
-ValueError: mutable default <class 'libvcs.url.base.RuleMap'> for field rule_map is not allowed: use default_factory
+>>> try:
+...     @dataclasses.dataclass(repr=False)
+...     class GitLabURL:
+...         rule_map: RuleMap = RuleMap(_rule_map={})
+... except ValueError as error:
+...     assert "mutable default" in str(error)
+... else:
+...     assert sys.version_info < (3, 11)
 ```
 
 After release:
