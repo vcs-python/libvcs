@@ -653,6 +653,35 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
     )
     assert any(line.startswith("?") for line in missing.splitlines())
 
+    run(
+        [
+            "git",
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            submodule_remote.as_uri(),
+            "deps/late",
+        ],
+        cwd=parent_remote,
+        env=git_commit_envvars,
+    )
+    run(
+        ["git", "commit", "-m", "add late submodule"],
+        cwd=parent_remote,
+        env=git_commit_envvars,
+    )
+    result = repo.update_repo()
+    assert result.ok, result.errors
+    late_submodule_git_dir = destination / ".git" / "modules" / "deps" / "late"
+    assert (
+        run(
+            ["git", "config", "--get", "remote.origin.partialclonefilter"],
+            cwd=late_submodule_git_dir,
+        ).strip()
+        == "combine:blob:none+tree:2"
+    )
+
     submodule_file.write_text("submodule data 3\n")
     run(
         ["git", "commit", "-am", "submodule update"],

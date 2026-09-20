@@ -709,6 +709,7 @@ class GitSync(BaseSync):
         self.cmd.submodule.update(
             recursive=True,
             init=True,
+            _filter=self.options.filter,
             config={"http.sslVerify": False} if not self.options.tls_verify else None,
             log_in_real_time=True,
             check_returncode=True,
