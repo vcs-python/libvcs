@@ -41,6 +41,9 @@ writers.
 
 #### Mercurial remotes keep fetch and push separate
 
+`create_project(vcs="hg", remotes=...)` forwards configured Mercurial paths
+through the same factory used by configuration consumers.
+
 `HgRemote` and `HgSync(remotes=...)` expose native `[paths]` aliases with
 separate fetch and push URLs. `SyncTarget(remote=...)` chooses where to pull
 without changing unrelated push destinations. Configured aliases update

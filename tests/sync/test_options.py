@@ -194,6 +194,25 @@ def test_create_project_forwards_backend_options(tmp_path: pathlib.Path) -> None
         )
 
 
+def test_create_project_forwards_hg_remotes(
+    tmp_path: pathlib.Path, hg_repo: HgSync
+) -> None:
+    """The factory applies Mercurial fetch and push destinations separately."""
+    from libvcs import HgRemote
+
+    remote = HgRemote(
+        "upstream", hg_repo.path.as_uri(), (tmp_path / "push-only").as_uri()
+    )
+    repo = create_project(
+        url=hg_repo.url,
+        path=tmp_path / "checkout",
+        vcs="hg",
+        remotes={"upstream": remote},
+    )
+    assert repo.update_repo().ok
+    assert repo.remotes()["upstream"] == remote
+
+
 def test_git_disabled_tls_option_runs_native_clone_and_fetch(
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
