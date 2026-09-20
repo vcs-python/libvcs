@@ -24,6 +24,30 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### Sync results and dirty checkout policy
+
+`update_repo()` creates or updates a checkout and returns `SyncResult`.
+Check `result.ok` and its ordered `errors` before proceeding. `obtain()` only
+creates the initial checkout.
+
+The default is now `SyncPolicy(drift="follow", dirty="abort")`. Automation
+that updates dirty checkouts must choose `dirty="preserve"` to retain
+recoverable changes or explicitly choose `dirty="discard"` to remove them.
+The library does not prompt for discard. Preservation may report conflicts;
+it never falls back to discard.
+
+Pass `target=SyncTarget(...)` and `policy=SyncPolicy(...)` to `update_repo()`.
+A method target replaces the constructor's `rev` default. Existing Git/Hg
+keep/warn operations do not fetch or change attachment; new checkouts first
+establish their configured target. SVN keep/warn requires a numeric revision
+for local comparison.
+
+Retain `result.recovery` on both successful and failed updates. Tokens stay
+available until `release_changes()`; `list_recoveries()` discovers them and
+`recover_changes()` writes a separate new checkout. See the executing
+{ref}`recovery example <sync-recovery>` and backend limits before deleting
+source repositories or recovery storage.
+
 ### Mercurial remotes and selected pull sources
 
 Use `HgSync(remotes={"upstream": HgRemote("upstream", fetch_url, push_url)})`

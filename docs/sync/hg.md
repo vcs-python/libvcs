@@ -38,7 +38,9 @@ Name native fetch and push destinations separately:
 ```
 
 Pass `target` and `policy` to `update_repo()`. The remote selects the pull
-source; its push URL stays separate. A synthesized `default` alias retains
+source; its push URL stays separate. The shared {ref}`recovery example <sync-recovery>`
+executes an update and checks its result against a disposable repository.
+A synthesized `default` alias retains
 an existing push destination. An explicitly configured alias supplies both
 destinations, with push defaulting to its fetch URL when omitted.
 
@@ -54,6 +56,16 @@ applies. A method-level target overrides the constructor's revision.
 Preservation retains an owned shelf and supplemental native state. Recovery
 creates a separate checkout from retained local history; the configured remote
 is never contacted during recovery.
+
+## Preservation limits
+
+Named branches, bookmarks, tags, and changesets resolve locally. Native
+unshelve conflicts retain both the conflict state and recovery token. Keep
+the source history until releasing its tokens: deleting that history prevents
+offline recovery. Preservation rejects subrepositories, nested repositories,
+shared-store layouts, and unfinished native operations. See the shared
+{ref}`token lifecycle <sync-recovery>` for discovery, separate recovery, and
+explicit release.
 
 ```{eval-rst}
 .. automodule:: libvcs.sync.hg

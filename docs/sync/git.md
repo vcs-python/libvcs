@@ -38,6 +38,23 @@ If gitlinks exist, obtain raises `ValueError` before initializing them and
 leaves the parent clone at the destination. Existing checkout updates do not
 change their configured filter.
 
+## Update and recovery behavior
+
+Following a branch requires fast-forward ancestry and retains ahead local
+commits. Select a tag or commit explicitly when you want a detached checkout.
+Use the shared {ref}`policy guide <sync-policies>` and executing
+{ref}`recovery example <sync-recovery>` to handle results and retained tokens.
+
+Preservation uses indexed stash application to retain staged and unstaged
+changes separately. An index conflict remains a conflict; restoration does
+not retry without the index. Ordinary ignored output is not dirt, but updates
+protect ignored files that collide with the target.
+
+Offline recovery needs the retained local common object database. Missing
+objects in a partial clone cause recovery to fail without fetching. Keep that
+database until you release its tokens. Preservation rejects submodule scopes
+and independent nested repositories; clean recursive updates remain available.
+
 ```{eval-rst}
 .. automodule:: libvcs.sync.git
    :members:
