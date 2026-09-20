@@ -314,6 +314,9 @@ class Hg:
         quiet: bool | None = None,
         verbose: bool | None = None,
         update: bool | None = None,
+        ssh: str | None = None,
+        remote_cmd: str | None = None,
+        insecure: bool | None = None,
         # libvcs special behavior
         check_returncode: bool | None = True,
         *args: object,
@@ -342,6 +345,12 @@ class Hg:
             local_flags.append("--verbose")
         if update:
             local_flags.append("--update")
+        if ssh is not None:
+            local_flags.extend(["--ssh", ssh])
+        if remote_cmd is not None:
+            local_flags.extend(["--remotecmd", remote_cmd])
+        if insecure is True:
+            local_flags.append("--insecure")
 
         return self.run(
             ["pull", *local_flags], check_returncode=check_returncode, **kwargs

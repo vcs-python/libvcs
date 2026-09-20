@@ -2605,6 +2605,7 @@ class GitSubmoduleCmd:
             local_flags=[*local_flags, "--", *required_flags],
             check_returncode=check_returncode,
             log_in_real_time=log_in_real_time,
+            **kwargs,
         )
 
 

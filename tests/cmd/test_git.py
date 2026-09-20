@@ -2929,6 +2929,20 @@ def test_git_submodule_rejects_auto_before_process(
     mock_run.assert_not_called()
 
 
+def test_git_submodule_update_forwards_run_configuration(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Submodule updates forward Git network configuration to the runner."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo.submodule, "run", return_value="")
+    config = {"http.sslVerify": False}
+
+    repo.submodule.update(config=config)
+
+    assert mock_run.call_args.kwargs["config"] == config
+
+
 def test_clone_rejects_filter_before_creating_destination(
     tmp_path: pathlib.Path,
 ) -> None:

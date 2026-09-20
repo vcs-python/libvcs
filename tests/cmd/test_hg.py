@@ -46,6 +46,26 @@ def test_hg_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     assert "Mercurial Distributed SCM" in result
 
 
+def test_hg_pull_forwards_transport_options(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Mercurial pull emits configured SSH and TLS transport flags."""
+    repo = Hg(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    repo.pull(ssh="ssh -i key", remote_cmd="hg-custom", insecure=True)
+
+    assert mock_run.call_args.args[0] == [
+        "pull",
+        "--ssh",
+        "ssh -i key",
+        "--remotecmd",
+        "hg-custom",
+        "--insecure",
+    ]
+
+
 def test_hg_run_timeout_propagates_to_runner(
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
