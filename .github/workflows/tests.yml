@@ -57,7 +57,7 @@ jobs:
           uv run python -c 'import os, sys; assert ".".join(map(str, sys.version_info[:2])) == os.environ["UV_PYTHON"]'
 
       - name: Test with pytest
-        run: uv run py.test -ra -n 2 --dist worksteal --cov=./ --cov-append --cov-report=xml
+        run: uv run py.test --no-showlocals --reruns 0 -ra -n 2 --dist worksteal --cov=./ --cov-append --cov-report=xml
         env:
           COV_CORE_SOURCE: .
           COV_CORE_CONFIG: .coveragerc
