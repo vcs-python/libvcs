@@ -236,27 +236,17 @@ def test_git_options_forward_clone_filter_depth_and_tls_polarity(
 
 
 def test_git_tls_option_applies_to_existing_checkout_network_operations(
-    tmp_path: pathlib.Path,
+    git_repo: GitSync,
     mocker: MockerFixture,
 ) -> None:
-    """Disabled verification reaches fetch and existing submodule updates."""
-    (tmp_path / ".git").mkdir()
-    repo = GitSync(
-        url="https://example.com/repo.git",
-        path=tmp_path,
-        options=GitOptions(tls_verify=False),
-    )
-    mocker.patch.object(repo.cmd, "symbolic_ref", return_value="main")
-    mocker.patch.object(repo.cmd, "rev_list", side_effect=["head", "next"])
-    mocker.patch.object(repo.cmd, "show_ref", return_value="next refs/heads/main\n")
-    mocker.patch.object(repo, "get_current_remote_name", return_value="origin")
-    fetch = mocker.patch.object(repo.cmd, "fetch", return_value="")
-    mocker.patch.object(repo.cmd, "checkout", return_value="")
-    submodules = mocker.patch.object(repo.cmd.submodule, "update", return_value="")
+    """Disabled verification reaches fetch and clean submodule updates."""
+    git_repo.options = GitOptions(tls_verify=False)
+    fetch = mocker.spy(git_repo.cmd, "fetch")
+    submodules = mocker.spy(git_repo.cmd.submodule, "update")
 
-    result = repo.update_repo()
+    result = git_repo.update_repo()
 
-    assert result.ok
+    assert result.ok, result.errors
     assert fetch.call_args.kwargs["config"] == {"http.sslVerify": False}
     assert submodules.call_args.kwargs["config"] == {"http.sslVerify": False}
 

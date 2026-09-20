@@ -29,6 +29,18 @@ configured-target drift separate from local-change handling and defaults to
 `dirty="abort"`. `SyncResult` now reports update and preservation outcomes,
 conflicts, and retained recovery tokens independently.
 
+#### Git retains dirty changes for independent recovery
+
+`GitSync.update_repo()` aborts on dirty checkouts by default. Explicit
+`SyncPolicy(dirty="preserve")` retains staged, unstaged, and untracked changes
+in an owned stash and applies them with the index after a fast-forward update.
+Conflicts and failed updates retain a recovery token. `list_recoveries()`
+finds interrupted saves; `recover_changes()` creates a separate original-base
+checkout from local Git objects; `release_changes()` removes owned material.
+Recovery requires those local objects and never fetches from the remote.
+Ignored target collisions, divergent commits, active native operations,
+dirty submodule scopes, and nested repositories fail before capture.
+
 #### Git command configuration precedes subcommands
 
 {meth}`~libvcs.cmd.git.Git.run` places global flags before the subcommand and

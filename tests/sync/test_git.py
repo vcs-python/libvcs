@@ -19,7 +19,7 @@ from libvcs import GitOptions, exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 from libvcs.cmd.git_filter import Auto, BlobNone
-from libvcs.sync.base import SyncResult
+from libvcs.sync.base import SyncPolicy, SyncResult, SyncTarget
 from libvcs.sync.git import (
     GitRemote,
     GitStatus,
@@ -297,14 +297,15 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
     )
 
     destination = tmp_path / "checkout"
-    GitSync(
+    repo = GitSync(
         url=parent_remote.as_uri(),
         path=destination,
         options=GitOptions(
             depth=depth,
             filter=[BlobNone(), {"kind": "tree", "depth": 2}],
         ),
-    ).obtain()
+    )
+    repo.obtain()
 
     assert (destination / "deps" / "sub" / "data.txt").read_text(
         encoding="utf-8"
@@ -329,6 +330,24 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
         cwd=destination / "deps" / "sub",
     )
     assert any(line.startswith("?") for line in missing.splitlines())
+
+    submodule_file.write_text("submodule data 3\n")
+    run(
+        ["git", "commit", "-am", "submodule update"],
+        cwd=submodule_remote,
+        env=git_commit_envvars,
+    )
+    run(["git", "submodule", "update", "--remote", "deps/sub"], cwd=parent_remote)
+    run(
+        ["git", "commit", "-am", "advance submodule"],
+        cwd=parent_remote,
+        env=git_commit_envvars,
+    )
+    result = repo.update_repo()
+    assert result.ok, result.errors
+    assert (
+        destination / "deps" / "sub" / "data.txt"
+    ).read_text() == "submodule data 3\n"
 
 
 @pytest.mark.parametrize(
@@ -529,20 +548,13 @@ def test_repo_update_handle_cases(
     git_repo: GitSync = constructor(**lazy_constructor_options(**locals()))
     git_repo.obtain()  # clone initial repo
 
-    cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
-    git_repo.update_repo()
-
-    cmd_mock.assert_any_call(name="HEAD", short=True, check_returncode=True)
-
-    cmd_mock.reset_mock()
-
-    # will only look up symbolic-ref if no rev specified for object
+    original = git_repo.get_position()
+    assert git_repo.update_repo().ok
+    assert git_repo.get_position() == original
     git_repo.rev = "HEAD"
-    git_repo.update_repo()
-    assert (
-        mocker.call(name="HEAD", short=True, check_returncode=True)
-        not in cmd_mock.mock_calls
-    )
+    assert git_repo.update_repo().ok
+    assert git_repo.get_position().revision == original.revision
+    assert git_repo.get_position().ref_kind == "commit"
 
 
 @pytest.mark.parametrize(
@@ -602,10 +614,13 @@ def test_repo_update_stash_cases(
         )
         git_repo.run(["add", some_stashed_file])
 
-    cmd_mock = mocker.spy(git_repo.cmd, "symbolic_ref")
-    git_repo.update_repo()
-
-    cmd_mock.assert_any_call(name="HEAD", short=True, check_returncode=True)
+    head = git_repo.get_revision()
+    before = git_repo.run(["status", "--porcelain=v2", "-z"])
+    result = git_repo.update_repo()
+    assert result.ok is not (has_untracked_files or needs_stash)
+    if has_untracked_files or needs_stash:
+        assert git_repo.get_revision() == head
+        assert git_repo.run(["status", "--porcelain=v2", "-z"]) == before
 
 
 @pytest.mark.parametrize(
@@ -1398,7 +1413,7 @@ def test_update_repo_checkout_failure_returns_sync_result(
     assert result.ok is False
     assert bool(result) is False
     assert len(result.errors) > 0
-    assert result.errors[0].step == "checkout"
+    assert result.errors[0].step == "target"
     assert result.errors[0].exception is not None
     assert isinstance(result.errors[0].exception, exc.CommandError)
 
@@ -1432,144 +1447,9 @@ def test_update_repo_rev_list_head_failure_returns_sync_result(
     assert result.ok is False
     assert bool(result) is False
     assert len(result.errors) > 0
-    assert result.errors[0].step == "rev-list-head"
+    assert result.errors[0].step == "precondition"
     assert result.errors[0].exception is not None
     assert isinstance(result.errors[0].exception, exc.CommandError)
-
-
-def test_update_repo_submodule_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that submodule.update() failure is recorded in SyncResult.
-
-    When ``git submodule update`` fails, the error should be recorded
-    in SyncResult rather than propagating as an uncaught exception.
-    We mock the submodule.update call to raise CommandError since
-    triggering a real submodule failure is git-version-dependent.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit and push so update_repo has a valid HEAD
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    # Make another commit, push, then reset to create a "behind" state
-    another_file = git_repo.path / "another_file"
-    another_file.write_text("more content", encoding="utf-8")
-    git_repo.run(["add", str(another_file)])
-    git_repo.run(["commit", "-m", "second commit"])
-    git_repo.run(["push"])
-    git_repo.run(["reset", "--hard", "HEAD^"])
-
-    # Mock submodule.update to raise CommandError
-    mocker.patch.object(
-        git_repo.cmd.submodule,
-        "update",
-        side_effect=exc.CommandError(
-            output="fatal: clone of 'file:///nonexistent' failed",
-            returncode=128,
-            cmd="git submodule update --init --recursive",
-        ),
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert any(e.step == "submodule-update" for e in result.errors)
-
-
-def test_update_repo_symbolic_ref_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-) -> None:
-    """Test that symbolic_ref failure on detached HEAD is recorded in SyncResult.
-
-    When a repo is in detached HEAD state and no ``rev`` is set,
-    ``symbolic_ref --short HEAD`` fails.  Currently this is not wrapped
-    in try/except, so the exception propagates instead of being
-    recorded in SyncResult.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit and push so the repo has a valid HEAD
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    # Detach HEAD — symbolic_ref will fail
-    head_sha = git_repo.run(["rev-parse", "HEAD"]).strip()
-    git_repo.run(["checkout", head_sha])
-
-    # Ensure no rev is set so the code path hits symbolic_ref
-    git_repo.rev = None
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert any(e.step == "symbolic-ref" for e in result.errors)
-
-
-def test_update_repo_remote_ref_not_found_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-) -> None:
-    """Test that GitRemoteRefNotFound is caught and recorded in SyncResult.
-
-    When show-ref output contains ``refs/remotes/<tag>`` but the regex
-    match fails, ``GitRemoteRefNotFound`` is raised with a bare ``raise``.
-    It should instead be caught and recorded in SyncResult.
-    """
-    from unittest.mock import patch
-
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit and push so the repo has a valid HEAD
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    # Set rev so symbolic_ref is skipped
-    git_repo.rev = "master"
-
-    # Patch show_ref to return output that contains "refs/remotes/master"
-    # but in a format that the regex won't match, triggering
-    # GitRemoteRefNotFound
-    malformed_show_ref = "not-a-sha refs/remotes/master"
-    with patch.object(git_repo.cmd, "show_ref", return_value=malformed_show_ref):
-        result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert any(e.step == "remote-ref-not-found" for e in result.errors)
 
 
 def test_update_repo_obtain_failure_recorded(
@@ -1649,379 +1529,6 @@ def test_update_repo_set_remotes_failure_recorded(
     assert result.ok is False
     assert len(result.errors) > 0
     assert result.errors[0].step == "set-remotes"
-    assert result.errors[0].exception is not None
-    assert isinstance(result.errors[0].exception, exc.CommandError)
-
-
-def test_update_repo_remote_name_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that get_current_remote_name failure is recorded in SyncResult.
-
-    When ``get_current_remote_name()`` raises, the error is recorded
-    as ``remote-name``.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit and push so the repo has a valid HEAD
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    mocker.patch.object(
-        git_repo,
-        "get_current_remote_name",
-        side_effect=exc.CommandError(
-            output="fatal: could not determine remote",
-            returncode=1,
-            cmd="git status",
-        ),
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert result.errors[0].step == "remote-name"
-    assert result.errors[0].exception is not None
-
-
-def test_update_repo_status_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that cmd.status failure is recorded in SyncResult.
-
-    When ``cmd.status()`` raises during the dirty-tree check on a remote
-    ref, the error is recorded as ``status``.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit, push, then reset to create a "behind" state
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    another_file = git_repo.path / "another_file"
-    another_file.write_text("more content", encoding="utf-8")
-    git_repo.run(["add", str(another_file)])
-    git_repo.run(["commit", "-m", "second commit"])
-    git_repo.run(["push"])
-    git_repo.run(["reset", "--hard", "HEAD^"])
-
-    # cmd.status is called twice: once for get_current_remote_name
-    # (with short=True, branch=True) and once for the dirty-tree check
-    # (with porcelain=True, untracked_files="no"). Only the second should fail.
-    real_status = git_repo.cmd.status
-
-    def status_side_effect(**kwargs: t.Any) -> str:
-        if "untracked_files" in kwargs:
-            raise exc.CommandError(
-                output="fatal: status failed",
-                returncode=128,
-                cmd="git status",
-            )
-        return real_status(**kwargs)
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "status",
-        side_effect=status_side_effect,
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert result.errors[0].step == "status"
-    assert result.errors[0].exception is not None
-    assert isinstance(result.errors[0].exception, exc.CommandError)
-
-
-def test_update_repo_stash_save_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that stash save failure is recorded in SyncResult.
-
-    When ``cmd.stash.save()`` raises on a dirty working tree, the error
-    is recorded as ``stash-save``.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit, push, then reset to create a "behind" state
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    another_file = git_repo.path / "another_file"
-    another_file.write_text("more content", encoding="utf-8")
-    git_repo.run(["add", str(another_file)])
-    git_repo.run(["commit", "-m", "second commit"])
-    git_repo.run(["push"])
-    git_repo.run(["reset", "--hard", "HEAD^"])
-
-    # cmd.status is called twice: first for get_current_remote_name, then
-    # for the dirty-tree check. Only the second should return dirty.
-    real_status = git_repo.cmd.status
-
-    def status_side_effect(**kwargs: t.Any) -> str:
-        if "untracked_files" in kwargs:
-            return "M  some_file"
-        return real_status(**kwargs)
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "status",
-        side_effect=status_side_effect,
-    )
-
-    mocker.patch.object(
-        git_repo.cmd.stash,
-        "save",
-        side_effect=exc.CommandError(
-            output="fatal: stash save failed",
-            returncode=1,
-            cmd="git stash save",
-        ),
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert result.errors[0].step == "stash-save"
-    assert result.errors[0].exception is not None
-    assert isinstance(result.errors[0].exception, exc.CommandError)
-
-
-def test_update_repo_rebase_invalid_upstream_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that rebase with invalid upstream is recorded in SyncResult.
-
-    When ``cmd.rebase()`` raises and the error message contains
-    ``invalid_upstream``, the error is recorded as ``rebase`` and the
-    function returns immediately.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit, push, then reset to create a "behind" state
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    another_file = git_repo.path / "another_file"
-    another_file.write_text("more content", encoding="utf-8")
-    git_repo.run(["add", str(another_file)])
-    git_repo.run(["commit", "-m", "second commit"])
-    git_repo.run(["push"])
-    git_repo.run(["reset", "--hard", "HEAD^"])
-
-    # cmd.status is called twice: first for get_current_remote_name, then
-    # for the dirty-tree check. Only the second should return dirty.
-    real_status = git_repo.cmd.status
-
-    def status_side_effect(**kwargs: t.Any) -> str:
-        if "untracked_files" in kwargs:
-            return "M  some_file"
-        return real_status(**kwargs)
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "status",
-        side_effect=status_side_effect,
-    )
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "rebase",
-        side_effect=exc.CommandError(
-            output="fatal: invalid_upstream 'origin/master'",
-            returncode=128,
-            cmd="git rebase",
-        ),
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert result.errors[0].step == "rebase"
-    assert "invalid_upstream" in result.errors[0].message
-    assert result.errors[0].exception is not None
-    assert isinstance(result.errors[0].exception, exc.CommandError)
-
-
-def test_update_repo_rebase_conflict_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that rebase conflict (non-abort) is recorded in SyncResult.
-
-    When ``cmd.rebase()`` raises and the error does NOT contain
-    ``invalid_upstream`` or ``Aborting``, the function aborts the rebase,
-    tries to restore stash, and records the error as ``rebase``.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit, push, then reset to create a "behind" state
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    another_file = git_repo.path / "another_file"
-    another_file.write_text("more content", encoding="utf-8")
-    git_repo.run(["add", str(another_file)])
-    git_repo.run(["commit", "-m", "second commit"])
-    git_repo.run(["push"])
-    git_repo.run(["reset", "--hard", "HEAD^"])
-
-    # cmd.status is called twice: first for get_current_remote_name, then
-    # for the dirty-tree check. Only the second should return dirty.
-    real_status = git_repo.cmd.status
-
-    def status_side_effect(**kwargs: t.Any) -> str:
-        if "untracked_files" in kwargs:
-            return "M  some_file"
-        return real_status(**kwargs)
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "status",
-        side_effect=status_side_effect,
-    )
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "rebase",
-        side_effect=exc.CommandError(
-            output="CONFLICT (content): Merge conflict in file.txt",
-            returncode=1,
-            cmd="git rebase",
-        ),
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert result.errors[0].step == "rebase"
-    assert "CONFLICT" in result.errors[0].message
-    assert result.errors[0].exception is not None
-    assert isinstance(result.errors[0].exception, exc.CommandError)
-
-
-def test_update_repo_stash_pop_failure_recorded(
-    create_git_remote_bare_repo: CreateRepoFn,
-    tmp_path: pathlib.Path,
-    mocker: MockerFixture,
-) -> None:
-    """Test that stash pop failure is recorded in SyncResult.
-
-    When ``cmd.stash.pop()`` raises after a successful rebase on a dirty
-    tree, the error is recorded as ``stash-pop``.
-    """
-    git_server = create_git_remote_bare_repo()
-    git_repo = GitSync(
-        path=tmp_path / "myrepo",
-        url=git_server.as_uri(),
-    )
-    git_repo.obtain()
-
-    # Make a commit, push, then reset to create a "behind" state
-    initial_file = git_repo.path / "initial_file"
-    initial_file.write_text("content", encoding="utf-8")
-    git_repo.run(["add", str(initial_file)])
-    git_repo.run(["commit", "-m", "initial commit"])
-    git_repo.run(["push"])
-
-    another_file = git_repo.path / "another_file"
-    another_file.write_text("more content", encoding="utf-8")
-    git_repo.run(["add", str(another_file)])
-    git_repo.run(["commit", "-m", "second commit"])
-    git_repo.run(["push"])
-    git_repo.run(["reset", "--hard", "HEAD^"])
-
-    # cmd.status is called twice: first for get_current_remote_name, then
-    # for the dirty-tree check. Only the second should return dirty.
-    real_status = git_repo.cmd.status
-
-    def status_side_effect(**kwargs: t.Any) -> str:
-        if "untracked_files" in kwargs:
-            return "M  some_file"
-        return real_status(**kwargs)
-
-    mocker.patch.object(
-        git_repo.cmd,
-        "status",
-        side_effect=status_side_effect,
-    )
-
-    # stash.pop must fail on both attempts (index=True and without)
-    mocker.patch.object(
-        git_repo.cmd.stash,
-        "pop",
-        side_effect=exc.CommandError(
-            output="error: could not restore untracked files",
-            returncode=1,
-            cmd="git stash pop",
-        ),
-    )
-
-    result = git_repo.update_repo()
-
-    assert isinstance(result, SyncResult)
-    assert result.ok is False
-    assert len(result.errors) > 0
-    assert result.errors[0].step == "stash-pop"
     assert result.errors[0].exception is not None
     assert isinstance(result.errors[0].exception, exc.CommandError)
 
@@ -2128,3 +1635,494 @@ def test_update_repo_rejects_option_like_rev(
 
     assert not result.ok, "update_repo() should fail for an option-like rev"
     assert victim.read_text() == "important\n", "Prevent rev argument injection"
+
+
+def _preservation_update(repo: GitSync) -> str:
+    """Create a fetched successor while leaving the checkout at its base."""
+    base = repo.get_revision()
+    (repo.path / "upstream.txt").write_text("upstream\n")
+    repo.run(["add", "upstream.txt"])
+    repo.run(["commit", "-m", "upstream"])
+    repo.run(
+        ["push", "--set-upstream", "origin", f"HEAD:preservation-{repo.path.name}"]
+    )
+    repo.run(["reset", "--hard", base])
+    return base
+
+
+def test_preservation_abort_before_capture(git_repo: GitSync) -> None:
+    """Default abort leaves dirty contents and HEAD untouched."""
+    base = _preservation_update(git_repo)
+    (git_repo.path / "local.txt").write_text("local\n")
+    result = git_repo.update_repo()
+    assert not result.ok
+    assert result.update_state == "not-started"
+    assert git_repo.get_revision() == base
+    assert (git_repo.path / "local.txt").read_text() == "local\n"
+
+
+@pytest.mark.parametrize("detached", [False, True])
+def test_preservation_recovers_index_offline(
+    git_repo: GitSync, tmp_path: pathlib.Path, detached: bool
+) -> None:
+    """A retained stash recovers both index and working contents at the saved base."""
+    base = _preservation_update(git_repo)
+    target = None
+    if detached:
+        target = SyncTarget(commit=git_repo.run(["rev-parse", "@{upstream}"]).strip())
+        git_repo.run(["checkout", "--detach", base])
+    original = git_repo.get_position()
+    local = git_repo.path / "local.txt"
+    local.write_text("staged\n")
+    git_repo.run(["add", "local.txt"])
+    local.write_text("unstaged\n")
+    result = git_repo.update_repo(target=target, policy=SyncPolicy(dirty="preserve"))
+    assert result.ok, result.errors
+    assert result.preservation_state == "restored"
+    assert result.recovery is not None
+    assert git_repo.run(["show", ":local.txt"]) == "staged\n"
+    assert local.read_text() == "unstaged\n"
+    git_repo.run(["remote", "set-url", "origin", str(tmp_path / "absent")])
+    destination = tmp_path / "recovered"
+    recovered = git_repo.recover_changes(result.recovery, destination=destination)
+    assert recovered.ok, recovered.errors
+    assert GitSync(url=git_repo.url, path=destination).get_position() == original
+    assert run(["git", "rev-parse", "HEAD"], cwd=destination).strip() == base
+    assert run(["git", "show", ":local.txt"], cwd=destination) == "staged\n"
+    assert (destination / "local.txt").read_text() == "unstaged\n"
+    assert git_repo.list_recoveries()[0].recovery == result.recovery
+    git_repo.release_changes(result.recovery)
+    assert git_repo.list_recoveries() == ()
+
+
+def test_preservation_drift_keep_leaves_dirty_branch(git_repo: GitSync) -> None:
+    """Keep policy does not capture or switch a differing configured branch."""
+    _preservation_update(git_repo)
+    git_repo.run(["branch", "other", "@{upstream}"])
+    (git_repo.path / "local.txt").write_text("local\n")
+    original = git_repo.get_position()
+    result = git_repo.update_repo(
+        target=SyncTarget(branch="other"), policy=SyncPolicy(drift="keep")
+    )
+    assert result.ok, result.errors
+    assert git_repo.get_position() == original
+    assert result.recovery is None
+
+
+def test_preservation_divergence_retains_local_commit(git_repo: GitSync) -> None:
+    """Follow refuses divergent histories before capturing dirty changes."""
+    _preservation_update(git_repo)
+    (git_repo.path / "commit.txt").write_text("local commit\n")
+    git_repo.run(["add", "commit.txt"])
+    git_repo.run(["commit", "-m", "local"])
+    head = git_repo.get_revision()
+    (git_repo.path / "local.txt").write_text("dirty\n")
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert not result.ok
+    assert result.recovery is None
+    assert git_repo.get_revision() == head
+    assert (git_repo.path / "local.txt").read_text() == "dirty\n"
+
+
+@pytest.mark.parametrize("selector", ["branch", "tag", "commit"])
+def test_preservation_equal_alias_keeps_attachment(
+    git_repo: GitSync, selector: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Equal object IDs do not warn or change attachment under drift keep/warn."""
+    git_repo.run(["branch", "alias"])
+    git_repo.run(["tag", "alias"])
+    target = SyncTarget(
+        **{selector: git_repo.get_revision() if selector == "commit" else "alias"}
+    )
+    original = git_repo.get_position()
+    for drift in ("keep", "warn"):
+        result = git_repo.update_repo(target=target, policy=SyncPolicy(drift=drift))
+        assert result.ok, result.errors
+        assert git_repo.get_position() == original
+    assert not [record for record in caplog.records if record.name == "libvcs.sync.git"]
+
+
+@pytest.mark.parametrize(
+    "fault", ["capture", "update", "restore", "inspection", "publication"]
+)
+def test_preservation_retains_token_after_fault(
+    git_repo: GitSync,
+    monkeypatch: pytest.MonkeyPatch,
+    fault: str,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Every failure after capture retains recovery and the first operation error."""
+    from libvcs._internal import preservation
+
+    _preservation_update(git_repo)
+    (git_repo.path / "local.txt").write_text("local\n")
+    real_run = git_repo.cmd.run
+    real_read = git_repo._read_git
+
+    def fail_command(args: t.Any, **kwargs: t.Any) -> str:
+        if (fault == "update" and args[0] == "merge") or (
+            fault == "restore" and args[:2] == ["stash", "apply"]
+        ):
+            raise exc.CommandError(output=fault, cmd=args, returncode=1)
+        output = real_run(args, **kwargs)
+        if fault == "capture" and args[:2] == ["stash", "push"]:
+            raise exc.CommandError(output=fault, cmd=args, returncode=1)
+        return output
+
+    def fail_read(args: list[str], **kwargs: t.Any) -> str:
+        if fault == "inspection" and args[:2] == ["ls-files", "--unmerged"]:
+            raise exc.CommandError(output=fault, cmd=args, returncode=1)
+        return real_read(args, **kwargs)
+
+    def fail_finish(*args: t.Any, **kwargs: t.Any) -> None:
+        message = "publication"
+        raise OSError(message)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(git_repo.cmd, "run", fail_command)
+        patch.setattr(git_repo, "_read_git", fail_read)
+        if fault == "publication":
+            patch.setattr(preservation.RecoveryStore, "finish", fail_finish)
+        result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert not result.ok
+    assert result.recovery is not None
+    assert result.errors[0].step == fault
+    assert git_repo.list_recoveries()[0].recovery == result.recovery
+    recovered = git_repo.recover_changes(
+        result.recovery, destination=tmp_path / "recovered"
+    )
+    assert recovered.ok, recovered.errors
+    assert (tmp_path / "recovered" / "local.txt").read_text() == "local\n"
+
+
+@pytest.mark.parametrize("collision", [False, True])
+def test_preservation_ignored_output(git_repo: GitSync, collision: bool) -> None:
+    """Ignored output only blocks updates that write an overlapping path."""
+    base = _preservation_update(git_repo)
+    (git_repo.path / ".git" / "info" / "exclude").write_text("*.txt\n")
+    output = git_repo.path / ("upstream.txt" if collision else "build.txt")
+    output.write_text("ignored\n")
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert result.ok is not collision, result.errors
+    assert output.read_text() == "ignored\n"
+    assert (git_repo.get_revision() == base) is collision
+    assert result.recovery is None
+
+
+@pytest.mark.parametrize("kind", ["text", "binary", "unknown", "disjoint"])
+def test_preservation_native_merge_outcomes(
+    git_repo: GitSync, kind: str, tmp_path: pathlib.Path
+) -> None:
+    """Native indexed apply reports collisions and merges disjoint text changes."""
+    file = git_repo.path / "shared"
+    if kind != "unknown":
+        file.write_bytes(
+            b"base\0binary"
+            if kind == "binary"
+            else b"first\n" + b"middle\n" * 12 + b"last\n"
+        )
+        git_repo.run(["add", "shared"])
+        git_repo.run(["commit", "-m", "base"])
+    base = git_repo.get_revision()
+    file.write_bytes(
+        b"upstream\0binary"
+        if kind == "binary"
+        else b"upstream\n" + b"middle\n" * 12 + b"last\n"
+    )
+    git_repo.run(["add", "shared"])
+    git_repo.run(["commit", "-m", "upstream"])
+    git_repo.run(
+        ["push", "--set-upstream", "origin", f"HEAD:merge-{git_repo.path.name}"]
+    )
+    git_repo.run(["reset", "--hard", base])
+    local = (
+        b"local\0binary"
+        if kind == "binary"
+        else (
+            b"first\n" + b"middle\n" * 12 + b"local\n"
+            if kind == "disjoint"
+            else b"local\n"
+        )
+    )
+    file.write_bytes(local)
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert result.recovery is not None
+    assert result.ok is (kind == "disjoint"), result.errors
+    assert result.update_state == "completed"
+    if kind == "disjoint":
+        assert file.read_bytes().startswith(b"upstream\n")
+        assert file.read_bytes().endswith(b"local\n")
+    recovered = git_repo.recover_changes(
+        result.recovery, destination=tmp_path / "recovered"
+    )
+    assert recovered.ok, recovered.errors
+    assert (tmp_path / "recovered" / "shared").read_bytes() == local
+    assert run(["git", "rev-parse", "HEAD"], cwd=tmp_path / "recovered").strip() == base
+
+
+def test_preservation_unchanged_preserves_existing_stash(git_repo: GitSync) -> None:
+    """No-change updates never adopt or remove a caller-owned stash."""
+    (git_repo.path / "caller").write_text("caller\n")
+    git_repo.run(["stash", "push", "-u", "-m", "caller"])
+    before = git_repo.run(["stash", "list", "--format=%H"])
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert result.ok, result.errors
+    assert result.recovery is None
+    assert git_repo.run(["stash", "list", "--format=%H"]) == before
+
+
+@pytest.mark.parametrize(
+    "busy", ["MERGE_HEAD", "rebase-merge", "index.lock", "nested", "submodule"]
+)
+def test_preservation_native_preconditions(git_repo: GitSync, busy: str) -> None:
+    """Native activity and independent repositories fail before fetch or capture."""
+    _preservation_update(git_repo)
+    if busy == "nested":
+        (git_repo.path / "nested" / ".git").mkdir(parents=True)
+    elif busy == "submodule":
+        git_repo.run(
+            [
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                f"160000,{git_repo.get_revision()},module",
+            ]
+        )
+    elif busy == "rebase-merge":
+        (git_repo.path / ".git" / busy).mkdir()
+    else:
+        (git_repo.path / ".git" / busy).write_text(git_repo.get_revision())
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert not result.ok
+    assert result.errors[0].step == "precondition"
+    assert result.recovery is None
+
+
+def test_preservation_rename_paths(git_repo: GitSync) -> None:
+    """NUL status preserves both rename paths including whitespace and newlines."""
+    original = git_repo.path / "old\nname"
+    original.write_text("contents")
+    git_repo.run(["add", "--", original.name])
+    git_repo.run(["commit", "-m", "original"])
+    git_repo.run(["mv", "--", original.name, "new name"])
+    assert set(git_repo._dirty_paths()) == {"old\nname", "new name"}
+
+
+def test_preservation_interrupted_save_is_discoverable(
+    git_repo: GitSync, monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    """An interrupted save retains discoverable intent and native stash identity."""
+    _preservation_update(git_repo)
+    (git_repo.path / "local.txt").write_text("local\n")
+    real_run = git_repo.cmd.run
+
+    def interrupt(args: t.Any, **kwargs: t.Any) -> str:
+        output = real_run(args, **kwargs)
+        if args[:2] == ["stash", "push"]:
+            raise KeyboardInterrupt
+        return output
+
+    with monkeypatch.context() as patch:
+        patch.setattr(git_repo.cmd, "run", interrupt)
+        with pytest.raises(KeyboardInterrupt):
+            git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    interrupted = git_repo.list_recoveries()[0]
+    assert not interrupted.ok
+    assert interrupted.recovery is not None
+    assert interrupted.errors[0].step == "interrupted"
+    blocked = git_repo.update_repo()
+    assert not blocked.ok
+    assert blocked.recovery == interrupted.recovery
+    recovered = git_repo.recover_changes(
+        interrupted.recovery, destination=tmp_path / "recovered"
+    )
+    assert recovered.ok, recovered.errors
+    assert (tmp_path / "recovered" / "local.txt").read_text() == "local\n"
+
+
+def test_preservation_release_keeps_caller_stash(git_repo: GitSync) -> None:
+    """Release identifies the owned stash beneath a newer caller stash."""
+    _preservation_update(git_repo)
+    (git_repo.path / "local.txt").write_text("local\n")
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert result.ok, result.errors
+    assert result.recovery is not None
+    git_repo.run(["stash", "push", "-u", "-m", "caller"])
+    caller = git_repo.run(["rev-parse", "refs/stash"])
+    git_repo.release_changes(result.recovery)
+    assert git_repo.run(["rev-parse", "refs/stash"]) == caller
+    assert git_repo.run(["stash", "list", "--format=%H"]) == caller
+
+
+def test_preservation_missing_promised_objects_fail_offline(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    git_commit_envvars: GitCommitEnvVars,
+) -> None:
+    """Partial history recovery refuses absent blobs without contacting the promisor."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    remote = tmp_path / "remote"
+    run(["git", "init", str(remote)], env=git_commit_envvars)
+    run(["git", "config", "uploadpack.allowFilter", "true"], cwd=remote)
+    for version in range(3):
+        (remote / "tracked").write_text(f"version {version}\n")
+        run(["git", "add", "tracked"], cwd=remote)
+        run(
+            ["git", "commit", "-m", f"version {version}"],
+            cwd=remote,
+            env=git_commit_envvars,
+        )
+    repo = GitSync(
+        url=remote.as_uri(),
+        path=tmp_path / "checkout",
+        options=GitOptions(filter=BlobNone()),
+    )
+    repo.obtain()
+    (remote / "upstream").write_text("upstream\n")
+    run(["git", "add", "upstream"], cwd=remote)
+    run(["git", "commit", "-m", "upstream"], cwd=remote, env=git_commit_envvars)
+    (repo.path / "local").write_text("local\n")
+    result = repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert result.ok, result.errors
+    assert result.recovery is not None
+    remote.rename(tmp_path / "offline-remote")
+    destination = tmp_path / "recovered"
+    recovered = repo.recover_changes(result.recovery, destination=destination)
+    assert not recovered.ok
+    assert recovered.recovery == result.recovery
+    assert not destination.exists()
+    assert repo.list_recoveries()[0].recovery == result.recovery
+
+
+def test_preservation_linked_checkout_shares_interruption_guard(
+    git_repo: GitSync, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Interrupted operations block another worktree sharing the stash namespace."""
+    _preservation_update(git_repo)
+    linked = tmp_path / "linked"
+    git_repo.run(["worktree", "add", "-b", "linked", str(linked)])
+    other = GitSync(url=git_repo.url, path=linked)
+    (git_repo.path / "local").write_text("local\n")
+    real_run = git_repo.cmd.run
+
+    def interrupt(args: t.Any, **kwargs: t.Any) -> str:
+        output = real_run(args, **kwargs)
+        if args[:2] == ["stash", "push"]:
+            raise KeyboardInterrupt
+        return output
+
+    with monkeypatch.context() as patch:
+        patch.setattr(git_repo.cmd, "run", interrupt)
+        with pytest.raises(KeyboardInterrupt):
+            git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    result = other.update_repo()
+    assert not result.ok
+    assert result.recovery == git_repo.list_recoveries()[0].recovery
+    assert result.errors[0].step == "interrupted"
+
+
+def test_preservation_follow_attaches_equal_branch(git_repo: GitSync) -> None:
+    """Follow may attach an explicit equal-OID branch to govern future updates."""
+    git_repo.run(["branch", "alias"])
+    result = git_repo.update_repo(target=SyncTarget(branch="alias"))
+    assert result.ok, result.errors
+    assert git_repo.get_position().ref_name == "alias"
+
+
+def test_preservation_discard_preserves_commits_and_ignored(git_repo: GitSync) -> None:
+    """Explicit discard removes ordinary dirt without rewriting local commits."""
+    _preservation_update(git_repo)
+    git_repo.run(["merge", "--ff-only", "@{upstream}"])
+    (git_repo.path / "commit").write_text("local commit\n")
+    git_repo.run(["add", "commit"])
+    git_repo.run(["commit", "-m", "local"])
+    head = git_repo.get_revision()
+    (git_repo.path / "commit").write_text("dirt\n")
+    (git_repo.path / "unknown").write_text("unknown\n")
+    (git_repo.path / ".git" / "info" / "exclude").write_text("ignored\n")
+    (git_repo.path / "ignored").write_text("ignored\n")
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="discard"))
+    assert result.ok, result.errors
+    assert git_repo.get_revision() == head
+    assert (git_repo.path / "commit").read_text() == "local commit\n"
+    assert not (git_repo.path / "unknown").exists()
+    assert (git_repo.path / "ignored").read_text() == "ignored\n"
+
+
+def test_preservation_phase_write_stops_update(
+    git_repo: GitSync, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An unpublished updating phase cannot start the native update."""
+    from libvcs._internal import preservation
+
+    base = _preservation_update(git_repo)
+    (git_repo.path / "local").write_text("local\n")
+    phase = preservation.RecoveryStore.phase
+
+    def fail_updating(
+        store: preservation.RecoveryStore,
+        token: t.Any,
+        record: t.Any,
+        value: str,
+    ) -> None:
+        if value == "updating":
+            message = "updating publication failed"
+            raise OSError(message)
+        phase(store, token, record, value)
+
+    monkeypatch.setattr(preservation.RecoveryStore, "phase", fail_updating)
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert not result.ok
+    assert result.recovery is not None
+    assert result.update_state == "not-started"
+    assert git_repo.get_revision() == base
+    assert (git_repo.path / "local").read_text() == "local\n"
+
+
+def test_preservation_clean_submodule_failure_is_reported(
+    git_repo: GitSync, mocker: MockerFixture
+) -> None:
+    """Clean update reports native submodule errors without discarding checkout data."""
+    mocker.patch.object(
+        git_repo.cmd.submodule,
+        "update",
+        side_effect=exc.CommandError(
+            output="submodule failure", returncode=1, cmd="git submodule update"
+        ),
+    )
+    result = git_repo.update_repo()
+    assert not result.ok
+    assert result.errors[0].step == "submodule-update"
+
+
+def test_preservation_ignored_obstruction_at_capture_base(git_repo: GitSync) -> None:
+    """Native stash cleanup cannot overwrite ignored obstructions at the old base."""
+    directory = git_repo.path / "directory"
+    directory.mkdir()
+    (directory / "tracked").write_text("tracked\n")
+    git_repo.run(["add", "directory"])
+    git_repo.run(["commit", "-m", "base directory"])
+    base = _preservation_update(git_repo)
+    (directory / "tracked").unlink()
+    directory.rmdir()
+    (git_repo.path / ".git" / "info" / "exclude").write_text("directory\n")
+    directory.write_text("ignored obstruction\n")
+    result = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert not result.ok
+    assert result.recovery is None
+    assert git_repo.get_revision() == base
+    assert directory.read_text() == "ignored obstruction\n"
+
+
+def test_preservation_damaged_record_retains_token(git_repo: GitSync) -> None:
+    """Damaged retained records block updates with their discoverable token."""
+    _preservation_update(git_repo)
+    (git_repo.path / "local").write_text("local\n")
+    saved = git_repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert saved.ok, saved.errors
+    assert saved.recovery is not None
+    (pathlib.Path(saved.recovery.location) / "operation.json").write_text("{")
+    result = git_repo.update_repo()
+    assert not result.ok
+    assert result.recovery == saved.recovery
+    assert result.update_state == "unknown"
