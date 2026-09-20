@@ -33,6 +33,7 @@ from libvcs.sync.base import (
     BaseSync,
     SyncResult,
     VCSLocation,
+    WorkingCopyPosition,
     convert_pip_url as base_convert_pip_url,
 )
 
@@ -713,6 +714,26 @@ class GitSync(BaseSync):
             self.log.exception("Failed to update submodules")
             result.add_error("submodule-update", str(e), exception=e)
         return result
+
+    def get_position(self) -> WorkingCopyPosition:
+        """Read HEAD without fetching; detached commits do not follow updates."""
+        revision = self.cmd.run(["rev-parse", "--verify", "HEAD"]).strip()
+        try:
+            branch = self.cmd.run(
+                ["symbolic-ref", "--quiet", "HEAD"],
+                check_returncode=True,
+            ).strip()
+        except exc.CommandError as error:
+            if error.returncode != 1:
+                raise
+        else:
+            return WorkingCopyPosition(
+                revision,
+                branch.removeprefix("refs/heads/"),
+                "branch",
+                follows=True,
+            )
+        return WorkingCopyPosition(revision, revision, "commit", follows=False)
 
     def remotes(self) -> GitSyncRemoteDict:
         """Return remotes like git remote -v.

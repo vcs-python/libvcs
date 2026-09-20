@@ -18,7 +18,7 @@ from libvcs import exc
 from libvcs._internal.types import StrPath
 from libvcs.cmd.hg import Hg
 
-from .base import BaseSync, SyncResult
+from .base import BaseSync, SyncResult, WorkingCopyPosition
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,16 @@ class HgSync(BaseSync):
     def get_revision(self) -> str:
         """Get latest revision of this mercurial repository."""
         return self.run(["parents", "--template={rev}"])
+
+    def get_position(self) -> WorkingCopyPosition:
+        """Read the parent and active bookmark or named branch without pulling."""
+        revision, bookmark = self.cmd.run(
+            ["log", "-r", ".", "-T", "{node}\\0{activebookmark}"],
+        ).split("\0")
+        if bookmark:
+            return WorkingCopyPosition(revision, bookmark, "bookmark", follows=True)
+        branch = self.cmd.run(["branch"]).strip()
+        return WorkingCopyPosition(revision, branch, "branch", follows=True)
 
     def update_repo(self, *args: t.Any, **kwargs: t.Any) -> SyncResult:
         """Pull changes from remote Mercurial repository into this one.

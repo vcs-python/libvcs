@@ -6,7 +6,7 @@ import logging
 
 from .__about__ import __version__
 from ._internal.run import CmdLoggingAdapter
-from .sync.base import BaseSync, SyncError, SyncResult
+from .sync.base import BaseSync, SyncError, SyncResult, WorkingCopyPosition
 from .sync.git import GitSync
 from .sync.hg import HgSync
 from .sync.svn import SvnSync
@@ -19,6 +19,7 @@ __all__ = [
     "SvnSync",
     "SyncError",
     "SyncResult",
+    "WorkingCopyPosition",
     "__version__",
 ]
 

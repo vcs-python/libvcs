@@ -53,6 +53,27 @@ def test_obtain_reports_clone_failure(tmp_path: pathlib.Path) -> None:
     assert "does not exist" in error.value.output
 
 
+def test_git_position_distinguishes_attached_and_detached(git_repo: GitSync) -> None:
+    """Position reports a moving branch or an immutable detached commit."""
+    branch = git_repo.cmd.run(["symbolic-ref", "--short", "HEAD"]).strip()
+    revision = git_repo.get_revision()
+    position = git_repo.get_position()
+
+    assert (position.ref_kind, position.ref_name) == ("branch", branch)
+    assert position.revision == revision
+    assert position.follows
+
+    git_repo.cmd.run(["tag", branch], check_returncode=True)
+    assert git_repo.get_position().ref_name == branch
+
+    git_repo.cmd.run(["checkout", "--detach", "HEAD"], check_returncode=True)
+    position = git_repo.get_position()
+
+    assert (position.ref_kind, position.ref_name) == ("commit", revision)
+    assert position.revision == revision
+    assert not position.follows
+
+
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
     ("constructor", "lazy_constructor_options"),

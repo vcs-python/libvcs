@@ -20,6 +20,58 @@ if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
 
 
+def test_svn_position_reports_local_url_and_revision(
+    tmp_path: pathlib.Path,
+    svn_remote_repo_with_files: pathlib.Path,
+) -> None:
+    """Position reads the working copy after its remote becomes unavailable."""
+    remote = tmp_path / "remote"
+    shutil.copytree(svn_remote_repo_with_files, remote)
+    repo = SvnSync(url=remote.as_uri(), path=tmp_path / "copy")
+    repo.obtain()
+    shutil.rmtree(remote)
+
+    position = repo.get_position()
+
+    assert (position.ref_kind, position.ref_name) == ("url", repo.url)
+    assert position.revision == "3"
+    assert position.follows
+    assert not position.mixed
+    assert not position.switched
+
+
+def test_svn_position_reports_mixed_and_switched_subtrees(
+    tmp_path: pathlib.Path,
+    create_svn_remote_repo: CreateRepoFn,
+) -> None:
+    """A root revision cannot stand in for mixed or switched child entries."""
+    remote = create_svn_remote_repo()
+    repo = SvnSync(url=remote.as_uri(), path=tmp_path / "copy")
+    repo.obtain()
+    (repo.path / "trunk").mkdir()
+    (repo.path / "trunk" / "file.txt").write_text("first\n")
+    repo.cmd.run(["add", "trunk"])
+    assert not repo.get_position().mixed
+    repo.cmd.run(["commit", "-m", "add trunk"])
+
+    position = repo.get_position()
+    assert position.mixed
+    assert position.revision == "0"
+
+    repo.cmd.run(["update"])
+    repo.cmd.run(["copy", "trunk", "branch"])
+    repo.cmd.run(["commit", "-m", "copy branch"])
+    repo.cmd.run(["update"])
+    repo.cmd.run(["copy", "-r", "1", f"{repo.url}/trunk", "old-copy"])
+    assert not repo.get_position().mixed
+    repo.cmd.run(["switch", f"{repo.url}/branch", "trunk"])
+
+    position = repo.get_position()
+    assert not position.mixed
+    assert position.switched
+    assert position.ref_name == repo.url
+
+
 def test_svn_sync(tmp_path: pathlib.Path, svn_remote_repo: pathlib.Path) -> None:
     """Tests for SvnSync."""
     repo_name = "my_svn_project"

@@ -20,6 +20,28 @@ $ uv add libvcs --prerelease allow
 _Notes on the upcoming release will go here._
 <!-- END PLACEHOLDER - ADD NEW CHANGELOG ENTRIES BELOW THIS LINE -->
 
+### What's new
+
+#### Inspect working-copy positions
+
+`GitSync.get_position()`, `HgSync.get_position()`, and
+`SvnSync.get_position()` report the checkout's local revision and ref without
+contacting a remote. Subversion also reports mixed revisions and switched
+subtrees. See {doc}`sync/index` for an example.
+
+### Fixes
+
+#### Keep partial-clone remotes usable
+
+Git remote listing retains fetch URLs annotated with a partial-clone filter.
+A failed `GitSync.obtain()` reports the clone command and Git's original
+message before attempting submodule or remote setup.
+
+#### Keep Subversion options before command targets
+
+`Svn.run()` places global options before command arguments, so an explicit
+`--` separator does not turn `--non-interactive` into a filename.
+
 ## libvcs 0.46.0 (2026-08-30)
 
 libvcs 0.46.0 hardens the command wrappers against argument injection: `Git.pull()`, a `GitSync` revision, and `Svn.checkout()` now reject a value a VCS binary would parse as an option in the positions an end-of-options `--` cannot guard, closing paths that could otherwise run a command or truncate a file. It also gives progress-callback timestamps an aware UTC value, documents what every field holds in the API reference, and moves the lint and CI toolchain to current majors.

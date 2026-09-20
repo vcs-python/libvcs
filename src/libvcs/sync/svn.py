@@ -18,12 +18,13 @@ import os
 import pathlib
 import re
 import typing as t
+import xml.etree.ElementTree
 
 from libvcs import exc
 from libvcs._internal.types import StrPath
 from libvcs.cmd.svn import Svn
 
-from .base import BaseSync, SyncResult
+from .base import BaseSync, SyncResult, WorkingCopyPosition
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,35 @@ class SvnSync(BaseSync):
             quiet=True,
             check_returncode=True,
             **kwargs,
+        )
+
+    def get_position(self) -> WorkingCopyPosition:
+        """Read base revisions and switched subtrees without contacting the server."""
+        info = xml.etree.ElementTree.fromstring(
+            self.cmd.run(["info", "--xml", "--", "."]),
+        )
+        entries = info.findall("entry")
+        if not entries or entries[0].findtext("url") is None:
+            message = "missing working-copy entry"
+            raise SvnUrlRevFormattingError(message)
+        root = entries[0]
+        status = xml.etree.ElementTree.fromstring(
+            self.cmd.run(["status", "--verbose", "--xml", "--", "."]),
+        )
+        revisions = {
+            item.attrib["revision"]
+            for item in status.iter("wc-status")
+            if item.attrib.get("revision", "").isdecimal()
+        }
+        return WorkingCopyPosition(
+            revision=root.attrib["revision"],
+            ref_name=t.cast("str", root.findtext("url")),
+            ref_kind="url",
+            follows=self.rev in (None, "HEAD"),
+            mixed=len(revisions) > 1,
+            switched=any(
+                item.get("switched") == "true" for item in status.iter("wc-status")
+            ),
         )
 
     def get_revision_file(self, location: str) -> int:

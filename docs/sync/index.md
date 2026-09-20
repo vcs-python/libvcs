@@ -20,6 +20,27 @@ versions.
 
 :::
 
+## Read the checkout position
+
+Use `get_position()` to inspect the checkout before choosing an update policy.
+It returns an immutable {class}`~libvcs.sync.base.WorkingCopyPosition` from
+local metadata. It does not fetch or contact a server.
+
+```python
+>>> position = example_git_repo.get_position()
+>>> position.ref_kind
+'branch'
+>>> position.revision == example_git_repo.get_revision()
+True
+>>> position.follows
+True
+```
+
+Git reports an attached branch or a detached commit. Mercurial reports its
+active bookmark when present, otherwise its named branch. Subversion reports
+the checkout URL and root base revision; `mixed` and `switched` identify
+working copies whose children cannot be described by the root alone.
+
 ## Modules
 
 ::::{grid} 1 1 2 2

@@ -15,6 +15,34 @@ from libvcs._internal.types import StrPath
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass(frozen=True)
+class WorkingCopyPosition:
+    """Describe a checkout using the backend's local metadata.
+
+    Attributes
+    ----------
+    revision : str
+        Full commit identifier or Subversion base revision.
+    ref_name : str
+        Branch, bookmark, detached commit, or checkout URL.
+    ref_kind : str
+        Meaning of ``ref_name`` in the backend.
+    follows : bool
+        Whether the selected ref follows new revisions on update.
+    mixed : bool
+        Whether Subversion entries have different base revisions.
+    switched : bool
+        Whether a Subversion subtree follows a different repository URL.
+    """
+
+    revision: str
+    ref_name: str
+    ref_kind: t.Literal["branch", "bookmark", "tag", "commit", "url"]
+    follows: bool
+    mixed: bool = False
+    switched: bool = False
+
+
 @dataclasses.dataclass
 class SyncError:
     """An error encountered during a sync step.
@@ -287,6 +315,10 @@ class BaseSync:
             log_in_real_time=log_in_real_time or self.log_in_real_time or False,
             cwd=cwd,
         )
+
+    def get_position(self) -> WorkingCopyPosition:
+        """Read the backend's local checkout metadata without contacting a remote."""
+        raise NotImplementedError
 
     def ensure_dir(self, *args: t.Any, **kwargs: t.Any) -> bool:
         """Assure destination path exists. If not, create directories."""

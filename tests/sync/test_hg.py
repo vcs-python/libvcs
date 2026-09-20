@@ -30,6 +30,24 @@ def set_vcs_hgconfig(
     return set_vcs_hgconfig
 
 
+def test_hg_position_reports_active_bookmark(hg_repo: HgSync) -> None:
+    """An active bookmark takes precedence over the named branch."""
+    revision = hg_repo.cmd.run(["log", "-r", ".", "-T", "{node}"]).strip()
+    position = hg_repo.get_position()
+    assert (position.ref_kind, position.ref_name) == ("branch", "default")
+    assert position.revision == revision
+    assert position.follows
+
+    hg_repo.cmd.run(["branch", "next"], check_returncode=True)
+    assert hg_repo.get_position().ref_name == "next"
+
+    hg_repo.cmd.run(["bookmark", "develop"], check_returncode=True)
+    position = hg_repo.get_position()
+    assert (position.ref_kind, position.ref_name) == ("bookmark", "develop")
+    assert position.revision == revision
+    assert position.follows
+
+
 def test_hg_sync(
     tmp_path: pathlib.Path,
     projects_path: pathlib.Path,
