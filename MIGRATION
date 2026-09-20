@@ -156,17 +156,21 @@ references these fixtures.
 
 `URL.rule_map` is now a class attribute rather than a dataclass attribute.
 
-Before Python 3.11 rejected mutable dataclass defaults:
+Python 3.11 and newer reject a `RuleMap` instance as a mutable dataclass
+default. Python 3.10 accepts the field:
 
 ```python
 >>> import dataclasses
+>>> import sys
 >>> from libvcs.url.base import RuleMap
->>> @dataclasses.dataclass(repr=False)
-... class GitLabURL:
-...     rule_map: RuleMap = RuleMap(_rule_map={})
-Traceback (most recent call last):
-...
-ValueError: mutable default <class 'libvcs.url.base.RuleMap'> for field rule_map is not allowed: use default_factory
+>>> try:
+...     @dataclasses.dataclass(repr=False)
+...     class GitLabURL:
+...         rule_map: RuleMap = RuleMap(_rule_map={})
+... except ValueError as error:
+...     assert "mutable default" in str(error)
+... else:
+...     assert sys.version_info < (3, 11)
 ```
 
 After release:
