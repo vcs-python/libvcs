@@ -64,7 +64,7 @@ def test_initial_checkout_respects_target_before_drift_policy(
 @pytest.mark.parametrize("local_only", [False, True])
 def test_detach_resolves_branch_after_native_fetch(
     git_repo: GitSync,
-    git_remote_repo: pathlib.Path,
+    tmp_path: pathlib.Path,
     local_only: bool,
 ) -> None:
     """Detachment uses refreshed tracking refs or the native local fallback."""
@@ -75,22 +75,13 @@ def test_detach_resolves_branch_after_native_fetch(
         git_repo.run(["commit", "--allow-empty", "-m", "local work"])
         expected = git_repo.get_revision()
     else:
-        subprocess.run(
-            [
-                "git",
-                "-C",
-                str(git_remote_repo),
-                "commit",
-                "--allow-empty",
-                "-m",
-                "next",
-            ],
-            check=True,
-            capture_output=True,
+        upstream = GitSync(
+            url=git_repo.path.as_uri(), path=tmp_path / "private-upstream"
         )
-        expected = subprocess.check_output(
-            ["git", "-C", str(git_remote_repo), "rev-parse", "HEAD"], text=True
-        ).strip()
+        upstream.obtain()
+        git_repo.run(["remote", "set-url", "origin", upstream.path.as_uri()])
+        upstream.run(["commit", "--allow-empty", "-m", "next"])
+        expected = upstream.get_revision()
     result = git_repo.update_repo(target=SyncTarget(branch=branch), detach=True)
     assert result.ok, result.errors
     position = git_repo.get_position()
