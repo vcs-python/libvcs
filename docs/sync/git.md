@@ -12,6 +12,31 @@ Compare to:
 [`salt.states.git`](https://docs.saltproject.io/en/latest/ref/states/all/salt.states.git.html),
 [`ansible.builtin.git`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)
 
+## Partial clones
+
+Pass any {ref}`validated Git filter <git-partial-clone-filters>` as
+`git_filter` when constructing {class}`~libvcs.sync.git.GitSync`. The filter
+applies to the initial clone and to submodules created during that obtain. An
+existing checkout keeps its configured partial-clone filter during updates.
+
+```python
+>>> from libvcs.cmd.git_filter import BlobNone
+>>> from libvcs.sync.git import GitSync
+>>> repo = GitSync(
+...     url="https://example.com/project.git",
+...     path=tmp_path / "project",
+...     git_filter=BlobNone(),
+... )
+>>> repo.git_filter
+('blob:none',)
+```
+
+{class}`~libvcs.cmd.git_filter.Auto` cannot be used with `GitSync`: obtain
+forwards the configured filter to `git submodule update`, and that command has
+no `auto` mode. Use {meth}`~libvcs.cmd.git.Git.clone` or
+{meth}`~libvcs.cmd.git.Git.fetch` directly when server-selected filtering is
+required.
+
 ```{eval-rst}
 .. automodule:: libvcs.sync.git
    :members:

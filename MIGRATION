@@ -24,6 +24,23 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### Git partial-clone filters have typed models
+
+String `_filter` arguments remain valid. Callers that build filters from
+configuration can replace unchecked strings with models or kind-tagged
+mappings from `libvcs.cmd.git_filter`:
+
+```python
+>>> from libvcs.cmd.git_filter import BlobLimit
+>>> BlobLimit("4m")
+BlobLimit(limit='4m')
+```
+
+`GitSync(git_filter=...)` validates the value during construction, applies it
+to the initial clone and new submodules, and leaves existing checkout filters
+unchanged during updates. `Auto` is unavailable through `GitSync` because Git
+does not accept `auto` on `git submodule update`.
+
 ### pytest fixtures: `gitconfig` / `hgconfig` renamed to `vcs_gitconfig` / `vcs_hgconfig` (#528)
 
 - pytest: `gitconfig` renamed to `vcs_gitconfig`

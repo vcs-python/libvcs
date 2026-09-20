@@ -22,6 +22,22 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+#### Typed Git filters validate partial clones before execution
+
+{mod}`libvcs.cmd.git_filter` provides frozen models for Git's `blob:none`,
+`blob:limit`, `tree`, `object:type`, `sparse:oid`, `auto`, and `combine`
+filters. Specs and kind-tagged mappings parse into the same models, with
+validation for numeric ranges, combine escaping, recursion, incompatible
+`auto` filters, and field names.
+
+{meth}`~libvcs.cmd.git.Git.clone`, {meth}`~libvcs.cmd.git.Git.fetch`,
+{meth}`~libvcs.cmd.git.Git.pull`, and
+{meth}`~libvcs.cmd.git.GitSubmoduleCmd.update` accept models, strings,
+mappings, and sequences through `_filter`. Sequences produce one
+`--filter=` argument per item. {class}`~libvcs.sync.git.GitSync` accepts the
+same values through `git_filter`, validates them before creating a checkout,
+and applies them to the initial clone and new submodules.
+
 #### Inspect working-copy positions
 
 `GitSync.get_position()`, `HgSync.get_position()`, and
