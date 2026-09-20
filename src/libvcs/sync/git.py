@@ -29,7 +29,7 @@ from libvcs import exc
 from libvcs._internal.run import reject_option_like
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
-from libvcs.cmd.git_filter import GitFilterInput, filter_specs
+from libvcs.cmd.git_filter import Auto, GitFilterInput, filter_specs
 from libvcs.sync.base import (
     BaseSync,
     SyncResult,
@@ -313,10 +313,11 @@ class GitSync(BaseSync):
         self.tls_verify = tls_verify
         self.depth = depth
         git_filter_specs = filter_specs(git_filter)
-        if "auto" in git_filter_specs:
-            msg = "git_filter: auto cannot be forwarded to submodule update"
-            raise ValueError(msg)
-        self.git_filter: tuple[str, ...] | None = git_filter_specs or None
+        self.git_filter: GitFilterInput | None
+        if git_filter_specs == ("auto",):
+            self.git_filter = Auto()
+        else:
+            self.git_filter = git_filter_specs or None
 
         self._remotes: GitSyncRemoteDict
 
@@ -440,6 +441,17 @@ class GitSync(BaseSync):
             check_returncode=True,
         )
 
+        submodule_filter = self.git_filter
+        if isinstance(self.git_filter, Auto):
+            tracked = self.cmd.run(["ls-files", "--stage", "-z"], check_returncode=True)
+            if any(entry.startswith("160000 ") for entry in tracked.split("\0")):
+                msg = (
+                    "git_filter: auto cannot be applied to repository submodules; "
+                    "the parent clone remains at the destination"
+                )
+                raise ValueError(msg)
+            submodule_filter = None
+
         self.log.info("Initializing submodules.")
         self.cmd.submodule.init(
             log_in_real_time=True,
@@ -447,7 +459,7 @@ class GitSync(BaseSync):
         self.cmd.submodule.update(
             init=True,
             recursive=True,
-            _filter=self.git_filter,
+            _filter=submodule_filter,
             log_in_real_time=True,
         )
 

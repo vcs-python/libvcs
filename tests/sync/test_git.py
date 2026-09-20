@@ -91,16 +91,70 @@ def test_git_sync_rejects_invalid_filter_before_destination(
     assert not destination.exists()
 
 
-def test_git_sync_rejects_auto_for_submodule_forwarding(
-    tmp_path: pathlib.Path,
+def test_git_sync_accepts_auto_for_existing_repo_without_submodules(
+    git_repo: GitSync,
 ) -> None:
-    """GitSync cannot forward Git's clone-only auto mode to submodule update."""
-    with pytest.raises(ValueError, match="auto"):
-        GitSync(
-            url="file:///unused",
-            path=tmp_path / "checkout",
-            git_filter=Auto(),
-        )
+    """Auto is valid when an existing checkout has no submodule workload."""
+    repo = GitSync(url=git_repo.url, path=git_repo.path, git_filter=Auto())
+
+    assert repo.git_filter == Auto()
+    assert repo.cmd.submodules.ls() == []
+
+
+def test_git_sync_auto_clone_skips_filter_when_no_submodules(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Auto reaches clone and is omitted from an empty submodule update."""
+    repo = GitSync(
+        url="https://example.com/repo.git",
+        path=tmp_path / "checkout",
+        git_filter=Auto(),
+    )
+    clone = mocker.patch.object(repo.cmd, "clone", return_value="")
+    ls_files = mocker.patch.object(
+        repo.cmd,
+        "run",
+        return_value="100644 deadbeef 0\t.gitmodules\0",
+    )
+    mocker.patch.object(repo.cmd.submodule, "init", return_value="")
+    update = mocker.patch.object(repo.cmd.submodule, "update", return_value="")
+    mocker.patch.object(repo, "set_remotes")
+
+    repo.obtain()
+
+    assert clone.call_args.kwargs["_filter"] == Auto()
+    ls_files.assert_called_once_with(
+        ["ls-files", "--stage", "-z"], check_returncode=True
+    )
+    assert update.call_args.kwargs["_filter"] is None
+
+
+def test_git_sync_auto_clone_rejects_present_submodules(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Auto reports the unsupported submodule workload after cloning."""
+    repo = GitSync(
+        url="https://example.com/repo.git",
+        path=tmp_path / "checkout",
+        git_filter=Auto(),
+    )
+    clone = mocker.patch.object(repo.cmd, "clone", return_value="")
+    mocker.patch.object(
+        repo.cmd,
+        "run",
+        return_value="160000 deadbeef 0\tdeps/sub\0",
+    )
+    init = mocker.patch.object(repo.cmd.submodule, "init", return_value="")
+    update = mocker.patch.object(repo.cmd.submodule, "update", return_value="")
+
+    with pytest.raises(ValueError, match=r"auto.*submodule"):
+        repo.obtain()
+
+    clone.assert_called_once()
+    init.assert_not_called()
+    update.assert_not_called()
 
 
 def test_git_sync_obtain_partial_clone(
@@ -162,13 +216,14 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
         cwd=submodule_remote,
     )
     submodule_file = submodule_remote / "data.txt"
-    submodule_file.write_text("submodule data\n", encoding="utf-8")
-    run(["git", "add", "data.txt"], cwd=submodule_remote, env=git_commit_envvars)
-    run(
-        ["git", "commit", "-m", "submodule data"],
-        cwd=submodule_remote,
-        env=git_commit_envvars,
-    )
+    for version in range(3):
+        submodule_file.write_text(f"submodule data {version}\n", encoding="utf-8")
+        run(["git", "add", "data.txt"], cwd=submodule_remote, env=git_commit_envvars)
+        run(
+            ["git", "commit", "-m", f"submodule data {version}"],
+            cwd=submodule_remote,
+            env=git_commit_envvars,
+        )
 
     parent_remote = tmp_path / "parent-remote"
     run(["git", "init", str(parent_remote)], env=git_commit_envvars)
@@ -200,19 +255,25 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
     GitSync(
         url=parent_remote.as_uri(),
         path=destination,
-        git_filter=BlobNone(),
+        git_filter=[BlobNone(), {"kind": "tree", "depth": 2}],
     ).obtain()
 
     assert (destination / "deps" / "sub" / "data.txt").read_text(
         encoding="utf-8"
-    ) == "submodule data\n"
+    ) == "submodule data 2\n"
+    submodule_git_dir = destination / ".git" / "modules" / "deps" / "sub"
     assert (
         run(
             ["git", "config", "--get", "remote.origin.partialclonefilter"],
-            cwd=destination / ".git" / "modules" / "deps" / "sub",
+            cwd=submodule_git_dir,
         ).strip()
-        == "blob:none"
+        == "combine:blob:none+tree:2"
     )
+    missing = run(
+        ["git", "rev-list", "--objects", "--missing=print", "--all"],
+        cwd=destination / "deps" / "sub",
+    )
+    assert any(line.startswith("?") for line in missing.splitlines())
 
 
 @pytest.mark.parametrize(

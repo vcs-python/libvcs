@@ -19,7 +19,7 @@ from libvcs._internal.run import (
     run,
 )
 from libvcs._internal.types import StrOrBytesPath, StrPath
-from libvcs.cmd.git_filter import Auto, GitFilterInput, filter_specs
+from libvcs.cmd.git_filter import Auto, GitFilterInput, coerce_filter, filter_specs
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 
@@ -28,11 +28,14 @@ def _filter_flags(
     value: GitFilterInput | None,
     *,
     allow_auto: bool,
+    combine_multiple: bool = False,
 ) -> list[str]:
     specs = filter_specs(value)
     if not allow_auto and any(spec == Auto().to_spec() for spec in specs):
         msg = "auto filter is not supported by this Git command"
         raise ValueError(msg)
+    if combine_multiple and len(specs) > 1:
+        specs = (coerce_filter(specs).to_spec(),)
     return [f"--filter={spec}" for spec in specs]
 
 
@@ -1013,7 +1016,9 @@ class Git:
         #
         if submodule_prefix is not None:
             local_flags.append(f"--submodule-prefix={submodule_prefix!r}")
-        local_flags.extend(_filter_flags(_filter, allow_auto=False))
+        if filter_specs(_filter):
+            msg = "git pull does not accept filters; call Git.fetch with _filter first"
+            raise ValueError(msg)
         if depth is not None:
             local_flags.extend(["--depth", depth])
         if deepen is not None:
@@ -2591,7 +2596,9 @@ class GitSubmoduleCmd:
             local_flags.append("--rebase")
         elif merge is True:
             local_flags.append("--merge")
-        local_flags.extend(_filter_flags(_filter, allow_auto=False))
+        local_flags.extend(
+            _filter_flags(_filter, allow_auto=False, combine_multiple=True)
+        )
 
         return self.run(
             "update",

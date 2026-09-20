@@ -2859,7 +2859,7 @@ def test_git_commands_emit_one_flag_per_filter(
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
-    """Clone, fetch, pull, and submodule update preserve repeated filters."""
+    """Clone and fetch repeat filters; submodule combines them into one flag."""
     repo = git.Git(path=tmp_path)
     mock_run = mocker.patch.object(repo, "run", return_value="")
     filters = ["blob:none", {"kind": "tree", "depth": 2}]
@@ -2870,15 +2870,19 @@ def test_git_commands_emit_one_flag_per_filter(
         make_parents=False,
     )
     repo.fetch(_filter=filters)
-    repo.pull(_filter=filters)
     repo.submodule.update(_filter=filters)
 
-    for call in mock_run.call_args_list:
-        argv = [os.fspath(arg) for arg in call.args[0]]
+    clone_argv, fetch_argv, submodule_argv = (
+        [os.fspath(arg) for arg in call.args[0]] for call in mock_run.call_args_list
+    )
+    for argv in (clone_argv, fetch_argv):
         assert [arg for arg in argv if arg.startswith("--filter=")] == [
             "--filter=blob:none",
             "--filter=tree:2",
         ]
+    assert [arg for arg in submodule_argv if arg.startswith("--filter=")] == [
+        "--filter=combine:blob:none+tree:2"
+    ]
 
 
 def test_git_commands_accept_legacy_filter_string(
@@ -2895,23 +2899,32 @@ def test_git_commands_accept_legacy_filter_string(
     assert "--filter=blob:none" in argv
 
 
-@pytest.mark.parametrize("command", ["pull", "submodule"])
-def test_git_commands_reject_auto_before_process(
-    command: str,
+def test_git_pull_rejects_filter_before_process(
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
-    """Commands without Git's auto mode reject it before running Git."""
+    """Pull rejects every filter because native Git has no filter option."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    with pytest.raises(ValueError, match="pull"):
+        repo.pull(_filter="blob:none")
+
+    mock_run.assert_not_called()
+
+
+def test_git_submodule_rejects_auto_before_process(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Submodule update rejects Git's clone/fetch-only auto mode."""
     from libvcs.cmd.git_filter import Auto
 
     repo = git.Git(path=tmp_path)
     mock_run = mocker.patch.object(repo, "run", return_value="")
 
     with pytest.raises(ValueError, match="auto"):
-        if command == "pull":
-            repo.pull(_filter=Auto())
-        else:
-            repo.submodule.update(_filter=Auto())
+        repo.submodule.update(_filter=Auto())
 
     mock_run.assert_not_called()
 

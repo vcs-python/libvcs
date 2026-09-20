@@ -12,7 +12,11 @@ from collections.abc import Mapping, Sequence
 
 _MAX_UINT = 2**64 - 1
 _MAX_NESTING = 32
-_LIMIT_RE = re.compile(r"(?P<number>[0-9]+)(?P<unit>[kmg]?)\Z")
+_GIT_ULONG_RE = re.compile(
+    r"[\t\v\f ]*\+?"
+    r"(?P<number>0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)"
+    r"(?P<unit>[kKmMgG]?)\Z"
+)
 _LIMIT_MULTIPLIERS = {"": 1, "k": 1024, "m": 1024**2, "g": 1024**3}
 _OBJECT_TYPES = ("blob", "tree", "commit", "tag")
 _RESERVED_NON_WHITESPACE = frozenset("~`!@#$^&*()[]{}\\;'\",<>?")
@@ -28,22 +32,34 @@ def _validate_uint(value: object, *, field: str) -> int:
     return value
 
 
+def _parse_git_ulong(value: str, *, field: str) -> int:
+    match = _GIT_ULONG_RE.fullmatch(value)
+    if match is None:
+        msg = f"{field} must use Git unsigned-long syntax"
+        raise ValueError(msg)
+    raw_number = match.group("number")
+    if raw_number.lower().startswith("0x"):
+        base = 16
+    elif len(raw_number) > 1 and raw_number.startswith("0"):
+        base = 8
+    else:
+        base = 10
+    number = int(raw_number, base)
+    multiplier = _LIMIT_MULTIPLIERS[match.group("unit").lower()]
+    if number > _MAX_UINT // multiplier:
+        msg = f"{field} must not exceed {_MAX_UINT}"
+        raise ValueError(msg)
+    return number * multiplier
+
+
 def _validate_limit(value: object) -> None:
     if isinstance(value, bool) or not isinstance(value, (int, str)):
-        msg = "limit must be a nonnegative integer or n[kmg] string"
+        msg = "limit must be an integer or Git unsigned-long string"
         raise ValueError(msg)
     if isinstance(value, int):
         _validate_uint(value, field="limit")
         return
-    match = _LIMIT_RE.fullmatch(value)
-    if match is None:
-        msg = "limit must be a nonnegative integer or n[kmg] string"
-        raise ValueError(msg)
-    number = int(match.group("number"))
-    multiplier = _LIMIT_MULTIPLIERS[match.group("unit")]
-    if number > _MAX_UINT // multiplier:
-        msg = f"limit must not exceed {_MAX_UINT} bytes"
-        raise ValueError(msg)
+    _parse_git_ulong(value, field="limit")
 
 
 def _validate_oid(value: object) -> None:
@@ -69,12 +85,14 @@ class BlobLimit:
     """Omit blobs at or above a byte limit."""
 
     limit: int | str
-    """Byte count as an integer or an ``n[kmg]`` string."""
+    """Byte count as an integer or Git unsigned-long string."""
 
     def __post_init__(self) -> None:
         """Validate the limit against Git's unsigned-long grammar."""
         _validate_limit(self.limit)
-        if isinstance(self.limit, str) and self.limit.isdecimal():
+        if isinstance(self.limit, str) and re.fullmatch(
+            r"(?:0|[1-9][0-9]*)", self.limit
+        ):
             object.__setattr__(self, "limit", int(self.limit))
 
     def to_spec(self) -> str:
@@ -84,7 +102,7 @@ class BlobLimit:
 
 @dataclasses.dataclass(frozen=True)
 class TreeDepth:
-    """Include trees only through a traversal depth."""
+    """Omit trees and blobs at or beyond a traversal depth."""
 
     depth: int
     """Maximum unsigned 64-bit traversal depth."""
@@ -160,6 +178,14 @@ class Combine:
             if isinstance(child, Auto):
                 msg = f"filters[{index}]: auto cannot be combined"
                 raise ValueError(msg)
+        stack = [(child, 1) for child in self.filters]
+        while stack:
+            child, depth = stack.pop()
+            if depth > _MAX_NESTING:
+                msg = f"filter nesting exceeds {_MAX_NESTING} levels"
+                raise ValueError(msg)
+            if isinstance(child, Combine):
+                stack.extend((nested, depth + 1) for nested in child.filters)
 
     def to_spec(self) -> str:
         """Return Git's canonical filter specification."""
@@ -240,10 +266,7 @@ def _parse_filter(spec: str, *, depth: int) -> GitFilter:
         return BlobLimit(spec.removeprefix("blob:limit="))
     if spec.startswith("tree:"):
         raw_depth = spec.removeprefix("tree:")
-        if not raw_depth.isascii() or not raw_depth.isdecimal():
-            msg = "depth must be a nonnegative integer"
-            raise ValueError(msg)
-        return TreeDepth(int(raw_depth))
+        return TreeDepth(_parse_git_ulong(raw_depth, field="depth"))
     if spec.startswith("object:type="):
         raw_type = spec.removeprefix("object:type=")
         if raw_type not in _OBJECT_TYPES:

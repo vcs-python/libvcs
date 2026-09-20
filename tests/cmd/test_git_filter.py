@@ -7,6 +7,7 @@ import typing as t
 
 import pytest
 
+from libvcs import exc
 from libvcs.cmd.git_filter import (
     Auto,
     BlobLimit,
@@ -22,6 +23,9 @@ from libvcs.cmd.git_filter import (
     parse_filter,
 )
 
+if t.TYPE_CHECKING:
+    from libvcs.sync.git import GitSync
+
 
 class FilterFixture(t.NamedTuple):
     """Canonical filter model and spec pair."""
@@ -34,7 +38,7 @@ class FilterFixture(t.NamedTuple):
 FILTER_FIXTURES = [
     FilterFixture("blob-none", BlobNone(), "blob:none"),
     FilterFixture("blob-limit-int", BlobLimit(1024), "blob:limit=1024"),
-    FilterFixture("blob-limit-numeric-string", BlobLimit("001024"), "blob:limit=1024"),
+    FilterFixture("blob-limit-octal-string", BlobLimit("001024"), "blob:limit=001024"),
     FilterFixture("blob-limit-unit", BlobLimit("4m"), "blob:limit=4m"),
     FilterFixture("tree-depth", TreeDepth(2), "tree:2"),
     FilterFixture("object-type", ObjectType("commit"), "object:type=commit"),
@@ -68,6 +72,51 @@ def test_filter_canonical_round_trip(
     assert filter_specs(model) == (spec,)
     assert parse_filter(spec) == model
     assert coerce_filter(spec) == model
+
+
+@pytest.mark.parametrize(
+    ("native_spec", "serialized_spec", "equivalent_spec"),
+    [
+        ("blob:limit=010", "blob:limit=010", "blob:limit=8"),
+        ("blob:limit=+10", "blob:limit=+10", "blob:limit=10"),
+        ("blob:limit=0x10", "blob:limit=0x10", "blob:limit=16"),
+        ("blob:limit=1K", "blob:limit=1K", "blob:limit=1024"),
+        ("tree:010", "tree:8", "tree:8"),
+        ("tree:+10", "tree:10", "tree:10"),
+        ("tree:0x10", "tree:16", "tree:16"),
+        ("tree:1K", "tree:1024", "tree:1024"),
+    ],
+)
+def test_filter_parser_preserves_native_git_ulong_semantics(
+    native_spec: str,
+    serialized_spec: str,
+    equivalent_spec: str,
+    git_repo: GitSync,
+) -> None:
+    """Accepted alternate integers select the same real Git objects."""
+    parsed_spec = filter_specs(parse_filter(native_spec))
+
+    assert parsed_spec == (serialized_spec,)
+    assert git_repo.cmd.run(
+        ["rev-list", "--objects", f"--filter={native_spec}", "HEAD"]
+    ) == git_repo.cmd.run(
+        ["rev-list", "--objects", f"--filter={equivalent_spec}", "HEAD"]
+    )
+
+
+@pytest.mark.parametrize("spec", ["blob:limit=08", "tree:08"])
+def test_filter_parser_rejects_values_rejected_by_git(
+    spec: str,
+    git_repo: GitSync,
+) -> None:
+    """Invalid octal values fail in libvcs and real Git."""
+    with pytest.raises(ValueError):
+        parse_filter(spec)
+    with pytest.raises(exc.CommandError):
+        git_repo.cmd.run(
+            ["rev-list", "--objects", f"--filter={spec}", "HEAD"],
+            check_returncode=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -209,3 +258,12 @@ def test_filter_recursion_is_bounded() -> None:
 
     with pytest.raises(ValueError, match="nesting"):
         coerce_filter(value)
+
+
+def test_filter_model_recursion_is_bounded() -> None:
+    """Direct model construction has the same nesting limit as parsing."""
+    value: GitFilter = BlobNone()
+
+    with pytest.raises(ValueError, match="nesting"):
+        for _ in range(40):
+            value = Combine((value,))
