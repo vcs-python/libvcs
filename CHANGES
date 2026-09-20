@@ -22,6 +22,10 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+`GitSync.update_repo(detach=True)` detaches at the resolved target after
+fetching under the ownership lock. Branch targets retain their native
+tracking-ref and local-branch fallback rules.
+
 Progress callback exceptions and interrupts terminate and reap the direct
 subprocess before propagating. Direct calls own the immediate child; callers
 that need descendant cancellation must supervise an owned process group.

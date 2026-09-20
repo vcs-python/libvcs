@@ -42,6 +42,10 @@ change their configured filter.
 
 Following a branch requires fast-forward ancestry and retains ahead local
 commits. Select a tag or commit explicitly when you want a detached checkout.
+To detach at a branch's resolved target, pass `detach=True` to `update_repo()`.
+The branch resolves after fetching under the ownership lock, including the
+normal fallback to a local branch when no tracking ref exists. Existing
+keep/warn policies still leave attachment unchanged.
 Use the shared {ref}`policy guide <sync-policies>` and executing
 {ref}`recovery example <sync-recovery>` to handle results and retained tokens.
 

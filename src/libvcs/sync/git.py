@@ -856,6 +856,7 @@ class GitSync(BaseSync):
         *args: t.Any,
         target: SyncTarget | None = None,
         policy: SyncPolicy | None = None,
+        detach: bool = False,
         **kwargs: t.Any,
     ) -> SyncResult:
         """Follow targets by fast-forward; abort on dirt unless explicitly permitted.
@@ -863,6 +864,9 @@ class GitSync(BaseSync):
         Preserve retains an owned stash, even after indexed restoration. Recovery
         needs the retained local object database. Callers must exclude other VCS
         writers and editors throughout this operation.
+
+        ``detach=True`` checks out the resolved target without attaching its
+        branch. Resolution happens after fetching, under the same ownership lock.
         """
         result = SyncResult()
         policy = policy or SyncPolicy()
@@ -935,6 +939,13 @@ class GitSync(BaseSync):
                 )
                 step = "target"
                 resolved = self.resolve_target(target)
+                if detach and resolved.follows:
+                    resolved = dataclasses.replace(
+                        resolved,
+                        ref_name=resolved.revision,
+                        ref_kind="commit",
+                        follows=False,
+                    )
                 if not self._drifted(original, resolved):
                     if not dirty:
                         step = "submodule-update"
