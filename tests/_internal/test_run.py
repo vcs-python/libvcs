@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import pathlib
 import subprocess
 import sys
@@ -176,19 +177,28 @@ def test_run_timeout_message_includes_duration(
     assert "0.3" in rendered
 
 
-def test_run_timeout_does_not_deadlock_on_chatty_stdout() -> None:
-    """A child filling its stdout pipe must not deadlock the deadline loop.
+@pytest.mark.skipif(os.name != "posix", reason="uses a child alarm to bound deadlocks")
+@pytest.mark.parametrize("timeout", [None, 15.0])
+@pytest.mark.parametrize("streaming", [False, True])
+def test_run_drains_both_pipes(timeout: float | None, streaming: bool) -> None:
+    """Both pipes drain with or without a deadline and progress callback."""
+    script = (
+        "import os, signal; signal.setitimer(signal.ITIMER_REAL, 0.5); "
+        "os.write(1, b'x' * 200000); os.write(2, b'y' * 200000)"
+    )
+    progress = []
 
-    The OS pipe buffer is typically 64 KiB on Linux. The child below writes
-    well past that before exiting; if the parent only drained ``stderr``, the
-    child would block on ``write()`` and only ``terminate()`` would unwedge
-    it, losing all the legitimate output.
-    """
-    script = "import sys; sys.stdout.write('x' * 200000); sys.stdout.flush()"
+    def callback(output: str, timestamp: t.Any) -> None:
+        progress.append(output)
 
-    output = run([sys.executable, "-c", script], timeout=15.0)
-
-    assert len(output) >= 200000
+    output = run(
+        [sys.executable, "-c", script],
+        timeout=timeout,
+        callback=callback if streaming else None,
+    )
+    assert output == "x" * 200000
+    if streaming:
+        assert "".join(progress).rstrip("\r") == "y" * 200000
 
 
 def test_run_timeout_preserves_stdout_after_exit() -> None:

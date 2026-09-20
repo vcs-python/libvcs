@@ -118,6 +118,12 @@ subtrees. See {doc}`sync/index` for an example.
 
 ### Fixes
 
+#### Drain command output while the process runs
+
+Commands with large stdout or stderr output complete without filling an
+unread pipe. Both streams drain concurrently with or without a timeout,
+and progress callbacks retain command diagnostics for failure reporting.
+
 #### Keep partial-clone remotes usable
 
 Git remote listing retains fetch URLs annotated with a partial-clone filter.
