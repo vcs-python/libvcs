@@ -924,7 +924,7 @@ class GitSync(BaseSync):
                     self.set_remotes(overwrite=True)
                 step = "fetch"
                 self.cmd.fetch(
-                    all=True,
+                    _all=True,
                     prune=True,
                     config={"http.sslVerify": False}
                     if not self.options.tls_verify

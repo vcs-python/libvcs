@@ -512,6 +512,7 @@ class Git:
         negotiate_only: bool | None = None,
         _filter: GitFilterInput | None = None,
         # libvcs special behavior
+        config: dict[str, t.Any] | None = None,
         check_returncode: bool | None = None,
         **kwargs: t.Any,
     ) -> str:
@@ -628,6 +629,7 @@ class Git:
             local_flags.append("--negotiate-only")
         return self.run(
             ["fetch", *local_flags, "--", *required_flags],
+            config=config,
             check_returncode=check_returncode,
         )
 

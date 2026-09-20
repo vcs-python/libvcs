@@ -17,6 +17,7 @@ from libvcs import (
     HgSync,
     SvnOptions,
     SvnSync,
+    SyncTarget,
 )
 from libvcs._internal.shortcuts import create_project
 from libvcs.cmd.git_filter import BlobNone, filter_specs
@@ -241,14 +242,37 @@ def test_git_tls_option_applies_to_existing_checkout_network_operations(
 ) -> None:
     """Disabled verification reaches fetch and clean submodule updates."""
     git_repo.options = GitOptions(tls_verify=False)
-    fetch = mocker.spy(git_repo.cmd, "fetch")
+    commands = mocker.spy(git_repo.cmd, "run")
     submodules = mocker.spy(git_repo.cmd.submodule, "update")
 
     result = git_repo.update_repo()
 
     assert result.ok, result.errors
-    assert fetch.call_args.kwargs["config"] == {"http.sslVerify": False}
+    fetch = next(call for call in commands.call_args_list if call.args[0][0] == "fetch")
+    assert fetch.kwargs["config"] == {"http.sslVerify": False}
+    assert "--all" in fetch.args[0]
     assert submodules.call_args.kwargs["config"] == {"http.sslVerify": False}
+
+
+def test_git_target_fetches_named_remote(git_repo: GitSync) -> None:
+    """A configured target can resolve a remote other than the default origin."""
+    original = git_repo.get_position()
+    git_repo.cmd.run(
+        ["remote", "add", "secondary", git_repo.url], check_returncode=True
+    )
+
+    result = git_repo.update_repo(
+        target=SyncTarget(branch=original.ref_name, remote="secondary")
+    )
+
+    assert result.ok, result.errors
+    assert (
+        git_repo.cmd.run(
+            ["rev-parse", f"refs/remotes/secondary/{original.ref_name}"],
+            check_returncode=True,
+        ).strip()
+        == original.revision
+    )
 
 
 def test_hg_options_forward_clone_and_network_update(
