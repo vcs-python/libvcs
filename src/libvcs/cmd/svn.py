@@ -139,7 +139,7 @@ class Svn:
         >>> svn.run(['help'])
         "usage: svn <subcommand> [options] [args]..."
         """
-        cli_args: list[StrOrBytesPath] = ["svn", *_normalize_command_args(args)]
+        cli_args: list[StrOrBytesPath] = ["svn"]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path
@@ -158,6 +158,8 @@ class Svn:
             cli_args.extend(["--config-dir", os.fspath(config_dir)])
         if config_option is not None:
             cli_args.extend(["--config-option", os.fspath(config_option)])
+
+        cli_args.extend(_normalize_command_args(args))
 
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback

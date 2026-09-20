@@ -14,6 +14,8 @@ from libvcs.cmd.svn import Svn
 if t.TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
+    from libvcs.sync.svn import SvnSync
+
 if not shutil.which("svn"):
     pytestmark = pytest.mark.skip(reason="svn is not available")
 
@@ -25,6 +27,14 @@ def test_svn_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     result = repo.run("help")
 
     assert "usage: svn <subcommand> [options] [args]" in result
+
+
+def test_svn_run_keeps_global_options_before_separator(svn_repo: SvnSync) -> None:
+    """The default non-interactive flag must not become a second info target."""
+    output = svn_repo.cmd.run(["info", "--xml", "--", "."])
+
+    assert "<info>" in output
+    assert svn_repo.url in output
 
 
 def test_svn_run_timeout_propagates_to_runner(
