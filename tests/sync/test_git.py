@@ -2239,3 +2239,54 @@ def test_preservation_recursive_submodule_ignored_collision(
         assert result.recovery is None
     else:
         assert (leaf / "build").read_text() == "upstream\n"
+
+
+@pytest.mark.parametrize("collision", [False, True])
+def test_submodule_preflight_fetches_unadvertised_commit(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    git_commit_envvars: GitCommitEnvVars,
+    collision: bool,
+) -> None:
+    """Fetch the pinned child commit before checking its ignored-file collisions."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "file")
+    child_remote = tmp_path / "child-remote"
+    parent_remote = tmp_path / "parent-remote"
+    run(["git", "init", str(child_remote)], env=git_commit_envvars)
+    (child_remote / ".gitignore").write_text("build\n")
+    run(["git", "add", ".gitignore"], cwd=child_remote)
+    run(["git", "commit", "-m", "base"], cwd=child_remote, env=git_commit_envvars)
+    base = run(["git", "rev-parse", "HEAD"], cwd=child_remote).strip()
+    run(["git", "init", str(parent_remote)], env=git_commit_envvars)
+    run(["git", "submodule", "add", str(child_remote), "child"], cwd=parent_remote)
+    run(["git", "commit", "-am", "base"], cwd=parent_remote, env=git_commit_envvars)
+    repo = GitSync(url=str(parent_remote), path=tmp_path / "checkout")
+    repo.obtain()
+    repo.run(["config", "fetch.recurseSubmodules", "false"])
+    child = repo.path / "child"
+    if collision:
+        (child / "build").write_text("valuable local output\n")
+    (child_remote / "build").write_text("upstream\n")
+    run(["git", "add", "-f", "build"], cwd=child_remote)
+    run(
+        ["git", "commit", "-m", "track build"], cwd=child_remote, env=git_commit_envvars
+    )
+    desired = run(["git", "rev-parse", "HEAD"], cwd=child_remote).strip()
+    run(
+        ["git", "update-index", "--cacheinfo", f"160000,{desired},child"],
+        cwd=parent_remote,
+    )
+    run(["git", "commit", "-m", "pin child"], cwd=parent_remote, env=git_commit_envvars)
+    run(["git", "reset", "--hard", base], cwd=child_remote)
+    original = repo.get_position()
+    result = repo.update_repo()
+    assert result.ok is not collision, result.errors
+    if collision:
+        assert "ignored path obstructs target" in result.errors[0].message
+        assert repo.get_position() == original
+        assert run(["git", "rev-parse", "HEAD"], cwd=child).strip() == base
+        assert (child / "build").read_text() == "valuable local output\n"
+    else:
+        assert run(["git", "rev-parse", "HEAD"], cwd=child).strip() == desired
+        assert (child / "build").read_text() == "upstream\n"

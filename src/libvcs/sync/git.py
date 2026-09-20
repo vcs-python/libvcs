@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import json
 import logging
@@ -665,18 +666,33 @@ class GitSync(BaseSync):
             if child._precondition():
                 msg = f"dirty submodule prevents recursive update: {relative}"
                 raise ValueError(msg)
+            original = child.get_position()
+            config = {"http.sslVerify": False} if not self.options.tls_verify else None
             try:
                 child._oid(desired)
             except exc.CommandError:
-                child.cmd.fetch(
-                    _all=True,
-                    config={"http.sslVerify": False}
-                    if not self.options.tls_verify
-                    else None,
-                    check_returncode=True,
-                )
-                child._oid(desired)
-            original = child.get_position()
+                child.cmd.run(["fetch"], config=config, check_returncode=True)
+                try:
+                    child._oid(desired)
+                except exc.CommandError:
+                    remote = "origin"
+                    if original.ref_kind == "branch":
+                        with contextlib.suppress(exc.CommandError):
+                            remote = child._read_git(
+                                [
+                                    "config",
+                                    "--get",
+                                    f"branch.{original.ref_name}.remote",
+                                ]
+                            ).strip()
+                    # Native submodule update also fetches a pinned commit
+                    # directly when no advertised ref reaches it.
+                    child.cmd.run(
+                        ["fetch", "--", remote, desired],
+                        config=config,
+                        check_returncode=True,
+                    )
+                    child._oid(desired)
             target = WorkingCopyPosition(desired, desired, "commit", follows=False)
             try:
                 child._ignored_collisions(original, target, dirty=False)
