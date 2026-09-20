@@ -21,6 +21,23 @@ if t.TYPE_CHECKING:
     from libvcs.sync.git import GitSync
 
 
+def test_remote_listing_preserves_filtered_fetch_url(
+    git_repo: GitSync,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A partial-clone annotation must not hide a remote's fetch URL."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    git_repo.cmd.run(
+        ["config", "--local", "remote.origin.partialclonefilter", "blob:none"],
+        check_returncode=True,
+    )
+    remote = git_repo.cmd.remotes.get(remote_name="origin")
+
+    assert remote is not None
+    assert remote.fetch_url == git_repo.url
+    assert remote.push_url == git_repo.url
+
+
 @pytest.mark.parametrize("path_type", [str, pathlib.Path])
 def test_git_constructor(
     path_type: t.Callable[[str | pathlib.Path], t.Any],

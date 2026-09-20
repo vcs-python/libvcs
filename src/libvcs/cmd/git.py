@@ -4423,6 +4423,7 @@ class GitRemoteManager:
             (?P<url>.+?)            # URL: any characters (non-greedy) - supports spaces
             \s+                     # One or more whitespace characters
             \((?P<cmd_type>fetch|push)\)  # 'fetch' or 'push' in parentheses
+            (?:[ \t]+\[[^\]\r\n]*\])?   # Partial-clone filter annotation
             $                       # End of line
         """,
             re.VERBOSE | re.MULTILINE,
