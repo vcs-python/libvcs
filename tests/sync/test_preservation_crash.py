@@ -66,21 +66,36 @@ child = subprocess.Popen(
     [sys.executable, '-c', sys.argv[1], *sys.argv[2:]], start_new_session=True
 )
 try:
-    sys.stdin.buffer.read(1)
+    event = json.load(sys.stdin)
 finally:
+    expected = {child.pid}
+    if 'native' in event:
+        expected.update((event['native'], event['pid']))
+    previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGCHLD})
     try:
         os.killpg(child.pid, signal.SIGKILL)
     except ProcessLookupError:
         pass
-    code = child.wait()
-    reaped = []
-    while True:
+    reaped = {}
+    while expected - reaped.keys():
         try:
-            pid, status = os.waitpid(-1, 0)
-            reaped.append([pid, status])
+            while True:
+                pid, status = os.waitpid(-1, os.WNOHANG)
+                if pid == 0:
+                    break
+                reaped[pid] = status
         except ChildProcessError:
-            break
-    print(json.dumps({'owner': child.pid, 'code': code, 'reaped': reaped}), flush=True)
+            pass
+        if expected - reaped.keys():
+            signal.sigwait({signal.SIGCHLD})
+    signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
+    code = os.waitstatus_to_exitcode(reaped[child.pid])
+    print(
+        json.dumps(
+            {'owner': child.pid, 'code': code, 'reaped': list(reaped.items())}
+        ),
+        flush=True,
+    )
 """
 
 _HOOK = r"""
@@ -204,7 +219,9 @@ def _kill_at_barrier(
                         assert repo.get_position().revision == checkout.target
                         native = pathlib.Path(f"/proc/{event['native']}/comm")
                         assert native.read_text().strip() == "git"
-                    stdout, stderr = supervisor.communicate("kill", timeout=10)
+                    stdout, stderr = supervisor.communicate(
+                        json.dumps(event), timeout=10
+                    )
             except TimeoutError:
                 stdout, stderr = supervisor.communicate("kill", timeout=10)
                 pytest.fail(f"barrier not reached: {stdout} {stderr}")
