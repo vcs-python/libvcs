@@ -177,7 +177,7 @@ def _validate_xml(name: str, document: et.Element) -> None:
         or (name == "status" and document.find("target/entry/wc-status") is None)
     ):
         msg = "unsupported or incomplete SVN inspection XML"
-        raise ValueError(msg)
+        raise et.ParseError(msg)
 
 
 def validate_record(record: Record) -> None:

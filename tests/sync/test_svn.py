@@ -913,3 +913,43 @@ def test_svn_initial_target_overrides_constructor_revision(
     result = repo.update_repo(target=SyncTarget(rev=2))
     assert result.ok, result.errors
     assert repo.get_position().revision == "2"
+
+
+def test_svn_missing_inspection_failure_remains_unknown(
+    svn_pair: tuple[SvnSync, SvnSync, pathlib.Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Invalid XML during absence inspection cannot be classified as a conflict."""
+    from libvcs._internal import svn_preservation
+
+    _, repo, _ = svn_pair
+    (repo.path / "missing").unlink()
+    real_run = repo.cmd.run
+    real_read = svn_preservation.WorkingCopy.read
+    inspections = 0
+    updated = False
+
+    def run(args: list[str], **kwargs: t.Any) -> str:
+        nonlocal updated
+        output = real_run(args, **kwargs)
+        if args[0] == "update":
+            updated = True
+        return output
+
+    def read(wc: t.Any, args: list[str]) -> bytes:
+        nonlocal inspections
+        if updated and args[0] == "status":
+            inspections += 1
+            if inspections == 2:
+                return b"<unexpected/>"
+        return real_read(wc, args)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(repo.cmd, "run", run)
+        patch.setattr(svn_preservation.WorkingCopy, "read", read)
+        result = repo.update_repo(policy=SyncPolicy(dirty="preserve"))
+    assert not result.ok
+    assert result.recovery is not None
+    assert result.preservation_state == "unknown"
+    assert result.errors[0].step == "inspection"
+    assert (repo.path / "missing").exists()
