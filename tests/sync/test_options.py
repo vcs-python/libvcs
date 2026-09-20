@@ -311,6 +311,7 @@ def test_hg_options_forward_clone_and_network_update(
     result = hg_repo.update_repo()
     assert result.ok, result.errors
     assert pull.call_args.kwargs == {
+        "source": None,
         "update": False,
         "ssh": "ssh -i key",
         "remote_cmd": "hg-custom",

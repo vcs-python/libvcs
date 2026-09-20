@@ -25,7 +25,7 @@ True
 Name native fetch and push destinations separately:
 
 ```python
->>> from libvcs import HgRemote, SyncPolicy, SyncTarget
+>>> from libvcs import HgRemote, HgSync, SyncPolicy, SyncTarget
 >>> repo = HgSync(
 ...     url="https://example.com/project",
 ...     path=tmp_path / "project",
