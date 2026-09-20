@@ -69,7 +69,7 @@ BlobLimit(limit='4m')
 ```
 
 `GitOptions(filter=...)` validates the value during construction, applies it
-to the initial clone and new submodules, and leaves existing checkout filters
+to the initial clone and its submodules, and leaves existing checkout filters
 unchanged during updates. `Auto` requires Git 2.54 or newer. If the cloned
 repository contains gitlinks, `GitSync` retains the parent clone and raises
 before submodule initialization because Git's submodule command rejects

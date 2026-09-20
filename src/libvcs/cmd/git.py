@@ -2552,6 +2552,7 @@ class GitSubmoduleCmd:
         rebase: bool | None = None,
         merge: bool | None = None,
         recursive: bool | None = None,
+        depth: int | None = None,
         _filter: GitFilterInput | None = None,
         # Pass-through to run()
         log_in_real_time: bool = False,
@@ -2591,6 +2592,11 @@ class GitSubmoduleCmd:
             local_flags.append("--init")
         if force is True:
             local_flags.append("--force")
+
+        if recursive is True:
+            local_flags.append("--recursive")
+        if depth is not None:
+            local_flags.extend(["--depth", str(depth)])
 
         if checkout is True:
             local_flags.append("--checkout")

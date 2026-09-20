@@ -222,10 +222,12 @@ def test_git_sync_obtain_partial_clone(
     assert repo.cmd.run(["ls-remote", "origin"]).strip()
 
 
+@pytest.mark.parametrize("depth", [None, 3])
 def test_git_sync_obtain_forwards_filter_to_submodule(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
     git_commit_envvars: GitCommitEnvVars,
+    depth: int | None,
 ) -> None:
     """GitSync creates submodules as partial clones with the configured filter."""
     monkeypatch.delenv("GIT_CONFIG", raising=False)
@@ -248,6 +250,25 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
             cwd=submodule_remote,
             env=git_commit_envvars,
         )
+
+    run(
+        [
+            "git",
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            submodule_remote.as_uri(),
+            "nested",
+        ],
+        cwd=submodule_remote,
+        env=git_commit_envvars,
+    )
+    run(
+        ["git", "commit", "-m", "add nested submodule"],
+        cwd=submodule_remote,
+        env=git_commit_envvars,
+    )
 
     parent_remote = tmp_path / "parent-remote"
     run(["git", "init", str(parent_remote)], env=git_commit_envvars)
@@ -280,6 +301,7 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
         url=parent_remote.as_uri(),
         path=destination,
         options=GitOptions(
+            depth=depth,
             filter=[BlobNone(), {"kind": "tree", "depth": 2}],
         ),
     ).obtain()
@@ -287,6 +309,13 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
     assert (destination / "deps" / "sub" / "data.txt").read_text(
         encoding="utf-8"
     ) == "submodule data 2\n"
+    assert (destination / "deps" / "sub" / "nested" / "data.txt").read_text(
+        encoding="utf-8"
+    ) == "submodule data 2\n"
+    assert run(
+        ["git", "rev-list", "--count", "HEAD"],
+        cwd=destination / "deps" / "sub",
+    ).strip() == str(depth or 4)
     submodule_git_dir = destination / ".git" / "modules" / "deps" / "sub"
     assert (
         run(
