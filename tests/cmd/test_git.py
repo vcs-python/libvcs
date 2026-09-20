@@ -2910,6 +2910,18 @@ def test_git_commands_emit_one_flag_per_filter(
     ]
 
 
+def test_submodule_combines_maximum_depth_filters(git_repo: GitSync) -> None:
+    """Combining repeated flags cannot reject already validated filter nesting."""
+    spec = "combine:" * 32 + "blob:none"
+    result = git_repo.cmd.submodule.update(
+        init=True,
+        _filter=[spec, "tree:2"],
+        check_returncode=True,
+    )
+
+    assert result == ""
+
+
 def test_git_commands_accept_legacy_filter_string(
     tmp_path: pathlib.Path,
     mocker: MockerFixture,

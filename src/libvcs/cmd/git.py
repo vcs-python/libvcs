@@ -19,7 +19,14 @@ from libvcs._internal.run import (
     run,
 )
 from libvcs._internal.types import StrOrBytesPath, StrPath
-from libvcs.cmd.git_filter import Auto, GitFilterInput, coerce_filter, filter_specs
+from libvcs.cmd.git_filter import (
+    Auto,
+    Combine,
+    GitFilter,
+    GitFilterInput,
+    coerce_filter,
+    filter_specs,
+)
 
 _CMD = StrOrBytesPath | Sequence[StrOrBytesPath]
 
@@ -35,7 +42,15 @@ def _filter_flags(
         msg = "auto filter is not supported by this Git command"
         raise ValueError(msg)
     if combine_multiple and len(specs) > 1:
-        specs = (coerce_filter(specs).to_spec(),)
+        pending = [coerce_filter(spec) for spec in reversed(specs)]
+        filters: list[GitFilter] = []
+        while pending:
+            child = pending.pop()
+            if isinstance(child, Combine):
+                pending.extend(reversed(child.filters))
+            else:
+                filters.append(child)
+        specs = (Combine(tuple(filters)).to_spec(),)
     return [f"--filter={spec}" for spec in specs]
 
 
