@@ -40,6 +40,19 @@ ProjectTestFactoryLazyKwargs = Callable[..., dict[str, str]]
 ProjectTestFactoryRemoteLazyExpected = Callable[..., dict[str, GitRemote]]
 
 
+def test_obtain_reports_clone_failure(tmp_path: pathlib.Path) -> None:
+    """A missing remote must fail at clone, before submodule or remote setup."""
+    missing_remote = tmp_path / "missing-remote"
+    repo = GitSync(url=str(missing_remote), path=tmp_path / "checkout")
+
+    with pytest.raises(exc.CommandError) as error:
+        repo.obtain()
+
+    assert "git clone " in error.value.cmd
+    assert str(missing_remote) in error.value.output
+    assert "does not exist" in error.value.output
+
+
 @pytest.mark.parametrize(
     # Postpone evaluation of options so fixture variables can interpolate
     ("constructor", "lazy_constructor_options"),
