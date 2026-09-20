@@ -64,6 +64,9 @@ def test_svn_position_reports_mixed_and_switched_subtrees(
     repo.cmd.run(["update"])
     repo.cmd.run(["copy", "-r", "1", f"{repo.url}/trunk", "old-copy"])
     assert not repo.get_position().mixed
+    repo.cmd.run(["propset", "svn:externals", "--", "-r1 ^/trunk external-copy", "."])
+    repo.cmd.run(["update"])
+    assert not repo.get_position().mixed
     repo.cmd.run(["switch", f"{repo.url}/branch", "trunk"])
 
     position = repo.get_position()

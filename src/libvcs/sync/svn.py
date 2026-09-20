@@ -113,7 +113,9 @@ class SvnSync(BaseSync):
             raise SvnUrlRevFormattingError(message)
         root = entries[0]
         status = xml.etree.ElementTree.fromstring(
-            self.cmd.run(["status", "--verbose", "--xml", "--", "."]),
+            self.cmd.run(
+                ["status", "--verbose", "--xml", "--ignore-externals", "--", "."],
+            ),
         )
         revisions = {
             item.attrib["revision"]
