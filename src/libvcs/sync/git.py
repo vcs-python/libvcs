@@ -650,7 +650,43 @@ class GitSync(BaseSync):
             dirs[:] = [name for name in dirs if name not in (".git", ".hg", ".svn")]
         return dirty
 
+    def _guard_submodules(self, revision: str) -> None:
+        """Guard initialized descendants before recursive checkout writes."""
+        tree = self._read_git(["ls-tree", "-r", "-z", revision])
+        for entry in tree.split("\0"):
+            if not entry.startswith("160000 "):
+                continue
+            metadata, relative = entry.split("\t", 1)
+            desired = metadata.split(" ")[2]
+            path = preservation.safe_path(self.path / relative)
+            if not (path / ".git").exists():
+                continue
+            child = GitSync(url=self.url, path=path, options=self.options)
+            if child._precondition():
+                msg = f"dirty submodule prevents recursive update: {relative}"
+                raise ValueError(msg)
+            try:
+                child._oid(desired)
+            except exc.CommandError:
+                child.cmd.fetch(
+                    _all=True,
+                    config={"http.sslVerify": False}
+                    if not self.options.tls_verify
+                    else None,
+                    check_returncode=True,
+                )
+                child._oid(desired)
+            original = child.get_position()
+            target = WorkingCopyPosition(desired, desired, "commit", follows=False)
+            try:
+                child._ignored_collisions(original, target, dirty=False)
+                child._guard_submodules(desired)
+            except ValueError as error:
+                msg = f"submodule {relative}: {error}"
+                raise ValueError(msg) from error
+
     def _sync_submodules(self) -> None:
+        self._guard_submodules(self._oid("HEAD"))
         self.cmd.submodule.update(
             recursive=True,
             init=True,
@@ -905,6 +941,9 @@ class GitSync(BaseSync):
                     msg = "target contains unsupported submodules"
                     raise ValueError(msg)  # noqa: TRY301 - reject before capture
                 self._ignored_collisions(original, resolved, dirty=bool(dirty))
+                if not dirty:
+                    step = "submodule-preflight"
+                    self._guard_submodules(resolved.revision)
                 token: RecoveryToken | None = None
                 record: preservation.Record | None = None
                 if dirty and policy.dirty == "preserve":

@@ -41,6 +41,8 @@ Recovery requires those local objects and never fetches from the remote.
 Malformed recovery records remain visible as errors carrying their token.
 Ignored target collisions, divergent commits, active native operations,
 dirty submodule scopes, and nested repositories fail before capture.
+Clean recursive submodule updates reject ignored-file collisions in initialized
+children before any checkout advances.
 
 #### Git command configuration precedes subcommands
 

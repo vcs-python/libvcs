@@ -2167,3 +2167,75 @@ def test_preservation_schema_damage_returns_token(
     assert git_repo.run(
         ["rev-parse", f"refs/libvcs/preserve/{saved.recovery.id}"]
     ).strip()
+
+
+@pytest.mark.parametrize(
+    "depth,collision,unchanged",
+    [
+        (1, True, False),
+        (2, True, False),
+        (1, False, False),
+        (2, False, False),
+        (1, True, True),
+        (2, True, True),
+    ],
+)
+def test_preservation_recursive_submodule_ignored_collision(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    git_commit_envvars: GitCommitEnvVars,
+    depth: int,
+    collision: bool,
+    unchanged: bool,
+) -> None:
+    """Recursive updates guard ignored child paths, including unchanged parents."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "file")
+    remotes = [tmp_path / f"remote-{index}" for index in range(depth + 1)]
+    for index, remote in enumerate(remotes):
+        run(["git", "init", str(remote)], env=git_commit_envvars)
+        if index == 0:
+            (remote / ".gitignore").write_text("build\ncache\n")
+            run(["git", "add", ".gitignore"], cwd=remote)
+        else:
+            run(
+                ["git", "submodule", "add", str(remotes[index - 1]), "child"],
+                cwd=remote,
+            )
+        run(["git", "commit", "-m", "base"], cwd=remote, env=git_commit_envvars)
+    repo = GitSync(url=str(remotes[-1]), path=tmp_path / "checkout")
+    repo.obtain()
+    leaf = repo.path.joinpath(*(["child"] * depth))
+    ignored = leaf / ("build" if collision else "cache")
+    ignored.write_text("valuable ignored local output\n")
+    leaf_base = run(["git", "rev-parse", "HEAD"], cwd=leaf)
+    (remotes[0] / "build").write_text("upstream\n")
+    run(["git", "add", "-f", "build"], cwd=remotes[0])
+    run(["git", "commit", "-m", "track build"], cwd=remotes[0], env=git_commit_envvars)
+    for index in range(1, len(remotes)):
+        revision = run(["git", "rev-parse", "HEAD"], cwd=remotes[index - 1]).strip()
+        run(["git", "fetch"], cwd=remotes[index] / "child")
+        run(["git", "checkout", revision], cwd=remotes[index] / "child")
+        run(
+            ["git", "commit", "-am", "advance child"],
+            cwd=remotes[index],
+            env=git_commit_envvars,
+        )
+    if unchanged:
+        repo.cmd.fetch(all=True, check_returncode=True)
+        revision = run(["git", "rev-parse", "HEAD"], cwd=remotes[-1]).strip()
+        repo.run(["checkout", "--detach", revision])
+        repo.run(["config", "submodule.child.ignore", "all"])
+    original = repo.get_position()
+    assert repo.is_dirty() is False
+    result = repo.update_repo(
+        policy=SyncPolicy(dirty="preserve") if depth == 2 else None
+    )
+    assert result.ok is not collision, result.errors
+    assert ignored.read_text() == "valuable ignored local output\n"
+    if collision:
+        assert repo.get_position() == original
+        assert run(["git", "rev-parse", "HEAD"], cwd=leaf) == leaf_base
+        assert result.recovery is None
+    else:
+        assert (leaf / "build").read_text() == "upstream\n"
