@@ -165,6 +165,24 @@ def test_create_project_forwards_backend_options(tmp_path: pathlib.Path) -> None
         )
 
 
+def test_git_disabled_tls_option_runs_native_clone_and_fetch(
+    tmp_path: pathlib.Path,
+    git_remote_repo: pathlib.Path,
+) -> None:
+    """Clone, fetch, and submodule commands accept the TLS override as argv."""
+    repo = GitSync(
+        url=git_remote_repo.as_uri(),
+        path=tmp_path / "checkout",
+        options=GitOptions(tls_verify=False),
+    )
+    repo.obtain()
+    revision = repo.get_position().revision
+    result = repo.update_repo()
+
+    assert result.ok
+    assert repo.get_position().revision == revision
+
+
 def test_git_options_forward_clone_filter_depth_and_tls_polarity(
     tmp_path: pathlib.Path,
     mocker: MockerFixture,

@@ -223,7 +223,7 @@ class Git:
         no_pager : bool
             ``-P / --no-pager``
         config :
-            ``--config=<name>=<value>``
+            ``-c <name>=<value>`` for this command and its child processes.
         config_env :
             ``--config-env=<name>=<envvar>``
         timeout : float, optional
@@ -240,7 +240,7 @@ class Git:
         >>> git.run(['help'])
         "usage: git [...--version] [...--help] [-C <path>]..."
         """
-        cli_args: list[StrOrBytesPath] = ["git", *_normalize_command_args(args)]
+        cli_args: list[StrOrBytesPath] = ["git"]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path if cwd is None else cwd
@@ -278,7 +278,7 @@ class Git:
                 return v
 
             for k, v in config.items():
-                cli_args.extend(["--config", f"{k}={stringify(v)}"])
+                cli_args.extend(["-c", f"{k}={stringify(v)}"])
         if config_env is not None:
             cli_args.append(f"--config-env={config_env}")
         if git_dir is not None:
@@ -305,6 +305,8 @@ class Git:
             cli_args.append("--icase-pathspecs")
         if no_optional_locks is True:
             cli_args.append("--no-optional-locks")
+
+        cli_args.extend(_normalize_command_args(args))
 
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback
@@ -7322,14 +7324,14 @@ class GitNoteCmd:
 
         Examples
         --------
-        Use config to override editor (avoids interactive editor):
+        Set ``GIT_EDITOR`` for a noninteractive command:
 
         >>> result = GitNoteCmd(
         ...     path=example_git_repo.path,
         ...     object_sha='HEAD',
-        ... ).edit(allow_empty=True, config={'core.editor': 'true'})
-        >>> 'error' in result.lower() or result == ''
-        True
+        ... ).edit(allow_empty=True, env=dict(os.environ, GIT_EDITOR='true'))
+        >>> result
+        ''
         """
         local_flags: list[str] = []
 

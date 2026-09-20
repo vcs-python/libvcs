@@ -22,6 +22,13 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+#### Git command configuration precedes subcommands
+
+{meth}`~libvcs.cmd.git.Git.run` places global flags before the subcommand and
+uses native `-c` arguments for command-scoped configuration. Sync operations
+with `GitOptions(tls_verify=False)` now run clone, fetch, and submodule commands
+without misreading the TLS setting as a repository argument.
+
 #### Sync backends expose typed options
 
 {class}`~libvcs.sync.git.GitOptions`, {class}`~libvcs.sync.hg.HgOptions`, and

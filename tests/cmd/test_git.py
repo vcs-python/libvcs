@@ -66,6 +66,32 @@ def test_git_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     assert result.startswith("git version ")
 
 
+def test_git_run_places_global_configuration_before_subcommand(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Command-scoped configuration reaches Git and stays out of config files."""
+    repo = git.Git(path=tmp_path)
+    monkeypatch.setenv("LIBVCS_TEST_CONFIG_VALUE", "from-environment")
+
+    assert (
+        repo.run(
+            ["config", "--get", "http.sslVerify"],
+            config={"http.sslVerify": False},
+        ).strip()
+        == "false"
+    )
+    assert (
+        repo.run(
+            ["config", "--get", "libvcs.test"],
+            config_env="libvcs.test=LIBVCS_TEST_CONFIG_VALUE",
+        ).strip()
+        == "from-environment"
+    )
+    with pytest.raises(exc.CommandError):
+        repo.run(["config", "--get", "libvcs.test"])
+
+
 def test_git_run_timeout_propagates_to_runner(
     tmp_path: pathlib.Path,
     mocker: MockerFixture,
@@ -2009,8 +2035,9 @@ def test_notes_get_ref(git_repo: GitSync) -> None:
     assert result == "refs/notes/commits" or result == "" or "notes" in result
 
 
-def test_notes_edit(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
-    """Test GitNoteCmd.edit() - non-interactive mode via GIT_EDITOR."""
+def test_notes_edit(git_repo: GitSync, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Command-scoped editor configuration runs without changing note content."""
+    monkeypatch.delenv("GIT_EDITOR", raising=False)
     # Add a note first
     git_repo.cmd.notes.add(message="Initial note for edit test", force=True)
 
@@ -2019,12 +2046,10 @@ def test_notes_edit(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
     note = git_repo.cmd.notes.get(object_sha=head_sha)
     assert note is not None
 
-    # Edit with allow_empty (avoid interactive editor by using config)
-    # The doctest uses config={'core.editor': 'true'} which sets a no-op editor
     result = note.edit(allow_empty=True, config={"core.editor": "true"})
 
-    # Should succeed (empty string) or show error about editor
-    assert result == "" or "error" in result.lower() or isinstance(result, str)
+    assert result == ""
+    assert note.show().strip() == "Initial note for edit test"
 
 
 def test_notes_copy(git_repo: GitSync) -> None:
