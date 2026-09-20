@@ -19,7 +19,7 @@ from libvcs import (
     SvnSync,
 )
 from libvcs._internal.shortcuts import create_project
-from libvcs.cmd.git_filter import BlobNone
+from libvcs.cmd.git_filter import BlobNone, filter_specs
 
 if t.TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -116,6 +116,34 @@ def test_backend_options_reject_wrong_field_types(
     """Options reject values outside their documented runtime types."""
     with pytest.raises((TypeError, ValueError)):
         factory()
+
+
+def test_git_options_normalization_preserves_filter_nesting_limit() -> None:
+    """Canonical repeated flags retain the nesting accepted at construction."""
+    spec = "combine:" * 32 + "blob:none"
+    options = GitOptions(filter=spec)
+
+    assert filter_specs(options.filter) == filter_specs(spec)
+    with pytest.raises(ValueError, match="nesting"):
+        GitOptions(filter="combine:" + spec)
+
+
+@pytest.mark.parametrize(
+    ("options_type", "field"),
+    [
+        (HgOptions, "ssh"),
+        (HgOptions, "remote_cmd"),
+        (SvnOptions, "username"),
+        (SvnOptions, "password"),
+    ],
+)
+def test_backend_options_reject_nul_before_command_creation(
+    options_type: type[HgOptions | SvnOptions],
+    field: str,
+) -> None:
+    """Strings destined for native argv cannot contain embedded NUL bytes."""
+    with pytest.raises(ValueError, match=field):
+        options_type(**{field: "value\0suffix"})  # type: ignore[arg-type]
 
 
 def test_sync_constructors_reject_unknown_and_wrong_backend_options(

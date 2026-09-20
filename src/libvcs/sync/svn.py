@@ -48,6 +48,9 @@ class SvnOptions:
             if value is not None and not isinstance(value, str):
                 msg = f"{name} must be a string or None"
                 raise TypeError(msg)
+            if value is not None and "\0" in value:
+                msg = f"{name} must not contain NUL"
+                raise ValueError(msg)
         if self.depth not in (None, "empty", "files", "immediates", "infinity"):
             msg = "depth must be empty, files, immediates, infinity, or None"
             raise ValueError(msg)

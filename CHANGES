@@ -37,6 +37,10 @@ Each sync class exposes its option class as `options_type` for dataclass
 introspection. Constructors now reject unknown fields and option objects from
 another backend.
 
+Mercurial and Subversion string options reject NUL before command creation.
+Git filter normalization preserves the nesting limit accepted by validation,
+including when the immutable options object is passed to clone.
+
 Git depth and filter settings apply to the initial clone and its submodules.
 Submodule initialization follows nested gitlinks and forwards the history depth.
 Git and Mercurial verify TLS certificates by default; setting `tls_verify` to

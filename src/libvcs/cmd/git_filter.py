@@ -424,7 +424,7 @@ def filter_specs(value: GitFilterInput | None) -> tuple[str, ...]:
         filters: list[GitFilter] = []
         for index, item in enumerate(value):
             try:
-                child = _coerce_filter(item, depth=1)
+                child = _coerce_filter(item, depth=0)
             except ValueError as error:
                 msg = f"filter[{index}]: {error}"
                 raise ValueError(msg) from None
