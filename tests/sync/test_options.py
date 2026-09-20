@@ -321,6 +321,7 @@ def test_hg_options_forward_clone_and_network_update(
 
 def test_svn_options_forward_checkout_and_update(
     tmp_path: pathlib.Path,
+    svn_remote_repo: pathlib.Path,
     mocker: MockerFixture,
 ) -> None:
     """Subversion checkout and network update receive their typed options."""
@@ -349,16 +350,21 @@ def test_svn_options_forward_checkout_and_update(
         "check_returncode": True,
     }
 
-    (tmp_path / ".svn").mkdir()
-    repo.update_repo()
-    assert checkout.call_args.kwargs == {
-        "url": repo.url,
-        "revision": None,
+    native = SvnSync(
+        url=svn_remote_repo.as_uri(), path=tmp_path / "native", options=options
+    )
+    native.obtain()
+    run = mocker.spy(native.cmd, "run")
+    result = native.update_repo()
+    assert result.ok, result.errors
+    update = next(call for call in run.call_args_list if call.args[0][0] == "update")
+    assert update.kwargs == {
         "username": "reader",
         "password": "secret",
         "trust_server_cert": True,
-        "ignore_externals": True,
         "non_interactive": True,
-        "quiet": True,
         "check_returncode": True,
     }
+    assert "--ignore-externals" in update.args[0]
+    assert "--accept" in update.args[0]
+    assert "postpone" in update.args[0]

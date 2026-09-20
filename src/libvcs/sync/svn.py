@@ -18,15 +18,25 @@ import logging
 import os
 import pathlib
 import re
+import sqlite3
+import subprocess
 import typing as t
-import xml.etree.ElementTree
+import xml.etree.ElementTree as et
 
 from libvcs import exc
+from libvcs._internal import preservation, svn_preservation
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath
 from libvcs.cmd.svn import DepthLiteral, Svn
 
-from .base import BaseSync, SyncResult, WorkingCopyPosition
+from .base import (
+    BaseSync,
+    RecoveryToken,
+    SyncPolicy,
+    SyncResult,
+    SyncTarget,
+    WorkingCopyPosition,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +128,7 @@ class SvnSync(BaseSync):
 
     def obtain(self, quiet: bool | None = None, *args: t.Any, **kwargs: t.Any) -> None:
         """Check out a working copy from a SVN repository."""
-        url, rev = self.url, self.rev
+        url, rev = self.url, kwargs.pop("revision", self.rev)
 
         self.cmd.checkout(
             url=url,
@@ -136,18 +146,14 @@ class SvnSync(BaseSync):
 
     def get_position(self) -> WorkingCopyPosition:
         """Read base revisions and switched subtrees without contacting the server."""
-        info = xml.etree.ElementTree.fromstring(
-            self.cmd.run(["info", "--xml", "--", "."]),
-        )
-        entries = info.findall("entry")
-        if not entries or entries[0].findtext("url") is None:
+        wc = svn_preservation.WorkingCopy(self.path)
+        info = wc.xml(["info", "--xml", "--", "."])
+        root = info.find("entry")
+        if root is None or root.findtext("url") is None:
             message = "missing working-copy entry"
             raise SvnUrlRevFormattingError(message)
-        root = entries[0]
-        status = xml.etree.ElementTree.fromstring(
-            self.cmd.run(
-                ["status", "--verbose", "--xml", "--ignore-externals", "--", "."],
-            ),
+        status = wc.xml(
+            ["status", "--verbose", "--xml", "--ignore-externals", "--", "."]
         )
         revisions = {
             item.attrib["revision"]
@@ -163,6 +169,65 @@ class SvnSync(BaseSync):
             switched=any(
                 item.get("switched") == "true" for item in status.iter("wc-status")
             ),
+        )
+
+    def _selection(self, target: SyncTarget | None) -> str:
+        if target is None:
+            target = SyncTarget(rev=self.rev or "HEAD")
+        if target.rev is None or target.remote is not None:
+            msg = "SVN targets require rev; other selectors and remote are unsupported"
+            raise ValueError(msg)
+        revision = str(target.rev)
+        if revision != "HEAD" and not revision.isdecimal():
+            msg = "SVN target revision must be a nonnegative number or HEAD"
+            raise ValueError(msg)
+        return revision
+
+    def resolve_target(self, target: SyncTarget | None = None) -> WorkingCopyPosition:
+        """Read explicit revision and URL facts without querying remote HEAD."""
+        revision = self._selection(target)
+        if revision == "HEAD":
+            msg = "SVN remote HEAD is unavailable from local working-copy metadata"
+            raise ValueError(msg)
+        return WorkingCopyPosition(
+            str(int(revision)), self.url.rstrip("/"), "url", follows=False
+        )
+
+    def is_dirty(self) -> bool:
+        """Include schedules, property edits, missing paths, and unknown files."""
+        return svn_preservation.dirty(svn_preservation.WorkingCopy(self.path).native())
+
+    def _store(self) -> preservation.RecoveryStore:
+        return preservation.RecoveryStore(
+            self.path, "svn", self.path / ".svn", lock_in_store=True
+        )
+
+    def _remote_target(
+        self, wc: svn_preservation.WorkingCopy, revision: str
+    ) -> WorkingCopyPosition:
+        args = ["info", "--xml", "--revision", revision]
+        for name in ("username", "password"):
+            value = getattr(self.options, name)
+            if value is not None:
+                args.extend(["--" + name, value])
+        if self.options.trust_server_cert:
+            args.append("--trust-server-cert")
+        remote = wc.xml([*args, "--", self.url])
+        local = wc.xml(["info", "--xml", "--", "."])
+        if remote.findtext("entry/repository/uuid") != local.findtext(
+            "entry/repository/uuid"
+        ):
+            msg = "SVN target belongs to a different repository"
+            raise ValueError(msg)
+        entry = remote.find("entry")
+        if entry is None or entry.get("kind") != "dir" or entry.findtext("url") is None:
+            msg = "SVN target is not an available directory"
+            raise ValueError(msg)
+        return WorkingCopyPosition(
+            entry.attrib["revision"],
+            t.cast("str", entry.findtext("url")),
+            "url",
+            follows=revision == "HEAD",
         )
 
     def get_revision_file(self, location: str) -> int:
@@ -210,47 +275,269 @@ class SvnSync(BaseSync):
         self,
         dest: str | None = None,
         *args: t.Any,
+        target: SyncTarget | None = None,
+        policy: SyncPolicy | None = None,
         **kwargs: t.Any,
     ) -> SyncResult:
-        """Fetch changes from SVN repository to local working copy.
+        """Update or switch natively, retaining a full copy under explicit preservation.
 
-        Parameters
-        ----------
-        dest : str or None, optional
-            Destination path override for the working copy.
-
-        Returns
-        -------
-        SyncResult
-            Result of the sync operation, with any errors recorded.
+        POSIX format-31 working copies are supported. Callers must exclude editors
+        and other VCS writers. Sealed copies include administrative/pristine storage.
         """
         result = SyncResult()
-        self.ensure_dir()
-        if pathlib.Path(self.path / ".svn").exists():
-            try:
-                self.cmd.checkout(
-                    url=self.url,
-                    revision=self.rev,
-                    username=self.options.username,
-                    password=self.options.password,
-                    trust_server_cert=self.options.trust_server_cert,
-                    ignore_externals=self.options.ignore_externals,
-                    non_interactive=True,
-                    quiet=True,
-                    check_returncode=True,
-                    **kwargs,
-                )
-            except exc.CommandError as e:
-                result.add_error("checkout", str(e), exception=e)
-        else:
-            try:
-                self.obtain()
-            except exc.CommandError as e:
-                self.log.exception("Failed to obtain repository")
-                result.add_error("obtain", str(e), exception=e)
-                return result
-            return self.update_repo()
+        policy = policy or SyncPolicy()
+        step = "target"
+        try:
+            revision = self._selection(target)
+            if not (self.path / ".svn").exists():
+                step = "precondition"
+                if any(
+                    (parent / ".svn").exists()
+                    for parent in self.path.absolute().parents
+                ):
+                    msg = "SVN synchronization requires the true working-copy root"
+                    raise ValueError(msg)  # noqa: TRY301 - return precondition failure
+                step = "obtain"
+                self.obtain(revision=revision)
+            wc = svn_preservation.WorkingCopy(self.path, timeout=kwargs.get("timeout"))
+            store = self._store()
+            step = "precondition"
+            with store.lock():
+                for retained in store.discover():
+                    assert retained.recovery is not None
+                    if any(
+                        error.step == "recovery-record" for error in retained.errors
+                    ):
+                        return retained
+                    retained_record = store.read(retained.recovery)
+                    if retained_record["phase"] not in preservation.TERMINAL:
+                        return retained
+                    try:
+                        svn_preservation.validate_record(retained_record)
+                    except (ValueError, TypeError, KeyError, et.ParseError) as error:
+                        retained.add_error("recovery-record", str(error), error)
+                        return retained
+                native = wc.precondition()
+                original = self.get_position()
+                step = "target"
+                if policy.drift != "follow":
+                    resolved = self.resolve_target(target)
+                    if policy.drift == "warn" and (
+                        resolved.revision != original.revision
+                        or resolved.ref_name != original.ref_name
+                    ):
+                        logger.warning(
+                            "configured SVN target drifted",
+                            extra={
+                                "vcs_event": "target_drift",
+                                "vcs_type": "svn",
+                                "vcs_repo_path": str(self.path),
+                            },
+                        )
+                    return result
+                dirty = svn_preservation.dirty(native)
+                if dirty and policy.dirty == "abort":
+                    result.add_error("dirty", "SVN working copy has local changes")
+                    return result
+                resolved = self._remote_target(wc, revision)
+                token: RecoveryToken | None = None
+                record = None
+                if dirty and policy.dirty == "preserve":
+                    step = "capture"
+                    token, record = store.create(
+                        original=dataclasses.asdict(original),
+                        target=dataclasses.asdict(resolved),
+                    )
+                    result.recovery = token
+                    result.preservation_state = "unknown"
+                    store.validate_source(record)
+                    svn_preservation.capture(wc, store, token, record)
+                    store.validate_source(record)
+                    result.preservation_state = "saved"
+                step = "update"
+                if token is not None and record is not None:
+                    store.phase(token, record, "updating")
+                try:
+                    if dirty and policy.dirty == "discard":
+                        self._discard(wc, native, **kwargs)
+                    command = (
+                        "update" if original.ref_name == resolved.ref_name else "switch"
+                    )
+                    flags = [
+                        command,
+                        "--accept",
+                        "postpone",
+                        "--ignore-externals",
+                        "--revision",
+                        resolved.revision,
+                        "--",
+                    ]
+                    if command == "switch":
+                        flags.append(resolved.ref_name)
+                    flags.append(".")
+                    result.update_state = "unknown"
+                    self.cmd.run(
+                        flags,
+                        username=self.options.username,
+                        password=self.options.password,
+                        trust_server_cert=self.options.trust_server_cert,
+                        non_interactive=True,
+                        check_returncode=True,
+                        **kwargs,
+                    )
+                    result.update_state = "completed"
+                except (OSError, ValueError, exc.LibVCSException) as error:
+                    if result.update_state == "unknown":
+                        result.update_state = "failed"
+                    result.add_error("update", str(error), error)
+                try:
+                    if token is not None and record is not None:
+                        store.phase(token, record, "inspecting")
+                    current = wc.native()
+                    result.conflicts = svn_preservation.conflicts(current)
+                    if (
+                        token is not None
+                        and record is not None
+                        and result.update_state == "completed"
+                    ):
+                        result.conflicts += svn_preservation.restore_missing(
+                            wc, record["native"]["metadata"]
+                        )
+                        result.preservation_state = "restored"
+                    if result.conflicts:
+                        result.preservation_state = "conflicted"
+                        result.add_error(
+                            "conflicts", "SVN update has unresolved conflicts"
+                        )
+                except (
+                    OSError,
+                    ValueError,
+                    TypeError,
+                    KeyError,
+                    et.ParseError,
+                    subprocess.SubprocessError,
+                    exc.LibVCSException,
+                ) as error:
+                    result.preservation_state = "unknown"
+                    result.add_error("inspection", str(error), error)
+                if token is not None and record is not None:
+                    try:
+                        store.finish(token, record, result)
+                    except (OSError, ValueError, TypeError) as error:
+                        result.add_error("publication", str(error), error)
+        except (
+            OSError,
+            ValueError,
+            TypeError,
+            KeyError,
+            RuntimeError,
+            sqlite3.Error,
+            et.ParseError,
+            subprocess.SubprocessError,
+            exc.LibVCSException,
+        ) as error:
+            result.add_error(step, str(error), error)
         return result
+
+    def _discard(
+        self,
+        wc: svn_preservation.WorkingCopy,
+        native: preservation.Record,
+        **kwargs: t.Any,
+    ) -> None:
+        remove = {
+            name
+            for name, item in svn_preservation.statuses(native).items()
+            if item.get("item") in {"added", "unversioned"}
+        }
+        physical = svn_preservation.tree(wc.path)
+        for name in remove:
+            if set(svn_preservation.scope(physical, name)) - remove:
+                msg = "SVN discard cannot remove unclassified or ignored descendants"
+                raise ValueError(msg)
+        self.cmd.run(
+            ["revert", "--depth", "infinity", "--", "."],
+            check_returncode=True,
+            **kwargs,
+        )
+        for name in sorted(
+            remove,
+            key=lambda value: len(pathlib.PurePosixPath(value).parts),
+            reverse=True,
+        ):
+            path = wc.path_for(name)
+            if path.is_symlink() or path.is_file():
+                path.unlink()
+            elif path.is_dir():
+                path.rmdir()
+
+    def list_recoveries(self) -> tuple[SyncResult, ...]:
+        """List retained copies and report incomplete material with tokens."""
+        store = self._store()
+        wc = svn_preservation.WorkingCopy(self.path)
+        with store.lock():
+            results = store.discover(require_repository=False)
+            for result in results:
+                assert result.recovery is not None
+                if any(error.step == "recovery-record" for error in result.errors):
+                    continue
+                try:
+                    svn_preservation.material(
+                        wc,
+                        store,
+                        result.recovery,
+                        store.read(result.recovery, require_repository=False),
+                    )
+                except (
+                    OSError,
+                    ValueError,
+                    TypeError,
+                    KeyError,
+                    et.ParseError,
+                    exc.LibVCSException,
+                ) as error:
+                    result.add_error("recovery-material", str(error), error)
+            return results
+
+    def recover_changes(
+        self, token: RecoveryToken, *, destination: StrPath
+    ) -> SyncResult:
+        """Recover offline after the original checkout is deleted or replaced."""
+        result = SyncResult(recovery=token, preservation_state="unknown")
+        try:
+            store = self._store()
+            with store.lock():
+                record = store.read(token, require_repository=False)
+                svn_preservation.recover(
+                    svn_preservation.WorkingCopy(self.path),
+                    store,
+                    token,
+                    record,
+                    store.destination(destination),
+                )
+                result.preservation_state = "restored"
+        except (
+            OSError,
+            ValueError,
+            TypeError,
+            KeyError,
+            RuntimeError,
+            et.ParseError,
+            exc.LibVCSException,
+        ) as error:
+            result.preservation_state = "failed"
+            result.add_error("recovery", str(error), error)
+        return result
+
+    def release_changes(self, token: RecoveryToken) -> None:
+        """Release only a verified owned full working-copy copy."""
+        store = self._store()
+        with store.lock():
+            record = store.read(token, require_repository=False)
+            svn_preservation.material(
+                svn_preservation.WorkingCopy(self.path), store, token, record
+            )
+            store.remove(token, require_repository=False)
 
     @classmethod
     def _get_svn_url_rev(cls, location: str) -> tuple[str | None, int]:

@@ -22,6 +22,23 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+#### Subversion retains complete working copies for recovery
+
+`SvnSync.update_repo()` aborts on dirty checkouts by default. Explicit
+preservation uses native update or switch and retains a complete working-copy
+copy, including schedules, binary properties, unknown files, and ignored files.
+Missing paths stay absent only when their complete native and physical scope
+is unchanged. Conflicts and failed inspection retain their recovery token.
+`recover_changes()` creates independent copies offline; `list_recoveries()`
+reports interrupted operations, and `release_changes()` releases verified copies.
+Recovery and release work after the original checkout is deleted or replaced.
+
+SVN targets accept `rev`; the configured repository URL controls switching.
+Branch, tag, commit, and remote selectors are rejected. Preservation requires
+POSIX and SVN working-copy format 31. It rejects externals, nested repositories,
+and linked administrative storage. Callers must stop external editors and native
+writers.
+
 #### Shared checkout targets and recovery outcomes
 
 `SyncTarget` selects one branch, tag, commit, or revision. `SyncPolicy` keeps
