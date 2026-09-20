@@ -39,6 +39,16 @@ POSIX and SVN working-copy format 31. It rejects externals, nested repositories,
 and linked administrative storage. Callers must stop external editors and native
 writers.
 
+#### Mercurial remotes keep fetch and push separate
+
+`HgRemote` and `HgSync(remotes=...)` expose native `[paths]` aliases with
+separate fetch and push URLs. `SyncTarget(remote=...)` chooses where to pull
+without changing unrelated push destinations. Configured aliases update
+atomically during following syncs; keep, warn, and dirty-abort preflight leave
+native configuration unchanged. Comments and includes survive updates, and
+equivalent relative or environment-expanded paths do not rewrite the file.
+See {doc}`sync/hg`.
+
 #### Shared checkout targets and recovery outcomes
 
 `SyncTarget` selects one branch, tag, commit, or revision. `SyncPolicy` keeps
@@ -62,6 +72,8 @@ in a separate checkout using retained local history, without remote access.
 
 `HgSync` strips the `hg+` adapter prefix before invoking Mercurial and applies
 the constructor's `rev` when checking out a new clone.
+An explicit `update_repo(target=...)` overrides that revision. A new checkout
+starts at its configured target before keep or warn policy applies.
 
 #### Git retains dirty changes for independent recovery
 

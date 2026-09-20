@@ -24,6 +24,18 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### Mercurial remotes and selected pull sources
+
+Use `HgSync(remotes={"upstream": HgRemote("upstream", fetch_url, push_url)})`
+to declare native Mercurial paths. A string value sets both destinations to
+that URL. Pass `SyncTarget(branch="default", remote="upstream")` to choose
+the pull source independently of the push URL.
+
+Following updates apply configured paths. On existing checkouts, keep/warn
+policies and dirty-abort preflight leave `.hg/hgrc` unchanged. The library owns a final marked `[paths]`
+block; comments and includes outside it remain intact. Leave that block last
+when editing native configuration manually.
+
 ### Sync backends use typed options
 
 Backend-specific constructor arguments move into frozen option objects. Import

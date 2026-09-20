@@ -320,6 +320,7 @@ class Hg:
         # libvcs special behavior
         check_returncode: bool | None = True,
         *args: object,
+        source: str | None = None,
         **kwargs: t.Any,
     ) -> str:
         r"""Pull changes from a remote repository.
@@ -353,5 +354,7 @@ class Hg:
             local_flags.append("--insecure")
 
         return self.run(
-            ["pull", *local_flags], check_returncode=check_returncode, **kwargs
+            ["pull", *local_flags, *(["--", source] if source is not None else [])],
+            check_returncode=check_returncode,
+            **kwargs,
         )

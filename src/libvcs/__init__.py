@@ -17,7 +17,7 @@ from .sync.base import (
     WorkingCopyPosition,
 )
 from .sync.git import GitOptions, GitSync
-from .sync.hg import HgOptions, HgSync
+from .sync.hg import HgOptions, HgRemote, HgSync
 from .sync.svn import SvnOptions, SvnSync
 
 __all__ = [
@@ -26,6 +26,7 @@ __all__ = [
     "GitOptions",
     "GitSync",
     "HgOptions",
+    "HgRemote",
     "HgSync",
     "RecoveryToken",
     "SvnOptions",

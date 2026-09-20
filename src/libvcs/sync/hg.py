@@ -18,7 +18,10 @@ import os
 import pathlib
 import re
 import shutil
+import stat
+import tempfile
 import typing as t
+from collections.abc import Mapping
 
 from libvcs import exc
 from libvcs._internal import preservation
@@ -38,6 +41,51 @@ from .base import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(frozen=True)
+class HgRemote:
+    """One native Mercurial path with separate inbound and outbound URLs.
+
+    Attributes
+    ----------
+    name : str
+        Alias in the native ``[paths]`` section.
+    fetch_url : str
+        URL used by pull with this alias.
+    push_url : str | None
+        Alias-specific push URL; defaults to the fetch URL.
+    """
+
+    name: str
+    fetch_url: str
+    push_url: str | None = None
+
+    def __post_init__(self) -> None:
+        """Reject values that could create additional native config entries."""
+        if not isinstance(self.name, str):
+            msg = "Mercurial remote name must be a string"
+            raise TypeError(msg)
+        if (
+            not self.name
+            or self.name != self.name.strip()
+            or self.name.startswith(("%", "#", ";"))
+            or any(char in self.name for char in "\0\r\n=:[]")
+        ):
+            msg = "invalid Mercurial remote name"
+            raise ValueError(msg)
+        for field in ("fetch_url", "push_url"):
+            value = getattr(self, field)
+            if value is None and field == "push_url":
+                value = self.fetch_url
+            if not isinstance(value, str):
+                msg = f"Mercurial remote {field} must be a string"
+                raise TypeError(msg)
+            value = value.removeprefix("hg+")
+            if not value or value != value.strip() or any(c in value for c in "\0\r\n"):
+                msg = f"invalid Mercurial remote {field}"
+                raise ValueError(msg)
+            object.__setattr__(self, field, value)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -79,6 +127,7 @@ class HgSync(BaseSync):
         *,
         url: str,
         path: StrPath,
+        remotes: Mapping[str, HgRemote | str | Mapping[str, str]] | None = None,
         options: HgOptions | None = None,
         progress_callback: ProgressCallbackProtocol | None = None,
         rev: str | None = None,
@@ -104,11 +153,111 @@ class HgSync(BaseSync):
         )
 
         self.cmd = Hg(path=path, progress_callback=self.progress_callback)
+        self._implicit_default = remotes is None or "default" not in remotes
+        self._remotes = {"default": HgRemote("default", self.url)}
+        if remotes is not None:
+            for name, remote in remotes.items():
+                if isinstance(remote, str):
+                    value = HgRemote(name, remote)
+                elif isinstance(remote, HgRemote):
+                    if name != remote.name:
+                        msg = "Mercurial remote key and name differ"
+                        raise ValueError(msg)
+                    value = remote
+                else:
+                    value = HgRemote(name=name, **remote)
+                self._remotes[name] = value
+
+    def remotes(self) -> dict[str, HgRemote]:
+        """Read effective native paths, including aliases provided by includes."""
+        return self._read_remotes({})
+
+    def _read_remotes(self, overrides: Mapping[str, HgRemote]) -> dict[str, HgRemote]:
+        arguments = []
+        for name, remote in overrides.items():
+            arguments.extend(["--config", f"paths.{name}={remote.fetch_url}"])
+            arguments.extend(["--config", f"paths.{name}:pushurl={remote.push_url}"])
+        entries = json.loads(self._read_hg([*arguments, "paths", "-Tjson"]))
+        return {
+            item["name"]: HgRemote(item["name"], item["url"], item.get("pushurl"))
+            for item in entries
+        }
+
+    def set_remotes(self, overwrite: bool = False) -> None:
+        """Write configured paths atomically, preserving unrelated native config.
+
+        Existing aliases remain unchanged unless ``overwrite`` is true. The
+        owned paths block must remain last in ``.hg/hgrc``; includes and comments
+        outside it are retained verbatim. Callers must exclude external writers.
+        """
+        with self._store().lock():
+            self._set_remotes(overwrite=overwrite)
+
+    def _set_remotes(self, *, overwrite: bool) -> None:
+        path = preservation.safe_path(self.path / ".hg" / "hgrc")
+        current = self.remotes()
+        desired = dict(self._remotes)
+        if self._implicit_default and "default" in current:
+            desired["default"] = HgRemote(
+                "default", self.url, current["default"].push_url
+            )
+        effective = self._read_remotes(desired)
+        changes = {
+            name: remote
+            for name, remote in desired.items()
+            if name not in current or (overwrite and current[name] != effective[name])
+        }
+        if not changes:
+            return
+        original = path.read_bytes() if path.exists() else b""
+        start = b"# libvcs managed paths begin\n"
+        end = b"# libvcs managed paths end\n"
+        managed: dict[str, str] = {}
+        if start in original or end in original:
+            if original.count(start) != 1 or original.count(end) != 1:
+                msg = "invalid libvcs paths block in Mercurial config"
+                raise ValueError(msg)
+            prefix, block = original.split(start)
+            if not block.endswith(end):
+                msg = "libvcs paths block must remain last in Mercurial config"
+                raise ValueError(msg)
+            parser = configparser.ConfigParser(interpolation=None, delimiters=("=",))
+            parser.optionxform = lambda optionstr: optionstr  # type: ignore[method-assign]
+            parser.read_string(block.removesuffix(end).decode("utf-8"))
+            managed = dict(parser["paths"])
+        else:
+            prefix = original
+        for name, remote in changes.items():
+            managed[name] = remote.fetch_url
+            assert remote.push_url is not None
+            managed[name + ":pushurl"] = remote.push_url
+        payload = prefix + (b"\n" if prefix and not prefix.endswith(b"\n") else b"")
+        payload += start + b"[paths]\n"
+        payload += "".join(
+            f"{key} = {value}\n" for key, value in managed.items()
+        ).encode()
+        payload += end
+        descriptor, name = tempfile.mkstemp(prefix=".libvcs-hgrc-", dir=path.parent)
+        temporary = pathlib.Path(name)
+        try:
+            with os.fdopen(descriptor, "wb") as stream:
+                os.fchmod(
+                    stream.fileno(),
+                    stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600,
+                )
+                stream.write(payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+            temporary.replace(path)
+            preservation.flush_directory(path.parent)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     def obtain(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Clone and update a Mercurial repository to this location."""
-        if self.rev is not None:
-            SyncTarget(rev=self.rev)
+        self._obtain(SyncTarget(rev=self.rev) if self.rev is not None else None)
+
+    def _obtain(self, target: SyncTarget | None) -> None:
         self.cmd.clone(
             no_update=True,
             quiet=True,
@@ -120,12 +269,34 @@ class HgSync(BaseSync):
             insecure=not self.options.tls_verify,
             check_returncode=True,
         )
-        if self.rev is None:
+        if target is None:
             self.cmd.update(quiet=True, check_returncode=True)
         else:
+            if target.remote is not None:
+                if (
+                    target.remote not in self._remotes
+                    and target.remote not in self.remotes()
+                ):
+                    msg = f"Mercurial remote is unavailable: {target.remote}"
+                    raise ValueError(msg)
+                self.set_remotes(overwrite=True)
+                self.cmd.pull(
+                    source=target.remote,
+                    update=False,
+                    ssh=self.options.ssh,
+                    remote_cmd=self.options.remote_cmd,
+                    insecure=not self.options.tls_verify,
+                    check_returncode=True,
+                )
+            resolved = self.resolve_target(target)
             self.cmd.run(
-                ["update", "--quiet", "--rev", self.rev], check_returncode=True
+                ["update", "--quiet", "--rev", resolved.revision], check_returncode=True
             )
+            if resolved.ref_kind == "bookmark":
+                self.cmd.run(
+                    ["bookmark", "--force", "--", resolved.ref_name],
+                    check_returncode=True,
+                )
 
     def get_revision(self) -> str:
         """Get latest revision of this mercurial repository."""
@@ -170,11 +341,16 @@ class HgSync(BaseSync):
         """Resolve available bookmarks, named branches, tags, or changesets locally."""
         if target is None and self.rev is not None:
             target = SyncTarget(rev=self.rev)
-        if target is not None and target.remote is not None:
-            msg = "Mercurial target remote qualifiers are not supported"
+        if (
+            target is not None
+            and target.remote is not None
+            and target.remote not in self._remotes
+            and target.remote not in self.remotes()
+        ):
+            msg = f"Mercurial remote is unavailable: {target.remote}"
             raise ValueError(msg)
-        current = self.get_position()
         if target is None:
+            current = self.get_position()
             name = current.ref_name
             if current.ref_kind == "branch":
                 name = self._read_hg(["log", "-r", ".", "-T", "{branch}"])
@@ -607,9 +783,10 @@ class HgSync(BaseSync):
         try:
             if target is None and self.rev is not None:
                 target = SyncTarget(rev=self.rev)
-            if not (self.path / ".hg").exists():
+            created = not (self.path / ".hg").exists()
+            if created:
                 step = "obtain"
-                self.obtain()
+                self._obtain(target)
             store = self._store()
             with store.lock():
                 for retained in store.discover():
@@ -633,7 +810,7 @@ class HgSync(BaseSync):
                 )
                 dirty = bool(status) or pending_branch
                 step = "target"
-                if policy.drift != "follow":
+                if not created and policy.drift != "follow":
                     resolved = self.resolve_target(target)
                     if (
                         original.revision != resolved.revision
@@ -653,8 +830,19 @@ class HgSync(BaseSync):
                         "dirty", "Mercurial working copy has local changes"
                     )
                     return result
+                step = "set-remotes"
+                source = target.remote if target is not None else None
+                if (
+                    source is not None
+                    and source not in self._remotes
+                    and source not in self.remotes()
+                ):
+                    msg = f"Mercurial remote is unavailable: {source}"
+                    raise ValueError(msg)  # noqa: TRY301 - return an unstarted result
+                self._set_remotes(overwrite=True)
                 step = "pull"
                 self.cmd.pull(
+                    source=source,
                     update=False,
                     ssh=self.options.ssh,
                     remote_cmd=self.options.remote_cmd,

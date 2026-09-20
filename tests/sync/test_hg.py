@@ -13,7 +13,7 @@ from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 from libvcs.pytest_plugin import hg_remote_repo_single_commit_post_init
 from libvcs.sync.base import SyncPolicy, SyncResult, SyncTarget
-from libvcs.sync.hg import HgSync
+from libvcs.sync.hg import HgRemote, HgSync
 
 if t.TYPE_CHECKING:
     from libvcs.pytest_plugin import CreateRepoFn
@@ -28,6 +28,146 @@ def set_vcs_hgconfig(
 ) -> pathlib.Path:
     """Set mercurial configuration."""
     return set_vcs_hgconfig
+
+
+def test_hg_remotes_preserve_native_config(
+    hg_repo: HgSync, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Includes and comments survive atomic, idempotent fetch/push overrides."""
+    included = hg_repo.path / ".hg" / "included.rc"
+    included.write_text("[paths]\nsecondary = https://example.com/original\n")
+    configuration = hg_repo.path / ".hg" / "hgrc"
+    original = configuration.read_bytes() + (
+        b"\n# caller configuration\n%include included.rc\n[ui]\nverbose = false\n"
+    )
+    configuration.write_bytes(original)
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path,
+        remotes={
+            "secondary": HgRemote(
+                "secondary", "https://example.com/fetch", "ssh://example.com/push"
+            )
+        },
+    )
+    project.set_remotes()
+    assert project.remotes()["secondary"].fetch_url == "https://example.com/original"
+    project.set_remotes(overwrite=True)
+    assert configuration.read_bytes().startswith(original)
+    assert included.read_text() == "[paths]\nsecondary = https://example.com/original\n"
+    assert project.remotes()["secondary"] == HgRemote(
+        "secondary", "https://example.com/fetch", "ssh://example.com/push"
+    )
+    before = configuration.read_bytes(), configuration.stat().st_ino
+    project.set_remotes(overwrite=True)
+    assert (configuration.read_bytes(), configuration.stat().st_ino) == before
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path,
+        remotes={"secondary": {"fetch_url": "https://example.com/new"}},
+    )
+    project.set_remotes(overwrite=True)
+    assert project.remotes()["secondary"] == HgRemote(
+        "secondary", "https://example.com/new"
+    )
+    original = configuration.read_bytes()
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path,
+        remotes={"secondary": "https://example.com/failure"},
+    )
+    replace = pathlib.Path.replace
+
+    def fail_publish(source: pathlib.Path, destination: pathlib.Path) -> pathlib.Path:
+        if destination == configuration:
+            msg = "config publication failed"
+            raise OSError(msg)
+        return replace(source, destination)
+
+    # Fail the atomic publish after the temporary file has been written.
+    monkeypatch.setattr(pathlib.Path, "replace", fail_publish)
+    with pytest.raises(OSError, match="config publication"):
+        project.set_remotes(overwrite=True)
+    assert configuration.read_bytes() == original
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("existing", [True, False])
+def test_hg_remote_selects_pull_without_changing_push(
+    hg_repo: HgSync, tmp_path: pathlib.Path, existing: bool
+) -> None:
+    """A selected alias supplies history without replacing its push destination."""
+    upstream = HgSync(url=str(hg_repo.path), path=tmp_path / "upstream")
+    upstream.obtain()
+    (upstream.path / "incoming").write_text("selected remote\n")
+    upstream.cmd.run(["add", "incoming"])
+    upstream.cmd.run(["commit", "-m", "selected source"])
+    revision = upstream.get_position().revision
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path if existing else tmp_path / "selected-clone",
+        remotes={
+            "upstream": {
+                "fetch_url": str(upstream.path),
+                "push_url": "ssh://example.com/publish",
+            }
+        },
+    )
+    result = project.update_repo(target=SyncTarget(commit=revision, remote="upstream"))
+    assert result.ok, result.errors
+    assert project.get_position().revision == revision
+    assert (project.path / "incoming").read_text() == "selected remote\n"
+    assert project.remotes()["upstream"].push_url == "ssh://example.com/publish"
+    assert project.remotes()["default"].fetch_url == hg_repo.url
+
+
+@pytest.mark.parametrize("value", ["bad\nurl", "", "bad\0url"])
+def test_hg_remotes_reject_config_injection(tmp_path: pathlib.Path, value: str) -> None:
+    """Remote URLs must fit one native config value before a checkout exists."""
+    destination = tmp_path / "checkout"
+    with pytest.raises(ValueError):
+        HgSync(url="https://example.com/repo", path=destination, remotes={"a": value})
+    assert not destination.exists()
+
+
+@pytest.mark.parametrize("url", ["../other", "$HOME/other"])
+def test_hg_remote_native_paths_are_idempotent(hg_repo: HgSync, url: str) -> None:
+    """Native path expansion does not rewrite identical configured aliases."""
+    project = HgSync(url=hg_repo.url, path=hg_repo.path, remotes={"other": url})
+    project.set_remotes(overwrite=True)
+    configuration = project.path / ".hg" / "hgrc"
+    original = configuration.read_bytes(), configuration.stat().st_ino
+    project.set_remotes(overwrite=True)
+    assert (configuration.read_bytes(), configuration.stat().st_ino) == original
+
+
+def test_hg_secondary_preserves_default_push(hg_repo: HgSync) -> None:
+    """An implicit default fetch alias does not reset an existing push destination."""
+    configuration = hg_repo.path / ".hg" / "hgrc"
+    configuration.write_text(
+        configuration.read_text()
+        + ("\n[paths]\ndefault:pushurl = ssh://example.com/private-push\n")
+    )
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path,
+        remotes={"secondary": "https://example.com/secondary"},
+    )
+    project.set_remotes(overwrite=True)
+    assert project.remotes()["default"].push_url == "ssh://example.com/private-push"
+
+
+def test_hg_remotes_reject_symlink_config_even_without_changes(hg_repo: HgSync) -> None:
+    """Unchanged effective paths do not bypass the config ownership boundary."""
+    configuration = hg_repo.path / ".hg" / "hgrc"
+    project = HgSync(url=hg_repo.remotes()["default"].fetch_url, path=hg_repo.path)
+    moved = configuration.with_name("external.rc")
+    configuration.rename(moved)
+    configuration.symlink_to(moved)
+    before = moved.read_bytes()
+    with pytest.raises(ValueError, match="symlink"):
+        project.set_remotes(overwrite=True)
+    assert moved.read_bytes() == before
 
 
 def test_hg_position_reports_active_bookmark(hg_repo: HgSync) -> None:
@@ -46,6 +186,47 @@ def test_hg_position_reports_active_bookmark(hg_repo: HgSync) -> None:
     assert (position.ref_kind, position.ref_name) == ("bookmark", "develop")
     assert position.revision == revision
     assert position.follows
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("drift", ["follow", "keep", "warn"])
+def test_hg_initial_method_target_overrides_constructor_revision(
+    hg_repo: HgSync, tmp_path: pathlib.Path, drift: t.Literal["follow", "keep", "warn"]
+) -> None:
+    """Native clone and pull establish the target before drift policy applies."""
+    expected = hg_repo.get_position().revision
+    (hg_repo.path / "later").write_text("later\n")
+    hg_repo.cmd.run(["add", "later"])
+    hg_repo.cmd.run(["commit", "-m", "later"])
+    project = HgSync(url=hg_repo.path.as_uri(), path=tmp_path / "clone", rev="missing")
+    result = project.update_repo(
+        target=SyncTarget(rev="0"), policy=SyncPolicy(drift=drift)
+    )
+    assert result.ok, result.errors
+    assert project.get_position().revision == expected
+
+
+@pytest.mark.slow
+def test_hg_initial_target_skips_unrelated_subrepository(
+    hg_repo: HgSync, tmp_path: pathlib.Path
+) -> None:
+    """An older checkout needs no subrepository present only at the remote tip."""
+    expected = hg_repo.get_position().revision
+    remote = tmp_path / "child-remote"
+    run(["hg", "init", str(remote)])
+    (remote / "file").write_text("child\n")
+    run(["hg", "add", "file"], cwd=remote)
+    run(["hg", "commit", "-m", "child"], cwd=remote)
+    run(["hg", "clone", str(remote), str(hg_repo.path / "child")])
+    (hg_repo.path / ".hgsub").write_text(f"child = {remote}\n")
+    hg_repo.cmd.run(["add", ".hgsub"])
+    hg_repo.cmd.run(["commit", "-m", "subrepository"])
+    shutil.rmtree(remote)
+    project = HgSync(url=str(hg_repo.path), path=tmp_path / "older")
+    result = project.update_repo(target=SyncTarget(rev="0"))
+    assert result.ok, result.errors
+    assert project.get_position().revision == expected
+    assert not (project.path / ".hgsub").exists()
 
 
 def test_hg_sync(
@@ -191,10 +372,18 @@ def test_hg_preservation_default_abort(hg_repo: HgSync) -> None:
     """Dirty abort never updates the parent or removes unknown files."""
     base, _ = _hg_advance(hg_repo)
     (hg_repo.path / "unknown").write_text("unknown\n")
-    result = hg_repo.update_repo()
+    configuration = hg_repo.path / ".hg" / "hgrc"
+    before = configuration.read_bytes()
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path,
+        remotes={"secondary": "https://example.com/secondary"},
+    )
+    result = project.update_repo()
     assert not result.ok
     assert hg_repo.get_position().revision == base
     assert (hg_repo.path / "unknown").read_text() == "unknown\n"
+    assert configuration.read_bytes() == before
 
 
 @pytest.mark.slow
@@ -538,13 +727,22 @@ def test_hg_preservation_drift_keeps_dirty_position(
     """Keep and warn compare resolved nodes and leave dirty checkouts untouched."""
     base, target = _hg_advance(hg_repo)
     (hg_repo.path / "unknown").write_text("local\n")
-    result = hg_repo.update_repo(
-        target=SyncTarget(commit=target), policy=SyncPolicy(drift=drift)
+    configuration = hg_repo.path / ".hg" / "hgrc"
+    before = configuration.read_bytes()
+    project = HgSync(
+        url=hg_repo.url,
+        path=hg_repo.path,
+        remotes={"secondary": "https://example.com/secondary"},
+    )
+    result = project.update_repo(
+        target=SyncTarget(commit=target, remote="secondary"),
+        policy=SyncPolicy(drift=drift),
     )
     assert result.ok, result.errors
     assert result.recovery is None
     assert hg_repo.get_position().revision == base
     assert (hg_repo.path / "unknown").read_text() == "local\n"
+    assert configuration.read_bytes() == before
     warnings = [record for record in caplog.records if record.name == "libvcs.sync.hg"]
     assert bool(warnings) is (drift == "warn")
     if warnings:
