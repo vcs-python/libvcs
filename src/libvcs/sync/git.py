@@ -910,6 +910,7 @@ class GitSync(BaseSync):
                             logger.warning(
                                 "configured Git target drifted",
                                 extra={
+                                    "vcs_event": "target_drift",
                                     "vcs_type": "git",
                                     "vcs_repo_path": str(self.path),
                                 },

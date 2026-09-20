@@ -1695,18 +1695,29 @@ def test_preservation_recovers_index_offline(
     assert git_repo.list_recoveries() == ()
 
 
-def test_preservation_drift_keep_leaves_dirty_branch(git_repo: GitSync) -> None:
-    """Keep policy does not capture or switch a differing configured branch."""
+@pytest.mark.parametrize("drift", ["keep", "warn"])
+def test_preservation_drift_keep_leaves_dirty_branch(
+    git_repo: GitSync,
+    drift: t.Literal["keep", "warn"],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Keep and warn leave a differing dirty branch intact, with a typed warning."""
     _preservation_update(git_repo)
     git_repo.run(["branch", "other", "@{upstream}"])
     (git_repo.path / "local.txt").write_text("local\n")
     original = git_repo.get_position()
     result = git_repo.update_repo(
-        target=SyncTarget(branch="other"), policy=SyncPolicy(drift="keep")
+        target=SyncTarget(branch="other"), policy=SyncPolicy(drift=drift)
     )
     assert result.ok, result.errors
     assert git_repo.get_position() == original
     assert result.recovery is None
+    warnings = [
+        record
+        for record in caplog.records
+        if getattr(record, "vcs_event", None) == "target_drift"
+    ]
+    assert len(warnings) == (1 if drift == "warn" else 0)
 
 
 def test_preservation_divergence_retains_local_commit(git_repo: GitSync) -> None:
