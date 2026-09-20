@@ -10,11 +10,13 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import pathlib
 import typing as t
 
 from libvcs import exc
+from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath
 from libvcs.cmd.hg import Hg
 
@@ -23,19 +25,45 @@ from .base import BaseSync, SyncResult, WorkingCopyPosition
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass(frozen=True)
+class HgOptions:
+    """Backend-specific options for Mercurial synchronization."""
+
+    ssh: str | None = None
+    remote_cmd: str | None = None
+    pull: bool = False
+    stream: bool = False
+    tls_verify: bool = True
+
+    def __post_init__(self) -> None:
+        """Validate Mercurial option types without running Mercurial."""
+        for name in ("ssh", "remote_cmd"):
+            value = getattr(self, name)
+            if value is not None and not isinstance(value, str):
+                msg = f"{name} must be a string or None"
+                raise TypeError(msg)
+        for name in ("pull", "stream", "tls_verify"):
+            if not isinstance(getattr(self, name), bool):
+                msg = f"{name} must be a boolean"
+                raise TypeError(msg)
+
+
 class HgSync(BaseSync):
     """Tool to manage a local hg (Mercurial) repository cloned from a remote one."""
 
     bin_name = "hg"
     schemes = ("hg", "hg+http", "hg+https", "hg+file")
     cmd: Hg
+    options_type = HgOptions
 
     def __init__(
         self,
         *,
         url: str,
         path: StrPath,
-        **kwargs: t.Any,
+        options: HgOptions | None = None,
+        progress_callback: ProgressCallbackProtocol | None = None,
+        rev: str | None = None,
     ) -> None:
         """Local Mercurial repository.
 
@@ -44,7 +72,18 @@ class HgSync(BaseSync):
         url : str
             Mercurial repository URL.
         """
-        super().__init__(url=url, path=path, **kwargs)
+        if options is None:
+            options = HgOptions()
+        elif not isinstance(options, HgOptions):
+            msg = "options must be an HgOptions instance"
+            raise TypeError(msg)
+        self.options = options
+        super().__init__(
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            rev=rev,
+        )
 
         self.cmd = Hg(path=path, progress_callback=self.progress_callback)
 
@@ -54,6 +93,12 @@ class HgSync(BaseSync):
             no_update=True,
             quiet=True,
             url=self.url,
+            ssh=self.options.ssh,
+            remote_cmd=self.options.remote_cmd,
+            pull=self.options.pull,
+            stream=self.options.stream,
+            insecure=not self.options.tls_verify,
+            check_returncode=True,
         )
         self.cmd.update(
             quiet=True,
@@ -94,7 +139,12 @@ class HgSync(BaseSync):
         else:
             try:
                 self.cmd.update()
-                self.cmd.pull(update=True)
+                self.cmd.pull(
+                    update=True,
+                    ssh=self.options.ssh,
+                    remote_cmd=self.options.remote_cmd,
+                    insecure=not self.options.tls_verify,
+                )
             except exc.CommandError as e:
                 result.add_error("pull", str(e), exception=e)
         return result

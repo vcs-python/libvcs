@@ -14,20 +14,20 @@ Compare to:
 
 ## Partial clones
 
-Pass any {ref}`validated Git filter <git-partial-clone-filters>` as
-`git_filter` when constructing {class}`~libvcs.sync.git.GitSync`. The filter
-applies to the initial clone and to submodules created during that obtain. An
-existing checkout keeps its configured partial-clone filter during updates.
+Pass any {ref}`validated Git filter <git-partial-clone-filters>` through
+{class}`~libvcs.sync.git.GitOptions`. The filter applies to the initial clone
+and to submodules created during that obtain. An existing checkout keeps its
+configured partial-clone filter during updates.
 
 ```python
 >>> from libvcs.cmd.git_filter import BlobNone
->>> from libvcs.sync.git import GitSync
+>>> from libvcs.sync.git import GitOptions, GitSync
 >>> repo = GitSync(
 ...     url="https://example.com/project.git",
 ...     path=tmp_path / "project",
-...     git_filter=BlobNone(),
+...     options=GitOptions(filter=BlobNone()),
 ... )
->>> repo.git_filter
+>>> repo.options.filter
 ('blob:none',)
 ```
 

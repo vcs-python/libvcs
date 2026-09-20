@@ -9,7 +9,7 @@ import pytest
 
 from libvcs import exc
 from libvcs.sync.base import SyncResult
-from libvcs.sync.svn import SvnSync
+from libvcs.sync.svn import SvnOptions, SvnSync
 
 if t.TYPE_CHECKING:
     import pathlib
@@ -112,6 +112,23 @@ def test_svn_sync_with_files(
     assert svn_repo.get_revision_file("./") == 3
 
     assert (tmp_path / repo_name).exists()
+
+
+def test_svn_options_establish_ambient_checkout_depth(
+    tmp_path: pathlib.Path,
+    svn_remote_repo_with_files: pathlib.Path,
+) -> None:
+    """An empty-depth checkout creates only the working-copy root."""
+    checkout = tmp_path / "empty-checkout"
+    repo = SvnSync(
+        url=svn_remote_repo_with_files.as_uri(),
+        path=checkout,
+        options=SvnOptions(depth="empty"),
+    )
+
+    repo.obtain()
+
+    assert {entry.name for entry in checkout.iterdir()} == {".svn"}
 
 
 def test_repo_svn_remote_checkout(

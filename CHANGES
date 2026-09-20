@@ -22,6 +22,20 @@ _Notes on the upcoming release will go here._
 
 ### What's new
 
+#### Sync backends expose typed options
+
+{class}`~libvcs.sync.git.GitOptions`, {class}`~libvcs.sync.hg.HgOptions`, and
+{class}`~libvcs.sync.svn.SvnOptions` are frozen backend configuration objects.
+Each sync class exposes its option class as `options_type` for dataclass
+introspection. Constructors now reject unknown fields and option objects from
+another backend.
+
+Git depth and filter settings apply to the initial clone and new submodules.
+Git and Mercurial verify TLS certificates by default; setting `tls_verify` to
+false forwards the native verification override to network operations.
+Mercurial clone transport settings and Subversion authentication, certificate,
+external, and ambient-depth settings now reach their native commands.
+
 #### Typed Git filters validate partial clones before execution
 
 {mod}`libvcs.cmd.git_filter` provides frozen models for Git's `blob:none`,
@@ -37,7 +51,7 @@ filter arguments; submodule update combines them so Git applies every filter.
 {meth}`~libvcs.cmd.git.Git.pull` rejects filters because native Git does not
 support them.
 
-{class}`~libvcs.sync.git.GitSync` accepts the same values through `git_filter`,
+{class}`~libvcs.sync.git.GitOptions` accepts the same values through `filter`,
 validates them before creating a checkout, and applies them to the initial
 clone and new submodules. `Auto` can clone a repository without gitlinks. If
 the cloned index contains gitlinks, obtain reports that `Auto` cannot be

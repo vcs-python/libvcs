@@ -24,6 +24,38 @@ _Notes on the upcoming release will be added here_
 
 <!-- Maintainers, insert migration notes for the next release here -->
 
+### Sync backends use typed options
+
+Backend-specific constructor arguments move into frozen option objects. Import
+the option class from `libvcs` or beside its sync class:
+
+```python
+>>> from libvcs import GitOptions, GitSync, HgOptions, SvnOptions
+>>> git = GitSync(
+...     url="https://example.com/project.git",
+...     path=tmp_path / "project",
+...     options=GitOptions(depth=1, tls_verify=True),
+... )
+>>> git.options
+GitOptions(depth=1, filter=None, tls_verify=True)
+```
+
+Replace the released Git constructor arguments as follows:
+
+- `git_shallow=True` becomes `options=GitOptions(depth=1)`.
+- `depth=n` becomes `options=GitOptions(depth=n)`.
+- `git_filter=value` becomes `options=GitOptions(filter=value)`.
+- The old `tls_verify=True` disabled verification. Use
+  `options=GitOptions(tls_verify=False)` to retain that behavior. The new
+  default, `tls_verify=True`, verifies certificates.
+
+Mercurial transport settings belong to `HgOptions`. Subversion `username`,
+`password`, and `svn_trust_cert` become `SvnOptions(username=...)`,
+`SvnOptions(password=...)`, and `SvnOptions(trust_server_cert=...)`.
+Constructors and `create_project()` reject unknown keywords instead of
+silently retaining or discarding them. Use `dataclasses.fields(Sync.options_type)`
+to enumerate a backend's accepted configuration fields.
+
 ### Git partial-clone filters have typed models
 
 String `_filter` arguments remain valid. Callers that build filters from
@@ -36,7 +68,7 @@ mappings from `libvcs.cmd.git_filter`:
 BlobLimit(limit='4m')
 ```
 
-`GitSync(git_filter=...)` validates the value during construction, applies it
+`GitOptions(filter=...)` validates the value during construction, applies it
 to the initial clone and new submodules, and leaves existing checkout filters
 unchanged during updates. `Auto` requires Git 2.54 or newer. If the cloned
 repository contains gitlinks, `GitSync` retains the parent clone and raises

@@ -188,7 +188,7 @@ class BaseSync:
         url: str,
         path: StrPath,
         progress_callback: ProgressCallbackProtocol | None = None,
-        **kwargs: t.Any,
+        rev: str | None = None,
     ) -> None:
         r"""Initialize a tool to manage a local VCS Checkout, Clone, Copy, or Work tree.
 
@@ -240,8 +240,7 @@ class BaseSync:
         else:
             self.path = pathlib.Path(path)
 
-        if "rev" in kwargs:
-            self.rev = kwargs["rev"]
+        self.rev = rev
 
         # Register more schemes with urlparse for various version control
         # systems

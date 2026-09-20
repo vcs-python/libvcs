@@ -26,7 +26,7 @@ import typing as t
 from urllib import parse as urlparse
 
 from libvcs import exc
-from libvcs._internal.run import reject_option_like
+from libvcs._internal.run import ProgressCallbackProtocol, reject_option_like
 from libvcs._internal.types import StrPath
 from libvcs.cmd.git import Git
 from libvcs.cmd.git_filter import Auto, GitFilterInput, filter_specs
@@ -39,6 +39,34 @@ from libvcs.sync.base import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(frozen=True)
+class GitOptions:
+    """Backend-specific options for Git synchronization."""
+
+    depth: int | None = None
+    filter: GitFilterInput | None = None
+    tls_verify: bool = True
+
+    def __post_init__(self) -> None:
+        """Validate and snapshot Git options without running Git."""
+        if self.depth is not None and (
+            isinstance(self.depth, bool)
+            or not isinstance(self.depth, int)
+            or self.depth < 1
+        ):
+            msg = "depth must be a positive integer or None"
+            raise ValueError(msg)
+        if not isinstance(self.tls_verify, bool):
+            msg = "tls_verify must be a boolean"
+            raise TypeError(msg)
+        specs = filter_specs(self.filter)
+        if specs == ("auto",):
+            canonical_filter: GitFilterInput | None = Auto()
+        else:
+            canonical_filter = specs or None
+        object.__setattr__(self, "filter", canonical_filter)
 
 
 class GitStatusParsingException(exc.LibVCSException):
@@ -242,18 +270,17 @@ class GitSync(BaseSync):
     schemes = ("git+http", "git+https", "git+file")
     cmd: Git
     _remotes: GitSyncRemoteDict
+    options_type = GitOptions
 
     def __init__(
         self,
         *,
         url: str,
         path: StrPath,
+        options: GitOptions | None = None,
         remotes: GitRemotesArgs = None,
-        git_shallow: bool = False,
-        tls_verify: bool = False,
-        depth: int | None = None,
-        git_filter: GitFilterInput | None = None,
-        **kwargs: t.Any,
+        progress_callback: ProgressCallbackProtocol | None = None,
+        rev: str | None = None,
     ) -> None:
         """Local git repository.
 
@@ -262,17 +289,8 @@ class GitSync(BaseSync):
         url : str
             URL of repo
 
-        git_shallow : bool
-            Clone with history truncated to the latest commit (``--depth 1``,
-            default False)
-
-        depth : int, optional
-            Clone with history truncated to ``depth`` commits
-            (``git clone --depth N``). Takes precedence over ``git_shallow``.
-            Default None (full clone).
-
-        tls_verify : bool
-            Should certificate for https be checked (default False)
+        options : GitOptions, optional
+            Git-specific clone and transport configuration.
 
         Examples
         --------
@@ -309,15 +327,12 @@ class GitSync(BaseSync):
                }
             )
         """
-        self.git_shallow = git_shallow
-        self.tls_verify = tls_verify
-        self.depth = depth
-        git_filter_specs = filter_specs(git_filter)
-        self.git_filter: GitFilterInput | None
-        if git_filter_specs == ("auto",):
-            self.git_filter = Auto()
-        else:
-            self.git_filter = git_filter_specs or None
+        if options is None:
+            options = GitOptions()
+        elif not isinstance(options, GitOptions):
+            msg = "options must be a GitOptions instance"
+            raise TypeError(msg)
+        self.options = options
 
         self._remotes: GitSyncRemoteDict
 
@@ -349,7 +364,12 @@ class GitSync(BaseSync):
                 fetch_url=url,
                 push_url=url,
             )
-        super().__init__(url=url, path=path, **kwargs)
+        super().__init__(
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            rev=rev,
+        )
 
         self.cmd = Git(path=path, progress_callback=self.progress_callback)
 
@@ -422,27 +442,18 @@ class GitSync(BaseSync):
         url = self.url
 
         self.log.info("Cloning.")
-        # An explicit depth wins; otherwise git_shallow keeps the depth-1
-        # behavior, and neither means a full clone.
-        clone_depth: int | None
-        if self.depth is not None:
-            clone_depth = self.depth
-        elif self.git_shallow:
-            clone_depth = 1
-        else:
-            clone_depth = None
         self.cmd.clone(
             url=url,
             progress=True,
-            depth=clone_depth,
-            _filter=self.git_filter,
-            config={"http.sslVerify": False} if self.tls_verify else None,
+            depth=self.options.depth,
+            _filter=self.options.filter,
+            config={"http.sslVerify": False} if not self.options.tls_verify else None,
             log_in_real_time=True,
             check_returncode=True,
         )
 
-        submodule_filter = self.git_filter
-        if isinstance(self.git_filter, Auto):
+        submodule_filter = self.options.filter
+        if isinstance(self.options.filter, Auto):
             tracked = self.cmd.run(["ls-files", "--stage", "-z"], check_returncode=True)
             if any(entry.startswith("160000 ") for entry in tracked.split("\0")):
                 msg = (
@@ -460,6 +471,7 @@ class GitSync(BaseSync):
             init=True,
             recursive=True,
             _filter=submodule_filter,
+            config=({"http.sslVerify": False} if not self.options.tls_verify else None),
             log_in_real_time=True,
         )
 
@@ -629,7 +641,13 @@ class GitSync(BaseSync):
             return result
 
         try:
-            process = self.cmd.fetch(log_in_real_time=True, check_returncode=True)
+            process = self.cmd.fetch(
+                config=(
+                    {"http.sslVerify": False} if not self.options.tls_verify else None
+                ),
+                log_in_real_time=True,
+                check_returncode=True,
+            )
         except exc.CommandError as e:
             self.log.exception("Failed to fetch repository '%s'", url)
             result.add_error("fetch", str(e), exception=e)
@@ -730,7 +748,14 @@ class GitSync(BaseSync):
                 return result
 
         try:
-            self.cmd.submodule.update(recursive=True, init=True, log_in_real_time=True)
+            self.cmd.submodule.update(
+                recursive=True,
+                init=True,
+                config=(
+                    {"http.sslVerify": False} if not self.options.tls_verify else None
+                ),
+                log_in_real_time=True,
+            )
         except exc.CommandError as e:
             self.log.exception("Failed to update submodules")
             result.add_error("submodule-update", str(e), exception=e)

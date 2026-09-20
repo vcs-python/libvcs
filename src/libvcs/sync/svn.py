@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import os
 import pathlib
@@ -21,12 +22,39 @@ import typing as t
 import xml.etree.ElementTree
 
 from libvcs import exc
+from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath
-from libvcs.cmd.svn import Svn
+from libvcs.cmd.svn import DepthLiteral, Svn
 
 from .base import BaseSync, SyncResult, WorkingCopyPosition
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(frozen=True)
+class SvnOptions:
+    """Backend-specific options for Subversion synchronization."""
+
+    username: str | None = None
+    password: str | None = dataclasses.field(default=None, repr=False)
+    depth: DepthLiteral = None
+    trust_server_cert: bool = False
+    ignore_externals: bool = False
+
+    def __post_init__(self) -> None:
+        """Validate Subversion option types without running Subversion."""
+        for name in ("username", "password"):
+            value = getattr(self, name)
+            if value is not None and not isinstance(value, str):
+                msg = f"{name} must be a string or None"
+                raise TypeError(msg)
+        if self.depth not in (None, "empty", "files", "immediates", "infinity"):
+            msg = "depth must be empty, files, immediates, infinity, or None"
+            raise ValueError(msg)
+        for name in ("trust_server_cert", "ignore_externals"):
+            if not isinstance(getattr(self, name), bool):
+                msg = f"{name} must be a boolean"
+                raise TypeError(msg)
 
 
 class SvnUrlRevFormattingError(ValueError):
@@ -42,13 +70,16 @@ class SvnSync(BaseSync):
     bin_name = "svn"
     schemes = ("svn", "svn+ssh", "svn+http", "svn+https", "svn+svn")
     cmd: Svn
+    options_type = SvnOptions
 
     def __init__(
         self,
         *,
         url: str,
         path: StrPath,
-        **kwargs: t.Any,
+        options: SvnOptions | None = None,
+        progress_callback: ProgressCallbackProtocol | None = None,
+        rev: str | None = None,
     ) -> None:
         """Working copy of a SVN repository.
 
@@ -57,23 +88,21 @@ class SvnSync(BaseSync):
         url : str
             URL in subversion repository
 
-        username : str, optional
-            username to use for checkout and update
-
-        password : str, optional
-            password to use for checkout and update
-
-        svn_trust_cert : bool
-            trust the Subversion server site certificate, default False
+        options : SvnOptions, optional
+            Subversion-specific checkout and transport configuration.
         """
-        self.svn_trust_cert = kwargs.pop("svn_trust_cert", False)
-
-        self.username = kwargs.get("username")
-        self.password = kwargs.get("password")
-
-        self.rev = kwargs.get("rev")
-
-        super().__init__(url=url, path=path, **kwargs)
+        if options is None:
+            options = SvnOptions()
+        elif not isinstance(options, SvnOptions):
+            msg = "options must be an SvnOptions instance"
+            raise TypeError(msg)
+        self.options = options
+        super().__init__(
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            rev=rev,
+        )
 
         self.cmd = Svn(path=path, progress_callback=self.progress_callback)
 
@@ -88,14 +117,14 @@ class SvnSync(BaseSync):
         """Check out a working copy from a SVN repository."""
         url, rev = self.url, self.rev
 
-        if rev is not None:
-            kwargs["revision"] = rev
-        if self.svn_trust_cert:
-            kwargs["trust_server_cert"] = True
         self.cmd.checkout(
             url=url,
-            username=self.username,
-            password=self.password,
+            revision=rev,
+            username=self.options.username,
+            password=self.options.password,
+            depth=self.options.depth,
+            trust_server_cert=self.options.trust_server_cert,
+            ignore_externals=self.options.ignore_externals,
             non_interactive=True,
             quiet=True,
             check_returncode=True,
@@ -198,8 +227,11 @@ class SvnSync(BaseSync):
             try:
                 self.cmd.checkout(
                     url=self.url,
-                    username=self.username,
-                    password=self.password,
+                    revision=self.rev,
+                    username=self.options.username,
+                    password=self.options.password,
+                    trust_server_cert=self.options.trust_server_cert,
+                    ignore_externals=self.options.ignore_externals,
                     non_interactive=True,
                     quiet=True,
                     check_returncode=True,

@@ -9,10 +9,19 @@ from __future__ import annotations
 
 import typing as t
 
-from libvcs import GitSync, HgSync, SvnSync, exc
+from libvcs import (
+    GitOptions,
+    GitSync,
+    HgOptions,
+    HgSync,
+    SvnOptions,
+    SvnSync,
+    exc,
+)
 from libvcs._internal.run import ProgressCallbackProtocol
 from libvcs._internal.types import StrPath, VCSLiteral
 from libvcs.exc import InvalidVCS
+from libvcs.sync.git import GitRemotesArgs
 from libvcs.url import registry as url_tools
 
 
@@ -38,7 +47,9 @@ def create_project(
     path: StrPath,
     vcs: t.Literal["git"],
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: t.Any,
+    options: GitOptions | None = None,
+    rev: str | None = None,
+    remotes: GitRemotesArgs = None,
 ) -> GitSync: ...
 
 
@@ -49,7 +60,8 @@ def create_project(
     path: StrPath,
     vcs: t.Literal["svn"],
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: t.Any,
+    options: SvnOptions | None = None,
+    rev: str | None = None,
 ) -> SvnSync: ...
 
 
@@ -60,7 +72,8 @@ def create_project(
     path: StrPath,
     vcs: t.Literal["hg"],
     progress_callback: ProgressCallbackProtocol | None = ...,
-    **kwargs: t.Any,
+    options: HgOptions | None = None,
+    rev: str | None = None,
 ) -> HgSync: ...
 
 
@@ -71,7 +84,9 @@ def create_project(
     path: StrPath,
     vcs: None = None,
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: t.Any,
+    options: GitOptions | HgOptions | SvnOptions | None = None,
+    rev: str | None = None,
+    remotes: GitRemotesArgs = None,
 ) -> GitSync | HgSync | SvnSync: ...
 
 
@@ -81,7 +96,9 @@ def create_project(
     path: StrPath,
     vcs: VCSLiteral | None = None,
     progress_callback: ProgressCallbackProtocol | None = None,
-    **kwargs: t.Any,
+    options: GitOptions | HgOptions | SvnOptions | None = None,
+    rev: str | None = None,
+    remotes: GitRemotesArgs = None,
 ) -> GitSync | HgSync | SvnSync:
     r"""Return an object representation of a VCS repository.
 
@@ -140,16 +157,31 @@ def create_project(
             url=url,
             path=path,
             progress_callback=progress_callback,
-            **kwargs,
+            options=t.cast(GitOptions | None, options),
+            rev=rev,
+            remotes=remotes,
         )
     if vcs == "hg":
-        return HgSync(url=url, path=path, progress_callback=progress_callback, **kwargs)
+        if remotes is not None:
+            msg = "remotes is only valid for Git projects"
+            raise TypeError(msg)
+        return HgSync(
+            url=url,
+            path=path,
+            progress_callback=progress_callback,
+            options=t.cast(HgOptions | None, options),
+            rev=rev,
+        )
     if vcs == "svn":
+        if remotes is not None:
+            msg = "remotes is only valid for Git projects"
+            raise TypeError(msg)
         return SvnSync(
             url=url,
             path=path,
             progress_callback=progress_callback,
-            **kwargs,
+            options=t.cast(SvnOptions | None, options),
+            rev=rev,
         )
     msg = f"VCS {vcs} is not a valid VCS"
     raise InvalidVCS(msg)

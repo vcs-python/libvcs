@@ -15,7 +15,7 @@ from collections.abc import Callable
 
 import pytest
 
-from libvcs import exc
+from libvcs import GitOptions, exc
 from libvcs._internal.run import run
 from libvcs._internal.shortcuts import create_project
 from libvcs.cmd.git_filter import Auto, BlobNone
@@ -105,7 +105,7 @@ def test_git_sync_rejects_invalid_filter_before_destination(
         GitSync(
             url="file:///unused",
             path=destination,
-            git_filter={"kind": "blob:limit", "limit": False},
+            options=GitOptions(filter={"kind": "blob:limit", "limit": False}),
         )
 
     assert not destination.exists()
@@ -115,9 +115,13 @@ def test_git_sync_accepts_auto_for_existing_repo_without_submodules(
     git_repo: GitSync,
 ) -> None:
     """Auto is valid when an existing checkout has no submodule workload."""
-    repo = GitSync(url=git_repo.url, path=git_repo.path, git_filter=Auto())
+    repo = GitSync(
+        url=git_repo.url,
+        path=git_repo.path,
+        options=GitOptions(filter=Auto()),
+    )
 
-    assert repo.git_filter == Auto()
+    assert repo.options.filter == Auto()
     assert repo.cmd.submodules.ls() == []
 
 
@@ -129,7 +133,7 @@ def test_git_sync_auto_clone_skips_filter_when_no_submodules(
     repo = GitSync(
         url="https://example.com/repo.git",
         path=tmp_path / "checkout",
-        git_filter=Auto(),
+        options=GitOptions(filter=Auto()),
     )
     clone = mocker.patch.object(repo.cmd, "clone", return_value="")
     ls_files = mocker.patch.object(
@@ -158,7 +162,7 @@ def test_git_sync_auto_clone_rejects_present_submodules(
     repo = GitSync(
         url="https://example.com/repo.git",
         path=tmp_path / "checkout",
-        git_filter=Auto(),
+        options=GitOptions(filter=Auto()),
     )
     clone = mocker.patch.object(repo.cmd, "clone", return_value="")
     mocker.patch.object(
@@ -203,7 +207,7 @@ def test_git_sync_obtain_partial_clone(
     repo = GitSync(
         url=remote.as_uri(),
         path=destination,
-        git_filter=BlobNone(),
+        options=GitOptions(filter=BlobNone()),
     )
     repo.obtain()
 
@@ -275,7 +279,9 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
     GitSync(
         url=parent_remote.as_uri(),
         path=destination,
-        git_filter=[BlobNone(), {"kind": "tree", "depth": 2}],
+        options=GitOptions(
+            filter=[BlobNone(), {"kind": "tree", "depth": 2}],
+        ),
     ).obtain()
 
     assert (destination / "deps" / "sub" / "data.txt").read_text(
@@ -305,7 +311,6 @@ def test_git_sync_obtain_forwards_filter_to_submodule(
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": bare_dir.as_uri(),
                 "path": tmp_path / "obtaining a bare repo",
-                "vcs": "git",
             },
         ),
         (
@@ -348,7 +353,6 @@ def test_repo_git_obtain_initial_commit_repo(
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": tmp_path / "myrepo",
-                "vcs": "git",
             },
         ),
         (
@@ -377,34 +381,17 @@ def test_repo_git_obtain_full(
     assert (tmp_path / "myrepo").exists()
 
 
-def test_git_shallow_and_tls_verify_kwargs_are_honored(
+def test_git_options_depth_one_creates_shallow_clone(
     tmp_path: pathlib.Path,
     git_remote_repo: pathlib.Path,
 ) -> None:
-    """``git_shallow`` and ``tls_verify`` populate their attributes.
-
-    Regression: each kwarg previously left its attribute unset, so the next
-    ``obtain()`` raised ``AttributeError``.
-    """
-    # tls_verify reaches the attribute. Its clone-time ``config`` wiring is
-    # broken independently of this fix and tracked separately, so we don't
-    # drive a clone with it here.
-    assert (
-        GitSync(
-            url=git_remote_repo.as_uri(),
-            path=tmp_path / "tls",
-            tls_verify=True,
-        ).tls_verify
-        is True
-    )
-
-    # git_shallow drives a depth-1 (shallow) clone in obtain().
+    """A depth-one option preserves the former shallow-clone behavior."""
     git_repo = GitSync(
         url=git_remote_repo.as_uri(),
         path=tmp_path / "myrepo",
-        git_shallow=True,
+        options=GitOptions(depth=1),
     )
-    assert git_repo.git_shallow is True
+    assert git_repo.options.depth == 1
     git_repo.obtain()
 
     is_shallow = run(
@@ -431,21 +418,15 @@ DEPTH_FIXTURES: list[DepthFixture] = [
         expected_shallow=False,
     ),
     DepthFixture(
-        test_id="git_shallow-depth-1",
-        sync_kwargs={"git_shallow": True},
+        test_id="depth-1",
+        sync_kwargs={"options": GitOptions(depth=1)},
         expected_count=1,
         expected_shallow=True,
     ),
     DepthFixture(
         test_id="depth-3",
-        sync_kwargs={"depth": 3},
+        sync_kwargs={"options": GitOptions(depth=3)},
         expected_count=3,
-        expected_shallow=True,
-    ),
-    DepthFixture(
-        test_id="depth-overrides-git_shallow",
-        sync_kwargs={"git_shallow": True, "depth": 2},
-        expected_count=2,
         expected_shallow=True,
     ),
 ]
@@ -496,7 +477,6 @@ def test_obtain_honors_clone_depth(
             lambda git_remote_repo, tmp_path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": tmp_path / "myrepo",
-                "vcs": "git",
             },
         ),
         (
@@ -563,7 +543,6 @@ def test_repo_update_stash_cases(
     git_repo: GitSync = GitSync(
         url=git_bare_repo.as_uri(),
         path=tmp_path / "myrepo",
-        vcs="git",
     )
     git_repo.obtain()  # clone initial repo
 
@@ -610,7 +589,6 @@ def test_repo_update_stash_cases(
                 "url": git_remote_repo.as_uri(),
                 "path": tmp_path / "myrepo",
                 "progress_callback": progress_callback,
-                "vcs": "git",
             },
         ),
         (
@@ -763,7 +741,6 @@ def test_progress_callback(
             lambda git_remote_repo, projects_path, repo_name, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": projects_path / repo_name,
-                "vcs": "git",
                 "remotes": {
                     "second_remote": GitRemote(
                         name="second_remote",
@@ -977,7 +954,6 @@ def test_git_get_url_and_rev_from_pip_url() -> None:
             lambda git_remote_repo, path, **kwargs: {
                 "url": git_remote_repo.as_uri(),
                 "path": path,
-                "vcs": "git",
             },
         ),
         (
@@ -1021,7 +997,6 @@ def test_remotes_preserves_git_ssh(
             lambda bare_dir, tmp_path, **kwargs: {
                 "url": bare_dir.as_uri(),
                 "path": tmp_path / "obtaining a bare repo",
-                "vcs": "git",
             },
         ),
         (
