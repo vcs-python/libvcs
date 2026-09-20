@@ -30,13 +30,18 @@ filters. Specs and kind-tagged mappings parse into the same models, with
 validation for numeric ranges, combine escaping, recursion, incompatible
 `auto` filters, and field names.
 
-{meth}`~libvcs.cmd.git.Git.clone`, {meth}`~libvcs.cmd.git.Git.fetch`,
-{meth}`~libvcs.cmd.git.Git.pull`, and
+{meth}`~libvcs.cmd.git.Git.clone`, {meth}`~libvcs.cmd.git.Git.fetch`, and
 {meth}`~libvcs.cmd.git.GitSubmoduleCmd.update` accept models, strings,
-mappings, and sequences through `_filter`. Sequences produce one
-`--filter=` argument per item. {class}`~libvcs.sync.git.GitSync` accepts the
-same values through `git_filter`, validates them before creating a checkout,
-and applies them to the initial clone and new submodules.
+mappings, and sequences through `_filter`. Clone and fetch preserve repeated
+filter arguments; submodule update combines them so Git applies every filter.
+{meth}`~libvcs.cmd.git.Git.pull` rejects filters because native Git does not
+support them.
+
+{class}`~libvcs.sync.git.GitSync` accepts the same values through `git_filter`,
+validates them before creating a checkout, and applies them to the initial
+clone and new submodules. `Auto` can clone a repository without gitlinks. If
+the cloned index contains gitlinks, obtain reports that `Auto` cannot be
+forwarded and retains the parent clone.
 
 #### Inspect working-copy positions
 

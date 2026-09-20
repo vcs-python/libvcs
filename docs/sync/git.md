@@ -31,11 +31,12 @@ existing checkout keeps its configured partial-clone filter during updates.
 ('blob:none',)
 ```
 
-{class}`~libvcs.cmd.git_filter.Auto` cannot be used with `GitSync`: obtain
-forwards the configured filter to `git submodule update`, and that command has
-no `auto` mode. Use {meth}`~libvcs.cmd.git.Git.clone` or
-{meth}`~libvcs.cmd.git.Git.fetch` directly when server-selected filtering is
-required.
+{class}`~libvcs.cmd.git_filter.Auto` is available for the initial clone with
+Git 2.54 or newer. After cloning, `GitSync` checks the index for submodule
+gitlinks. With no gitlinks, the empty submodule update runs without a filter.
+If gitlinks exist, obtain raises `ValueError` before initializing them and
+leaves the parent clone at the destination. Existing checkout updates do not
+change their configured filter.
 
 ```{eval-rst}
 .. automodule:: libvcs.sync.git
