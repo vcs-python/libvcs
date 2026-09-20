@@ -135,3 +135,48 @@ def test_store_rejects_record_schema_damage(
     found = store.discover()[0]
     assert not found.ok
     assert found.recovery == token
+
+
+def test_store_lock_outlives_source_and_release(tmp_path: pathlib.Path) -> None:
+    """Opt-in snapshot ownership stays locked independently of native administration."""
+    source = tmp_path / "source"
+    source.mkdir()
+    store = RecoveryStore(source, "svn", source, lock_in_store=True)
+    with store.lock():
+        token, _ = store.create(original={}, target={})
+        identity = store.lock_path.stat().st_ino
+        source.rmdir()
+        with pytest.raises(OSError):
+            store.read(token)
+        assert store.read(token, require_repository=False)["id"] == token.id
+        with pytest.raises(RuntimeError, match="busy"), store.lock():
+            pytest.fail("acquired an owned snapshot lock")
+        store.remove(token, require_repository=False)
+        assert store.lock_path.stat().st_ino == identity
+        with pytest.raises(RuntimeError, match="busy"), store.lock():
+            pytest.fail("release removed the active ownership lock")
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("source_identity", []),
+        ("repository_identity", {}),
+        ("repository_identity", [True, 1]),
+    ],
+)
+def test_independent_record_reads_validate_identity_types(
+    tmp_path: pathlib.Path, field: str, value: object
+) -> None:
+    """Skipping current native identity never skips persisted identity validation."""
+    source = tmp_path / "source"
+    source.mkdir()
+    store = RecoveryStore(source, "svn", source, lock_in_store=True)
+    token, record = store.create(original={}, target={})
+    record[field] = value
+    store.write(token, record)
+    with pytest.raises(ValueError, match="identity"):
+        store.read(token, require_repository=False)
+    result = store.discover(require_repository=False)[0]
+    assert not result.ok
+    assert result.recovery == token

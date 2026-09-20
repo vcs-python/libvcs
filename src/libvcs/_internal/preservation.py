@@ -97,7 +97,12 @@ class RecoveryStore:
     """Keep retained operations beside a checkout, with shared native ownership."""
 
     def __init__(
-        self, source: pathlib.Path, backend: str, repository: pathlib.Path
+        self,
+        source: pathlib.Path,
+        backend: str,
+        repository: pathlib.Path,
+        *,
+        lock_in_store: bool = False,
     ) -> None:
         self.source = safe_path(source)
         self.backend = backend
@@ -107,17 +112,27 @@ class RecoveryStore:
         if self.root.is_relative_to(self.source):
             msg = "recovery store overlaps source"
             raise ValueError(msg)
-        self.lock_path = self.repository / ".libvcs-preserve.lock"
+        self.lock_in_store = lock_in_store
+        self.lock_path = (
+            self.root.parent / (key + ".lock")
+            if lock_in_store
+            else self.repository / ".libvcs-preserve.lock"
+        )
 
     @contextlib.contextmanager
     def lock(self) -> Iterator[None]:
-        """Own the native namespace without waiting for another transaction."""
+        """Exclude concurrent library operations without waiting."""
         if os.name != "posix":
             msg = "recovery requires POSIX ownership locks"
             raise NotImplementedError(msg)
         import fcntl
 
         safe_path(self.lock_path)
+        if self.lock_in_store:
+            self.lock_path.parent.mkdir(mode=0o700, exist_ok=True)
+            if self.lock_path.parent.stat().st_mode & 0o077:
+                msg = "recovery store must be private (mode 0700)"
+                raise ValueError(msg)
         fd = os.open(self.lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         try:
             try:
@@ -177,8 +192,8 @@ class RecoveryStore:
         safe_path(expected)
         return expected
 
-    def read(self, token: RecoveryToken) -> Record:
-        """Read a versioned record, rejecting mismatched native and filesystem scope."""
+    def read(self, token: RecoveryToken, *, require_repository: bool = True) -> Record:
+        """Validate the envelope and, by default, current native administration."""
         path = self.token_path(token) / "operation.json"
         safe_path(path)
         value: object = json.loads(path.read_text(encoding="utf-8"))
@@ -192,9 +207,19 @@ class RecoveryStore:
             "backend": self.backend,
             "source": str(self.source),
             "repository": str(self.repository),
-            "repository_identity": identity(self.repository),
             "marker": f"libvcs:{token.id}",
         }
+        if require_repository:
+            expected["repository_identity"] = identity(self.repository)
+        for field in ("source_identity", "repository_identity"):
+            value = record.get(field)
+            if (
+                not isinstance(value, list)
+                or len(value) != 2
+                or any(type(part) is not int or part < 0 for part in value)
+            ):
+                msg = "invalid recovery record filesystem identity"
+                raise ValueError(msg)
         if any(record.get(key) != value for key, value in expected.items()):
             msg = "recovery record identity does not match"
             raise ValueError(msg)
@@ -302,7 +327,7 @@ class RecoveryStore:
             )
         return result
 
-    def discover(self) -> tuple[SyncResult, ...]:
+    def discover(self, *, require_repository: bool = True) -> tuple[SyncResult, ...]:
         """List damaged and unfinished operation directories as visible errors."""
         if not self.root.exists():
             return ()
@@ -311,7 +336,11 @@ class RecoveryStore:
         for path in sorted(self.root.iterdir()):
             token = RecoveryToken(path.name, self.backend, str(path))
             try:
-                results.append(self.snapshot(token, self.read(token)))
+                results.append(
+                    self.snapshot(
+                        token, self.read(token, require_repository=require_repository)
+                    )
+                )
             except (OSError, ValueError, KeyError, TypeError) as error:
                 result = SyncResult(
                     recovery=token, update_state="unknown", preservation_state="unknown"
@@ -335,8 +364,8 @@ class RecoveryStore:
             raise ValueError(msg)
         return destination
 
-    def remove(self, token: RecoveryToken) -> None:
+    def remove(self, token: RecoveryToken, *, require_repository: bool = True) -> None:
         """Remove a validated owned envelope after its native material is released."""
-        self.read(token)
+        self.read(token, require_repository=require_repository)
         shutil.rmtree(self.token_path(token))
         flush_directory(self.root)
