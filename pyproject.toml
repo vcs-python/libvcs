@@ -250,6 +250,7 @@ convention = "numpy"
 "src/libvcs/sync/svn.py" = ["BLE001"]
 
 [tool.pytest.ini_options]
+markers = ["slow: native recovery matrices with multiple independent repositories"]
 addopts = [
   "--tb=short",
   "--no-header",

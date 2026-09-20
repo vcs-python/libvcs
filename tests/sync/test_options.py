@@ -277,6 +277,7 @@ def test_git_target_fetches_named_remote(git_repo: GitSync) -> None:
 
 def test_hg_options_forward_clone_and_network_update(
     tmp_path: pathlib.Path,
+    hg_repo: HgSync,
     mocker: MockerFixture,
 ) -> None:
     """Mercurial transport options reach clone and pull operations."""
@@ -305,14 +306,16 @@ def test_hg_options_forward_clone_and_network_update(
         "check_returncode": True,
     }
 
-    (tmp_path / ".hg").mkdir()
-    pull = mocker.patch.object(repo.cmd, "pull", return_value="")
-    repo.update_repo()
+    hg_repo.options = options
+    pull = mocker.patch.object(hg_repo.cmd, "pull", return_value="")
+    result = hg_repo.update_repo()
+    assert result.ok, result.errors
     assert pull.call_args.kwargs == {
-        "update": True,
+        "update": False,
         "ssh": "ssh -i key",
         "remote_cmd": "hg-custom",
         "insecure": True,
+        "check_returncode": True,
     }
 
 

@@ -29,6 +29,18 @@ configured-target drift separate from local-change handling and defaults to
 `dirty="abort"`. `SyncResult` now reports update and preservation outcomes,
 conflicts, and retained recovery tokens independently.
 
+#### Mercurial retains shelves for independent recovery
+
+`HgSync.update_repo()` aborts on dirty checkouts by default. Explicit
+`SyncPolicy(dirty="preserve")` retains native shelves in private storage,
+including added, removed, modified, and unknown files. Missing files retain
+their unscheduled state; upstream changes to a missing path report a conflict.
+Native unshelve conflicts keep their recovery token and caller-owned backups.
+`recover_changes()` restores the original branch, bookmark, and native status
+in a separate checkout using retained local history, without remote access.
+`list_recoveries()` exposes interrupted saves and damaged records;
+`release_changes()` removes only verified owned shelf artifacts.
+
 #### Mercurial clone applies transport and revision selection
 
 `HgSync` strips the `hg+` adapter prefix before invoking Mercurial and applies
