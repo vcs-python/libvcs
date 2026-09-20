@@ -17,6 +17,26 @@ if not shutil.which("hg"):
     pytestmark = pytest.mark.skip(reason="hg is not available")
 
 
+def test_hg_run_keeps_global_options_before_separator(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Mercurial global options precede command operands and their separator."""
+    repo = Hg(path=tmp_path)
+    mock_run = mocker.patch("libvcs.cmd.hg.run", return_value="")
+
+    repo.run(["clone", "--", "source", "destination"], quiet=True)
+
+    assert mock_run.call_args.kwargs["args"] == [
+        "hg",
+        "--quiet",
+        "clone",
+        "--",
+        "source",
+        "destination",
+    ]
+
+
 def test_hg_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     """Mercurial run() should not split scalar command strings."""
     repo = Hg(path=tmp_path)

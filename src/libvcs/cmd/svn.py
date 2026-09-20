@@ -144,6 +144,8 @@ class Svn:
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path
 
+        if quiet is True:
+            cli_args.append("--quiet")
         if no_auth_cache is True:
             cli_args.append("--no-auth-cache")
         if non_interactive is True:
@@ -153,7 +155,7 @@ class Svn:
         if password is not None:
             cli_args.extend(["--password", password])
         if trust_server_cert is True:
-            cli_args.append("--trust-server_cert")
+            cli_args.append("--trust-server-cert")
         if config_dir is not None:
             cli_args.extend(["--config-dir", os.fspath(config_dir)])
         if config_option is not None:

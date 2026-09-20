@@ -51,6 +51,27 @@ def test_svn_run_timeout_propagates_to_runner(
     assert kwargs.get("timeout") == 2.5
 
 
+def test_svn_run_forwards_quiet_and_trust_cert_with_native_spelling(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Global checkout options use the argv accepted by Subversion."""
+    repo = Svn(path=tmp_path)
+    mock_run = mocker.patch("libvcs.cmd.svn.run", return_value="")
+
+    repo.run(["info", "--", "."], quiet=True, trust_server_cert=True)
+
+    assert mock_run.call_args.kwargs["args"] == [
+        "svn",
+        "--quiet",
+        "--non-interactive",
+        "--trust-server-cert",
+        "info",
+        "--",
+        ".",
+    ]
+
+
 def test_checkout_rejects_option_like_url(tmp_path: pathlib.Path) -> None:
     """Reject a checkout URL that svn would parse as an option.
 

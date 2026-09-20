@@ -164,7 +164,7 @@ class Hg:
         >>> hg.run(['help'])
         "Mercurial Distributed SCM..."
         """
-        cli_args: list[StrOrBytesPath] = ["hg", *_normalize_command_args(args)]
+        cli_args: list[StrOrBytesPath] = ["hg"]
 
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.path
@@ -195,6 +195,8 @@ class Hg:
             cli_args.append("--version")
         if _help is True:
             cli_args.append("--help")
+
+        cli_args.extend(_normalize_command_args(args))
 
         if self.progress_callback is not None:
             kwargs["callback"] = self.progress_callback
