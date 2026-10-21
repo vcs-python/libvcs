@@ -21,6 +21,23 @@ if t.TYPE_CHECKING:
     from libvcs.sync.git import GitSync
 
 
+def test_remote_listing_preserves_filtered_fetch_url(
+    git_repo: GitSync,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A partial-clone annotation must not hide a remote's fetch URL."""
+    monkeypatch.delenv("GIT_CONFIG", raising=False)
+    git_repo.cmd.run(
+        ["config", "--local", "remote.origin.partialclonefilter", "blob:none"],
+        check_returncode=True,
+    )
+    remote = git_repo.cmd.remotes.get(remote_name="origin")
+
+    assert remote is not None
+    assert remote.fetch_url == git_repo.url
+    assert remote.push_url == git_repo.url
+
+
 @pytest.mark.parametrize("path_type", [str, pathlib.Path])
 def test_git_constructor(
     path_type: t.Callable[[str | pathlib.Path], t.Any],
@@ -47,6 +64,32 @@ def test_git_run_accepts_scalar_string(tmp_path: pathlib.Path) -> None:
     result = repo.run("--version")
 
     assert result.startswith("git version ")
+
+
+def test_git_run_places_global_configuration_before_subcommand(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Command-scoped configuration reaches Git and stays out of config files."""
+    repo = git.Git(path=tmp_path)
+    monkeypatch.setenv("LIBVCS_TEST_CONFIG_VALUE", "from-environment")
+
+    assert (
+        repo.run(
+            ["config", "--get", "http.sslVerify"],
+            config={"http.sslVerify": False},
+        ).strip()
+        == "false"
+    )
+    assert (
+        repo.run(
+            ["config", "--get", "libvcs.test"],
+            config_env="libvcs.test=LIBVCS_TEST_CONFIG_VALUE",
+        ).strip()
+        == "from-environment"
+    )
+    with pytest.raises(exc.CommandError):
+        repo.run(["config", "--get", "libvcs.test"])
 
 
 def test_git_run_timeout_propagates_to_runner(
@@ -1992,8 +2035,9 @@ def test_notes_get_ref(git_repo: GitSync) -> None:
     assert result == "refs/notes/commits" or result == "" or "notes" in result
 
 
-def test_notes_edit(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
-    """Test GitNoteCmd.edit() - non-interactive mode via GIT_EDITOR."""
+def test_notes_edit(git_repo: GitSync, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Command-scoped editor configuration runs without changing note content."""
+    monkeypatch.delenv("GIT_EDITOR", raising=False)
     # Add a note first
     git_repo.cmd.notes.add(message="Initial note for edit test", force=True)
 
@@ -2002,12 +2046,10 @@ def test_notes_edit(git_repo: GitSync, tmp_path: pathlib.Path) -> None:
     note = git_repo.cmd.notes.get(object_sha=head_sha)
     assert note is not None
 
-    # Edit with allow_empty (avoid interactive editor by using config)
-    # The doctest uses config={'core.editor': 'true'} which sets a no-op editor
     result = note.edit(allow_empty=True, config={"core.editor": "true"})
 
-    # Should succeed (empty string) or show error about editor
-    assert result == "" or "error" in result.lower() or isinstance(result, str)
+    assert result == ""
+    assert note.show().strip() == "Initial note for edit test"
 
 
 def test_notes_copy(git_repo: GitSync) -> None:
@@ -2836,3 +2878,119 @@ def test_clone_places_end_of_options_before_url(
     assert argv[argv.index("--") + 1] == "https://example.com/repo.git", (
         "URL must follow the -- separator, not precede it"
     )
+
+
+def test_git_commands_emit_one_flag_per_filter(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Clone and fetch repeat filters; submodule combines them into one flag."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+    filters = ["blob:none", {"kind": "tree", "depth": 2}]
+
+    repo.clone(
+        url="https://example.com/repo.git",
+        _filter=filters,
+        make_parents=False,
+    )
+    repo.fetch(_filter=filters)
+    repo.submodule.update(_filter=filters)
+
+    clone_argv, fetch_argv, submodule_argv = (
+        [os.fspath(arg) for arg in call.args[0]] for call in mock_run.call_args_list
+    )
+    for argv in (clone_argv, fetch_argv):
+        assert [arg for arg in argv if arg.startswith("--filter=")] == [
+            "--filter=blob:none",
+            "--filter=tree:2",
+        ]
+    assert [arg for arg in submodule_argv if arg.startswith("--filter=")] == [
+        "--filter=combine:blob:none+tree:2"
+    ]
+
+
+def test_submodule_combines_maximum_depth_filters(git_repo: GitSync) -> None:
+    """Combining repeated flags cannot reject already validated filter nesting."""
+    spec = "combine:" * 32 + "blob:none"
+    result = git_repo.cmd.submodule.update(
+        init=True,
+        _filter=[spec, "tree:2"],
+        check_returncode=True,
+    )
+
+    assert result == ""
+
+
+def test_git_commands_accept_legacy_filter_string(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Existing string filter calls keep their argv."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    repo.fetch(_filter="blob:none")
+
+    argv = [os.fspath(arg) for arg in mock_run.call_args.args[0]]
+    assert "--filter=blob:none" in argv
+
+
+def test_git_pull_rejects_filter_before_process(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Pull rejects every filter because native Git has no filter option."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    with pytest.raises(ValueError, match="pull"):
+        repo.pull(_filter="blob:none")
+
+    mock_run.assert_not_called()
+
+
+def test_git_submodule_rejects_auto_before_process(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Submodule update rejects Git's clone/fetch-only auto mode."""
+    from libvcs.cmd.git_filter import Auto
+
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo, "run", return_value="")
+
+    with pytest.raises(ValueError, match="auto"):
+        repo.submodule.update(_filter=Auto())
+
+    mock_run.assert_not_called()
+
+
+def test_git_submodule_update_forwards_run_configuration(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    """Submodule updates forward Git network configuration to the runner."""
+    repo = git.Git(path=tmp_path)
+    mock_run = mocker.patch.object(repo.submodule, "run", return_value="")
+    config = {"http.sslVerify": False}
+
+    repo.submodule.update(config=config)
+
+    assert mock_run.call_args.kwargs["config"] == config
+
+
+def test_clone_rejects_filter_before_creating_destination(
+    tmp_path: pathlib.Path,
+) -> None:
+    """Invalid filter config does not create the clone destination."""
+    destination = tmp_path / "checkout"
+    repo = git.Git(path=destination)
+
+    with pytest.raises(ValueError, match="limit"):
+        repo.clone(
+            url="https://example.com/repo.git",
+            _filter={"kind": "blob:limit", "limit": -1},
+        )
+
+    assert not destination.exists()
