@@ -61,6 +61,7 @@ True
 :caption: Subcommands
 :maxdepth: 1
 
+filter
 submodule
 remote
 stash

@@ -267,8 +267,6 @@ def run(
     )
 
     all_output: str = ""
-    code = None
-    line = None
     if log_in_real_time and callback is None:
 
         def progress_cb(output: t.AnyStr, timestamp: datetime.datetime) -> None:
@@ -277,34 +275,22 @@ def run(
 
         callback = progress_cb
 
-    # Note: When git detects that stderr is not a TTY (e.g., when piped),
-    # it outputs progress with newlines instead of carriage returns.
-    # This causes each progress update to appear on a new line.
-    # To get proper single-line progress updates, git would need to be
-    # connected to a pseudo-TTY, which would require significant changes
-    # to how subprocess execution is handled.
-
-    timeout_stdout: bytes | None = None
-    timeout_stderr: bytes | None = None
-    if timeout is None:
-        while code is None:
-            code = proc.poll()
-
-            if callback and callable(callback) and proc.stderr is not None:
-                line = console_to_str(proc.stderr.read(128))
-                if line:
-                    callback(
-                        output=line,
-                        timestamp=datetime.datetime.now(tz=datetime.timezone.utc),
-                    )
-    else:
+    try:
         code, timeout_stdout, timeout_stderr = _wait_with_deadline(
             proc,
-            deadline=time.monotonic() + timeout,
+            deadline=time.monotonic() + timeout if timeout is not None else None,
             timeout=timeout,
             callback=callback,
             cmd=_stringify_command(normalized_args),
         )
+    except BaseException:
+        try:
+            _terminate_process(proc, _stringify_command(normalized_args))
+        finally:
+            for stream in (proc.stdin, proc.stdout, proc.stderr):
+                if stream is not None:
+                    stream.close()
+        raise
     if callback and callable(callback):
         callback(output="\r", timestamp=datetime.datetime.now(tz=datetime.timezone.utc))
 
@@ -348,12 +334,12 @@ _TIMEOUT_POLL_INTERVAL_SECONDS = 0.1
 def _wait_with_deadline(
     proc: subprocess.Popen[bytes],
     *,
-    deadline: float,
-    timeout: float,
+    deadline: float | None,
+    timeout: float | None,
     callback: ProgressCallbackProtocol | None,
     cmd: str | list[str],
 ) -> tuple[int, bytes | None, bytes | None]:
-    """Wait for ``proc`` to exit, enforcing a wall-clock deadline.
+    """Drain child pipes while waiting, enforcing an optional wall-clock deadline.
 
     Drains both ``stdout`` and ``stderr`` concurrently so a child that fills
     either kernel pipe buffer (~64 KiB on Linux) cannot deadlock waiting for
@@ -429,8 +415,8 @@ def _wait_with_deadline(
                             )
                 break
 
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
+            remaining = deadline - time.monotonic() if deadline is not None else None
+            if remaining is not None and remaining <= 0:
                 # ``vcs_exit_code`` deliberately omitted here: ``proc.returncode``
                 # is still ``None`` because the child has not been signalled yet,
                 # and CLAUDE.md treats ``vcs_exit_code`` as a scalar ``int``.
@@ -454,12 +440,16 @@ def _wait_with_deadline(
                     timeout=timeout,
                 )
 
-            wait = min(_TIMEOUT_POLL_INTERVAL_SECONDS, remaining)
+            wait = (
+                min(_TIMEOUT_POLL_INTERVAL_SECONDS, remaining)
+                if remaining is not None
+                else _TIMEOUT_POLL_INTERVAL_SECONDS
+            )
             if not registered:
-                # No streams to select on (e.g. ``os.set_blocking`` failed on
-                # Windows pipes). Yield the CPU explicitly instead of busy-
-                # looping until the deadline or process exit.
-                time.sleep(wait)
+                try:
+                    proc.wait(timeout=remaining)
+                except subprocess.TimeoutExpired:
+                    continue
                 continue
 
             events = sel.select(timeout=wait)
