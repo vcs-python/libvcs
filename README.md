@@ -177,7 +177,7 @@ def test_my_git_tool(create_git_remote_repo: CreateRepoFn, tmp_path: pathlib.Pat
 
 ## Project Information
 
-- **Python Support**: 3.10+
+- **Python Support**: 3.11+
 - **VCS Support**: Git (including AWS CodeCommit), Mercurial (hg), Subversion (svn)
 - **License**: MIT
 
